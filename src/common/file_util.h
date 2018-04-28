@@ -169,12 +169,8 @@ public:
 
     template <typename T>
     std::size_t ReadArray(T* data, std::size_t length) {
-        static_assert(std::is_standard_layout<T>(),
-                      "Given array doesn't consist of standard layout objects");
-#if (__GNUC__ >= 5) || defined(__clang__) || defined(_MSC_VER)
         static_assert(std::is_trivially_copyable<T>(),
-                      "Given array doesn't consist of trivially copyable objects");
-#endif
+                      "Given array does not consist of trivially copyable objects");
         if (!IsOpen()) {
             m_good = false;
             return std::numeric_limits<std::size_t>::max();
@@ -187,12 +183,8 @@ public:
 
     template <typename T>
     std::size_t WriteArray(const T* data, std::size_t length) {
-        static_assert(std::is_standard_layout<T>(),
-                      "Given array doesn't consist of standard layout objects");
-#if (__GNUC__ >= 5) || defined(__clang__) || defined(_MSC_VER)
         static_assert(std::is_trivially_copyable<T>(),
-                      "Given array doesn't consist of trivially copyable objects");
-#endif
+                      "Given array does not consist of trivially copyable objects");
         if (!IsOpen()) {
             m_good = false;
             return std::numeric_limits<std::size_t>::max();
