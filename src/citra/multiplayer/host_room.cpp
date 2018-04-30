@@ -49,6 +49,7 @@ HostRoomWindow::HostRoomWindow(QWidget* parent,
     int index{static_cast<int>(UISettings::values.host_type)};
     if (index < ui->host_type->count())
         ui->host_type->setCurrentIndex(index);
+    ui->room_description->setText(UISettings::values.room_description);
 }
 
 HostRoomWindow::~HostRoomWindow() = default;
@@ -79,9 +80,9 @@ void HostRoomWindow::Host() {
     ui->host->setDisabled(true);
     auto port{ui->port->isModified() ? ui->port->text().toInt() : Network::DefaultRoomPort};
     auto password{ui->password->text().toStdString()};
-    bool created{system.Room().Create(ui->room_name->text().toStdString(),
-                                      ui->username->text().toStdString(), port, password,
-                                      ui->max_members->value())};
+    bool created{system.Room().Create(
+        ui->room_name->text().toStdString(), ui->room_description->toPlainText().toStdString(),
+        ui->username->text().toStdString(), port, password, ui->max_members->value())};
     if (!created) {
         NetworkMessage::ShowError(NetworkMessage::COULD_NOT_CREATE_ROOM);
         LOG_ERROR(Network, "Couldn't create room!");
@@ -97,6 +98,7 @@ void HostRoomWindow::Host() {
     UISettings::values.room_port = (ui->port->isModified() && !ui->port->text().isEmpty())
                                        ? ui->port->text()
                                        : QString::number(Network::DefaultRoomPort);
+    UISettings::values.room_description = ui->room_description->toPlainText();
     OnConnection();
 }
 

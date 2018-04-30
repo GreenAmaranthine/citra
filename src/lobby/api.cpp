@@ -24,6 +24,7 @@ void to_json(nlohmann::json& json, const Room& room) {
     json["ip"] = room.ip;
     json["name"] = room.name;
     json["creator"] = room.creator;
+    json["description"] = room.description;
     json["port"] = room.port;
     json["maxMembers"] = room.max_members;
     json["netVersion"] = room.net_version;
@@ -39,6 +40,12 @@ void from_json(const nlohmann::json& json, Room& room) {
     room.ip = json.at("ip").get<std::string>();
     room.name = json.at("name").get<std::string>();
     room.creator = json.at("creator").get<std::string>();
+    try {
+        room.description = json.at("description").get<std::string>();
+    } catch (const nlohmann::detail::out_of_range& e) {
+        room.description = "";
+        LOG_DEBUG(Network, "Room '{}' doesn't contain a description", room.name);
+    }
     room.port = json.at("port").get<u16>();
     room.max_members = json.at("maxMembers").get<u32>();
     room.net_version = json.at("netVersion").get<u32>();
@@ -57,9 +64,11 @@ LobbyAPI::LobbyAPI()
     : client{std::make_shared<httplib::SSLClient>("citra-lobby.herokuapp.com", 443)} {}
 
 void LobbyAPI::SetRoomInformation(const std::string& name, const u16 port,
-                                  const std::string& creator, const u32 max_members,
-                                  const u32 net_version, const bool has_password) {
+                                  const std::string& creator, const std::string& description,
+                                  const u32 max_members, const u32 net_version,
+                                  const bool has_password) {
     room.name = name;
+    room.description = description;
     room.port = port;
     room.creator = creator;
     room.max_members = max_members;

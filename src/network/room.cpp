@@ -97,6 +97,7 @@ struct Room::RoomImpl {
      * The packet has the structure:
      * <MessageID> ID_ROOM_INFORMATION
      * <String> room_name
+     * <String> room_description
      * <u32> member_slots: The max number of clients allowed in this room
      * <u16> port
      * <u32> num_members: the number of currently joined clients
@@ -339,6 +340,7 @@ void Room::RoomImpl::BroadcastRoomInformation() {
     Packet packet;
     packet << static_cast<u8>(IdRoomInformation);
     packet << room_information.name;
+    packet << room_information.description;
     packet << room_information.member_slots;
     packet << room_information.port;
     packet << static_cast<u32>(members.size());
@@ -485,8 +487,9 @@ void Room::RoomImpl::HandleClientDisconnection(ENetPeer* client) {
 Room::Room() : room_impl{std::make_unique<RoomImpl>()} {}
 Room::~Room() = default;
 
-bool Room::Create(const std::string& name, const std::string& creator, u16 port,
-                  const std::string& password, const u32 max_connections) {
+bool Room::Create(const std::string& name, const std::string& description,
+                  const std::string& creator, u16 port, const std::string& password,
+                  const u32 max_connections) {
     ENetAddress address;
     address.port = port;
     // In order to send the room is full message to the connecting client, we need to leave one slot
@@ -497,6 +500,7 @@ bool Room::Create(const std::string& name, const std::string& creator, u16 port,
     room_impl->is_open.store(true, std::memory_order_relaxed);
     room_impl->room_information.name = name;
     room_impl->room_information.creator = creator;
+    room_impl->room_information.description = description;
     room_impl->room_information.member_slots = max_connections;
     room_impl->room_information.port = port;
     room_impl->password = password;

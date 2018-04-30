@@ -33,10 +33,10 @@ static void PrintHelp(const char* argv0) {
     std::cout << "Usage: " << argv0
               << " [options] <filename>\n"
                  "--room-name         The name of the room\n"
+                 "--room-description  The room description\n"
                  "--port              The port used for the room\n"
                  "--max_members       The maximum number of members for this room\n"
                  "--password          The password for the room\n"
-
                  "-h, --help          Display this help and exit\n"
                  "-v, --version       Output version information and exit\n";
 }
@@ -52,20 +52,28 @@ int main(int argc, char** argv) {
     char* endarg;
     // This is just to be able to link against core
     gladLoadGL();
-    std::string room_name, creator, password;
+    std::string room_name, room_description, creator, password;
     u32 port{Network::DefaultRoomPort}, max_members{16};
     static struct option long_options[]{
-        {"room-name", required_argument, 0, 'n'},   {"port", required_argument, 0, 'p'},
-        {"max-members", required_argument, 0, 'm'}, {"password", required_argument, 0, 'w'},
-        {"creator", required_argument, 0, 'c'},     {"help", no_argument, 0, 'h'},
-        {"version", no_argument, 0, 'v'},           {0, 0, 0, 0},
+        {"room-name", required_argument, 0, 'n'},
+        {"room-description", required_argument, 0, 'd'},
+        {"port", required_argument, 0, 'p'},
+        {"max-members", required_argument, 0, 'm'},
+        {"password", required_argument, 0, 'w'},
+        {"creator", required_argument, 0, 'c'},
+        {"help", no_argument, 0, 'h'},
+        {"version", no_argument, 0, 'v'},
+        {0, 0, 0, 0},
     };
     while (optind < argc) {
-        int arg{getopt_long(argc, argv, "n:p:m:w:c:hv", long_options, &option_index)};
+        int arg{getopt_long(argc, argv, "n:d:p:m:w:c:hv", long_options, &option_index)};
         if (arg != -1) {
             switch (arg) {
             case 'n':
                 room_name.assign(optarg);
+                break;
+            case 'd':
+                room_description.assign(optarg);
                 break;
             case 'p':
                 port = strtoul(optarg, &endarg, 0);
@@ -105,7 +113,7 @@ int main(int argc, char** argv) {
         return -1;
     }
     Network::Room room;
-    if (!room.Create(room_name, creator, port, password, max_members)) {
+    if (!room.Create(room_name, room_description, creator, port, password, max_members)) {
         std::cout << "Failed to create room!\n\n";
         return -1;
     }

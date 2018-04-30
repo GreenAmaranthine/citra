@@ -20,10 +20,11 @@ constexpr u32 MaxConcurrentConnections{
 constexpr std::size_t NumChannels{1}; // Number of channels used for the connection
 
 struct RoomInformation {
-    std::string name;    ///< Name of the server
-    u32 member_slots;    ///< Maximum number of members in this room
-    u16 port;            ///< The port of this room
-    std::string creator; ///< The creator of this room
+    std::string name;        ///< Name of the room
+    std::string description; ///< Room description
+    u32 member_slots;        ///< Maximum number of members in this room
+    u16 port;                ///< The port of this room
+    std::string creator;     ///< The creator of this room
 };
 
 // The different types of messages that can be sent. The first byte of each packet defines the type
@@ -74,8 +75,8 @@ public:
     bool HasPassword() const;
 
     /// Creates the socket for this room
-    bool Create(const std::string& name, const std::string& creator, u16 port = DefaultRoomPort,
-                const std::string& password = "",
+    bool Create(const std::string& name, const std::string& description, const std::string& creator,
+                u16 port = DefaultRoomPort, const std::string& password = "",
                 const u32 max_connections = MaxConcurrentConnections);
 
     /**

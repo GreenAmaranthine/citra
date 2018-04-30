@@ -96,6 +96,7 @@ struct Values {
     quint32 max_members;
     QString room_port;
     uint host_type;
+    QString room_description;
 
     // Logging
     bool show_console;

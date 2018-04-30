@@ -21,6 +21,7 @@ struct Room {
     };
     std::string name;
     std::string creator;
+    std::string description;
     std::string ip;
     u16 port;
     u32 max_members;

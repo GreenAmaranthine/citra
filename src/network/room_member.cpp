@@ -233,9 +233,11 @@ void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* ev
     packet.IgnoreBytes(sizeof(u8)); // Ignore the message type
     RoomInformation info;
     packet >> info.name;
+    packet >> info.description;
     packet >> info.member_slots;
     packet >> info.port;
     room_information.name = info.name;
+    room_information.description = info.description;
     room_information.member_slots = info.member_slots;
     room_information.port = info.port;
     u32 num_members;

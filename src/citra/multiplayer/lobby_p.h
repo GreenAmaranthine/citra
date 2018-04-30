@@ -50,9 +50,32 @@ public:
     bool operator<(const QStandardItem& other) const override {
         return data(NameRole).toString().localeAwareCompare(other.data(NameRole).toString()) < 0;
     }
+};
 
-    static const int NameRole{Qt::UserRole + 1};
-    static const int PasswordRole{Qt::UserRole + 2};
+class LobbyItemDescription : public LobbyItem {
+public:
+    LobbyItemDescription() = default;
+
+    explicit LobbyItemDescription(QString description) {
+        setData(description, DescriptionRole);
+    }
+
+    QVariant data(int role) const override {
+        if (role != Qt::DisplayRole)
+            return LobbyItem::data(role);
+        auto description{data(DescriptionRole).toString()};
+        description.prepend("Description: ");
+        return description;
+    }
+
+    bool operator<(const QStandardItem& other) const override {
+        return data(DescriptionRole)
+                   .toString()
+                   .localeAwareCompare(other.data(DescriptionRole).toString()) < 0;
+    }
+
+private:
+    static const int DescriptionRole{Qt::UserRole + 1};
 };
 
 class LobbyItemHost : public LobbyItem {
