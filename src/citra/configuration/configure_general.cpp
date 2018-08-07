@@ -51,3 +51,7 @@ void ConfigureGeneral::ApplyConfiguration() {
     filter.ParseFilterString(Settings::values.log_filter);
     Log::SetGlobalFilter(filter);
 }
+
+void ConfigureGeneral::PopulateHotkeyList(const HotkeyRegistry& registry) {
+    ui->hotkeysDialog->Populate(registry);
+}

@@ -7,6 +7,8 @@
 #include <memory>
 #include <QWidget>
 
+class HotkeyRegistry;
+
 namespace Ui {
 class ConfigureGeneral;
 } // namespace Ui
@@ -19,6 +21,7 @@ public:
     ~ConfigureGeneral();
 
     void ApplyConfiguration();
+    void PopulateHotkeyList(const HotkeyRegistry& registry);
 
 signals:
     void RestoreDefaultsRequested();

@@ -11,11 +11,13 @@ namespace Ui {
 class ConfigurationDialog;
 } // namespace Ui
 
+class HotkeyRegistry;
+
 class ConfigurationDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit ConfigurationDialog(QWidget* parent);
+    explicit ConfigurationDialog(QWidget* parent, const HotkeyRegistry& registry);
     ~ConfigurationDialog();
 
     void ApplyConfiguration();

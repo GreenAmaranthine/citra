@@ -7,11 +7,13 @@
 #include "citra/configuration/config.h"
 #include "citra/configuration/configure_dialog.h"
 #include "core/settings.h"
+#include "citra/hotkeys.h"
 #include "ui_configure.h"
 
-ConfigurationDialog::ConfigurationDialog(QWidget* parent)
+ConfigurationDialog::ConfigurationDialog(QWidget* parent, const HotkeyRegistry& registry)
     : QDialog{parent}, ui{std::make_unique<Ui::ConfigurationDialog>()} {
     ui->setupUi(this);
+    ui->generalTab->PopulateHotkeyList(registry);
     PopulateSelectionList();
     connect(ui->generalTab, &ConfigureGeneral::RestoreDefaultsRequested, [this] {
         restore_defaults_requested = true;

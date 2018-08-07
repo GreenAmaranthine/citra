@@ -7,6 +7,7 @@
 #include <QLabel>
 #include <QMainWindow>
 #include <QTimer>
+#include "citra/hotkeys.h"
 #include "common/announce_multiplayer_room.h"
 #include "core/core.h"
 #include "core/hle/applets/erreula.h"
@@ -219,6 +220,8 @@ private:
 
     // Stores default icon theme search paths for the platform
     QStringList default_theme_paths;
+
+    HotkeyRegistry hotkey_registry;
 
     Core::System& system{Core::System::GetInstance()};
 

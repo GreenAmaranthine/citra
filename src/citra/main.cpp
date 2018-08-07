@@ -233,126 +233,138 @@ void GMainWindow::InitializeRecentFileMenuActions() {
 }
 
 void GMainWindow::InitializeHotkeys() {
-    RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
-    RegisterHotkey("Main Window", "Load/Remove Amiibo", QKeySequence(Qt::Key_Comma));
-    RegisterHotkey("Main Window", "Continue/Pause", QKeySequence(Qt::Key_F4));
-    RegisterHotkey("Main Window", "Restart", QKeySequence(Qt::Key_F5));
-    RegisterHotkey("Main Window", "Swap Screens", QKeySequence("F9"));
-    RegisterHotkey("Main Window", "Toggle Screen Layout", QKeySequence("F10"));
-    RegisterHotkey("Main Window", "Fullscreen", QKeySequence::FullScreen);
-    RegisterHotkey("Main Window", "Exit Fullscreen", QKeySequence(Qt::Key_Escape));
-    RegisterHotkey("Main Window", "Toggle Speed Limit", QKeySequence("CTRL+Z"));
-    RegisterHotkey("Main Window", "Increase Speed Limit", QKeySequence("+"));
-    RegisterHotkey("Main Window", "Decrease Speed Limit", QKeySequence("-"));
-    RegisterHotkey("Main Window", "Increase Internal Resolution", QKeySequence("CTRL+I"));
-    RegisterHotkey("Main Window", "Decrease Internal Resolution", QKeySequence("CTRL+D"));
-    RegisterHotkey("Main Window", "Capture Screenshot", QKeySequence("CTRL+S"));
-    RegisterHotkey("Main Window", "Toggle Sleep Mode", QKeySequence("F2"));
-    RegisterHotkey("Main Window", "Change CPU Ticks", QKeySequence("CTRL+T"));
-    RegisterHotkey("Main Window", "Toggle Frame Advancing", QKeySequence("CTRL+A"));
-    RegisterHotkey("Main Window", "Advance Frame", QKeySequence(Qt::Key_Backslash));
-    RegisterHotkey("Main Window", "Open User Directory", QKeySequence("CTRL+U"));
-    RegisterHotkey("Main Window", "Toggle Hardware Shaders", QKeySequence("CTRL+W"));
-    LoadHotkeys();
-    connect(GetHotkey("Main Window", "Load File", this), &QShortcut::activated, this,
-            &GMainWindow::OnMenuLoadFile);
-    connect(GetHotkey("Main Window", "Load/Remove Amiibo", this), &QShortcut::activated, this, [&] {
-        if (!system.IsPoweredOn())
-            return;
-        if (ui.action_Remove_Amiibo->isEnabled())
-            OnRemoveAmiibo();
-        else
-            OnLoadAmiibo();
-    });
-    connect(GetHotkey("Main Window", "Continue/Pause", this), &QShortcut::activated, this, [&] {
-        if (system.IsPoweredOn()) {
-            if (system.IsRunning())
-                OnPauseApplication();
-            else
-                OnStartApplication();
-        }
-    });
-    connect(GetHotkey("Main Window", "Restart", this), &QShortcut::activated, this, [this] {
-        if (!system.IsPoweredOn())
-            return;
-        BootApplication(system.GetFilePath());
-    });
-    connect(GetHotkey("Main Window", "Swap Screens", screens), &QShortcut::activated,
-            ui.action_Screen_Layout_Swap_Screens, &QAction::trigger);
-    connect(GetHotkey("Main Window", "Toggle Screen Layout", screens), &QShortcut::activated, this,
-            &GMainWindow::ToggleScreenLayout);
-    connect(GetHotkey("Main Window", "Fullscreen", screens), &QShortcut::activated,
+    hotkey_registry.RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
+    hotkey_registry.RegisterHotkey("Main Window", "Load/Remove Amiibo",
+                                   QKeySequence(Qt::Key_Comma));
+    hotkey_registry.RegisterHotkey("Main Window", "Continue/Pause", QKeySequence(Qt::Key_F4));
+    hotkey_registry.RegisterHotkey("Main Window", "Restart", QKeySequence(Qt::Key_F5));
+    hotkey_registry.RegisterHotkey("Main Window", "Swap Screens", QKeySequence("F9"));
+    hotkey_registry.RegisterHotkey("Main Window", "Toggle Screen Layout", QKeySequence("F10"));
+    hotkey_registry.RegisterHotkey("Main Window", "Fullscreen", QKeySequence::FullScreen);
+    hotkey_registry.RegisterHotkey("Main Window", "Exit Fullscreen", QKeySequence(Qt::Key_Escape));
+    hotkey_registry.RegisterHotkey("Main Window", "Toggle Speed Limit", QKeySequence("CTRL+Z"));
+    hotkey_registry.RegisterHotkey("Main Window", "Increase Speed Limit", QKeySequence("+"));
+    hotkey_registry.RegisterHotkey("Main Window", "Decrease Speed Limit", QKeySequence("-"));
+    hotkey_registry.RegisterHotkey("Main Window", "Increase Internal Resolution",
+                                   QKeySequence("CTRL+I"));
+    hotkey_registry.RegisterHotkey("Main Window", "Decrease Internal Resolution",
+                                   QKeySequence("CTRL+D"));
+    hotkey_registry.RegisterHotkey("Main Window", "Capture Screenshot", QKeySequence("CTRL+S"));
+    hotkey_registry.RegisterHotkey("Main Window", "Toggle Sleep Mode", QKeySequence("F2"));
+    hotkey_registry.RegisterHotkey("Main Window", "Change CPU Ticks", QKeySequence("CTRL+T"));
+    hotkey_registry.RegisterHotkey("Main Window", "Toggle Frame Advancing", QKeySequence("CTRL+A"));
+    hotkey_registry.RegisterHotkey("Main Window", "Advance Frame", QKeySequence(Qt::Key_Backslash));
+    hotkey_registry.RegisterHotkey("Main Window", "Open User Directory", QKeySequence("CTRL+U"));
+    hotkey_registry.RegisterHotkey("Main Window", "Toggle Hardware Shaders",
+                                   QKeySequence("CTRL+W"));
+    hotkey_registry.LoadHotkeys();
+    connect(hotkey_registry.GetHotkey("Main Window", "Load File", this), &QShortcut::activated,
+            this, &GMainWindow::OnMenuLoadFile);
+    connect(hotkey_registry.GetHotkey("Main Window", "Load/Remove Amiibo", this),
+            &QShortcut::activated, this, [&] {
+                if (!system.IsPoweredOn())
+                    return;
+                if (ui.action_Remove_Amiibo->isEnabled())
+                    OnRemoveAmiibo();
+                else
+                    OnLoadAmiibo();
+            });
+    connect(hotkey_registry.GetHotkey("Main Window", "Continue/Pause", this), &QShortcut::activated,
+            this, [&] {
+                if (system.IsPoweredOn()) {
+                    if (system.IsRunning())
+                        OnPauseApplication();
+                    else
+                        OnStartApplication();
+                }
+            });
+    connect(hotkey_registry.GetHotkey("Main Window", "Restart", this), &QShortcut::activated, this,
+            [this] {
+                if (!system.IsPoweredOn())
+                    return;
+                BootApplication(system.GetFilePath());
+            });
+    connect(hotkey_registry.GetHotkey("Main Window", "Swap Screens", screens),
+            &QShortcut::activated, ui.action_Screen_Layout_Swap_Screens, &QAction::trigger);
+    connect(hotkey_registry.GetHotkey("Main Window", "Toggle Screen Layout", screens),
+            &QShortcut::activated, this, &GMainWindow::ToggleScreenLayout);
+    connect(hotkey_registry.GetHotkey("Main Window", "Fullscreen", screens), &QShortcut::activated,
             ui.action_Fullscreen, &QAction::trigger);
-    connect(GetHotkey("Main Window", "Fullscreen", screens), &QShortcut::activatedAmbiguously,
-            ui.action_Fullscreen, &QAction::trigger);
-    connect(GetHotkey("Main Window", "Exit Fullscreen", this), &QShortcut::activated, this, [&] {
-        if (system.IsPoweredOn()) {
-            ui.action_Fullscreen->setChecked(false);
-            ToggleFullscreen();
-        }
-    });
-    connect(GetHotkey("Main Window", "Toggle Speed Limit", this), &QShortcut::activated, this, [&] {
-        Settings::values.use_frame_limit = !Settings::values.use_frame_limit;
-        UpdatePerformanceStats();
-    });
+    connect(hotkey_registry.GetHotkey("Main Window", "Fullscreen", screens),
+            &QShortcut::activatedAmbiguously, ui.action_Fullscreen, &QAction::trigger);
+    connect(hotkey_registry.GetHotkey("Main Window", "Exit Fullscreen", this),
+            &QShortcut::activated, this, [&] {
+                if (system.IsPoweredOn()) {
+                    ui.action_Fullscreen->setChecked(false);
+                    ToggleFullscreen();
+                }
+            });
+    connect(hotkey_registry.GetHotkey("Main Window", "Toggle Speed Limit", this),
+            &QShortcut::activated, this, [&] {
+                Settings::values.use_frame_limit = !Settings::values.use_frame_limit;
+                UpdatePerformanceStats();
+            });
     constexpr u16 SPEED_LIMIT_STEP{5};
-    connect(GetHotkey("Main Window", "Increase Speed Limit", this), &QShortcut::activated, this,
-            [&] {
+    connect(hotkey_registry.GetHotkey("Main Window", "Increase Speed Limit", this),
+            &QShortcut::activated, this, [&] {
                 if (Settings::values.frame_limit < 9999 - SPEED_LIMIT_STEP) {
                     Settings::values.frame_limit += SPEED_LIMIT_STEP;
                     UpdatePerformanceStats();
                 }
             });
-    connect(GetHotkey("Main Window", "Decrease Speed Limit", this), &QShortcut::activated, this,
-            [&] {
+    connect(hotkey_registry.GetHotkey("Main Window", "Decrease Speed Limit", this),
+            &QShortcut::activated, this, [&] {
                 if (Settings::values.frame_limit > SPEED_LIMIT_STEP) {
                     Settings::values.frame_limit -= SPEED_LIMIT_STEP;
                     UpdatePerformanceStats();
                 }
             });
-    connect(GetHotkey("Main Window", "Increase Internal Resolution", this), &QShortcut::activated,
-            this, [&] {
+    connect(hotkey_registry.GetHotkey("Main Window", "Increase Internal Resolution", this),
+            &QShortcut::activated, this, [&] {
                 if (Settings::values.resolution_factor < 10)
                     ++Settings::values.resolution_factor;
             });
-    connect(GetHotkey("Main Window", "Decrease Internal Resolution", this), &QShortcut::activated,
-            this, [&] {
+    connect(hotkey_registry.GetHotkey("Main Window", "Decrease Internal Resolution", this),
+            &QShortcut::activated, this, [&] {
                 if (Settings::values.resolution_factor > 1)
                     --Settings::values.resolution_factor;
             });
-    connect(GetHotkey("Main Window", "Capture Screenshot", this), &QShortcut::activated, this, [&] {
-        if (system.IsRunning())
-            OnCaptureScreenshot();
-    });
-    connect(GetHotkey("Main Window", "Toggle Sleep Mode", this), &QShortcut::activated, this, [&] {
-        if (system.IsPoweredOn()) {
-            bool new_value{!system.IsSleepModeEnabled()};
-            system.SetSleepModeEnabled(new_value);
-            ui.action_Sleep_Mode->setChecked(new_value);
-        }
-    });
-    connect(GetHotkey("Main Window", "Change CPU Ticks", this), &QShortcut::activated, this, [&] {
-        QString str{QInputDialog::getText(this, "Change CPU Ticks", "Ticks:")};
-        if (str.isEmpty())
-            return;
-        bool ok{};
-        u64 ticks{str.toULongLong(&ok)};
-        if (ok) {
-            Settings::values.ticks_mode = Settings::TicksMode::Custom;
-            Settings::values.ticks = ticks;
-            if (system.IsPoweredOn())
-                system.CPU().SyncSettings();
-        } else
-            QMessageBox::critical(this, "Error", "Invalid number");
-    });
-    connect(GetHotkey("Main Window", "Toggle Frame Advancing", this), &QShortcut::activated,
-            ui.action_Enable_Frame_Advancing, &QAction::trigger);
-    connect(GetHotkey("Main Window", "Advance Frame", this), &QShortcut::activated,
+    connect(hotkey_registry.GetHotkey("Main Window", "Capture Screenshot", this),
+            &QShortcut::activated, this, [&] {
+                if (system.IsRunning())
+                    OnCaptureScreenshot();
+            });
+    connect(hotkey_registry.GetHotkey("Main Window", "Toggle Sleep Mode", this),
+            &QShortcut::activated, this, [&] {
+                if (system.IsPoweredOn()) {
+                    bool new_value{!system.IsSleepModeEnabled()};
+                    system.SetSleepModeEnabled(new_value);
+                    ui.action_Sleep_Mode->setChecked(new_value);
+                }
+            });
+    connect(hotkey_registry.GetHotkey("Main Window", "Change CPU Ticks", this),
+            &QShortcut::activated, this, [&] {
+                QString str{QInputDialog::getText(this, "Change CPU Ticks", "Ticks:")};
+                if (str.isEmpty())
+                    return;
+                bool ok{};
+                u64 ticks{str.toULongLong(&ok)};
+                if (ok) {
+                    Settings::values.ticks_mode = Settings::TicksMode::Custom;
+                    Settings::values.ticks = ticks;
+                    if (system.IsPoweredOn())
+                        system.CPU().SyncSettings();
+                } else
+                    QMessageBox::critical(this, "Error", "Invalid number");
+            });
+    connect(hotkey_registry.GetHotkey("Main Window", "Toggle Frame Advancing", this),
+            &QShortcut::activated, ui.action_Enable_Frame_Advancing, &QAction::trigger);
+    connect(hotkey_registry.GetHotkey("Main Window", "Advance Frame", this), &QShortcut::activated,
             ui.action_Advance_Frame, &QAction::trigger);
-    connect(GetHotkey("Main Window", "Open User Directory", this), &QShortcut::activated,
-            ui.action_Open_User_Directory, &QAction::trigger);
-    connect(GetHotkey("Main Window", "Toggle Hardware Shaders", this), &QShortcut::activated, this,
-            [&] {
+    connect(hotkey_registry.GetHotkey("Main Window", "Open User Directory", this),
+            &QShortcut::activated, ui.action_Open_User_Directory, &QAction::trigger);
+    connect(hotkey_registry.GetHotkey("Main Window", "Toggle Hardware Shaders", this),
+            &QShortcut::activated, this, [&] {
                 Settings::values.use_hw_shaders = !Settings::values.use_hw_shaders;
                 Settings::Apply();
             });
@@ -436,9 +448,10 @@ void GMainWindow::ConnectMenuEvents() {
     ui.action_Show_Filter_Bar->setShortcut(QKeySequence("CTRL+F"));
     connect(ui.action_Show_Filter_Bar, &QAction::triggered, this, &GMainWindow::OnToggleFilterBar);
     connect(ui.action_Show_Status_Bar, &QAction::triggered, statusBar(), &QStatusBar::setVisible);
-    ui.action_Fullscreen->setShortcut(GetHotkey("Main Window", "Fullscreen", this)->key());
+    ui.action_Fullscreen->setShortcut(
+        hotkey_registry.GetHotkey("Main Window", "Fullscreen", this)->key());
     ui.action_Screen_Layout_Swap_Screens->setShortcut(
-        GetHotkey("Main Window", "Swap Screens", this)->key());
+        hotkey_registry.GetHotkey("Main Window", "Swap Screens", this)->key());
     ui.action_Screen_Layout_Swap_Screens->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(ui.action_Fullscreen, &QAction::triggered, this, &GMainWindow::ToggleFullscreen);
     connect(ui.action_Screen_Layout_Default, &QAction::triggered, this,
@@ -1138,7 +1151,7 @@ void GMainWindow::ToggleSleepMode() {
 }
 
 void GMainWindow::OnOpenConfiguration() {
-    ConfigurationDialog configuration_dialog{this};
+    ConfigurationDialog configuration_dialog{this, hotkey_registry};
     auto old_theme{UISettings::values.theme};
     auto old_profile{Settings::values.profile};
     auto old_profiles{Settings::values.profiles};
@@ -1538,7 +1551,7 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     UISettings::values.show_filter_bar = ui.action_Show_Filter_Bar->isChecked();
     UISettings::values.show_status_bar = ui.action_Show_Status_Bar->isChecked();
     app_list->SaveInterfaceLayout();
-    SaveHotkeys();
+    hotkey_registry.SaveHotkeys();
     // Shutdown session if the emu thread is active...
     if (emu_thread)
         ShutdownApplication();
