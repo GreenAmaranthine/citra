@@ -168,7 +168,7 @@ public:
     bool Close();
 
     template <typename T>
-    std::size_t ReadArray(T* data, std::size_t length) const {
+    std::size_t ReadArray(T* data, std::size_t length) {
         static_assert(std::is_trivially_copyable_v<T>,
                       "Given array does not consist of trivially copyable objects");
         if (!IsOpen()) {
@@ -203,7 +203,7 @@ public:
     std::size_t WriteBytes(const void* data, std::size_t length) {
 =======
     template <typename T>
-    size_t ReadBytes(T* data, size_t length) const {
+    size_t ReadBytes(T* data, size_t length) {
         static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
         return ReadArray(reinterpret_cast<char*>(data), length);
     }
