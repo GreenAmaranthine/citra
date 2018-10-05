@@ -71,7 +71,7 @@ private:
 };
 
 GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread)
-    : QWidget{parent, Qt::WindowOverridesSystemGestures}, child{nullptr}, emu_thread{emu_thread} {
+    : QWidget{parent}, child{nullptr}, emu_thread{emu_thread} {
 
     setWindowTitle("Render Window");
     setAttribute(Qt::WA_AcceptTouchEvents);
