@@ -178,9 +178,9 @@ void GRenderWindow::mousePressEvent(QMouseEvent* event) {
 
     auto pos{event->pos()};
     if (event->button() == Qt::LeftButton) {
-        qreal pixelRatio{windowPixelRatio()};
-        TouchPressed(static_cast<unsigned>(pos.x() * pixelRatio),
-                     static_cast<unsigned>(pos.y() * pixelRatio));
+        qreal pixel_ratio{windowPixelRatio()};
+        TouchPressed(static_cast<unsigned>(pos.x() * pixel_ratio),
+                     static_cast<unsigned>(pos.y() * pixel_ratio));
     } else if (event->button() == Qt::RightButton) {
         InputCommon::GetMotionEmu()->BeginTilt(pos.x(), pos.y());
     }
@@ -192,9 +192,9 @@ void GRenderWindow::mouseMoveEvent(QMouseEvent* event) {
     }
 
     auto pos{event->pos()};
-    qreal pixelRatio{windowPixelRatio()};
-    TouchMoved(std::max(static_cast<unsigned>(pos.x() * pixelRatio), 0u),
-               std::max(static_cast<unsigned>(pos.y() * pixelRatio), 0u));
+    qreal pixel_ratio{windowPixelRatio()};
+    TouchMoved(std::max(static_cast<unsigned>(pos.x() * pixel_ratio), 0u),
+               std::max(static_cast<unsigned>(pos.y() * pixel_ratio), 0u));
     InputCommon::GetMotionEmu()->Tilt(pos.x(), pos.y());
 }
 
@@ -216,9 +216,9 @@ void GRenderWindow::touchBeginEvent(QTouchEvent* event) {
     auto pos{tp.pos()};
 
     // Copied from mousePressEvent:
-    qreal pixelRatio{windowPixelRatio()};
-    TouchPressed(static_cast<unsigned>(pos.x() * pixelRatio),
-                 static_cast<unsigned>(pos.y() * pixelRatio));
+    qreal pixel_ratio{windowPixelRatio()};
+    TouchPressed(static_cast<unsigned>(pos.x() * pixel_ratio),
+                 static_cast<unsigned>(pos.y() * pixel_ratio));
 }
 
 void GRenderWindow::touchUpdateEvent(QTouchEvent* event) {
@@ -226,7 +226,7 @@ void GRenderWindow::touchUpdateEvent(QTouchEvent* event) {
     int activePoints{};
     auto points{event->touchPoints()};
 
-    for (int i = 0; i < points.count(); i++) {
+    for (int i{}; i < points.count(); i++) {
         auto tp{points[i]};
 
         if (tp.state() & (Qt::TouchPointPressed | Qt::TouchPointMoved | Qt::TouchPointStationary)) {
@@ -241,9 +241,9 @@ void GRenderWindow::touchUpdateEvent(QTouchEvent* event) {
     y /= activePoints;
 
     // Copied from mouseMoveEvent:
-    qreal pixelRatio{windowPixelRatio()};
-    TouchMoved(std::max(static_cast<unsigned>(x * pixelRatio), 0u),
-               std::max(static_cast<unsigned>(y * pixelRatio), 0u));
+    qreal pixel_ratio{windowPixelRatio()};
+    TouchMoved(std::max(static_cast<unsigned>(x * pixel_ratio), 0u),
+               std::max(static_cast<unsigned>(y * pixel_ratio), 0u));
 }
 
 void GRenderWindow::touchEndEvent(QTouchEvent* event) {
