@@ -52,6 +52,6 @@ void ToggleConsole() {
     if (UISettings::values.show_console)
         Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
     else
-        Log::RemoveBackend(Log::ColorConsoleBackend::Name());
+        Log::RemoveBackend(Log::ColorConsoleBackend::Name);
 #endif
 }

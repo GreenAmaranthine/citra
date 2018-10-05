@@ -44,9 +44,11 @@ struct Entry {
 class Backend {
 public:
     virtual ~Backend() = default;
+
     virtual void SetFilter(const Filter& new_filter) {
         filter = new_filter;
     }
+
     virtual const char* GetName() const = 0;
     virtual void Write(const Entry& entry) = 0;
 
@@ -54,48 +56,51 @@ private:
     Filter filter;
 };
 
-/**
- * Backend that writes to stderr and with color
- */
+/// Backend that writes to stderr and with color
 class ColorConsoleBackend : public Backend {
 public:
-    static const char* Name() {
-        return "color_console";
+    const char* GetName() const override {
+        return Name;
     }
 
-    const char* GetName() const override {
-        return Name();
-    }
+    static constexpr const char* Name{"color_console"};
+
     void Write(const Entry& entry) override;
 };
 
-/**
- * Backend that writes to a file passed into the constructor
- */
+/// Backend that writes to a file passed into the constructor
 class FileBackend : public Backend {
 public:
     explicit FileBackend(const std::string& filename);
 
-    static const char* Name() {
-        return "file";
-    }
-
     const char* GetName() const override {
-        return Name();
+        return Name;
     }
 
     void Write(const Entry& entry) override;
+
+    static constexpr const char* Name{"file"};
 
 private:
     FileUtil::IOFile file;
     std::size_t bytes_written{};
 };
 
+/// Backend that writes to Visual Studio's output window
+class DebuggerBackend : public Backend {
+public:
+    const char* GetName() const override {
+        return Name;
+    }
+
+    void Write(const Entry& entry) override;
+
+    static constexpr const char* Name{"debugger"};
+};
+
 void AddBackend(std::unique_ptr<Backend> backend);
 
 void RemoveBackend(std::string_view backend_name);
-
-Backend* GetBackend(std::string_view backend_name);
 
 /**
  * Returns the name of the passed log class as a C-string. Subclasses are separated by periods
@@ -103,9 +108,7 @@ Backend* GetBackend(std::string_view backend_name);
  */
 const char* GetLogClassName(Class log_class);
 
-/**
- * Returns the name of the passed log level as a C-string.
- */
+/// Returns the name of the passed log level as a C-string.
 const char* GetLevelName(Level log_level);
 
 /// Creates a log entry by formatting the given source location, and message.

@@ -11,7 +11,8 @@
 #include <thread>
 #include <vector>
 #ifdef _WIN32
-#include <share.h> // For _SH_DENYWR
+#include <share.h>   // For _SH_DENYWR
+#include <windows.h> // For OutputDebugStringA
 #else
 #define _SH_DENYWR 0
 #endif
@@ -50,6 +51,7 @@ public:
         std::lock_guard lock{writing_mutex};
         const auto it{
             std::remove_if(backends.begin(), backends.end(), [&backend_name](const auto& i) {
+                LOG_CRITICAL(Log, "{}", i->GetName());
                 return backend_name == i->GetName();
             })};
         backends.erase(it, backends.end());
@@ -61,15 +63,6 @@ public:
 
     void SetGlobalFilter(const Filter& f) {
         filter = f;
-    }
-
-    Backend* GetBackend(std::string_view backend_name) {
-        const auto it{
-            std::find_if(backends.begin(), backends.end(),
-                         [&backend_name](const auto& i) { return backend_name == i->GetName(); })};
-        if (it == backends.end())
-            return nullptr;
-        return it->get();
     }
 
 private:
@@ -125,6 +118,12 @@ void FileBackend::Write(const Entry& entry) {
     if (entry.log_level >= Level::Error) {
         file.Flush();
     }
+}
+
+void DebuggerBackend::Write(const Entry& entry) {
+#ifdef _WIN32
+    ::OutputDebugStringA(FormatLogMessage(entry).append(1, '\n').c_str());
+#endif
 }
 
 /// Macro listing all log classes. Code should define CLS and SUB as desired before invoking this.
@@ -257,10 +256,6 @@ void AddBackend(std::unique_ptr<Backend> backend) {
 
 void RemoveBackend(std::string_view backend_name) {
     Impl::Instance().RemoveBackend(backend_name);
-}
-
-Backend* GetBackend(std::string_view backend_name) {
-    return Impl::Instance().GetBackend(backend_name);
 }
 
 void FmtLogMessageImpl(Class log_class, Level log_level, const char* filename,

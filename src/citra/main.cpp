@@ -852,7 +852,7 @@ void GMainWindow::OnAppListOpenFolder(u64 data_id, AppListOpenTarget target) {
         LOG_ERROR(Frontend, "Unexpected target {}", static_cast<int>(target));
         return;
     }
-    QString qpath{QString::fromStdString(path)};
+    auto qpath{QString::fromStdString(path)};
     QDir dir{qpath};
     if (!dir.exists()) {
         QMessageBox::critical(
@@ -860,9 +860,7 @@ void GMainWindow::OnAppListOpenFolder(u64 data_id, AppListOpenTarget target) {
             "Folder doesn't exist!");
         return;
     }
-
     LOG_INFO(Frontend, "Opening {} path for data_id={:016x}", open_target, data_id);
-
     QDesktopServices::openUrl(QUrl::fromLocalFile(qpath));
 }
 
@@ -1226,7 +1224,7 @@ void GMainWindow::OnSetPlayCoins() {
 }
 
 void GMainWindow::OnOpenUserDirectory() {
-    QString path{QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::UserDir))};
+    auto path{QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::UserDir))};
     QDesktopServices::openUrl(
         QUrl::fromLocalFile(path.replace("./user", QDir::currentPath() + "/user")));
 }
@@ -1237,7 +1235,7 @@ void GMainWindow::OnNANDDefault() {
 }
 
 void GMainWindow::OnNANDCustom() {
-    QString dir{QFileDialog::getExistingDirectory(this, "Set NAND Directory", ".")};
+    auto dir{QFileDialog::getExistingDirectory(this, "Set NAND Directory", ".")};
     if (dir.isEmpty())
         return;
     Settings::values.nand_dir = dir.toStdString();
@@ -1250,7 +1248,7 @@ void GMainWindow::OnSDMCDefault() {
 }
 
 void GMainWindow::OnSDMCCustom() {
-    QString dir{QFileDialog::getExistingDirectory(this, "Set SD Card Directory", ".")};
+    auto dir{QFileDialog::getExistingDirectory(this, "Set SD Card Directory", ".")};
     if (dir.isEmpty())
         return;
     Settings::values.sdmc_dir = dir.toStdString();

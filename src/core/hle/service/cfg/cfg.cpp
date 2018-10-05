@@ -683,8 +683,7 @@ void Module::SetUsername(const std::u16string& name) {
 std::u16string Module::GetUsername() {
     UsernameBlock block;
     GetConfigInfoBlock(UsernameBlockID, sizeof(block), 8, &block);
-
-    // the username string in the block isn't null-terminated,
+    // The username string in the block isn't null-terminated,
     // so we need to find the end manually.
     std::u16string username{block.username, ARRAY_SIZE(block.username)};
     const std::size_t pos{username.find(u'\0')};
