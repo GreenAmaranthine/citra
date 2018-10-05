@@ -71,7 +71,7 @@ private:
 };
 
 GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread)
-    : QWidget{parent}, child{nullptr}, emu_thread{emu_thread} {
+    : QWidget{parent, Qt::WindowOverridesSystemGestures}, child{nullptr}, emu_thread{emu_thread} {
 
     setWindowTitle("Render Window");
     setAttribute(Qt::WA_AcceptTouchEvents);
@@ -172,29 +172,42 @@ void GRenderWindow::keyReleaseEvent(QKeyEvent* event) {
 }
 
 void GRenderWindow::mousePressEvent(QMouseEvent* event) {
+    if (event->source() == Qt::MouseEventSynthesizedBySystem) {
+        return; // touch input is handled in touchBeginEvent
+    }
+
     auto pos{event->pos()};
     if (event->button() == Qt::LeftButton) {
-        qreal pixel_ratio{windowPixelRatio()};
-        TouchPressed(static_cast<unsigned>(pos.x() * pixel_ratio),
-                     static_cast<unsigned>(pos.y() * pixel_ratio));
+        qreal pixelRatio{windowPixelRatio()};
+        TouchPressed(static_cast<unsigned>(pos.x() * pixelRatio),
+                     static_cast<unsigned>(pos.y() * pixelRatio));
     } else if (event->button() == Qt::RightButton) {
         InputCommon::GetMotionEmu()->BeginTilt(pos.x(), pos.y());
     }
 }
 
 void GRenderWindow::mouseMoveEvent(QMouseEvent* event) {
+    if (event->source() == Qt::MouseEventSynthesizedBySystem) {
+        return; // touch input is handled in touchUpdateEvent
+    }
+
     auto pos{event->pos()};
-    qreal pixel_ratio{windowPixelRatio()};
-    TouchMoved(std::max(static_cast<unsigned>(pos.x() * pixel_ratio), 0u),
-               std::max(static_cast<unsigned>(pos.y() * pixel_ratio), 0u));
+    qreal pixelRatio{windowPixelRatio()};
+    TouchMoved(std::max(static_cast<unsigned>(pos.x() * pixelRatio), 0u),
+               std::max(static_cast<unsigned>(pos.y() * pixelRatio), 0u));
     InputCommon::GetMotionEmu()->Tilt(pos.x(), pos.y());
 }
 
 void GRenderWindow::mouseReleaseEvent(QMouseEvent* event) {
-    if (event->button() == Qt::LeftButton)
+    if (event->source() == Qt::MouseEventSynthesizedBySystem) {
+        return; // touch input is handled in touchEndEvent
+    }
+
+    if (event->button() == Qt::LeftButton) {
         TouchReleased();
-    else if (event->button() == Qt::RightButton)
+    } else if (event->button() == Qt::RightButton) {
         InputCommon::GetMotionEmu()->EndTilt();
+    }
 }
 
 void GRenderWindow::touchBeginEvent(QTouchEvent* event) {
@@ -209,30 +222,28 @@ void GRenderWindow::touchBeginEvent(QTouchEvent* event) {
 }
 
 void GRenderWindow::touchUpdateEvent(QTouchEvent* event) {
-    QPointF pos;
+    qreal x{}, y{};
     int activePoints{};
     auto points{event->touchPoints()};
 
-    // To do: print the actual positions of the fingers and see why the following happens:
-    // 1. Touch finger A
-    // 2. Touch finger B
-    // 3. Slide finger A, keeping finger B stationary
-    // Result: cursor follows A, not the average of A and B.
-
-    for (int i{}; i < points.count(); i++) {
+    for (int i = 0; i < points.count(); i++) {
         auto tp{points[i]};
+
         if (tp.state() & (Qt::TouchPointPressed | Qt::TouchPointMoved | Qt::TouchPointStationary)) {
             activePoints++;
-            pos += tp.pos();
+
+            x += tp.pos().x();
+            y += tp.pos().y();
         }
     }
 
-    pos /= activePoints;
+    x /= activePoints;
+    y /= activePoints;
 
     // Copied from mouseMoveEvent:
     qreal pixelRatio{windowPixelRatio()};
-    TouchMoved(std::max(static_cast<unsigned>(pos.x() * pixelRatio), 0u),
-               std::max(static_cast<unsigned>(pos.y() * pixelRatio), 0u));
+    TouchMoved(std::max(static_cast<unsigned>(x * pixelRatio), 0u),
+               std::max(static_cast<unsigned>(y * pixelRatio), 0u));
 }
 
 void GRenderWindow::touchEndEvent(QTouchEvent* event) {
