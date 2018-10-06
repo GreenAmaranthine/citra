@@ -210,56 +210,51 @@ void GRenderWindow::mouseReleaseEvent(QMouseEvent* event) {
     }
 }
 
-void GRenderWindow::touchBeginEvent(QTouchEvent* event) {
+void GRenderWindow::TouchBeginEvent(const QTouchEvent* event) {
     auto points{event->touchPoints()};
     auto tp{points.first()}; // there should only be 1 point in TouchBegin
     auto pos{tp.pos()};
 
-    // Copied from mousePressEvent:
     qreal pixel_ratio{windowPixelRatio()};
     TouchPressed(static_cast<unsigned>(pos.x() * pixel_ratio),
                  static_cast<unsigned>(pos.y() * pixel_ratio));
 }
 
-void GRenderWindow::touchUpdateEvent(QTouchEvent* event) {
+void GRenderWindow::TouchUpdateEvent(const QTouchEvent* event) {
     qreal x{}, y{};
-    int activePoints{};
+    int active_points{};
     auto points{event->touchPoints()};
 
-    for (int i{}; i < points.count(); i++) {
-        auto tp{points[i]};
-
+    for (const auto tp : points) {
         if (tp.state() & (Qt::TouchPointPressed | Qt::TouchPointMoved | Qt::TouchPointStationary)) {
-            activePoints++;
+            active_points++;
 
             x += tp.pos().x();
             y += tp.pos().y();
         }
     }
 
-    x /= activePoints;
-    y /= activePoints;
+    x /= active_points;
+    y /= active_points;
 
-    // Copied from mouseMoveEvent:
     qreal pixel_ratio{windowPixelRatio()};
     TouchMoved(std::max(static_cast<unsigned>(x * pixel_ratio), 0u),
                std::max(static_cast<unsigned>(y * pixel_ratio), 0u));
 }
 
-void GRenderWindow::touchEndEvent(QTouchEvent* event) {
-    // Copied from mouseReleaseEvent:
+void GRenderWindow::TouchEndEvent() {
     TouchReleased();
 }
 
 bool GRenderWindow::event(QEvent* event) {
     if (event->type() == QEvent::TouchBegin) {
-        touchBeginEvent(static_cast<QTouchEvent*>(event));
+        TouchBeginEvent(static_cast<QTouchEvent*>(event));
         return true;
     } else if (event->type() == QEvent::TouchUpdate) {
-        touchUpdateEvent(static_cast<QTouchEvent*>(event));
+        TouchUpdateEvent(static_cast<QTouchEvent*>(event));
         return true;
     } else if (event->type() == QEvent::TouchEnd || event->type() == QEvent::TouchCancel) {
-        touchEndEvent(static_cast<QTouchEvent*>(event));
+        TouchEndEvent();
         return true;
     }
 

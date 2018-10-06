@@ -78,10 +78,6 @@ public:
     void mouseMoveEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
 
-    void touchBeginEvent(QTouchEvent* event);
-    void touchUpdateEvent(QTouchEvent* event);
-    void touchEndEvent(QTouchEvent* event);
-
     bool event(QEvent* event) override;
 
     void focusOutEvent(QFocusEvent* event) override;
@@ -104,6 +100,10 @@ signals:
     void Closed();
 
 private:
+    void TouchBeginEvent(const QTouchEvent* event);
+    void TouchUpdateEvent(const QTouchEvent* event);
+    void TouchEndEvent();
+
     void OnMinimalClientAreaChangeRequest(
         const std::pair<unsigned, unsigned>& minimal_size) override;
 
