@@ -27,7 +27,7 @@ enum class VMAType : u8 {
     /// VMA is mapped to MMIO registers at a fixed PAddr.
     MMIO,
 
-    // TODO(yuriks): Implement MemoryAlias to support MAP/UNMAP
+    // TODO: Implement MemoryAlias to support MAP/UNMAP
 };
 
 /// Permissions for mapped memory blocks
@@ -138,7 +138,7 @@ public:
     /// Finds the VMA in which the given address is included in, or `vma_map.end()`.
     VMAHandle FindVMA(VAddr target) const;
 
-    // TODO(yuriks): Should these functions actually return the handle?
+    // TODO: Should these functions actually return the handle?
 
     /**
      * Maps part of a ref-counted block of memory at a given address.

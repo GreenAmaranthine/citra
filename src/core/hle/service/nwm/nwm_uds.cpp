@@ -103,7 +103,7 @@ static Kernel::SharedPtr<Kernel::Event> connection_event;
 static std::mutex beacon_mutex;
 
 // Number of beacons to store before we start dropping the old ones.
-// TODO(Subv): Find a more accurate value for this limit.
+// TODO: Find a more accurate value for this limit.
 constexpr std::size_t MaxBeaconFrames{15};
 
 // List of the last <MaxBeaconFrames> beacons received from the network.
@@ -128,7 +128,7 @@ std::list<Network::WifiPacket> GetReceivedBeacons(const MacAddress& sender) {
                                        })};
         if (beacon != received_beacons.end()) {
             filtered_list.push_back(*beacon);
-            // TODO(B3N30): Check if the complete deque is cleared or just the fetched entries
+            // TODO: Check if the complete deque is cleared or just the fetched entries
             received_beacons.erase(beacon);
         }
         return filtered_list;
@@ -249,7 +249,7 @@ void HandleAssociationResponseFrame(const Network::WifiPacket& packet) {
     WifiPacket eapol_start{};
     eapol_start.channel = network_channel;
     eapol_start.data = GenerateEAPoLStartFrame(std::get<u16>(assoc_result), current_node);
-    // TODO(B3N30): Encrypt the packet.
+    // TODO: Encrypt the packet.
     eapol_start.destination_address = packet.transmitter_address;
     eapol_start.type = WifiPacket::PacketType::Data;
 
@@ -311,9 +311,8 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
             GenerateEAPoLLogoffFrame(packet.transmitter_address, node.network_node_id, node_info,
                                      network_info.max_nodes, network_info.total_nodes);
 
-        // TODO(Subv): Encrypt the packet.
-
-        // TODO(B3N30): send the eapol packet just to the new client and implement a proper
+        // TODO: Encrypt the packet.
+        // TODO: send the eapol packet just to the new client and implement a proper
         // broadcast packet for all other clients
         // On a 3ds the eapol packet is only sent to packet.transmitter_address
         // while a packet containing the node information is broadcasted
@@ -354,7 +353,7 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
         connection_status_event->Signal();
         connection_event->Signal();
     } else if (connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsClient)) {
-        // TODO(B3N30): Remove that section and send/receive a proper connection_status packet
+        // TODO: Remove that section and send/receive a proper connection_status packet
         // On a 3ds this packet wouldn't be addressed to already connected clients
         // We use this information because in the current implementation the host
         // isn't broadcasting the node information
@@ -385,7 +384,7 @@ static void HandleSecureDataPacket(const Network::WifiPacket& packet) {
 
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost) &&
         connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsClient)) {
-        // TODO(B3N30): Handle spectators
+        // TODO: Handle spectators
         LOG_DEBUG(Service_NWM, "Ignored SecureDataPacket, because connection status is {}",
                   connection_status.status);
         return;
@@ -408,7 +407,7 @@ static void HandleSecureDataPacket(const Network::WifiPacket& packet) {
         if (connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost) &&
             secure_data.dest_node_id != BroadcastNetworkNodeId) {
             // Broadcast the packet so the right receiver can get it.
-            // TODO(B3N30): Is there a flag that makes this kind of routing be unicast instead of
+            // TODO: Is there a flag that makes this kind of routing be unicast instead of
             // multicast? Perhaps this is a way to allow spectators to see some of the packets.
             Network::WifiPacket out_packet{packet};
             out_packet.destination_address = Network::BroadcastMac;
@@ -418,10 +417,10 @@ static void HandleSecureDataPacket(const Network::WifiPacket& packet) {
     }
 
     // The packet is addressed to us (or to everyone using the broadcast node id), handle it.
-    // TODO(B3N30): We don't currently send nor handle management frames.
+    // TODO: We don't currently send nor handle management frames.
     ASSERT(!secure_data.is_management);
 
-    // TODO(B3N30): Allow more than one bind node per channel.
+    // TODO: Allow more than one bind node per channel.
     auto channel_info{channel_data.find(secure_data.data_channel)};
     // Ignore packets from channels we're not interested in.
     if (channel_info == channel_data.end())
@@ -449,7 +448,7 @@ void StartConnectionSequence(const MacAddress& server) {
         std::lock_guard<std::mutex> lock{connection_status_mutex};
         connection_status.status = static_cast<u32>(NetworkStatus::Connecting);
 
-        // TODO(Subv): Handle timeout.
+        // TODO: Handle timeout.
 
         // Send an authentication frame with SEQ1
         auth_request.channel = network_channel;
@@ -475,7 +474,7 @@ void SendAssociationResponseFrame(const MacAddress& address) {
         }
 
         assoc_response.channel = network_channel;
-        // TODO(Subv): This will cause multiple clients to end up with the same association id, but
+        // TODO: This will cause multiple clients to end up with the same association id, but
         // we're not using that for anything.
         u16 association_id{1};
         assoc_response.data = GenerateAssocResponseFrame(AssocStatus::Successful, association_id,
@@ -516,7 +515,7 @@ void HandleAuthenticationFrame(const Network::WifiPacket& packet) {
                 // Reject connection attempt
                 LOG_ERROR(Service_NWM, "Reached maximum nodes, but reject packet wasn't sent.");
 
-                // TODO(B3N30): Figure out what packet is sent here
+                // TODO: Figure out what packet is sent here
                 return;
             }
             // Respond with an authentication response frame with SEQ2
@@ -563,7 +562,7 @@ void HandleDeauthenticationFrame(const Network::WifiPacket& packet) {
     connection_status.changed_nodes |= 1 << (node.node_id - 1);
     connection_status.total_nodes--;
     connection_status.nodes[node.node_id - 1] = 0;
-    // TODO(B3N30): broadcast new connection_status to clients
+    // TODO: broadcast new connection_status to clients
 
     network_info.total_nodes--;
 
@@ -684,7 +683,7 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     // Write each of the received beacons into the buffer
     for (const auto& beacon : beacons) {
         BeaconEntryHeader entry{};
-        // TODO(Subv): Figure out what this size is used for.
+        // TODO: Figure out what this size is used for.
         entry.unk_size = static_cast<u32>(sizeof(BeaconEntryHeader) + beacon.data.size());
         entry.total_size = static_cast<u32>(sizeof(BeaconEntryHeader) + beacon.data.size());
         entry.wifi_channel = beacon.channel;
@@ -768,7 +767,7 @@ void NWM_UDS::GetConnectionStatus(Kernel::HLERequestContext& ctx) {
         // Reset the bitmask of changed nodes after each call to this
         // function to prevent falsely informing games of outstanding
         // changes in subsequent calls.
-        // TODO(Subv): Find exactly where the NWM module resets this value.
+        // TODO: Find exactly where the NWM module resets this value.
         connection_status.changed_nodes = 0;
     }
 
@@ -848,7 +847,7 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
     std::lock_guard<std::mutex> lock{connection_status_mutex};
 
     ASSERT(channel_data.find(data_channel) == channel_data.end());
-    // TODO(B3N30): Support more than one bind node per channel.
+    // TODO: Support more than one bind node per channel.
     channel_data[data_channel] = {bind_node_id, data_channel, network_node_id, event};
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
@@ -883,7 +882,7 @@ void NWM_UDS::Unbind(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(5, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(bind_node_id);
-    // TODO(B3N30): Find out what the other return values are
+    // TODO: Find out what the other return values are
     rb.Push<u32>(0);
     rb.Push<u32>(0);
     rb.Push<u32>(0);
@@ -899,7 +898,7 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
     const std::vector<u8> passphrase{rp.PopStaticBuffer()};
     ASSERT(passphrase.size() == passphrase_size);
 
-    // TODO(Subv): Store the passphrase and verify it when attempting a connection.
+    // TODO: Store the passphrase and verify it when attempting a connection.
 
     {
         std::lock_guard<std::mutex> lock{connection_status_mutex};
@@ -986,9 +985,9 @@ void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    // TODO(B3N30): Send 3 Deauth packets
+    // TODO: Send 3 Deauth packets
 
-    u16_le tmp_node_id = connection_status.network_node_id;
+    u16_le tmp_node_id{connection_status.network_node_id};
     connection_status = {};
     connection_status.status = static_cast<u32>(NetworkStatus::NotConnected);
     connection_status.network_node_id = tmp_node_id;
@@ -1035,7 +1034,7 @@ void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
         connection_status_event->Signal();
 
         deauth.channel = network_channel;
-        // TODO(B3N30): Add disconnect reason
+        // TODO: Add disconnect reason
         deauth.data = {};
         deauth.destination_address = network_info.host_mac_address;
         deauth.type = WifiPacket::PacketType::Deauthentication;
@@ -1104,13 +1103,13 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    // TODO(B3N30): Increment the sequence number after each sent packet.
+    // TODO: Increment the sequence number after each sent packet.
     u16 sequence_number{};
     std::vector<u8> data_payload{GenerateDataPayload(input_buffer, data_channel, dest_node_id,
                                                      connection_status.network_node_id,
                                                      sequence_number)};
 
-    // TODO(B3N30): Use the MAC address of the dest_node_id and our own to encrypt
+    // TODO: Use the MAC address of the dest_node_id and our own to encrypt
     // and encapsulate the payload.
     Network::WifiPacket packet;
 
@@ -1232,7 +1231,7 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
         Kernel::GetCurrentThread(), "uds::ConnectToNetwork", UDSConnectionTimeout,
         [](Kernel::SharedPtr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
            Kernel::ThreadWakeupReason reason) {
-            // TODO(B3N30): Add error handling for host full and timeout
+            // TODO: Add error handling for host full and timeout
             IPC::ResponseBuilder rb{ctx, 0x1E, 1, 0};
             rb.Push(RESULT_SUCCESS);
             LOG_DEBUG(Service_NWM, "connection sequence finished");
@@ -1300,7 +1299,7 @@ void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx) {
     BeaconData beacon_header;
     std::memcpy(&beacon_header, beacon_data.data(), sizeof(beacon_header));
 
-    // TODO(Subv): Verify the MD5 hash of the data and return 0xE1211005 if invalid.
+    // TODO: Verify the MD5 hash of the data and return 0xE1211005 if invalid.
 
     u8 num_nodes{net_info.max_nodes};
 

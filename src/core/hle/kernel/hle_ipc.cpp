@@ -104,7 +104,7 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
 
     std::size_t untranslated_size{1u + header.normal_params_size};
     std::size_t command_size{untranslated_size + header.translate_params_size};
-    ASSERT(command_size <= IPC::COMMAND_BUFFER_LENGTH); // TODO(yuriks): Return error
+    ASSERT(command_size <= IPC::COMMAND_BUFFER_LENGTH); // TODO: Return error
 
     std::copy_n(src_cmdbuf, untranslated_size, cmd_buf.begin());
 
@@ -117,13 +117,13 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
         case IPC::DescriptorType::CopyHandle:
         case IPC::DescriptorType::MoveHandle: {
             u32 num_handles{IPC::HandleNumberFromDesc(descriptor)};
-            ASSERT(i + num_handles <= command_size); // TODO(yuriks): Return error
+            ASSERT(i + num_handles <= command_size); // TODO: Return error
             for (u32 j{}; j < num_handles; ++j) {
                 Handle handle{src_cmdbuf[i]};
                 SharedPtr<Object> object{};
                 if (handle != 0) {
                     object = src_table.GetGeneric(handle);
-                    ASSERT(object != nullptr); // TODO(yuriks): Return error
+                    ASSERT(object != nullptr); // TODO: Return error
                     if (descriptor == IPC::DescriptorType::MoveHandle) {
                         src_table.Close(handle);
                     }

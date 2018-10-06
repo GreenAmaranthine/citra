@@ -23,12 +23,12 @@ TimeStretcher::TimeStretcher()
 
 TimeStretcher::~TimeStretcher() = default;
 
-void TimeStretcher::SetOutputSampleRate(size_t sample_rate) {
+void TimeStretcher::SetOutputSampleRate(std::size_t sample_rate) {
     sound_touch->setSampleRate(sample_rate);
     sample_rate = native_sample_rate;
 }
 
-size_t TimeStretcher::Process(const s16* in, size_t num_in, s16* out, size_t num_out) {
+std::size_t TimeStretcher::Process(const s16* in, std::size_t num_in, s16* out, std::size_t num_out) {
     const double time_delta{static_cast<double>(num_out) / sample_rate}; // seconds
     double current_ratio{static_cast<double>(num_in) / static_cast<double>(num_out)};
 

@@ -74,7 +74,7 @@ ResultVal<ArchiveFormatInfo> ArchiveSource_SDSaveData::GetFormatInfo(u64 program
 
     if (!file.IsOpen()) {
         LOG_ERROR(Service_FS, "Could not open metadata information for archive");
-        // TODO(Subv): Verify error code
+        // TODO: Verify error code
         return ERR_NOT_FORMATTED;
     }
 

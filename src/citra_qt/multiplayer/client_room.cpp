@@ -80,6 +80,6 @@ void ClientRoomWindow::UpdateView() {
             return;
         }
     }
-    // TODO(B3N30): can't get RoomMember*, show error and close window
+    // TODO: can't get RoomMember*, show error and close window
     close();
 }

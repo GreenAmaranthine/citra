@@ -21,7 +21,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
 
     IPC::Header header;
 
-    // TODO(Subv): Replace by Memory::Read32 when possible.
+    // TODO: Replace by Memory::Read32 when possible.
     Memory::ReadBlock(*src_process, src_address, &header.raw, sizeof(header.raw));
 
     std::size_t untranslated_size{1u + header.normal_params_size};
@@ -191,7 +191,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
 
             VAddr target_address{};
 
-            // TODO(Subv): Perform permission checks.
+            // TODO: Perform permission checks.
 
             // Reserve a page of memory before the mapped buffer
             auto reserve_buffer{std::make_shared<std::vector<u8>>(Memory::PAGE_SIZE)};

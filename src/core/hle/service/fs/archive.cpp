@@ -179,7 +179,7 @@ void File::SetSize(Kernel::HLERequestContext& ctx) {
 void File::Close(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0808, 0, 0};
 
-    // TODO(Subv): Only close the backend if this client is the only one left.
+    // TODO: Only close the backend if this client is the only one left.
     if (connected_sessions.size() > 1)
         LOG_WARNING(Service_FS, "Closing File backend but {} clients still connected",
                     connected_sessions.size());
@@ -271,7 +271,7 @@ void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
 
     auto end{offset + size};
 
-    // TODO(Subv): Check for overflow and return ERR_WRITE_BEYOND_END
+    // TODO: Check for overflow and return ERR_WRITE_BEYOND_END
 
     if (end > original_file->size) {
         rb.Push(FileSys::ERR_WRITE_BEYOND_END);
@@ -405,7 +405,7 @@ ResultCode CloseArchive(ArchiveHandle handle) {
         return RESULT_SUCCESS;
 }
 
-// TODO(yuriks): This might be what the fs:REG service is for. See the Register/Unregister calls in
+// TODO: This might be what the fs:REG service is for. See the Register/Unregister calls in
 // http://3dbrew.org/wiki/Filesystem_services#ProgramRegistry_service_.22fs:REG.22
 ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factory,
                                ArchiveIdCode id_code) {
@@ -536,7 +536,7 @@ ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::ArchiveFormatInfo
                          const FileSys::Path& path) {
     auto archive_itr{id_code_map.find(id_code)};
     if (archive_itr == id_code_map.end()) {
-        return UnimplementedFunction(ErrorModule::FS); // TODO(Subv): Find the right error
+        return UnimplementedFunction(ErrorModule::FS); // TODO: Find the right error
     }
 
     return archive_itr->second->Format(path, format_info);
@@ -546,7 +546,7 @@ ResultVal<FileSys::ArchiveFormatInfo> GetArchiveFormatInfo(ArchiveIdCode id_code
                                                            FileSys::Path& archive_path) {
     auto archive{id_code_map.find(id_code)};
     if (archive == id_code_map.end()) {
-        return UnimplementedFunction(ErrorModule::FS); // TODO(Subv): Find the right error
+        return UnimplementedFunction(ErrorModule::FS); // TODO: Find the right error
     }
 
     return archive->second->GetFormatInfo(archive_path);
@@ -563,7 +563,7 @@ ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low,
                                                                 : ArchiveIdCode::ExtSaveData)};
 
     if (archive == id_code_map.end()) {
-        return UnimplementedFunction(ErrorModule::FS); // TODO(Subv): Find the right error
+        return UnimplementedFunction(ErrorModule::FS); // TODO: Find the right error
     }
 
     auto ext_savedata{static_cast<FileSys::ArchiveFactory_ExtSaveData*>(archive->second.get())};
@@ -589,7 +589,7 @@ ResultCode DeleteExtSaveData(MediaType media_type, u32 high, u32 low) {
                                                                  : Settings::values.sdmc_dir + "/";
     } else {
         LOG_ERROR(Service_FS, "Unsupported media type {}", static_cast<u32>(media_type));
-        return ResultCode(-1); // TODO(Subv): Find the right error code
+        return ResultCode(-1); // TODO: Find the right error code
     }
 
     // Delete all directories (/user, /boss) and the icon file.
@@ -597,7 +597,7 @@ ResultCode DeleteExtSaveData(MediaType media_type, u32 high, u32 low) {
         FileSys::GetExtDataContainerPath(media_type_directory, media_type == MediaType::NAND)};
     std::string extsavedata_path{FileSys::GetExtSaveDataPath(base_path, path)};
     if (FileUtil::Exists(extsavedata_path) && !FileUtil::DeleteDirRecursively(extsavedata_path))
-        return ResultCode(-1); // TODO(Subv): Find the right error code
+        return ResultCode(-1); // TODO: Find the right error code
     return RESULT_SUCCESS;
 }
 
@@ -609,7 +609,7 @@ ResultCode DeleteSystemSaveData(u32 high, u32 low) {
     std::string base_path{FileSys::GetSystemSaveDataContainerPath(nand_directory)};
     std::string systemsavedata_path{FileSys::GetSystemSaveDataPath(base_path, path)};
     if (!FileUtil::DeleteDirRecursively(systemsavedata_path))
-        return ResultCode(-1); // TODO(Subv): Find the right error code
+        return ResultCode(-1); // TODO: Find the right error code
     return RESULT_SUCCESS;
 }
 
@@ -621,12 +621,12 @@ ResultCode CreateSystemSaveData(u32 high, u32 low) {
     std::string base_path{FileSys::GetSystemSaveDataContainerPath(nand_directory)};
     std::string systemsavedata_path{FileSys::GetSystemSaveDataPath(base_path, path)};
     if (!FileUtil::CreateFullPath(systemsavedata_path))
-        return ResultCode(-1); // TODO(Subv): Find the right error code
+        return ResultCode(-1); // TODO: Find the right error code
     return RESULT_SUCCESS;
 }
 
 void RegisterArchiveTypes() {
-    // TODO(Subv): Add the other archive types (see here for the known types:
+    // TODO: Add the other archive types (see here for the known types:
     // http://3dbrew.org/wiki/FS:OpenArchive#Archive_idcodes).
 
     std::string sdmc_directory{Settings::values.sdmc_dir.empty() ? FileUtil::GetUserPath(D_SDMC_IDX)

@@ -212,7 +212,7 @@ void Module::Interface::GetLockHandle(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(3, 2)};
     rb.Push(RESULT_SUCCESS); // No error
 
-    // TODO(Subv): The output attributes should have an AppletPos of either Library or System |
+    // TODO: The output attributes should have an AppletPos of either Library or System |
     // Library (depending on the type of the last launched applet) if the input attributes'
     // AppletPos has the Library bit set.
 
@@ -241,7 +241,7 @@ void Module::Interface::GetAppletManInfo(Kernel::HLERequestContext& ctx) {
     rb.Push<u32>(0);
     rb.Push<u32>(0);
     rb.Push(static_cast<u32>(AppletId::HomeMenu));    // Home menu AppID
-    rb.Push(static_cast<u32>(AppletId::Application)); // TODO(purpasmart96): Do this correctly
+    rb.Push(static_cast<u32>(AppletId::Application)); // TODO: Do this correctly
 
     LOG_WARNING(Service_APT, "(STUBBED) called, unk={:#010X}", unk);
 }
@@ -467,7 +467,7 @@ void Module::Interface::PrepareToStartNewestHomeMenu(Kernel::HLERequestContext& 
     IPC::RequestParser rp{ctx, 0x1A, 0, 0};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
 
-    // TODO(Subv): This command can only be called by a System Applet (return 0xC8A0CC04 otherwise).
+    // TODO: This command can only be called by a System Applet (return 0xC8A0CC04 otherwise).
 
     // This command must return an error when called, otherwise the Home Menu will try to reboot the
     // system.

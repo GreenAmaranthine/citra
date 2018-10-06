@@ -85,7 +85,7 @@ ResultStatus AppLoader_NCCH::LoadExec(Kernel::SharedPtr<Kernel::Process>& proces
         codeset->RODataSegment().size =
             overlay_ncch->exheader_header.codeset_info.ro.num_max_pages * Memory::PAGE_SIZE;
 
-        // TODO(yuriks): Not sure if the bss size is added to the page-aligned .data size or just
+        // TODO: Not sure if the bss size is added to the page-aligned .data size or just
         //               to the regular size. Playing it safe for now.
         u32 bss_page_size{(overlay_ncch->exheader_header.codeset_info.bss_size + 0xFFF) & ~0xFFF};
         code.resize(code.size() + bss_page_size, 0);

@@ -17,7 +17,7 @@ AM_SYS::AM_SYS(std::shared_ptr<Module> am) : Module::Interface{std::move(am), "a
         {0x00070080, &AM_SYS::DeleteTicket, "DeleteTicket"},
         {0x00080000, &AM_SYS::GetNumTickets, "GetNumTickets"},
         {0x00090082, &AM_SYS::GetTicketList, "GetTicketList"},
-        {0x000A0000, nullptr, "GetDeviceID"},
+        {0x000A0000, &AM_SYS::GetDeviceID, "GetDeviceID"},
         {0x000B0040, nullptr, "GetNumImportTitleContexts"},
         {0x000C0082, nullptr, "GetImportTitleContextList"},
         {0x000D0084, nullptr, "GetImportTitleContexts"},

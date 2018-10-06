@@ -8,7 +8,6 @@
 #include <QGLWidget>
 #include <QImage>
 #include <QThread>
-#include <QTouchEvent>
 #include "core/core.h"
 #include "core/frontend/emu_window.h"
 
@@ -18,6 +17,7 @@ class QScreen;
 class GGLWidgetInternal;
 class GMainWindow;
 class GRenderWindow;
+class QTouchEvent;
 
 class EmuThread : public QThread {
     Q_OBJECT
@@ -60,14 +60,13 @@ public:
     void SwapBuffers() override;
     void MakeCurrent() override;
     void DoneCurrent() override;
-    void PollEvents() override;
 
     void BackupGeometry();
     void RestoreGeometry();
     void restoreGeometry(const QByteArray& geometry); // overridden
     QByteArray saveGeometry();                        // overridden
 
-    qreal windowPixelRatio();
+    qreal windowPixelRatio() const;
 
     void closeEvent(QCloseEvent* event) override;
 
@@ -100,6 +99,7 @@ signals:
     void Closed();
 
 private:
+    std::pair<unsigned, unsigned> ScaleTouch(const QPointF pos) const;
     void TouchBeginEvent(const QTouchEvent* event);
     void TouchUpdateEvent(const QTouchEvent* event);
     void TouchEndEvent();

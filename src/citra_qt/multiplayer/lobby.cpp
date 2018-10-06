@@ -78,7 +78,7 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
             &Lobby::OnRefreshLobby);
 
     // manually start a refresh when the window is opening
-    // TODO(jroweboy): if this refresh is slow for people with bad internet, then don't do it as
+    // TODO: if this refresh is slow for people with bad internet, then don't do it as
     // part of the constructor, but offload the refresh until after the window shown. perhaps emit a
     // refreshroomlist signal from places that open the lobby
     RefreshLobby();
@@ -140,7 +140,7 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
     })};
     watcher->setFuture(f);
 
-    // TODO(jroweboy): disable widgets and display a connecting while we wait
+    // TODO: disable widgets and display a connecting while we wait
 
     // Save settings
     UISettings::values.nickname = ui->nickname->text();
@@ -167,7 +167,7 @@ void Lobby::RefreshLobby() {
         room_list_watcher.setFuture(
             QtConcurrent::run([session]() { return session->GetRoomList(); }));
     } else {
-        // TODO(jroweboy): Display an error box about announce couldn't be started
+        // TODO: Display an error box about announce couldn't be started
     }
 }
 
@@ -282,7 +282,7 @@ bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& s
         }
         auto current_id{sourceModel()->data(game_name, LobbyItemGame::TitleIDRole).toLongLong()};
         if (current_id == 0) {
-            // TODO(jroweboy): homebrew often doesn't have a game id and this hides them
+            // TODO: homebrew often doesn't have a game id and this hides them
             return false;
         }
         bool owned{};

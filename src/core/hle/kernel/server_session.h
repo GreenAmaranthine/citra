@@ -88,12 +88,12 @@ public:
 
     /// List of threads that are pending a response after a sync request. This list is processed in
     /// a LIFO manner, thus, the last request will be dispatched first.
-    /// TODO(Subv): Verify if this is indeed processed in LIFO using a hardware test.
+    /// TODO: Verify if this is indeed processed in LIFO using a hardware test.
     std::vector<SharedPtr<Thread>> pending_requesting_threads;
 
     /// Thread whose request is currently being handled. A request is considered "handled" when a
     /// response is sent via svcReplyAndReceive.
-    /// TODO(Subv): Find a better name for this.
+    /// TODO: Find a better name for this.
     SharedPtr<Thread> currently_handling;
 
 private:

@@ -150,7 +150,7 @@ void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mappin
 
     u8* target_pointer{Memory::GetPhysicalPointer(area->paddr_base + offset_into_region)};
 
-    // TODO(yuriks): This flag seems to have some other effect, but it's unknown what
+    // TODO: This flag seems to have some other effect, but it's unknown what
     MemoryState memory_state{mapping.unk_flag ? MemoryState::Static : MemoryState::IO};
 
     auto vma{

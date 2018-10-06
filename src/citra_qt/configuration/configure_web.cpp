@@ -20,13 +20,13 @@ ConfigureWeb::ConfigureWeb(QWidget* parent)
     setConfiguration();
 }
 
-ConfigureWeb::~ConfigureWeb() {}
+ConfigureWeb::~ConfigureWeb() = default;
 
 void ConfigureWeb::setConfiguration() {
     ui->web_credentials_disclaimer->setWordWrap(true);
     ui->web_signup_link->setOpenExternalLinks(true);
     ui->web_signup_link->setText(
-        "<a href='https://services.citra-emu.org/'><span style=\"text-decoration: underline; "
+        "<a href='https://profile.citra-emu.org/'><span style=\"text-decoration: underline; "
         "color:#039be5;\">Sign up</span></a>");
     ui->web_token_info_link->setOpenExternalLinks(true);
     ui->web_token_info_link->setText(

@@ -252,7 +252,7 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
 
 bool Room::RoomImpl::IsValidNickname(const std::string& nickname) const {
     // A nickname is valid if it is not already taken by anybody else in the room.
-    // TODO(B3N30): Check for empty names, spaces, etc.
+    // TODO: Check for empty names, spaces, etc.
     std::lock_guard<std::mutex> lock{member_mutex};
     return std::all_of(members.begin(), members.end(),
                        [&nickname](const auto& member) { return member.nickname != nickname; });

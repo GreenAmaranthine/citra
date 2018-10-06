@@ -91,7 +91,7 @@ static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 add
 
     switch (operation & MEMOP_OPERATION_MASK) {
     case MEMOP_FREE: {
-        // TODO(Subv): What happens if an application tries to FREE a block of memory that has a
+        // TODO: What happens if an application tries to FREE a block of memory that has a
         // SharedMemory pointing to it?
         if (addr0 >= Memory::HEAP_VADDR && addr0 < Memory::HEAP_VADDR_END) {
             ResultCode result{process.HeapFree(addr0, size)};
@@ -235,7 +235,7 @@ static void ExitProcess() {
         if (thread == GetCurrentThread())
             continue;
 
-        // TODO(Subv): When are the other running/ready threads terminated?
+        // TODO: When are the other running/ready threads terminated?
         ASSERT_MSG(thread->status == ThreadStatus::WaitSynchAny ||
                        thread->status == ThreadStatus::WaitSynchAll,
                    "Exiting processes with non-waiting threads is currently unimplemented");
@@ -281,7 +281,7 @@ static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 o
 static ResultCode UnmapMemoryBlock(Handle handle, u32 addr) {
     LOG_TRACE(Kernel_SVC, "called memblock=0x{:08X}, addr=0x{:08X}", handle, addr);
 
-    // TODO(Subv): Return E0A01BF5 if the address is not in the application's heap
+    // TODO: Return E0A01BF5 if the address is not in the application's heap
 
     SharedPtr<SharedMemory> shared_memory{g_handle_table.Get<SharedMemory>(handle)};
     if (shared_memory == nullptr)
@@ -578,7 +578,7 @@ static ResultCode ReceiveIPCRequest(SharedPtr<ServerSession> server_session,
         server_session->currently_handling->ResumeFromWait();
         server_session->currently_handling = nullptr;
 
-        // TODO(Subv): This path should try to wait again on the same objects.
+        // TODO: This path should try to wait again on the same objects.
         ASSERT_MSG(false, "ReplyAndReceive translation error behavior unimplemented");
     }
 
@@ -621,7 +621,7 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
         session->currently_handling = nullptr;
 
         // Error out if there's no request thread or the session was closed.
-        // TODO(Subv): Is the same error code (ClosedByRemote) returned for both of these cases?
+        // TODO: Is the same error code (ClosedByRemote) returned for both of these cases?
         if (request_thread == nullptr || session->parent->client == nullptr) {
             *index = -1;
             return ERR_SESSION_CLOSED_BY_REMOTE;
@@ -730,7 +730,7 @@ static ResultCode ArbitrateAddress(Handle handle, u32 address, u32 type, u32 val
     auto res{arbiter->ArbitrateAddress(GetCurrentThread(), static_cast<ArbitrationType>(type),
                                        address, value, nanoseconds)};
 
-    // TODO(Subv): Identify in which specific cases this call should cause a reschedule.
+    // TODO: Identify in which specific cases this call should cause a reschedule.
     Core::System::GetInstance().PrepareReschedule();
 
     return res;
@@ -856,7 +856,7 @@ static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point
                   "Newly created thread must run in the SysCore (Core2), unimplemented.");
         break;
     default:
-        // TODO(bunnei): Implement support for other processor IDs
+        // TODO: Implement support for other processor IDs
         ASSERT_MSG(false, "Unsupported thread processor ID: {}", processor_id);
         break;
     }
@@ -1188,7 +1188,7 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
         !VerifyPermissions(static_cast<MemoryPermission>(other_permission)))
         return ERR_INVALID_COMBINATION;
 
-    // TODO(Subv): Processes with memory type APPLICATION are not allowed
+    // TODO: Processes with memory type APPLICATION are not allowed
     // to create memory blocks with addr = 0, any attempts to do so
     // should return error 0xD92007EA.
     if ((addr < Memory::PROCESS_IMAGE_VADDR || addr + size > Memory::SHARED_MEMORY_VADDR_END) &&
@@ -1215,7 +1215,7 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
 
 static ResultCode CreatePort(Handle* server_port, Handle* client_port, VAddr name_address,
                              u32 max_sessions) {
-    // TODO(Subv): Implement named ports.
+    // TODO: Implement named ports.
     ASSERT_MSG(name_address == 0, "Named ports are currently unimplemented");
 
     auto ports{ServerPort::CreatePortPair(max_sessions)};
@@ -1308,7 +1308,7 @@ static ResultCode GetProcessInfo(s64* out, Handle process_handle, u32 type) {
     switch (type) {
     case 0:
     case 2:
-        // TODO(yuriks): Type 0 returns a slightly higher number than type 2, but I'm not sure
+        // TODO: Type 0 returns a slightly higher number than type 2, but I'm not sure
         // what's the difference between them.
         *out = process->heap_used + process->linear_heap_used + process->misc_memory_used;
         if (*out % Memory::PAGE_SIZE != 0) {

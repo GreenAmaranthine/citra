@@ -26,28 +26,28 @@ ResultVal<std::unique_ptr<FileBackend>> IVFCArchive::OpenFile(const Path& path,
 
 ResultCode IVFCArchive::DeleteFile(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a file from an IVFC archive ({}).", GetName());
-    // TODO(Subv): Verify error code
+    // TODO: Verify error code
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, ErrorSummary::Canceled,
                       ErrorLevel::Status);
 }
 
 ResultCode IVFCArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
     LOG_CRITICAL(Service_FS, "Attempted to rename a file within an IVFC archive ({}).", GetName());
-    // TODO(wwylele): Use correct error code
+    // TODO: Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode IVFCArchive::DeleteDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an IVFC archive ({}).",
                  GetName());
-    // TODO(wwylele): Use correct error code
+    // TODO: Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode IVFCArchive::DeleteDirectoryRecursively(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an IVFC archive ({}).",
                  GetName());
-    // TODO(wwylele): Use correct error code
+    // TODO: Use correct error code
     return ResultCode(-1);
 }
 
@@ -60,13 +60,13 @@ ResultCode IVFCArchive::CreateFile(const Path& path, u64 size) const {
 
 ResultCode IVFCArchive::CreateDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to create a directory in an IVFC archive ({}).", GetName());
-    // TODO(wwylele): Use correct error code
+    // TODO: Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode IVFCArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
     LOG_CRITICAL(Service_FS, "Attempted to rename a file within an IVFC archive ({}).", GetName());
-    // TODO(wwylele): Use correct error code
+    // TODO: Use correct error code
     return ResultCode(-1);
 }
 
@@ -94,7 +94,7 @@ ResultVal<std::size_t> IVFCFile::Read(const u64 offset, const std::size_t length
 ResultVal<std::size_t> IVFCFile::Write(const u64 offset, const std::size_t length, const bool flush,
                                        const u8* buffer) {
     LOG_ERROR(Service_FS, "Attempted to write to IVFC file");
-    // TODO(Subv): Find error code
+    // TODO: Find error code
     return MakeResult<std::size_t>(0);
 }
 
@@ -125,7 +125,7 @@ ResultVal<std::size_t> IVFCFileInMemory::Read(const u64 offset, const std::size_
 ResultVal<std::size_t> IVFCFileInMemory::Write(const u64 offset, const std::size_t length,
                                                const bool flush, const u8* buffer) {
     LOG_ERROR(Service_FS, "Attempted to write to IVFC file");
-    // TODO(Subv): Find error code
+    // TODO: Find error code
     return MakeResult<std::size_t>(0);
 }
 

@@ -479,7 +479,7 @@ static void VBlankCallback(u64 userdata, s64 cycles_late) {
     VideoCore::g_renderer->SwapBuffers();
 
     // Signal to GSP that GPU interrupt has occurred
-    // TODO(yuriks): hwtest to determine if PDC0 is for the Top screen and PDC1 for the Sub
+    // TODO: hwtest to determine if PDC0 is for the Top screen and PDC1 for the Sub
     // screen, or if both use the same interrupts and these two instead determine the
     // beginning and end of the VBlank period. If needed, split the interrupt firing into
     // two different intervals.

@@ -4,13 +4,20 @@
 
 #pragma once
 
-#include <LUrlParser.h>
+#include <array>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
+#include <boost/optional.hpp>
 #include <httplib.h>
+#include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/service.h"
 
 namespace Service::HTTP {
 
 enum class RequestMethod : u8 {
+    None = 0x0,
     Get = 0x1,
     Post = 0x2,
     Head = 0x3,
@@ -20,127 +27,130 @@ enum class RequestMethod : u8 {
     PutEmpty = 0x7,
 };
 
-struct Context {
-    void SetUrl(std::string url) {
-        this->url = std::move(url);
-    }
+/// The number of request methods, any valid method must be less than this.
+constexpr u32 TotalRequestMethods{8};
 
-    void SetMethod(RequestMethod method) {
-        this->method = method;
-    }
-
-    void SetKeepAlive(bool keep_alive) {
-        auto itr{request_headers.find("Connection")};
-        bool header_keep_alive{(itr != request_headers.end()) && (itr->second == "Keep-Alive")};
-        if (keep_alive && !header_keep_alive) {
-            request_headers.emplace("Connection", "Keep-Alive");
-        } else if (!keep_alive && header_keep_alive) {
-            request_headers.erase("Connection");
-        }
-    }
-
-    void SetSSLOptions(u32 ssl_options) {
-        if ((ssl_options & 0x200) == 0x200) {
-            disable_verify = true;
-            LOG_WARNING(Service_HTTP, "Disable verify requested");
-        }
-        if ((ssl_options & 0x800) == 0x800) {
-            LOG_WARNING(Service_HTTP, "TLS v1.0 requested, unimplemented.");
-        }
-    }
-
-    u32 GetResponseStatusCode() const {
-        return response ? response->status : 0;
-    }
-
-    u32 GetResponseContentLength() const {
-        try {
-            const std::string length{response->get_header_value("Content-Length")};
-            return std::stoi(length);
-        } catch (...) {
-            return 0;
-        }
-    }
-
-    void Send() {
-        using lup = LUrlParser::clParseURL;
-        namespace hl = httplib;
-        lup parsedUrl{lup::ParseURL(url)};
-        std::unique_ptr<hl::Client> cli;
-        int port;
-        if (parsedUrl.m_Scheme == "http") {
-            if (!parsedUrl.GetPort(&port)) {
-                port = 80;
-            }
-            cli = std::make_unique<hl::Client>(parsedUrl.m_Host.c_str(), port,
-                                               (timeout == 0) ? 300 : (timeout * std::pow(10, -9)));
-        } else if (parsedUrl.m_Scheme == "https") {
-            if (!parsedUrl.GetPort(&port)) {
-                port = 443;
-            }
-            cli = std::make_unique<hl::SSLClient>(parsedUrl.m_Host.c_str(), port,
-                                                  (timeout == 0) ? 300
-                                                                 : (timeout * std::pow(10, -9)));
-        } else {
-            UNREACHABLE_MSG("Invalid scheme!");
-        }
-        if (disable_verify) {
-            cli->set_verify(hl::SSLVerifyMode::None);
-        }
-        hl::Request request;
-        static const std::unordered_map<RequestMethod, std::string> methods_map_strings = {
-            {RequestMethod::Get, "GET"},       {RequestMethod::Post, "POST"},
-            {RequestMethod::Head, "HEAD"},     {RequestMethod::Put, "PUT"},
-            {RequestMethod::Delete, "DELETE"}, {RequestMethod::PostEmpty, "POST"},
-            {RequestMethod::PutEmpty, "PUT"},
-        };
-        static const std::unordered_map<RequestMethod, bool> methods_map_body = {
-            {RequestMethod::Get, false},      {RequestMethod::Post, true},
-            {RequestMethod::Head, false},     {RequestMethod::Put, true},
-            {RequestMethod::Delete, true},    {RequestMethod::PostEmpty, false},
-            {RequestMethod::PutEmpty, false},
-        };
-        request.method = methods_map_strings.find(method)->second;
-        request.path = '/' + parsedUrl.m_Path;
-        request.headers = request_headers;
-        if (methods_map_body.find(method)->second) {
-            request.body = body;
-        }
-        hl::detail::parse_query_text(parsedUrl.m_Query, request.params);
-        response = std::make_shared<hl::Response>();
-        cli->send(request, *response);
-    }
-
-    void Initialize() {
-        current_offset = 0;
-        response = nullptr;
-        disable_verify = false;
-        proxy_default = false;
-        timeout = 0;
-        state = State::NotStarted;
-    }
-
-    enum class State : u32 {
-        NotStarted = 0x1,             // Request has not started yet.
-        InProgress = 0x5,             // Request in progress, sending request over the network.
-        ReadyToDownloadContent = 0x7, // Ready to download the content. (needs verification)
-        ReadyToDownload = 0x8,        // Ready to download?
-        TimedOut = 0xA,               // Request timed out?
-    };
-
-    u32 current_offset;
-    httplib::Headers request_headers;
-    std::string url;
-    std::shared_ptr<httplib::Response> response;
-    RequestMethod method;
-    bool disable_verify;
-    bool proxy_default;
-    u64 timeout;
-    State state;
-    std::string body;
+enum class RequestState : u8 {
+    NotStarted = 0x1,             // Request has not started yet.
+    InProgress = 0x5,             // Request in progress, sending request over the network.
+    ReadyToDownloadContent = 0x7, // Ready to download the content. (needs verification)
+    ReadyToDownload = 0x8,        // Ready to download?
+    TimedOut = 0xA,               // Request timed out?
 };
 
-class HTTP_C final : public ServiceFramework<HTTP_C> {
+/// Represents a client certificate along with its private key, stored as a byte array of DER data.
+/// There can only be at most one client certificate context attached to an HTTP context at any
+/// given time.
+struct ClientCertContext {
+    using Handle = u32;
+    Handle handle;
+    u32 session_id;
+    u8 cert_id;
+    std::vector<u8> certificate;
+    std::vector<u8> private_key;
+};
+
+/// Represents a root certificate chain, it contains a list of DER-encoded certificates for
+/// verifying HTTP requests. An HTTP context can have at most one root certificate chain attached to
+/// it, but the chain may contain an arbitrary number of certificates in it.
+struct RootCertChain {
+    struct RootCACert {
+        using Handle = u32;
+        Handle handle;
+        u32 session_id;
+        std::vector<u8> certificate;
+    };
+
+    using Handle = u32;
+    Handle handle;
+    u32 session_id;
+    std::vector<RootCACert> certificates;
+    u32 certs_counter{};
+};
+
+struct DefaultRootCert {
+    u8 cert_id;
+    std::string name;
+    std::vector<u8> certificate;
+    std::size_t size;
+};
+
+/// Represents an HTTP context.
+class Context final {
+public:
+    using Handle = u32;
+
+    Context() = default;
+    Context(const Context&) = delete;
+    Context& operator=(const Context&) = delete;
+
+    Context(Context&& other) = default;
+    Context& operator=(Context&&) = default;
+
+    struct Proxy {
+        std::string url;
+        std::string username;
+        std::string password;
+        u16 port;
+    };
+
+    struct BasicAuth {
+        std::string username;
+        std::string password;
+    };
+
+    struct SSLConfig {
+        u32 options;
+        std::weak_ptr<ClientCertContext> client_cert_ctx;
+        std::weak_ptr<RootCertChain> root_ca_chain;
+    };
+
+    Handle handle;
+    u32 session_id;
+    std::string url;
+    RequestMethod method;
+    RequestState state{RequestState::NotStarted};
+    boost::optional<Proxy> proxy;
+    boost::optional<BasicAuth> basic_auth;
+    SSLConfig ssl_config{};
+    u32 socket_buffer_size;
+    httplib::Headers headers;
+    std::string post_data;
+    u32 current_offset{};
+    std::shared_ptr<httplib::Response> response;
+    u32 ssl_options;
+    u64 timeout;
+    bool proxy_default;
+    u32 ssl_error{};
+
+    u32 GetResponseContentLength() const;
+    void Send();
+    void SetKeepAlive(bool);
+    std::string GetRawResponse() const;
+};
+
+struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
+    /// The HTTP context that is currently bound to this session, this can be empty if no context
+    /// has been bound. Certain commands can only be called on a session with a bound context.
+    boost::optional<Context::Handle> current_http_context;
+
+    u32 session_id;
+
+    /// Number of HTTP contexts that are currently opened in this session.
+    u32 num_http_contexts{};
+
+    /// Number of ClientCert contexts that are currently opened in this session.
+    u32 num_client_certs{};
+
+    /// Number of RootCertChain contexts that are currently opened in this session.
+    u32 num_root_cert_chains{};
+
+    /// Whether this session has been initialized in some way, be it via Initialize or
+    /// InitializeConnectionSession.
+    bool initialized{};
+};
+
+class HTTP_C final : public ServiceFramework<HTTP_C, SessionData> {
 public:
     HTTP_C();
 
@@ -158,17 +168,73 @@ private:
     void SetProxyDefault(Kernel::HLERequestContext& ctx);
     void SetSocketBufferSize(Kernel::HLERequestContext& ctx);
     void AddRequestHeader(Kernel::HLERequestContext& ctx);
+    void AddPostDataAscii(Kernel::HLERequestContext& ctx);
+    void AddPostDataBinary(Kernel::HLERequestContext& ctx);
     void AddPostDataRaw(Kernel::HLERequestContext& ctx);
     void GetResponseHeader(Kernel::HLERequestContext& ctx);
+    void GetResponseHeaderTimeout(Kernel::HLERequestContext& ctx);
     void GetResponseStatusCode(Kernel::HLERequestContext& ctx);
     void GetResponseStatusCodeTimeout(Kernel::HLERequestContext& ctx);
+    void SetClientCertContext(Kernel::HLERequestContext& ctx);
     void SetSSLOpt(Kernel::HLERequestContext& ctx);
+    void SetSSLClearOpt(Kernel::HLERequestContext& ctx);
     void SetKeepAlive(Kernel::HLERequestContext& ctx);
+    void OpenClientCertContext(Kernel::HLERequestContext& ctx);
+    void OpenDefaultClientCertContext(Kernel::HLERequestContext& ctx);
+    void CloseClientCertContext(Kernel::HLERequestContext& ctx);
     void Finalize(Kernel::HLERequestContext& ctx);
+    void GetSSLError(Kernel::HLERequestContext& ctx);
+    void CreateRootCertChain(Kernel::HLERequestContext& ctx);
+    void DestroyRootCertChain(Kernel::HLERequestContext& ctx);
+    void RootCertChainAddDefaultCert(Kernel::HLERequestContext& ctx);
+    void SelectRootCertChain(Kernel::HLERequestContext& ctx);
+    void SetClientCertDefault(Kernel::HLERequestContext& ctx);
+    void GetResponseData(Kernel::HLERequestContext& ctx);
+    void GetResponseDataTimeout(Kernel::HLERequestContext& ctx);
+    void SetPostDataType(Kernel::HLERequestContext& ctx);
+    void SendPOSTDataRawTimeout(Kernel::HLERequestContext& ctx);
+    void NotifyFinishSendPostData(Kernel::HLERequestContext& ctx);
+    void AddTrustedRootCA(Kernel::HLERequestContext& ctx);
+    void AddDefaultCert(Kernel::HLERequestContext& ctx);
+    void RootCertChainAddCert(Kernel::HLERequestContext& ctx);
+    void RootCertChainRemoveCert(Kernel::HLERequestContext& ctx);
+    void SetClientCert(Kernel::HLERequestContext& ctx);
+    void SetBasicAuthorization(Kernel::HLERequestContext& ctx);
+    void SetProxy(Kernel::HLERequestContext& ctx);
+
+    void DecryptClCertA();
+    void LoadDefaultCerts();
 
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory{};
-    std::unordered_map<u32, Context> contexts;
-    u32 context_counter{};
+
+    /// The next number to use when a new HTTP session is initalized.
+    u32 session_counter{};
+
+    /// The next handle number to use when a new HTTP context is created.
+    Context::Handle context_counter{};
+
+    /// The next handle number to use when a new ClientCert context is created.
+    ClientCertContext::Handle client_certs_counter{};
+
+    /// The next handle number to use when a new RootCertChain context is created.
+    RootCertChain::Handle root_cert_chains_counter{};
+
+    /// Global list of HTTP contexts currently opened.
+    std::unordered_map<Context::Handle, Context> contexts;
+
+    /// Global list of ClientCert contexts currently opened.
+    std::unordered_map<ClientCertContext::Handle, ClientCertContext> client_certs;
+
+    /// Global list of RootCertChain contexts currently opened.
+    std::unordered_map<RootCertChain::Handle, RootCertChain> root_cert_chains;
+
+    struct {
+        std::vector<u8> certificate;
+        std::vector<u8> private_key;
+        bool init{};
+    } ClCertA;
+
+    std::array<DefaultRootCert, 11> default_root_certs;
 };
 
 void InstallInterfaces(SM::ServiceManager& service_manager);

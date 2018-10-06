@@ -297,7 +297,7 @@ std::vector<u8> GenerateEAPoLStartFrame(u16 association_id, const NodeInfo& node
               eapol_start.node.username.begin());
 
     // Note: The network_node_id and unknown bytes seem to be uninitialized in the NWM module.
-    // TODO(B3N30): The last 8 bytes seem to have a fixed value of 07 88 15 00 04 e9 13 00 in
+    // TODO: The last 8 bytes seem to have a fixed value of 07 88 15 00 04 e9 13 00 in
     // EAPoL-Start packets from different 3DSs to the same host during a Super Smash Bros. 4 game.
     // Find out what that means.
 

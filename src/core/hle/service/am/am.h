@@ -187,6 +187,7 @@ public:
         void GetSystemUpdaterMutex(Kernel::HLERequestContext& ctx);
         void GetMetaSizeFromCia(Kernel::HLERequestContext& ctx);
         void GetMetaDataFromCia(Kernel::HLERequestContext& ctx);
+        void GetDeviceID(Kernel::HLERequestContext& ctx);
 
     private:
         std::shared_ptr<Module> am;

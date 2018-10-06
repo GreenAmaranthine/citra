@@ -11,7 +11,7 @@ namespace Network {
 
 static std::shared_ptr<RoomMember> g_room_member; ///< RoomMember (Client) for network games
 static std::shared_ptr<Room> g_room;              ///< Room (Server) for network games
-// TODO(B3N30): Put these globals into a networking class
+// TODO: Put these globals into a networking class
 
 bool Init() {
     if (enet_initialize() != 0) {

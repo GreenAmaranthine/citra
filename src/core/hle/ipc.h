@@ -16,7 +16,7 @@ static const int kCommandHeaderOffset = 0x80;
 
 /**
  * Returns a pointer to the command buffer in the current thread's TLS
- * TODO(Subv): This is not entirely correct, the command buffer should be copied from
+ * TODO: This is not entirely correct, the command buffer should be copied from
  * the thread's TLS to an intermediate buffer in kernel memory, and then copied again to
  * the service handler process' memory.
  * @param offset Optional offset into command buffer
@@ -40,7 +40,7 @@ constexpr std::size_t MAX_STATIC_BUFFERS{16};
 
 // These errors are commonly returned by invalid IPC translations, so alias them here for
 // convenience.
-// TODO(yuriks): These will probably go away once translation is implemented inside the kernel.
+// TODO: These will probably go away once translation is implemented inside the kernel.
 using Kernel::ERR_INVALID_BUFFER_DESCRIPTOR;
 constexpr auto ERR_INVALID_HANDLE{Kernel::ERR_INVALID_HANDLE_OS};
 

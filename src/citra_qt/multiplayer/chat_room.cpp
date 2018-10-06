@@ -126,7 +126,7 @@ bool ChatRoom::ValidateMessage(const std::string& msg) {
 }
 
 void ChatRoom::OnRoomUpdate(const Network::RoomInformation& info) {
-    // TODO(B3N30): change title
+    // TODO: change title
     if (auto room_member{Network::GetRoomMember().lock()}) {
         SetPlayerList(room_member->GetMemberInformation());
     }
@@ -197,7 +197,7 @@ void ChatRoom::OnSendChat() {
 }
 
 void ChatRoom::SetPlayerList(const Network::RoomMember::MemberList& member_list) {
-    // TODO(B3N30): Remember which row is selected
+    // TODO: Remember which row is selected
     player_list->removeRows(0, player_list->rowCount());
     for (const auto& member : member_list) {
         if (member.nickname.empty())
@@ -211,7 +211,7 @@ void ChatRoom::SetPlayerList(const Network::RoomMember::MemberList& member_list)
         }
         player_list->invisibleRootItem()->appendRow(l);
     }
-    // TODO(B3N30): Restore row selection
+    // TODO: Restore row selection
 }
 
 void ChatRoom::OnChatTextChanged() {

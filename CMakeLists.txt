@@ -191,7 +191,7 @@ else()
 endif()
 
 if (SDL2_FOUND)
-    # TODO(yuriks): Make FindSDL2.cmake export an IMPORTED library instead
+    # TODO: Make FindSDL2.cmake export an IMPORTED library instead
     add_library(SDL2 INTERFACE)
     target_link_libraries(SDL2 INTERFACE "${SDL2_LIBRARY}")
     target_include_directories(SDL2 INTERFACE "${SDL2_INCLUDE_DIR}")
@@ -216,10 +216,6 @@ else()
 endif()
 
 find_package(Qt5 REQUIRED COMPONENTS Widgets OpenGL Multimedia ${QT_PREFIX_HINT})
-
-if (ENABLE_WEB_SERVICE)
-    add_definitions(-DENABLE_WEB_SERVICE)
-endif()
 
 if (ENABLE_SCRIPTING)
     add_definitions(-DENABLE_SCRIPTING)

@@ -220,7 +220,7 @@ Path ArchiveFactory_ExtSaveData::GetCorrectedPath(const Path& path) {
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(const Path& path) {
     std::string fullpath{GetExtSaveDataPath(mount_point, GetCorrectedPath(path)) + "user/"};
     if (!FileUtil::Exists(fullpath)) {
-        // TODO(Subv): Verify the archive behavior of SharedExtSaveData compared to ExtSaveData.
+        // TODO: Verify the archive behavior of SharedExtSaveData compared to ExtSaveData.
         // ExtSaveData seems to return FS_NotFound (120) when the archive doesn't exist.
         if (!shared) {
             return ERR_NOT_FOUND_INVALID_STATE;
@@ -247,7 +247,7 @@ ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path,
     FileUtil::IOFile file{metadata_path, "wb"};
 
     if (!file.IsOpen()) {
-        // TODO(Subv): Find the correct error code
+        // TODO: Find the correct error code
         return ResultCode(-1);
     }
 
@@ -261,7 +261,7 @@ ResultVal<ArchiveFormatInfo> ArchiveFactory_ExtSaveData::GetFormatInfo(const Pat
 
     if (!file.IsOpen()) {
         LOG_ERROR(Service_FS, "Could not open metadata information for archive");
-        // TODO(Subv): Verify error code
+        // TODO: Verify error code
         return ERR_NOT_FORMATTED;
     }
 

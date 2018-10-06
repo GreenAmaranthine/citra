@@ -140,7 +140,7 @@ ResultCode SaveDataArchive::RenameFile(const Path& src_path, const Path& dest_pa
         return RESULT_SUCCESS;
     }
 
-    // TODO(yuriks): This code probably isn't right, it'll return a Status even if the file didn't
+    // TODO: This code probably isn't right, it'll return a Status even if the file didn't
     // exist or similar. Verify.
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
                       ErrorSummary::NothingHappened, ErrorLevel::Status);
@@ -299,7 +299,7 @@ ResultCode SaveDataArchive::RenameDirectory(const Path& src_path, const Path& de
         return RESULT_SUCCESS;
     }
 
-    // TODO(yuriks): This code probably isn't right, it'll return a Status even if the file didn't
+    // TODO: This code probably isn't right, it'll return a Status even if the file didn't
     // exist or similar. Verify.
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
                       ErrorSummary::NothingHappened, ErrorLevel::Status);

@@ -26,6 +26,9 @@ enum KeySlotID : std::size_t {
     // AES keyslot used for decrypting ticket title key
     TicketCommonKey = 0x3D,
 
+    // SSL Key
+    SSLKey = 0x0D,
+
     MaxKeySlotID = 0x40,
 };
 

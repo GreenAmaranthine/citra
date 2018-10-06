@@ -687,8 +687,8 @@ void SplitFilename83(const std::string& filename, std::array<char, 9>& short_nam
         if (forbidden_characters.find(letter, 0) != std::string::npos)
             continue;
         if (j == 8) {
-            // TODO(Link Mauve): also do that for filenames containing a space.
-            // TODO(Link Mauve): handle multiple files having the same short name.
+            // TODO: also do that for filenames containing a space.
+            // TODO: handle multiple files having the same short name.
             short_name[6] = '~';
             short_name[7] = '1';
             break;

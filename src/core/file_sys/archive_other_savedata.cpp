@@ -11,7 +11,7 @@
 
 namespace FileSys {
 
-// TODO(wwylele): The storage info in exheader should be checked before accessing these archives
+// TODO: The storage info in exheader should be checked before accessing these archives
 
 using Service::FS::MediaType;
 

@@ -64,7 +64,7 @@ ValidationError ValidateInput(const SoftwareKeyboardConfig& config, const std::s
         return error;
     }
 
-    // TODO(jroweboy): Is max_text_length inclusive or exclusive?
+    // TODO: Is max_text_length inclusive or exclusive?
     if (input.size() > config.max_text_length) {
         return ValidationError::MaxLengthExceeded;
     }
@@ -104,7 +104,7 @@ ValidationError ValidateInput(const SoftwareKeyboardConfig& config, const std::s
     case SoftwareKeyboardValidInput::Anything:
         break;
     default:
-        // TODO(jroweboy): What does hardware do in this case?
+        // TODO: What does hardware do in this case?
         LOG_CRITICAL(Frontend, "Application requested unknown validation method. Method: {}",
                      static_cast<u32>(config.valid_input));
         UNREACHABLE();
@@ -153,7 +153,7 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
     if (parameter.signal != Service::APT::SignalType::Request) {
         LOG_ERROR(Applet_Swkbd, "unsupported signal {}", static_cast<u32>(parameter.signal));
         UNIMPLEMENTED();
-        // TODO(Subv): Find the right error code
+        // TODO: Find the right error code
         return ResultCode(-1);
     }
 
@@ -195,7 +195,7 @@ ResultCode SoftwareKeyboard::StartImpl(const Service::APT::AppletStartupParamete
     text_memory =
         boost::static_pointer_cast<Kernel::SharedMemory, Kernel::Object>(parameter.object);
 
-    // TODO(Subv): Verify if this is the correct behavior
+    // TODO: Verify if this is the correct behavior
     memset(text_memory->GetPointer(), 0, text_memory->size);
 
     is_running = true;

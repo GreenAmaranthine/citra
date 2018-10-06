@@ -255,7 +255,7 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
         vm_manager.RefreshMemoryBlockMappings(linheap_memory.get());
     }
 
-    // TODO(yuriks): As is, this lets processes map memory allocated by other processes from the
+    // TODO: As is, this lets processes map memory allocated by other processes from the
     // same region. It is unknown if or how the 3DS kernel checks against this.
     std::size_t offset{target - GetLinearHeapBase()};
     CASCADE_RESULT(auto vma, vm_manager.MapMemoryBlock(target, linheap_memory, offset, size,

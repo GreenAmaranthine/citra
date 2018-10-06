@@ -41,7 +41,7 @@ DirectConnectWindow::DirectConnectWindow(QWidget* parent)
     ui->port->setValidator(validation.GetPort());
     ui->port->setText(UISettings::values.port);
 
-    // TODO(jroweboy): Show or hide the connection options based on the current value of the combo
+    // TODO: Show or hide the connection options based on the current value of the combo
     // box. Add this back in when the traversal server support is added.
     connect(ui->connect, &QPushButton::pressed, this, &DirectConnectWindow::Connect);
 }

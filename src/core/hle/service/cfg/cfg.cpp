@@ -98,11 +98,11 @@ constexpr BirthdayBlock PROFILE_BIRTHDAY{3, 25}; // March 25th, 2014
 constexpr u8 SOUND_OUTPUT_MODE{SOUND_SURROUND};
 constexpr u8 UNITED_STATES_COUNTRY_ID{49};
 
-/// TODO(Subv): Find what the other bytes are
+/// TODO: Find what the other bytes are
 constexpr ConsoleCountryInfo COUNTRY_INFO{{0, 0, 0}, UNITED_STATES_COUNTRY_ID};
 
 /**
- * TODO(Subv): Find out what this actually is, these values fix some NaN uniforms in some games,
+ * TODO: Find out what this actually is, these values fix some NaN uniforms in some games,
  * for example Nintendo Zone
  * Thanks Normmatt for providing this information
  */
@@ -243,7 +243,7 @@ void Module::Interface::GetSystemModel(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     u32 data;
 
-    // TODO(Subv): Find out the correct error codes
+    // TODO: Find out the correct error codes
     rb.Push(cfg->GetConfigInfoBlock(ConsoleModelBlockID, 4, 0x8, reinterpret_cast<u8*>(&data)));
     rb.Push<u8>(data & 0xFF);
 }
@@ -259,7 +259,7 @@ void Module::Interface::GetModelNintendo2DS(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     u32 data;
 
-    // TODO(Subv): Find out the correct error codes
+    // TODO: Find out the correct error codes
     rb.Push(cfg->GetConfigInfoBlock(ConsoleModelBlockID, 4, 0x8, reinterpret_cast<u8*>(&data)));
     u8 model = data & 0xFF;
     rb.Push(model != Service::CFG::NINTENDO_2DS);
@@ -465,7 +465,7 @@ ResultCode Module::SetConfigInfoBlock(u32 block_id, u32 size, u32 flag, const vo
 ResultCode Module::CreateConfigInfoBlk(u32 block_id, u16 size, u16 flags, const void* data) {
     SaveFileConfig* config{reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data())};
     if (config->total_entries >= CONFIG_FILE_MAX_BLOCK_ENTRIES)
-        return ResultCode(-1); // TODO(Subv): Find the right error code
+        return ResultCode(-1); // TODO: Find the right error code
 
     // Insert the block header with offset 0 for now
     config->block_entries[config->total_entries] = {block_id, 0, size, flags};
@@ -629,6 +629,11 @@ ResultCode Module::FormatConfig() {
         return res;
 
     res = CreateConfigInfoBlk(ConsoleModelBlockID, sizeof(CONSOLE_MODEL), 0xC, &CONSOLE_MODEL);
+    if (!res.IsSuccess())
+        return res;
+
+    // 0x00160000 - Unknown
+    res = CreateConfigInfoBlk(0x00160000, 0x4, 0xE, zero_buffer);
     if (!res.IsSuccess())
         return res;
 

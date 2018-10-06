@@ -109,7 +109,7 @@ struct SharedMem {
 
         PadState current_state; ///< Current state of the pad buttons
 
-        // TODO(bunnei): Implement `raw_circle_pad_data` field
+        // TODO: Implement `raw_circle_pad_data` field
         u32 raw_circle_pad_data; ///< Raw (analog) circle pad data, before being converted
 
         INSERT_PADDING_WORDS(0x1);
@@ -125,7 +125,7 @@ struct SharedMem {
 
         INSERT_PADDING_WORDS(0x1);
 
-        // TODO(bunnei): Implement `raw_entry` field
+        // TODO: Implement `raw_entry` field
         TouchDataEntry raw_entry; ///< Raw (analog) touch data, before being converted
 
         std::array<TouchDataEntry, 8> entries; ///< Last 8 touch entries, in pixel coordinates

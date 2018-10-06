@@ -16,7 +16,7 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
     if (parameter.signal != Service::APT::SignalType::Request) {
         LOG_ERROR(Applet_MiiSelector, "unsupported signal {}", static_cast<u32>(parameter.signal));
         UNIMPLEMENTED();
-        // TODO(Subv): Find the right error code
+        // TODO: Find the right error code
         return ResultCode(-1);
     }
 

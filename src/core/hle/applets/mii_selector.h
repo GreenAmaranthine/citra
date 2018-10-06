@@ -44,7 +44,7 @@ struct MiiResult {
     u32_le return_code;
     u32_le is_guest_mii_selected;
     u32_le selected_guest_mii_index;
-    // TODO(mailwl): expand to Mii Format structure: https://www.3dbrew.org/wiki/Mii
+    // TODO: expand to Mii Format structure: https://www.3dbrew.org/wiki/Mii
     u8 selected_mii_data[0x5C];
     INSERT_PADDING_BYTES(2);
     u16_be mii_data_checksum;

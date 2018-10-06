@@ -50,7 +50,7 @@ enum class MediaType : u32 { NAND = 0, SDMC = 1, GameCard = 2 };
 typedef u64 ArchiveHandle;
 
 struct FileSessionSlot : public Kernel::SessionRequestHandler::SessionDataBase {
-    u32 priority; ///< Priority of the file. TODO(Subv): Find out what this means
+    u32 priority; ///< Priority of the file. TODO: Find out what this means
     u64 offset;   ///< Offset that this session will start reading from.
     u64 size;     ///< Max size of the file that this session is allowed to access
     bool subfile; ///< Whether this file was opened via OpenSubFile or not.

@@ -48,7 +48,7 @@ std::vector<u8> GenerateFixedParameters() {
 
     BeaconFrameHeader header{};
     // Use a fixed default time for now.
-    // TODO(Subv): Perhaps use the difference between now and the time the network was started?
+    // TODO: Perhaps use the difference between now and the time the network was started?
     header.timestamp = DefaultNetworkUptime;
     header.beacon_interval = DefaultBeaconInterval;
     header.capabilities = DefaultExtraCapabilities;
@@ -85,11 +85,11 @@ std::vector<u8> GenerateBasicTaggedParameters() {
     // Append the SSID tag
     std::vector<u8> buffer = GenerateSSIDTag();
 
-    // TODO(Subv): Add the SupportedRates tag.
-    // TODO(Subv): Add the DSParameterSet tag.
-    // TODO(Subv): Add the TrafficIndicationMap tag.
-    // TODO(Subv): Add the CountryInformation tag.
-    // TODO(Subv): Add the ERPInformation tag.
+    // TODO: Add the SupportedRates tag.
+    // TODO: Add the DSParameterSet tag.
+    // TODO: Add the TrafficIndicationMap tag.
+    // TODO: Add the CountryInformation tag.
+    // TODO: Add the ERPInformation tag.
 
     return buffer;
 }
@@ -97,7 +97,7 @@ std::vector<u8> GenerateBasicTaggedParameters() {
 /**
  * Generates a buffer with the Dummy Nintendo tag.
  * It is currently unknown what this tag does.
- * TODO(Subv): Figure out if this is needed and what it does.
+ * TODO: Figure out if this is needed and what it does.
  * @returns A buffer with the Nintendo tagged parameters of the beacon frame.
  */
 std::vector<u8> GenerateNintendoDummyTag() {

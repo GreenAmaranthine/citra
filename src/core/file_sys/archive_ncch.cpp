@@ -26,17 +26,6 @@
 
 namespace FileSys {
 
-enum class NCCHFilePathType : u32 {
-    RomFS = 0,
-    Code = 1,
-    ExeFS = 2,
-};
-
-enum class NCCHFileOpenType : u32 {
-    NCCHData = 0,
-    SaveData = 1,
-};
-
 struct NCCHArchivePath {
     u64_le tid;
     u32_le media_type;
@@ -181,28 +170,28 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
 
 ResultCode NCCHArchive::DeleteFile(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a file from an NCCH archive ({}).", GetName());
-    // TODO(Subv): Verify error code
+    // TODO: Verify error code
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, ErrorSummary::Canceled,
                       ErrorLevel::Status);
 }
 
 ResultCode NCCHArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
     LOG_CRITICAL(Service_FS, "Attempted to rename a file within an NCCH archive ({}).", GetName());
-    // TODO(wwylele): Use correct error code
+    // TODO: Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode NCCHArchive::DeleteDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an NCCH archive ({}).",
                  GetName());
-    // TODO(wwylele): Use correct error code
+    // TODO: Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode NCCHArchive::DeleteDirectoryRecursively(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an NCCH archive ({}).",
                  GetName());
-    // TODO(wwylele): Use correct error code
+    // TODO: Use correct error code
     return ResultCode(-1);
 }
 
@@ -215,20 +204,20 @@ ResultCode NCCHArchive::CreateFile(const Path& path, u64 size) const {
 
 ResultCode NCCHArchive::CreateDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to create a directory in an NCCH archive ({}).", GetName());
-    // TODO(wwylele): Use correct error code
+    // TODO: Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode NCCHArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
     LOG_CRITICAL(Service_FS, "Attempted to rename a file within an NCCH archive ({}).", GetName());
-    // TODO(wwylele): Use correct error code
+    // TODO: Use correct error code
     return ResultCode(-1);
 }
 
 ResultVal<std::unique_ptr<DirectoryBackend>> NCCHArchive::OpenDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to open a directory within an NCCH archive ({}).",
                  GetName().c_str());
-    // TODO(shinyquagsire23): Use correct error code
+    // TODO: Use correct error code
     return ResultCode(-1);
 }
 
@@ -258,7 +247,7 @@ ResultVal<std::size_t> NCCHFile::Read(const u64 offset, const std::size_t length
 ResultVal<std::size_t> NCCHFile::Write(const u64 offset, const std::size_t length, const bool flush,
                                        const u8* buffer) {
     LOG_ERROR(Service_FS, "Attempted to write to NCCH file");
-    // TODO(shinyquagsire23): Find error code
+    // TODO: Find error code
     return MakeResult<std::size_t>(0);
 }
 
@@ -302,7 +291,7 @@ ResultCode ArchiveFactory_NCCH::Format(const Path& path,
 }
 
 ResultVal<ArchiveFormatInfo> ArchiveFactory_NCCH::GetFormatInfo(const Path& path) const {
-    // TODO(Subv): Implement
+    // TODO: Implement
     LOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive {}", GetName());
     return ResultCode(-1);
 }

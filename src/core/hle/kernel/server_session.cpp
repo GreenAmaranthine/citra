@@ -23,7 +23,7 @@ ServerSession::~ServerSession() {
     if (parent->port)
         parent->port->ConnectionClosed();
 
-    // TODO(Subv): Wake up all the ClientSession's waiting threads and set
+    // TODO: Wake up all the ClientSession's waiting threads and set
     // the SendSyncRequest result to 0xC920181A.
 
     parent->server = nullptr;

@@ -21,7 +21,7 @@ struct SharedMemoryHeader {
     u32_le latest_receive_error_result;
     u32_le latest_send_error_result;
 
-    // TODO(wwylele): for these fields below, make them enum when the meaning of values is known.
+    // TODO: for these fields below, make them enum when the meaning of values is known.
     u8 connection_status;
     u8 trying_to_connect_status;
     u8 connection_role;
@@ -62,7 +62,7 @@ static_assert(sizeof(SharedMemoryHeader) == 16, "SharedMemoryHeader has wrong si
  * region, performing the same put/get/release operation. This way the client and the service
  * communicate via a pair of manager of the same buffer.
  *
- * TODO(wwylele): implement Get function, which is used by ReceiveIrnop service function.
+ * TODO: implement Get function, which is used by ReceiveIrnop service function.
  */
 class BufferManager {
 public:

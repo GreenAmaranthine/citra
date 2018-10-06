@@ -70,7 +70,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
 
     std::string name{name_buf.data(), name_len};
 
-    // TODO(yuriks): Permission checks go here
+    // TODO: Permission checks go here
 
     auto get_handle{[name, this](Kernel::SharedPtr<Kernel::Thread> thread,
                                  Kernel::HLERequestContext& ctx,

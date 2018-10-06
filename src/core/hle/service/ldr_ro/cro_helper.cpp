@@ -81,7 +81,7 @@ ResultCode CROHelper::ApplyRelocation(VAddr target_address, RelocationType reloc
     case RelocationType::ArmBranch:
     case RelocationType::ModifyArmBranch:
     case RelocationType::AlignedRelativeAddress:
-        // TODO(wwylele): implement other types
+        // TODO: implement other types
         UNIMPLEMENTED();
         break;
     default:
@@ -104,7 +104,7 @@ ResultCode CROHelper::ClearRelocation(VAddr target_address, RelocationType reloc
     case RelocationType::ArmBranch:
     case RelocationType::ModifyArmBranch:
     case RelocationType::AlignedRelativeAddress:
-        // TODO(wwylele): implement other types
+        // TODO: implement other types
         UNIMPLEMENTED();
         break;
     default:
@@ -1231,7 +1231,7 @@ void CROHelper::Unrebase(bool is_crs) {
 }
 
 ResultCode CROHelper::VerifyHash(u32 cro_size, VAddr crr) const {
-    // TODO(wwylele): actually verify the hash
+    // TODO: actually verify the hash
     return RESULT_SUCCESS;
 }
 
@@ -1491,7 +1491,7 @@ bool CROHelper::IsLoaded() const {
     if (magic != MAGIC_CRO0 && magic != MAGIC_FIXD)
         return false;
 
-    // TODO(wwylele): verify memory state here after memory aliasing is implemented
+    // TODO: verify memory state here after memory aliasing is implemented
 
     return true;
 }

@@ -92,7 +92,7 @@ Loader::ResultStatus TitleMetadata::Save(const std::string& file_path) {
     // Update our TMD body values and hashes
     tmd_body.content_count = static_cast<u16>(tmd_chunks.size());
 
-    // TODO(shinyquagsire23): Do TMDs with more than one contentinfo exist?
+    // TODO: Do TMDs with more than one contentinfo exist?
     // For now we'll just adjust the first index to hold all content chunks
     // and ensure that no further content info data exists.
     tmd_body.contentinfo = {};

@@ -62,7 +62,7 @@ ResultCode Applet::Create(Service::APT::AppletId id,
         break;
     default:
         LOG_ERROR(Applet, "Could not create applet {}", static_cast<u32>(id));
-        // TODO(Subv): Find the right error code
+        // TODO: Find the right error code
         return ResultCode(ErrorDescription::NotFound, ErrorModule::Applet,
                           ErrorSummary::NotSupported, ErrorLevel::Permanent);
     }

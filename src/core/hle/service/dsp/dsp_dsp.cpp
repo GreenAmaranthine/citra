@@ -79,7 +79,7 @@ void DSP_DSP::ConvertProcessAddressFromDspDram(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
 
-    // TODO(merry): There is a per-region offset missing in this calculation (that seems to be
+    // TODO: There is a per-region offset missing in this calculation (that seems to be
     // always zero).
     rb.Push<u32>((address << 1) + (Memory::DSP_RAM_VADDR + 0x40000));
 
@@ -197,7 +197,7 @@ void DSP_DSP::LoadComponent(Kernel::HLERequestContext& ctx) {
     rb.Push(true); /// Pretend that we actually loaded the DSP firmware
     rb.PushMappedBuffer(buffer);
 
-    // TODO(bunnei): Implement real DSP firmware loading
+    // TODO: Implement real DSP firmware loading
 
     std::vector<u8> component_data(size);
     buffer.Read(component_data.data(), 0, size);

@@ -111,7 +111,7 @@ void Module::Interface::SetRequestEulaVersion(Kernel::HLERequestContext& ctx) {
 
     const std::vector<u8>& ac_config{rp.PopStaticBuffer()};
 
-    // TODO(Subv): Copy over the input ACConfig to the stored ACConfig.
+    // TODO: Copy over the input ACConfig to the stored ACConfig.
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);

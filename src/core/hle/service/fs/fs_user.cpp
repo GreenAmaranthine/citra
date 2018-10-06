@@ -48,7 +48,7 @@ void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
     auto filename_type{rp.PopEnum<FileSys::LowPathType>()};
     u32 filename_size{rp.Pop<u32>()};
     FileSys::Mode mode{rp.Pop<u32>()};
-    u32 attributes{rp.Pop<u32>()}; // TODO(Link Mauve): do something with those attributes.
+    u32 attributes{rp.Pop<u32>()}; // TODO: do something with those attributes.
     std::vector<u8> filename{rp.PopStaticBuffer()};
     ASSERT(filename.size() == filename_size);
     FileSys::Path file_path{filename_type, filename};
@@ -85,7 +85,7 @@ void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
     auto filename_type{rp.PopEnum<FileSys::LowPathType>()};
     u32 filename_size{rp.Pop<u32>()};
     FileSys::Mode mode{rp.Pop<u32>()};
-    u32 attributes{rp.Pop<u32>()}; // TODO(Link Mauve): do something with those attributes.
+    u32 attributes{rp.Pop<u32>()}; // TODO: do something with those attributes.
     std::vector<u8> archivename{rp.PopStaticBuffer()};
     std::vector<u8> filename{rp.PopStaticBuffer()};
     ASSERT(archivename.size() == archivename_size);
@@ -378,7 +378,7 @@ void FS_USER::FormatSaveData(Kernel::HLERequestContext& ctx) {
     }
 
     if (archive_path.GetType() != FileSys::LowPathType::Empty) {
-        // TODO(Subv): Implement formatting the SaveData of other games
+        // TODO: Implement formatting the SaveData of other games
         LOG_ERROR(Service_FS, "archive LowPath type other than empty is currently unsupported");
         rb.Push(UnimplementedFunction(ErrorModule::FS));
         return;
@@ -429,7 +429,7 @@ void FS_USER::GetFreeBytes(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::CreateExtSaveData(Kernel::HLERequestContext& ctx) {
-    // TODO(Subv): Figure out the other parameters.
+    // TODO: Figure out the other parameters.
     IPC::RequestParser rp{ctx, 0x0851, 9, 2};
     MediaType media_type{static_cast<MediaType>(rp.Pop<u32>())}; // the other bytes are unknown
     u32 save_low{rp.Pop<u32>()};
@@ -465,7 +465,7 @@ void FS_USER::DeleteExtSaveData(Kernel::HLERequestContext& ctx) {
     MediaType media_type{static_cast<MediaType>(rp.Pop<u32>())}; // the other bytes are unknown
     u32 save_low{rp.Pop<u32>()};
     u32 save_high{rp.Pop<u32>()};
-    u32 unknown{rp.Pop<u32>()}; // TODO(Subv): Figure out what this is
+    u32 unknown{rp.Pop<u32>()}; // TODO: Figure out what this is
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(Service::FS::DeleteExtSaveData(media_type, save_high, save_low));
@@ -623,7 +623,7 @@ void FS_USER::GetProgramLaunchInfo(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_FS, "process_id={}", process_id);
 
-    // TODO(Subv): The real FS service manages its own process list and only checks the processes
+    // TODO: The real FS service manages its own process list and only checks the processes
     // that were registered with the 'fs:REG' service.
     auto process{Kernel::GetProcessById(process_id)};
 
@@ -646,7 +646,7 @@ void FS_USER::GetProgramLaunchInfo(Kernel::HLERequestContext& ctx) {
     rb.Push(program_id);
     rb.Push(static_cast<u8>(media_type));
 
-    // TODO(Subv): Find out what this value means.
+    // TODO: Find out what this value means.
     rb.Push<u32>(0);
 }
 

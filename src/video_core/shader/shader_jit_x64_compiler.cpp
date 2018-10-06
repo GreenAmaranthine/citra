@@ -529,7 +529,7 @@ void JitShader::Compile_MOV(Instruction instr) {
 void JitShader::Compile_RCP(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
 
-    // TODO(bunnei): RCPSS is a pretty rough approximation, this might cause problems if Pica
+    // TODO: RCPSS is a pretty rough approximation, this might cause problems if Pica
     // performs this operation more accurately. This should be checked on hardware.
     rcpss(SRC1, SRC1);
     shufps(SRC1, SRC1, _MM_SHUFFLE(0, 0, 0, 0)); // XYWZ -> XXXX
@@ -540,7 +540,7 @@ void JitShader::Compile_RCP(Instruction instr) {
 void JitShader::Compile_RSQ(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
 
-    // TODO(bunnei): RSQRTSS is a pretty rough approximation, this might cause problems if Pica
+    // TODO: RSQRTSS is a pretty rough approximation, this might cause problems if Pica
     // performs this operation more accurately. This should be checked on hardware.
     rsqrtss(SRC1, SRC1);
     shufps(SRC1, SRC1, _MM_SHUFFLE(0, 0, 0, 0)); // XYWZ -> XXXX

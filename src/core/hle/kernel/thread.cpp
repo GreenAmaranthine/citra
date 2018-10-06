@@ -37,7 +37,7 @@ void Thread::Acquire(Thread* thread) {
     ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
 }
 
-// TODO(yuriks): This can be removed if Thread objects are explicitly pooled in the future,
+// TODO: This can be removed if Thread objects are explicitly pooled in the future,
 // allowing us to simply use a pool index or similar.
 static Kernel::HandleTable wakeup_callback_handle_table;
 
@@ -333,7 +333,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
         return ERR_OUT_OF_RANGE_KERNEL;
     }
 
-    // TODO(yuriks): Other checks, returning 0xD9001BEA
+    // TODO: Other checks, returning 0xD9001BEA
 
     if (!Memory::IsValidVirtualAddress(*owner_process, entry_point)) {
         LOG_ERROR(Kernel_SVC, "(name={}): invalid entry {:08x}", name, entry_point);
@@ -392,7 +392,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
         vm_manager.RefreshMemoryBlockMappings(linheap_memory.get());
 
         // Map the page to the current process' address space.
-        // TODO(Subv): Find the correct MemoryState for this region.
+        // TODO: Find the correct MemoryState for this region.
         vm_manager.MapMemoryBlock(Memory::TLS_AREA_VADDR + available_page * Memory::PAGE_SIZE,
                                   linheap_memory, offset, Memory::PAGE_SIZE, MemoryState::Private);
     }
@@ -402,7 +402,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     thread->tls_address = Memory::TLS_AREA_VADDR + available_page * Memory::PAGE_SIZE +
                           available_slot * Memory::TLS_ENTRY_SIZE;
 
-    // TODO(peachum): move to ScheduleThread() when scheduler is added so selected core is used
+    // TODO: move to ScheduleThread() when scheduler is added so selected core is used
     // to initialize the context
     ResetThreadContext(thread->context, stack_top, entry_point, arg);
 

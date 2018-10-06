@@ -155,7 +155,7 @@ ResultCode SDMCArchive::RenameFile(const Path& src_path, const Path& dest_path) 
         return RESULT_SUCCESS;
     }
 
-    // TODO(yuriks): This code probably isn't right, it'll return a Status even if the file didn't
+    // TODO: This code probably isn't right, it'll return a Status even if the file didn't
     // exist or similar. Verify.
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
                       ErrorSummary::NothingHappened, ErrorLevel::Status);
@@ -312,7 +312,7 @@ ResultCode SDMCArchive::RenameDirectory(const Path& src_path, const Path& dest_p
         return RESULT_SUCCESS;
     }
 
-    // TODO(yuriks): This code probably isn't right, it'll return a Status even if the file didn't
+    // TODO: This code probably isn't right, it'll return a Status even if the file didn't
     // exist or similar. Verify.
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
                       ErrorSummary::NothingHappened, ErrorLevel::Status);
@@ -385,7 +385,7 @@ ResultCode ArchiveFactory_SDMC::Format(const Path& path,
 }
 
 ResultVal<ArchiveFormatInfo> ArchiveFactory_SDMC::GetFormatInfo(const Path& path) const {
-    // TODO(Subv): Implement
+    // TODO: Implement
     LOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive {}", GetName());
     return ResultCode(-1);
 }

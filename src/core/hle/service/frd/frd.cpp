@@ -115,13 +115,14 @@ void Module::Interface::UnscrambleLocalFriendCode(Kernel::HLERequestContext& ctx
                "Wrong input buffer size");
 
     std::vector<u8> unscrambled_friend_codes(friend_code_count * friend_code_size, 0);
-    // TODO(B3N30): Unscramble the codes and compare them against the friend list
+
+    // TODO: Unscramble the codes and compare them against the friend list
     //              Only write 0 if the code isn't in friend list, otherwise write the
     //              unscrambled one
     //
     // Code for unscrambling (should be compared to HW):
     // std::array<u16, 6> scambled_friend_code;
-    // Memory::ReadBlock(scrambled_friend_codes+(current*scrambled_friend_code_size),
+    // Memory::ReadBlock(scrambled_friend_codes + (current * scrambled_friend_code_size),
     // scambled_friend_code.data(), scrambled_friend_code_size); std::array<u16, 4>
     // unscrambled_friend_code; unscrambled_friend_code[0] = scambled_friend_code[0] ^
     // scambled_friend_code[5]; unscrambled_friend_code[1] = scambled_friend_code[1] ^

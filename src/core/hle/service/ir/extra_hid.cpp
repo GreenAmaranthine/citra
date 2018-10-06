@@ -33,11 +33,10 @@ enum class RequestID : u8 {
      */
     ReadCalibrationData = 2,
 
-    // TODO(wwylele): there are three more request types (id = 3, 4 and 5)
+    // TODO: there are three more request types (id = 3, 4 and 5)
 };
 
 enum class ResponseID : u8 {
-
     /**
      * PollHID response
      * Sends current HID status
@@ -63,11 +62,11 @@ enum class ResponseID : u8 {
     ReadCalibrationData = 0x11,
 };
 
-ExtraHID::ExtraHID(SendFunc send_func) : IRDevice(send_func) {
+ExtraHID::ExtraHID(SendFunc send_func) : IRDevice{send_func} {
     LoadInputDevices();
 
     // The data below was retrieved from a New 3DS
-    // TODO(wwylele): this data is probably writable (via request 3?) and thus should be saved to
+    // TODO: this data is probably writable (via request 3?) and thus should be saved to
     // and loaded from somewhere.
     calibration_data = std::array<u8, 0x40>{{
         // 0x00
@@ -232,7 +231,8 @@ void ExtraHID::SendHIDStatus() {
         LoadInputDevices();
 
     constexpr int C_STICK_CENTER{0x800};
-    // TODO(wwylele): this value is not accurately measured. We currently assume that the axis can
+
+    // TODO: this value is not accurately measured. We currently assume that the axis can
     // take values in the whole range of a 12-bit integer.
     constexpr int C_STICK_RADIUS{0x7FF};
 

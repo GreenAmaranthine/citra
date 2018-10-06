@@ -115,7 +115,7 @@ void FileBackend::Write(const Entry& entry) {
     if (!file.IsOpen() || bytes_written > MAX_BYTES_WRITTEN) {
         return;
     }
-    bytes_written += file.WriteString(FormatLogMessage(entry) + '\n');
+    bytes_written += file.WriteString(FormatLogMessage(entry).append(1, '\n'));
     if (entry.log_level >= Level::Error) {
         file.Flush();
     }

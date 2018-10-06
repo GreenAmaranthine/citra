@@ -51,7 +51,7 @@ enum class StartupArgumentType : u32 {
 };
 
 enum class ScreencapPostPermission : u32 {
-    CleanThePermission = 0, // TODO(JamePeng): verify what "zero" means
+    CleanThePermission = 0, // TODO: verify what "zero" means
     NoExplicitSetting = 1,
     EnableScreenshotPostingToMiiverse = 2,
     DisableScreenshotPostingToMiiverse = 3
@@ -135,7 +135,7 @@ private:
     std::vector<u8> screen_capture_buffer;
 
     ScreencapPostPermission screen_capture_post_permission{
-        ScreencapPostPermission::CleanThePermission}; // TODO(JamePeng): verify the initial value
+        ScreencapPostPermission::CleanThePermission}; // TODO: verify the initial value
 
     std::shared_ptr<AppletManager> applet_manager;
 

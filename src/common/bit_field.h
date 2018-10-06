@@ -104,7 +104,7 @@
  * to use #pragma pack here not to pack the members of the class, but instead
  * to break GCC's assumption that the members of the class are aligned on
  * sizeof(StorageType).
- * TODO(neobrain): Confirm that this is a proper fix and not just masking
+ * TODO: Confirm that this is a proper fix and not just masking
  * symptoms.
  */
 #pragma pack(1)

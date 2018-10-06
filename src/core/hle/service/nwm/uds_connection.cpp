@@ -68,9 +68,9 @@ std::vector<u8> GenerateAssocResponseFrame(AssocStatus status, u16 association_i
     auto ssid_tag{GenerateSSIDTag(network_id)};
     data.insert(data.end(), ssid_tag.begin(), ssid_tag.end());
 
-    // TODO(Subv): Add the SupportedRates tag.
-    // TODO(Subv): Add the DSParameterSet tag.
-    // TODO(Subv): Add the ERPInformation tag.
+    // TODO: Add the SupportedRates tag.
+    // TODO: Add the DSParameterSet tag.
+    // TODO: Add the ERPInformation tag.
     return data;
 }
 

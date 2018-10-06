@@ -197,7 +197,7 @@ ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush
                                       const u8* buffer) {
     written += length;
 
-    // TODO(shinyquagsire23): Can we assume that things will only be written in sequence?
+    // TODO: Can we assume that things will only be written in sequence?
     // Does AM send an error if we write to things out of order?
     // Or does it just ignore offsets and assume a set sequence of incoming data?
 
@@ -238,7 +238,7 @@ ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush
         memcpy(data.data() + copy_offset, buffer + buf_offset, buf_copy_size);
     }
 
-    // TODO(shinyquagsire23): Write out .tik files to nand?
+    // TODO: Write out .tik files to nand?
 
     // The end of our TMD is at the beginning of Content data, so ensure we have that much
     // buffered before trying to parse.
@@ -433,7 +433,7 @@ std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, u16 
     std::string content_path{GetTitlePath(media_type, tid) + "content/"};
 
     if (media_type == Service::FS::MediaType::GameCard) {
-        // TODO(shinyquagsire23): get current app file if TID matches?
+        // TODO: get current app file if TID matches?
         LOG_ERROR(Service_AM, "Request for gamecard partition {} content path unimplemented!",
                   static_cast<u32>(index));
         return "";
@@ -452,7 +452,7 @@ std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, u16 
             return "";
         }
 
-        // TODO(shinyquagsire23): how does DLC actually get this folder on hardware?
+        // TODO: how does DLC actually get this folder on hardware?
         // For now, check if the second (index 1) content has the optional flag set, for most
         // apps this is usually the manual and not set optional, DLC has it set optional.
         // All .apps (including index 0) will be in the 00000000/ folder for DLC.
@@ -473,7 +473,7 @@ std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid) {
         return fmt::format("{}{:08x}/{:08x}/", GetMediaTitlePath(media_type), high, low);
 
     if (media_type == Service::FS::MediaType::GameCard) {
-        // TODO(shinyquagsire23): get current app path if TID matches?
+        // TODO: get current app path if TID matches?
         LOG_ERROR(Service_AM, "Request for gamecard title path unimplemented!");
         return "";
     }
@@ -492,7 +492,7 @@ std::string GetMediaTitlePath(Service::FS::MediaType media_type) {
                            SYSTEM_ID, SDCARD_ID);
 
     if (media_type == Service::FS::MediaType::GameCard) {
-        // TODO(shinyquagsire23): get current app parent folder if TID matches?
+        // TODO: get current app parent folder if TID matches?
         LOG_ERROR(Service_AM, "Request for gamecard parent path unimplemented!");
         return "";
     }
@@ -581,7 +581,7 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
                           content_requested[i]);
 
                 IPC::ResponseBuilder rb{rp.MakeBuilder(1, 4)};
-                rb.Push<u32>(-1); // TODO(Steveice10): Find the right error code
+                rb.Push<u32>(-1); // TODO: Find the right error code
                 rb.PushMappedBuffer(content_requested_in);
                 rb.PushMappedBuffer(content_info_out);
                 return;
@@ -593,7 +593,7 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
             content_info.content_id = tmd.GetContentIDByIndex(content_requested[i]);
             content_info.size = tmd.GetContentSizeByIndex(content_requested[i]);
             content_info.ownership =
-                OWNERSHIP_OWNED; // TODO(Steveice10): Pull this from the ticket.
+                OWNERSHIP_OWNED; // TODO: Pull this from the ticket.
 
             if (FileUtil::Exists(GetTitleContentPath(media_type, title_id, content_requested[i]))) {
                 content_info.ownership |= OWNERSHIP_DOWNLOADED;
@@ -649,7 +649,7 @@ void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
             content_info.content_id = tmd.GetContentIDByIndex(i);
             content_info.size = tmd.GetContentSizeByIndex(i);
             content_info.ownership =
-                OWNERSHIP_OWNED; // TODO(Steveice10): Pull this from the ticket.
+                OWNERSHIP_OWNED; // TODO: Pull this from the ticket.
 
             if (FileUtil::Exists(GetTitleContentPath(media_type, title_id, i))) {
                 content_info.ownership |= OWNERSHIP_DOWNLOADED;
@@ -690,7 +690,7 @@ void Module::Interface::GetProgramList(Kernel::HLERequestContext& ctx) {
 
     if (media_type > 2) {
         IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
-        rb.Push<u32>(-1); // TODO(shinyquagsire23): Find the right error code
+        rb.Push<u32>(-1); // TODO: Find the right error code
         rb.Push<u32>(0);
         rb.PushMappedBuffer(title_ids_output);
         return;
@@ -719,7 +719,7 @@ ResultCode GetTitleInfoFromList(const std::vector<u64>& title_id_list,
 
         FileSys::TitleMetadata tmd;
         if (tmd.Load(tmd_path) == Loader::ResultStatus::Success) {
-            // TODO(shinyquagsire23): This is the total size of all files this process owns,
+            // TODO: This is the total size of all files this process owns,
             // including savefiles and other content. This comes close but is off.
             title_info.size = tmd.GetContentSizeByIndex(FileSys::TMDContentIndex::Main);
             title_info.version = tmd.GetTitleVersion();
@@ -980,7 +980,7 @@ void Module::Interface::CheckContentRights(Kernel::HLERequestContext& ctx) {
     u64 tid{rp.Pop<u64>()};
     u16 content_index{rp.Pop<u16>()};
 
-    // TODO(shinyquagsire23): Read tickets for this instead?
+    // TODO: Read tickets for this instead?
     bool has_rights{
         FileUtil::Exists(GetTitleContentPath(Service::FS::MediaType::SDMC, tid, content_index))};
 
@@ -996,7 +996,7 @@ void Module::Interface::CheckContentRightsIgnorePlatform(Kernel::HLERequestConte
     u64 tid{rp.Pop<u64>()};
     u16 content_index{rp.Pop<u16>()};
 
-    // TODO(shinyquagsire23): Read tickets for this instead?
+    // TODO: Read tickets for this instead?
     bool has_rights{
         FileUtil::Exists(GetTitleContentPath(Service::FS::MediaType::SDMC, tid, content_index))};
 
@@ -1152,7 +1152,7 @@ ResultVal<std::unique_ptr<AMFileWrapper>> GetFileFromSession(
     if (server->hle_handler != nullptr) {
         auto file{std::dynamic_pointer_cast<Service::FS::File>(server->hle_handler)};
 
-        // TODO(shinyquagsire23): This requires RTTI, use service calls directly instead?
+        // TODO: This requires RTTI, use service calls directly instead?
         if (file != nullptr) {
             // Grab the session file offset in case we were given a subfile opened with
             // File::OpenSubFile
@@ -1194,7 +1194,7 @@ void Module::Interface::GetProgramInfoFromCia(Kernel::HLERequestContext& ctx) {
     FileSys::TitleMetadata tmd{container.GetTitleMetadata()};
     container.Print();
 
-    // TODO(shinyquagsire23): Sizes allegedly depend on the mediatype, and will double
+    // TODO: Sizes allegedly depend on the mediatype, and will double
     // on some mediatypes. Since this is more of a required install size we'll report
     // what Citra needs, but it would be good to be more accurate here.
     TitleInfo title_info{};
@@ -1347,7 +1347,7 @@ void Module::Interface::GetRequiredSizeFromCia(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    // TODO(shinyquagsire23): Sizes allegedly depend on the mediatype, and will double
+    // TODO: Sizes allegedly depend on the mediatype, and will double
     // on some mediatypes. Since this is more of a required install size we'll report
     // what Citra needs, but it would be good to be more accurate here.
     IPC::ResponseBuilder rb{rp.MakeBuilder(3, 0)};
@@ -1448,6 +1448,13 @@ void Module::Interface::GetMetaDataFromCia(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(output_buffer);
+}
+
+void Module::Interface::GetDeviceID(Kernel::HLERequestContext& ctx) {
+    IPC::ResponseBuilder rb{ctx, 0xA, 3, 0};
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<u32>(0xDEADC0DE);
+    rb.Push<u32>(0xDEADC0DE);
 }
 
 Module::Module() {

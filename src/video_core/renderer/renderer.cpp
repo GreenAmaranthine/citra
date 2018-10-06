@@ -175,7 +175,6 @@ void Renderer::SwapBuffers() {
     Core::System::GetInstance().perf_stats.EndSystemFrame();
 
     // Swap buffers
-    render_window.PollEvents();
     render_window.SwapBuffers();
 
     Core::System::GetInstance().frame_limiter.DoFrameLimiting(CoreTiming::GetGlobalTimeUs());

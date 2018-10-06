@@ -12,7 +12,7 @@ ResultCode Mint::ReceiveParameter(const Service::APT::MessageParameter& paramete
     if (parameter.signal != Service::APT::SignalType::Request) {
         LOG_ERROR(Applet_Mint, "unsupported signal {}", static_cast<u32>(parameter.signal));
         UNIMPLEMENTED();
-        // TODO(Subv): Find the right error code
+        // TODO: Find the right error code
         return ResultCode(-1);
     }
 
@@ -49,9 +49,9 @@ ResultCode Mint::ReceiveParameter(const Service::APT::MessageParameter& paramete
 ResultCode Mint::StartImpl(const Service::APT::AppletStartupParameter& parameter) {
     is_running = true;
 
-    // TODO(Subv): Set the expected fields in the response buffer before resending it to the
+    // TODO: Set the expected fields in the response buffer before resending it to the
     // application.
-    // TODO(Subv): Reverse the parameter format for the Mint applet
+    // TODO: Reverse the parameter format for the Mint applet
 
     // Let the application know that we're closing
     Service::APT::MessageParameter message;

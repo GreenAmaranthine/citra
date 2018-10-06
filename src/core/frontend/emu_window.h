@@ -41,9 +41,6 @@ public:
     /// Swap buffers to display the next frame
     virtual void SwapBuffers() = 0;
 
-    /// Polls window events
-    virtual void PollEvents() = 0;
-
     /// Makes the graphics context current for the caller thread
     virtual void MakeCurrent() = 0;
 

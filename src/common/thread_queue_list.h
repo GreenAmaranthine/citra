@@ -12,7 +12,7 @@ namespace Common {
 
 template <class T, unsigned int N>
 struct ThreadQueueList {
-    // TODO(yuriks): If performance proves to be a problem, the std::deques can be replaced with
+    // TODO: If performance proves to be a problem, the std::deques can be replaced with
     //               (dynamically resizable) circular buffers to remove their overhead when
     //               inserting and popping.
 

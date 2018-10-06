@@ -348,10 +348,10 @@ bool DspHle::Impl::IsOutputAllowed() {
 
 void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
     if (Tick()) {
-        // TODO(merry): Signal all the other interrupts as appropriate.
+        // TODO: Signal all the other interrupts as appropriate.
         if (auto service{dsp_dsp.lock()}) {
             service->SignalInterrupt(InterruptType::Pipe, DspPipe::Audio);
-            // HACK(merry): Added to prevent regressions. Will remove soon.
+            // HACK: Added to prevent regressions. Will remove soon.
             service->SignalInterrupt(InterruptType::Pipe, DspPipe::Binary);
         }
     }

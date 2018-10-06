@@ -16,7 +16,7 @@ namespace Kernel {
 /// The event type of the generic timer callback event
 static CoreTiming::EventType* timer_callback_event_type{};
 
-// TODO(yuriks): This can be removed if Timer objects are explicitly pooled in the future, allowing
+// TODO: This can be removed if Timer objects are explicitly pooled in the future, allowing
 //               us to simply use a pool index or similar.
 static Kernel::HandleTable timer_callback_handle_table;
 

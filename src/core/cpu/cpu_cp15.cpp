@@ -20,7 +20,7 @@ boost::optional<Callback> CPUCP15::CompileInternalOperation(bool two, unsigned o
 
 CallbackOrAccessOneWord CPUCP15::CompileSendOneWord(bool two, unsigned opc1, CoprocReg CRn,
                                                     CoprocReg CRm, unsigned opc2) {
-    // TODO(merry): Privileged CP15 registers
+    // TODO: Privileged CP15 registers
 
     if (!two && CRn == CoprocReg::C7 && opc1 == 0 && CRm == CoprocReg::C5 && opc2 == 4) {
         // This is a dummy write, we ignore the value written here.
@@ -53,7 +53,7 @@ CallbackOrAccessTwoWords CPUCP15::CompileSendTwoWords(bool two, unsigned opc, Co
 
 CallbackOrAccessOneWord CPUCP15::CompileGetOneWord(bool two, unsigned opc1, CoprocReg CRn,
                                                    CoprocReg CRm, unsigned opc2) {
-    // TODO(merry): Privileged CP15 registers
+    // TODO: Privileged CP15 registers
 
     if (!two && CRn == CoprocReg::C13 && opc1 == 0 && CRm == CoprocReg::C0) {
         switch (opc2) {

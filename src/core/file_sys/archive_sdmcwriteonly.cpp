@@ -53,13 +53,13 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SDMCWriteOnly::Open(co
 
 ResultCode ArchiveFactory_SDMCWriteOnly::Format(const Path& path,
                                                 const FileSys::ArchiveFormatInfo& format_info) {
-    // TODO(wwylele): hwtest this
+    // TODO: hwtest this
     LOG_ERROR(Service_FS, "Attempted to format a SDMC write-only archive.");
     return ResultCode(-1);
 }
 
 ResultVal<ArchiveFormatInfo> ArchiveFactory_SDMCWriteOnly::GetFormatInfo(const Path& path) const {
-    // TODO(Subv): Implement
+    // TODO: Implement
     LOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive {}", GetName());
     return ResultCode(-1);
 }

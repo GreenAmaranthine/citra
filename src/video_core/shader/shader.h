@@ -256,7 +256,7 @@ public:
     virtual void Run(const ShaderSetup& setup, UnitState& state) const = 0;
 };
 
-// TODO(yuriks): Remove and make it non-global state somewhere
+// TODO: Remove and make it non-global state somewhere
 ShaderEngine* GetEngine();
 void Shutdown();
 

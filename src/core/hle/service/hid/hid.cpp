@@ -168,7 +168,7 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
 
     Core::Movie::GetInstance().HandleTouchStatus(touch_entry);
 
-    // TODO(bunnei): We're not doing anything with offset 0xA8 + 0x18 of HID SharedMemory, which
+    // TODO: We're not doing anything with offset 0xA8 + 0x18 of HID SharedMemory, which
     // supposedly is "Touch-screen entry, which contains the raw coordinate data prior to being
     // converted to pixel coordinates." (http://3dbrew.org/wiki/HID_Shared_Memory#Offset_0xA8).
 
@@ -201,7 +201,8 @@ void Module::UpdateAccelerometerCallback(u64 userdata, s64 cycles_late) {
         Math::Vec3<float> accel;
         std::tie(accel, std::ignore) = motion_device->GetStatus();
         accel *= accelerometer_coef;
-        // TODO(wwylele): do a time stretch like the one in UpdateGyroscopeCallback
+
+        // TODO: do a time stretch like the one in UpdateGyroscopeCallback
         // The time stretch formula should be like
         // stretched_vector = (raw_vector - gravity) * stretch_ratio + gravity
         accelerometer_entry.x = static_cast<s16>(accel.x);
@@ -212,7 +213,7 @@ void Module::UpdateAccelerometerCallback(u64 userdata, s64 cycles_late) {
     Core::Movie::GetInstance().HandleAccelerometerStatus(accelerometer_entry);
 
     // Make up "raw" entry
-    // TODO(wwylele):
+    // TODO:
     // From hardware testing, the raw_entry values are approximately, but not exactly, as twice as
     // corresponding entries (or with a minus sign). It may caused by system calibration to the
     // accelerometer. Figure out how it works, or, if no game reads raw_entry, the following three

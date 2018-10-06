@@ -346,19 +346,19 @@ void Module::Interface::Socket(Kernel::HLERequestContext& ctx) {
 
     // Only 0 is allowed according to 3dbrew, using 0 will let the OS decide which protocol to use
     if (protocol != 0) {
-        rb.Push(UnimplementedFunction(ErrorModule::SOC)); // TODO(Subv): Correct error code
+        rb.Push(UnimplementedFunction(ErrorModule::SOC)); // TODO: Correct error code
         rb.Skip(1, false);
         return;
     }
 
     if (domain != AF_INET) {
-        rb.Push(UnimplementedFunction(ErrorModule::SOC)); // TODO(Subv): Correct error code
+        rb.Push(UnimplementedFunction(ErrorModule::SOC)); // TODO: Correct error code
         rb.Skip(1, false);
         return;
     }
 
     if (type != SOCK_DGRAM && type != SOCK_STREAM) {
-        rb.Push(UnimplementedFunction(ErrorModule::SOC)); // TODO(Subv): Correct error code
+        rb.Push(UnimplementedFunction(ErrorModule::SOC)); // TODO: Correct error code
         rb.Skip(1, false);
         return;
     }
@@ -478,7 +478,7 @@ void Module::Interface::Listen(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::Accept(Kernel::HLERequestContext& ctx) {
-    // TODO(Subv): Calling this function on a blocking socket will block the emu thread,
+    // TODO: Calling this function on a blocking socket will block the emu thread,
     // preventing graceful shutdown when closing the emulator, this can be fixed by always
     // performing nonblocking operations and spinlock until the data is available
     IPC::RequestParser rp{ctx, 0x04, 2, 2};
@@ -613,7 +613,7 @@ void Module::Interface::RecvFromOther(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::RecvFrom(Kernel::HLERequestContext& ctx) {
-    // TODO(Subv): Calling this function on a blocking socket will block the emu thread,
+    // TODO: Calling this function on a blocking socket will block the emu thread,
     // preventing graceful shutdown when closing the emulator, this can be fixed by always
     // performing nonblocking operations and spinlock until the data is available
     IPC::RequestParser rp{ctx, 0x08, 4, 2};
@@ -756,7 +756,7 @@ void Module::Interface::GetPeerName(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::Connect(Kernel::HLERequestContext& ctx) {
-    // TODO(Subv): Calling this function on a blocking socket will block the emu thread,
+    // TODO: Calling this function on a blocking socket will block the emu thread,
     // preventing graceful shutdown when closing the emulator, this can be fixed by always
     // performing nonblocking operations and spinlock until the data is available
     IPC::RequestParser rp{ctx, 0x06, 2, 4};
@@ -779,7 +779,7 @@ void Module::Interface::Connect(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::InitializeSockets(Kernel::HLERequestContext& ctx) {
-    // TODO(Subv): Implement
+    // TODO: Implement
     IPC::RequestParser rp{ctx, 0x01, 1, 4};
     u32 memory_block_size{rp.Pop<u32>()};
     rp.PopPID();
@@ -790,7 +790,7 @@ void Module::Interface::InitializeSockets(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::ShutdownSockets(Kernel::HLERequestContext& ctx) {
-    // TODO(Subv): Implement
+    // TODO: Implement
     IPC::RequestParser rp{ctx, 0x19, 0, 0};
     CleanupSockets();
 

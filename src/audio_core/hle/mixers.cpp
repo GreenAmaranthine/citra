@@ -95,7 +95,7 @@ static std::array<s16, 2> AddAndClampToS16(const std::array<s16, 2>& a,
 }
 
 void Mixers::DownmixAndMixIntoCurrentFrame(float gain, const QuadFrame32& samples) {
-    // TODO(merry): Limiter. (Currently we're performing final mixing assuming a disabled limiter.)
+    // TODO: Limiter. (Currently we're performing final mixing assuming a disabled limiter.)
 
     switch (state.output_format) {
     case OutputFormat::Mono:
@@ -113,7 +113,7 @@ void Mixers::DownmixAndMixIntoCurrentFrame(float gain, const QuadFrame32& sample
         return;
 
     case OutputFormat::Surround:
-        // TODO(merry): Implement surround sound.
+        // TODO: Implement surround sound.
         // fallthrough
 
     case OutputFormat::Stereo:
@@ -192,7 +192,7 @@ void Mixers::MixCurrentFrame() {
                                       state.intermediate_mix_buffer[mix]);
     }
 
-    // TODO(merry): Compressor. (We currently assume a disabled compressor.)
+    // TODO: Compressor. (We currently assume a disabled compressor.)
 }
 
 DspStatus Mixers::GetCurrentStatus() const {

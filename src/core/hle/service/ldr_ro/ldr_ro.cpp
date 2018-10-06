@@ -106,7 +106,7 @@ void RO::Initialize(Kernel::HLERequestContext& ctx) {
     ResultCode result = RESULT_SUCCESS;
 
     if (crs_buffer_ptr != crs_address) {
-        // TODO(wwylele): should be memory aliasing
+        // TODO: should be memory aliasing
         std::shared_ptr<std::vector<u8>> crs_mem = std::make_shared<std::vector<u8>>(crs_size);
         Memory::ReadBlock(crs_buffer_ptr, crs_mem->data(), crs_size);
         result = process->vm_manager
@@ -129,7 +129,7 @@ void RO::Initialize(Kernel::HLERequestContext& ctx) {
         slot->memory_synchronizer.AddMemoryBlock(crs_address, crs_buffer_ptr, crs_size);
     } else {
         // Do nothing if buffer_ptr == address
-        // TODO(wwylele): verify this behaviour. This is only seen in the web browser app,
+        // TODO: verify this behaviour. This is only seen in the web browser app,
         //     and the actual behaviour is unclear. "Do nothing" is probably an incorrect implement.
         //     There is also a chance that another issue causes the app passing wrong arguments.
         LOG_WARNING(Service_LDR, "crs_buffer_ptr == crs_address (0x{:08X})", crs_address);
@@ -267,7 +267,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
     ResultCode result = RESULT_SUCCESS;
 
     if (cro_buffer_ptr != cro_address) {
-        // TODO(wwylele): should be memory aliasing
+        // TODO: should be memory aliasing
         std::shared_ptr<std::vector<u8>> cro_mem = std::make_shared<std::vector<u8>>(cro_size);
         Memory::ReadBlock(cro_buffer_ptr, cro_mem->data(), cro_size);
         result = process->vm_manager
@@ -293,7 +293,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
         slot->memory_synchronizer.AddMemoryBlock(cro_address, cro_buffer_ptr, cro_size);
     } else {
         // Do nothing if buffer_ptr == address
-        // TODO(wwylele): verify this behaviour.
+        // TODO: verify this behaviour.
         //     This is derived from the case of LoadCRS with buffer_ptr==address,
         //     and is never seen in any game. "Do nothing" is probably an incorrect implement.
         //     There is also a chance that this case is just prohibited.
@@ -336,7 +336,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
 
     slot->memory_synchronizer.SynchronizeOriginalMemory(*process);
 
-    // TODO(wwylele): verify the behaviour when buffer_ptr == address
+    // TODO: verify the behaviour when buffer_ptr == address
     if (cro_buffer_ptr != cro_address) {
         if (fix_size != cro_size) {
             result = process->vm_manager.UnmapRange(cro_address + fix_size, cro_size - fix_size);
@@ -437,7 +437,7 @@ void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
 
     slot->memory_synchronizer.SynchronizeOriginalMemory(*process);
 
-    // TODO(wwylele): verify the behaviour when buffer_ptr == address
+    // TODO: verify the behaviour when buffer_ptr == address
     if (cro_address != cro_buffer_ptr) {
         result = process->vm_manager.UnmapRange(cro_address, fixed_size);
         if (result.IsError()) {
@@ -558,7 +558,7 @@ void RO::Shutdown(Kernel::HLERequestContext& ctx) {
 
     ResultCode result = RESULT_SUCCESS;
 
-    // TODO(wwylele): verify the behaviour when buffer_ptr == address
+    // TODO: verify the behaviour when buffer_ptr == address
     if (slot->loaded_crs != crs_buffer_ptr) {
         result = process->vm_manager.UnmapRange(slot->loaded_crs, crs.GetFileSize());
         if (result.IsError()) {

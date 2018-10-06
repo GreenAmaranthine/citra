@@ -67,7 +67,7 @@ static constexpr std::array<AppletTitleData, NumApplets> applet_titleids{{
      0x400300000CD02, 0x400300000D502, 0x400300000D502, 0x400300000D502},
     {AppletId::Memolib, AppletId::Memolib2, 0x400300000F602, 0x400300000F602, 0x400300000F602,
      0x400300000F602, 0x400300000F602, 0x400300000F602, 0x400300000F602},
-    // TODO(Subv): Fill in the rest of the titleids
+    // TODO: Fill in the rest of the titleids
 }};
 
 static u64 GetTitleIdForApplet(AppletId id) {
@@ -363,7 +363,7 @@ ResultCode AppletManager::PreloadLibraryApplet(AppletId applet_id) {
 }
 
 ResultCode AppletManager::FinishPreloadingLibraryApplet(AppletId applet_id) {
-    // TODO(Subv): This function should fail depending on the applet preparation state.
+    // TODO: This function should fail depending on the applet preparation state.
     auto& slot{applet_slots[static_cast<std::size_t>(AppletSlot::LibraryApplet)]};
     slot.loaded = true;
     return RESULT_SUCCESS;
@@ -403,12 +403,12 @@ ResultVal<AppletManager::AppletInfo> AppletManager::GetAppletInfo(AppletId app_i
         }
         LOG_WARNING(Service_APT, "Using HLE applet info for applet {:03X}",
                     static_cast<u32>(app_id));
-        // TODO(Subv): Get the title id for the current applet and write it in the response[2-3]
+        // TODO: Get the title id for the current applet and write it in the response[2-3]
         return MakeResult<AppletInfo>({0, Service::FS::MediaType::NAND, true, true, 0});
     }
 
     if (app_id == AppletId::Application) {
-        // TODO(Subv): Implement this once Application launching is implemented
+        // TODO: Implement this once Application launching is implemented
         LOG_ERROR(Service_APT, "Unimplemented GetAppletInfo(Application)");
         return ResultCode(ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotFound,
                           ErrorLevel::Status);
@@ -442,7 +442,7 @@ ResultCode AppletManager::CloseLibraryApplet(Kernel::SharedPtr<Kernel::Object> o
     auto& slot{applet_slots[static_cast<std::size_t>(AppletSlot::LibraryApplet)]};
 
     MessageParameter param;
-    // TODO(Subv): The destination id should be the "current applet slot id", which changes
+    // TODO: The destination id should be the "current applet slot id", which changes
     // constantly depending on what is going on in the system. Most of the time it is the running
     // application, but it could be something else if a system applet is launched.
     param.destination_id = AppletId::Application;
@@ -454,7 +454,7 @@ ResultCode AppletManager::CloseLibraryApplet(Kernel::SharedPtr<Kernel::Object> o
     ResultCode result{SendParameter(param)};
 
     if (library_applet_closing_command != SignalType::WakeupByPause) {
-        // TODO(Subv): Terminate the running applet title
+        // TODO: Terminate the running applet title
         slot.Reset();
     }
 

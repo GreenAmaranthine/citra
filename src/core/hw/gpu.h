@@ -211,7 +211,7 @@ struct Regs {
             BitField<8, 3, PixelFormat> input_format;
             BitField<12, 3, PixelFormat> output_format;
             /// Uses some kind of 32x32 block swizzling mode, instead of the usual 8x8 one.
-            BitField<16, 1, u32> block_32;        // TODO(yuriks): unimplemented
+            BitField<16, 1, u32> block_32;        // TODO: unimplemented
             BitField<24, 2, ScalingMode> scaling; // Determines the scaling mode of the transfer
         };
 

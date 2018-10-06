@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <memory>
 #include <string>
 #include "core/file_sys/archive_backend.h"
@@ -16,11 +17,22 @@ enum class MediaType : u32;
 
 namespace FileSys {
 
+enum class NCCHFilePathType : u32 {
+    RomFS = 0,
+    Code = 1,
+    ExeFS = 2,
+};
+
+enum class NCCHFileOpenType : u32 {
+    NCCHData = 0,
+    SaveData = 1,
+};
+
 /// Archive backend for NCCH Archives (RomFS, ExeFS)
 class NCCHArchive : public ArchiveBackend {
 public:
     explicit NCCHArchive(u64 title_id, Service::FS::MediaType media_type)
-        : title_id(title_id), media_type(media_type) {}
+        : title_id{title_id}, media_type{media_type} {}
 
     std::string GetName() const override {
         return "NCCHArchive";
@@ -77,5 +89,8 @@ public:
     ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) override;
     ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path) const override;
 };
+
+Path MakeNCCHFilePath(NCCHFileOpenType open_type, u32 content_index, NCCHFilePathType filepath_type,
+                      std::array<char, 8>& exefs_filepath);
 
 } // namespace FileSys

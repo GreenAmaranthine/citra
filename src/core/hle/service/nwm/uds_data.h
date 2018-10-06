@@ -40,7 +40,7 @@ static_assert(sizeof(LLCHeader) == 8, "LLCHeader has the wrong size");
  * the source and destination network node ids.
  */
 struct SecureDataHeader {
-    // TODO(Subv): It is likely that the first 4 bytes of this header are
+    // TODO: It is likely that the first 4 bytes of this header are
     // actually part of another container protocol.
     u16_be protocol_size;
     INSERT_PADDING_BYTES(2);

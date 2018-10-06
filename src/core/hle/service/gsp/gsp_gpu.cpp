@@ -26,7 +26,7 @@ const u32 REGS_BEGIN{0x1EB00000};
 
 namespace ErrCodes {
 enum {
-    // TODO(purpasmart): Check if this name fits its actual usage
+    // TODO: Check if this name fits its actual usage
     OutofRangeOrMisalignedAddress = 513,
     FirstInitialization = 519,
 };
@@ -303,7 +303,7 @@ void GSP_GPU::FlushDataCache(Kernel::HLERequestContext& ctx) {
     u32 size{rp.Pop<u32>()};
     auto process{rp.PopObject<Kernel::Process>()};
 
-    // TODO(purpasmart96): Verify return header on HW
+    // TODO: Verify return header on HW
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
@@ -328,7 +328,7 @@ void GSP_GPU::RegisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
 
     auto interrupt_event{rp.PopObject<Kernel::Event>()};
 
-    // TODO(mailwl): return right error code instead of asserting
+    // TODO: return right error code instead of asserting
     ASSERT_MSG((interrupt_event != nullptr), "handle is not valid!");
 
     interrupt_event->SetName("GSP_GSP_GPU::interrupt_event");
@@ -387,9 +387,9 @@ void GSP_GPU::SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id) 
     interrupt_relay_queue->error_code = 0x0; // No error
 
     // Update framebuffer information if requested
-    // TODO(yuriks): Confirm where this code should be called. It is definitely updated without
+    // TODO: Confirm where this code should be called. It is definitely updated without
     //               executing any GSP commands, only waiting on the event.
-    // TODO(Subv): The real GSP module triggers PDC0 after updating both the top and bottom
+    // TODO: The real GSP module triggers PDC0 after updating both the top and bottom
     // screen, it is currently unknown what PDC1 does.
     int screen_id{
         (interrupt_id == InterruptId::PDC0) ? 0 : (interrupt_id == InterruptId::PDC1) ? 1 : -1};
@@ -450,7 +450,7 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
                                              command.dma_request.size,
                                              Memory::FlushMode::Invalidate);
 
-        // TODO(Subv): These memory accesses should not go through the application's memory mapping.
+        // TODO: These memory accesses should not go through the application's memory mapping.
         // They should go through the GSP module's memory mapping.
         Memory::CopyBlock(command.dma_request.dest_address, command.dma_request.source_address,
                           command.dma_request.size);
@@ -476,7 +476,7 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         // though
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(command_processor_config.trigger)), 1);
 
-        // TODO(yuriks): Figure out the meaning of the `flags` field.
+        // TODO: Figure out the meaning of the `flags` field.
         break;
     }
 
@@ -646,7 +646,7 @@ void GSP_GPU::AcquireRight(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    // TODO(Subv): This case should put the caller thread to sleep until the right is released.
+    // TODO: This case should put the caller thread to sleep until the right is released.
     ASSERT_MSG(active_thread_id == -1, "GPU right has already been acquired");
 
     active_thread_id = session_data->thread_id;

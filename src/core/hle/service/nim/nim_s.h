@@ -12,6 +12,8 @@ class NIM_S final : public ServiceFramework<NIM_S> {
 public:
     NIM_S();
     ~NIM_S();
+
+    void CheckSysupdateAvailableSOAP(Kernel::HLERequestContext& ctx);
 };
 
 } // namespace Service::NIM

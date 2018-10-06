@@ -41,7 +41,7 @@ public:
      * Handles a sync request from the emulated application.
      * @param server_session The ServerSession that was triggered for this sync request,
      * it should be used to differentiate which client (As in ClientSession) we're answering to.
-     * TODO(Subv): Use a wrapper structure to hold all the information relevant to
+     * TODO: Use a wrapper structure to hold all the information relevant to
      * this request (ServerSession, Originator thread, Translated command buffer, etc).
      * @returns ResultCode the result code of the translate operation.
      */
@@ -237,10 +237,13 @@ public:
 private:
     std::array<u32, IPC::COMMAND_BUFFER_LENGTH> cmd_buf;
     SharedPtr<ServerSession> session;
-    // TODO(yuriks): Check common usage of this and optimize size accordingly
+
+    // TODO: Check common usage of this and optimize size accordingly
     boost::container::small_vector<SharedPtr<Object>, 8> request_handles;
+
     // The static buffers will be created when the IPC request is translated.
     std::array<std::vector<u8>, IPC::MAX_STATIC_BUFFERS> static_buffers;
+
     // The mapped buffers will be created when the IPC request is translated
     boost::container::small_vector<MappedBuffer, 8> request_mapped_buffers;
 };
