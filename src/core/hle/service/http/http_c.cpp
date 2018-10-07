@@ -1047,7 +1047,6 @@ void HTTP_C::AddTrustedRootCA(Kernel::HLERequestContext& ctx) {
 
     itr->second.ssl_config.enable_root_cert_chain = true;
 
-    LOG_INFO(Service, "Adding Trusted RootCA.");
     RootCertChain::RootCACert cert{};
     cert.session_id = session_data->session_id;
     cert.handle = ++itr->second.ssl_config.root_ca_chain.certs_counter;
@@ -1078,6 +1077,7 @@ void HTTP_C::AddDefaultCert(Kernel::HLERequestContext& ctx) {
 
     RootCertChain::RootCACert cert{};
     cert.session_id = session_data->session_id;
+    cert.handle = ++itr->second.ssl_config.root_ca_chain.certs_counter;
     cert.certificate = default_root_certs[cert_id].certificate;
     itr->second.ssl_config.root_ca_chain.certificates.push_back(cert);
 
