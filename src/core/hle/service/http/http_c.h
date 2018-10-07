@@ -101,8 +101,33 @@ public:
 
     struct SSLConfig {
         u32 options;
-        std::weak_ptr<ClientCertContext> client_cert_ctx;
-        std::weak_ptr<RootCertChain> root_ca_chain;
+        bool enable_client_cert{};
+        bool enable_root_cert_chain{};
+        ClientCertContext client_cert_ctx{};
+        RootCertChain root_ca_chain{};
+    };
+
+    struct PostData {
+        enum class Type {
+            Ascii,
+            Binary,
+            Raw,
+        };
+        Type type;
+
+        struct {
+            std::string name;
+            std::string value;
+        } ascii;
+
+        struct {
+            std::string name;
+            std::vector<u8> data;
+        } binary;
+
+        struct {
+            std::string data;
+        } raw;
     };
 
     Handle handle;
@@ -115,10 +140,9 @@ public:
     SSLConfig ssl_config{};
     u32 socket_buffer_size;
     httplib::Headers headers;
-    std::string post_data;
+    std::vector<PostData> post_data;
     u32 current_offset{};
     std::shared_ptr<httplib::Response> response;
-    u32 ssl_options;
     u64 timeout;
     bool proxy_default;
     u32 ssl_error{};
@@ -126,7 +150,7 @@ public:
     u32 GetResponseContentLength() const;
     void Send();
     void SetKeepAlive(bool);
-    std::string GetRawResponse() const;
+    std::string GetRawResponseWithoutBody() const;
 };
 
 struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
