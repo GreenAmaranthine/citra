@@ -16,4 +16,4 @@ Packet::Packet(const PacketHeader& header, u8* data,
     std::memcpy(packet_data.data(), data, header.packet_size);
 }
 
-}; // namespace RPC
+} // namespace RPC

@@ -390,7 +390,11 @@ void RPCServer::HandleRequestsLoop() {
 
     LOG_INFO(RPC, "Request handler started.");
 
-    while (request_queue.PopWait(request_packet)) {
+    for (;;) {
+        request_packet = request_queue.PopWait();
+        if (!request_packet) {
+            break;
+        }
         HandleSingleRequest(std::move(request_packet));
     }
 }
@@ -406,9 +410,8 @@ void RPCServer::Start() {
 }
 
 void RPCServer::Stop() {
-    request_queue.Finalize();
-    request_handler_thread.join();
     server.Stop();
+    request_handler_thread.join();
 }
 
-}; // namespace RPC
+} // namespace RPC

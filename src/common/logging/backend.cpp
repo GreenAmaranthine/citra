@@ -75,21 +75,27 @@ public:
 private:
     Impl() {
         backend_thread = std::thread([&] {
-            Entry entry{};
+            Entry entry;
             auto write_logs{[&](Entry& e) {
                 std::lock_guard<std::mutex> lock{writing_mutex};
                 for (const auto& backend : backends) {
                     backend->Write(e);
                 }
             }};
-            while (message_queue.PopWait(entry)) {
+            for (;;) {
+                entry = message_queue.PopWait();
+                if (entry.final_entry) {
+                    break;
+                }
                 write_logs(entry);
             }
         });
     }
 
     ~Impl() {
-        message_queue.Finalize();
+        Entry entry;
+        entry.final_entry = true;
+        message_queue.Push(entry);
         backend_thread.join();
     }
 

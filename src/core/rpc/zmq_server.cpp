@@ -57,6 +57,8 @@ void ZMQServer::WorkerLoop() {
         }
     }
 
+    new_request_callback({});
+
     // Destroying the socket must be done by this thread.
     zmq_socket.reset();
 }
@@ -79,4 +81,4 @@ void ZMQServer::SendReply(Packet& reply_packet) {
     }
 }
 
-}; // namespace RPC
+} // namespace RPC

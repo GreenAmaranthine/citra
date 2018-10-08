@@ -6,7 +6,6 @@
 
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <thread>
 #include "common/threadsafe_queue.h"
 #include "core/rpc/server.h"
@@ -51,7 +50,6 @@ private:
     Server server;
     Common::SPSCQueue<std::unique_ptr<Packet>> request_queue;
     std::thread request_handler_thread;
-    std::mutex request_queue_mutex;
 };
 
 } // namespace RPC

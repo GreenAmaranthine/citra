@@ -43,20 +43,10 @@ public:
 
     template <typename Arg>
     void Push(Arg&& t) {
-        // create the element, add it to the queue
+        // add the element to the queue
         write_ptr->current = std::move(t);
         // set the next pointer to a new element ptr
         // then advance the write pointer
-        ElementPtr* new_ptr{new ElementPtr()};
-        write_ptr->next.store(new_ptr, std::memory_order_release);
-        write_ptr = new_ptr;
-        if (NeedSize)
-            size++;
-        cv.notify_one();
-    }
-
-    void Finalize() {
-        // Create a new next, the queue wont be empty but the optional will contain no value
         ElementPtr* new_ptr{new ElementPtr()};
         write_ptr->next.store(new_ptr, std::memory_order_release);
         write_ptr = new_ptr;
@@ -80,15 +70,10 @@ public:
         if (Empty())
             return false;
 
-        ElementPtr* tmpptr{read_ptr};
-
-        // If the finialize msg was pushed return false
-        if (!tmpptr->current)
-            return false;
-
         if (NeedSize)
             size--;
 
+        ElementPtr* tmpptr{read_ptr};
         read_ptr = tmpptr->next.load(std::memory_order_acquire);
         t = std::move(tmpptr->current.value());
         tmpptr->next.store(nullptr);
@@ -96,12 +81,14 @@ public:
         return true;
     }
 
-    bool PopWait(T& t) {
+    T PopWait() {
         if (Empty()) {
             std::unique_lock<std::mutex> lock{cv_mutex};
             cv.wait(lock, [this]() { return !Empty(); });
         }
-        return Pop(t);
+        T t;
+        Pop(t);
+        return t;
     }
 
     // not thread-safe
@@ -171,8 +158,8 @@ public:
         return spsc_queue.Pop(t);
     }
 
-    bool PopWait(T& t) {
-        return spsc_queue.PopWait(t);
+    T PopWait() {
+        return spsc_queue.PopWait();
     }
 
     // not thread-safe
