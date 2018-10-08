@@ -66,7 +66,6 @@ public:
         void OpenAppData(Kernel::HLERequestContext& ctx);
         void ReadAppData(Kernel::HLERequestContext& ctx);
         void Unknown1(Kernel::HLERequestContext& ctx);
-        void IsFigure(Kernel::HLERequestContext& ctx);
 
     private:
         std::shared_ptr<Module> nfc;
