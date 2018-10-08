@@ -75,6 +75,7 @@ void LogSettings() {
     LogSetting("Hacks_Ticks", Settings::values.ticks);
     LogSetting("Hacks_TicksMode", static_cast<int>(Settings::values.ticks_mode));
     LogSetting("Hacks_UseBos", Settings::values.use_bos);
+    LogSetting("Hacks_DisableMh3d", Settings::values.disable_mh_3d);
 }
 
 void LoadProfile(int index) {
@@ -111,8 +112,7 @@ void CreateProfile(std::string name) {
     profile.udp_input_port = values.udp_input_port;
     profile.udp_pad_index = values.udp_pad_index;
     values.profiles.push_back(profile);
-    values.profile = values.profiles.size() - 1;
-    LoadProfile(values.profile);
+    LoadProfile(values.profiles.size() - 1);
 }
 
 void DeleteProfile(int index) {
