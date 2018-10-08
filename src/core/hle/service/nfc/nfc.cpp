@@ -2,53 +2,74 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/core.h"
+#include "common/file_util.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/hle/service/nfc/nfc_m.h"
 #include "core/hle/service/nfc/nfc_u.h"
+extern "C" {
+#include "nfc3d/amitool.h"
+}
 
 namespace Service::NFC {
 
+#define AMIIBO_YEAR_FROM_DATE(dt) ((dt >> 1) + 2000)
+#define AMIIBO_MONTH_FROM_DATE(dt) ((*((&dt) + 1) >> 5) & 0xF)
+#define AMIIBO_DAY_FROM_DATE(dt) (*((&dt) + 1) & 0x1F)
+
 struct TagInfo {
-    u16 id_offset_size;
-    u8 unk1;
-    u8 unk2;
-    std::array<u8, 10> uuid;
-    INSERT_PADDING_BYTES(0x1D);
+    u16 id_offset_size; /// "u16 size/offset of the below ID data. Normally this is 0x7. When this
+                        /// is <=10, this field is the size of the below ID data. When this is >10,
+                        /// this is the offset of the 10-byte ID data, relative to
+                        /// structstart+4+<offsetfield-10>. It's unknown in what cases this 10-byte
+                        /// ID data is used."
+    u8 unk_x2;          //"Unknown u8, normally 0x0."
+    u8 unk_x3;          //"Unknown u8, normally 0x2."
+    std::array<u8, 0x28> id; //"ID data. When the above size field is 0x7, this is the 7-byte NFC
+                             // tag UID, followed by all-zeros."
 };
-static_assert(sizeof(TagInfo) == 0x2C, "TagInfo has an invalid size");
 
 struct AmiiboConfig {
     u16 lastwritedate_year;
     u8 lastwritedate_month;
     u8 lastwritedate_day;
     u16 write_counter;
-
-    std::array<u8, 3> characterID; /// the first element is the collection ID, the second the
-                                   /// character in this collection, the third the variant
-    u8 series;                     /// ID of the series
+    u8 characterID[3]; /// the first element is the collection ID, the second the character in this
+                       /// collection, the third the variant
+    u8 series;         /// ID of the series
     u16 amiiboID; /// ID shared by all exact same amiibo. Some amiibo are only distinguished by this
                   /// one like regular SMB Series Mario and the gold one
     u8 type;      /// Type of amiibo 0 = figure, 1 = card, 2 = plush
     u8 pagex4_byte3;
     u16 appdata_size; /// "NFC module writes hard-coded u8 value 0xD8 here. This is the size of the
                       /// Amiibo AppData, apps can use this with the AppData R/W commands. ..."
-    INSERT_PADDING_BYTES(0x30); /// "Unused / reserved: this is cleared by NFC module but never
-                                /// written after that."
+    INSERT_PADDING_BYTES(
+        0x30); /// "Unused / reserved: this is cleared by NFC module but never written after that."
 };
-static_assert(sizeof(AmiiboConfig) == 0x40, "AmiiboConfig has an invalid size");
+
+struct AmiiboSettings {
+    u8 mii[0x60];     /// "Owner Mii."
+    u16 nickname[11]; /// "UTF-16BE Amiibo nickname."
+    u8 flags; /// "This is plaintext_amiibosettingsdata[0] & 0xF." See also the NFC_amiiboFlag
+              /// enums.
+    u8 countrycodeid; /// "This is plaintext_amiibosettingsdata[1]." "Country Code ID, from the
+                      /// system which setup this amiibo."
+    u16 setupdate_year;
+    u8 setupdate_month;
+    u8 setupdate_day;
+    INSERT_PADDING_BYTES(0x2C); // Normally all-zero?
+};
 
 void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x01, 1, 0};
     u8 param{rp.Pop<u8>()};
 
-    Core::System& system{Core::System::GetInstance()};
-    system.SetNFCTagState(TagState::NotScanning);
+    nfc->nfc_tag_state = TagState::NotScanning;
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
+
     LOG_WARNING(Service_NFC, "(STUBBED) called, param={}", param);
 }
 
@@ -56,27 +77,25 @@ void Module::Interface::Shutdown(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x02, 1, 0};
     u8 param{rp.Pop<u8>()};
 
-    Core::System& system{Core::System::GetInstance()};
-    system.SetNFCTagState(TagState::NotInitialized);
+    nfc->nfc_tag_state = TagState::NotInitialized;
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
+
     LOG_WARNING(Service_NFC, "(STUBBED) called, param={}", param);
 }
 
 void Module::Interface::StartCommunication(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x03, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x03, 1, 0};
     rb.Push(RESULT_SUCCESS);
+
     LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
 void Module::Interface::StopCommunication(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x04, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x04, 1, 0};
     rb.Push(RESULT_SUCCESS);
+
     LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
@@ -84,111 +103,136 @@ void Module::Interface::StartTagScanning(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x05, 1, 0};
     u16 in_val{rp.Pop<u16>()};
 
-    Core::System& system{Core::System::GetInstance()};
-    system.SetNFCTagState(TagState::Scanning);
+    nfc->nfc_tag_state = TagState::Scanning;
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
+
     LOG_WARNING(Service_NFC, "(STUBBED) called, in_val={:04x}", in_val);
 }
 
 void Module::Interface::GetTagInfo(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x11, 1, 0};
-
-    LOG_CRITICAL(Service_NFC, "called");
     TagInfo tag_info{};
-    Core::System& system{Core::System::GetInstance()};
-    FileUtil::IOFile nfc_file{system.GetNFCFilename(), "rb"};
-    std::size_t read_length{nfc_file.ReadBytes(tag_info.uuid.data(), tag_info.uuid.size())};
-    tag_info.id_offset_size = static_cast<u8>(read_length);
-    tag_info.unk1 = 0x0;
-    tag_info.unk2 = 0x2;
 
-    IPC::ResponseBuilder rb{rp.MakeBuilder(12, 0)};
+    FileUtil::IOFile nfc_file{nfc->nfc_filename, "rb"};
+    u8 data[AMIIBO_MAX_SIZE];
+    nfc_file.ReadBytes(data, AMIIBO_MAX_SIZE);
+
+    tag_info.id_offset_size = 0x7;
+    tag_info.unk_x3 = 0x02;
+    tag_info.id[0] = data[0];
+    tag_info.id[1] = data[1];
+    tag_info.id[2] = data[2];
+    tag_info.id[3] = data[4];
+    tag_info.id[4] = data[5];
+    tag_info.id[5] = data[6];
+    tag_info.id[6] = data[7];
+
+    IPC::ResponseBuilder rb{ctx, 0x11, (sizeof(TagInfo) / sizeof(u32)) + 1, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw<TagInfo>(tag_info);
 }
 
 void Module::Interface::GetAmiiboConfig(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x18, 0, 0};
-
-    // TODO: FILL THE STRUCT!
     AmiiboConfig amiibo_config{};
 
-    // amiibo_config.lastwritedate_year = 2017;
-    // amiibo_config.lastwritedate_month = 10;
-    // amiibo_config.lastwritedate_day = 10;
+    FileUtil::IOFile nfc_file{nfc->nfc_filename, "rb"};
+    u8 e_data[AMIIBO_MAX_SIZE];
+    u8 d_data[AMIIBO_MAX_SIZE];
+    nfc_file.ReadBytes(e_data, AMIIBO_MAX_SIZE);
 
-    // amiibo_config.write_counter = 1;
+    if (!amitool_unpack(e_data, AMIIBO_MAX_SIZE, d_data, AMIIBO_MAX_SIZE)) {
+        LOG_ERROR(Service_NFC, "Failed to decrypt");
+    } else {
+        amiibo_config.lastwritedate_year = AMIIBO_YEAR_FROM_DATE(d_data[0x32]);
+        amiibo_config.lastwritedate_month = AMIIBO_MONTH_FROM_DATE(d_data[0x32]);
+        amiibo_config.lastwritedate_day = AMIIBO_DAY_FROM_DATE(d_data[0x32]);
 
-    // amiibo_config.characterID[0] = 1; /// the first element is the collection ID, the second the
-    // amiibo_config.characterID[1] = 2;
-    // amiibo_config.characterID[2] = 3;
+        amiibo_config.write_counter = (d_data[0xB4] << 8) | d_data[0xB5];
+        amiibo_config.characterID[0] = d_data[0x1DC];
+        amiibo_config.characterID[1] = d_data[0x1DD];
+        amiibo_config.characterID[2] = d_data[0x1DE];
+        amiibo_config.series = d_data[0x1e2];
+        amiibo_config.amiiboID = (d_data[0x1e0] << 8) | d_data[0x1e1];
+        amiibo_config.type = d_data[0x1DF];
+        amiibo_config.pagex4_byte3 = d_data[0x2B]; // raw page 0x4 byte 0x3, dec byte
+        amiibo_config.appdata_size = 0xD8;
+    }
 
-    /// character in this collection, the third the variant
-    // amiibo_config.series = 4; /// ID of the series
-
-    // TODO: Use
-    // FileUtil::IOFile nfc_file{system.GetNFCFilename(), "rb"};
-    // std::size_t read_length{nfc_file.ReadBytes(tag_info.uuid.data(),
-    // tag_info.uuid.size())}; amiibo_config.amiiboID = 12345678; /// ID shared by all exact
-    // same amiibo. Some amiibo are
-    // only
-    /// distinguished by this
-    /// one like regular SMB Series Mario and the gold one
-    // u8 type{0};                       /// Type of amiibo 0 = figure, 1 = card, 2 = plush
-    // u8 pagex4_byte3{456};
-    // u16 appdata_size{0xD8};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(17, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x18, 17, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw<AmiiboConfig>(amiibo_config);
+}
 
-    LOG_CRITICAL(Service_NFC, "called");
+void Module::Interface::GetAmiiboSettings(Kernel::HLERequestContext& ctx) {
+    AmiiboSettings amsettings{};
+
+    FileUtil::IOFile nfc_file{nfc->nfc_filename, "rb"};
+    u8 e_data[AMIIBO_MAX_SIZE];
+    u8 d_data[AMIIBO_MAX_SIZE];
+    nfc_file.ReadBytes(e_data, AMIIBO_MAX_SIZE);
+
+    ResultCode result{RESULT_SUCCESS};
+
+    if (!amitool_unpack(e_data, AMIIBO_MAX_SIZE, d_data, AMIIBO_MAX_SIZE)) {
+        LOG_ERROR(Service_NFC, "Failed to decrypt");
+    } else {
+        if (!(d_data[0x2C] & 0x10)) {
+            result = ResultCode(0xC8A17628); // uninitialised
+        } else {
+            result = RESULT_SUCCESS;
+            memcpy(amsettings.mii, &d_data[0x4C], sizeof(amsettings.mii));
+            memcpy(amsettings.nickname, &d_data[0x38],
+                   4 * 5); // amiibo doesnt have the null terminator
+            amsettings.flags =
+                d_data[0x2C] & 0xF; // todo: we should only load some of these values if the unused
+                                    // flag bits are set correctly https://3dbrew.org/wiki/Amiibo
+            amsettings.countrycodeid = d_data[0x2D];
+
+            amsettings.setupdate_year = AMIIBO_YEAR_FROM_DATE(d_data[0x30]);
+            amsettings.setupdate_month = AMIIBO_MONTH_FROM_DATE(d_data[0x30]);
+            amsettings.setupdate_day = AMIIBO_DAY_FROM_DATE(d_data[0x30]);
+        }
+    }
+
+    IPC::ResponseBuilder rb{ctx, 0x17, (sizeof(AmiiboSettings) / sizeof(u32)) + 1, 0};
+    rb.Push(RESULT_SUCCESS);
+    rb.PushRaw<AmiiboSettings>(amsettings);
 }
 
 void Module::Interface::StopTagScanning(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x06, 0, 0};
 
-    Core::System& system{Core::System::GetInstance()};
-    system.SetNFCTagState(TagState::NotScanning);
+    nfc->nfc_tag_state = TagState::NotScanning;
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
+
     LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
 void Module::Interface::LoadAmiiboData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x07, 0, 0};
 
-    Core::System& system{Core::System::GetInstance()};
-    system.SetNFCTagState(TagState::TagDataLoaded);
+    nfc->nfc_tag_state = TagState::TagDataLoaded;
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
+
     LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
 void Module::Interface::ResetTagScanState(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x08, 0, 0};
+    nfc->nfc_tag_state = TagState::TagInRange;
 
-    Core::System& system{Core::System::GetInstance()};
-    system.SetNFCTagState(TagState::TagInRange);
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x08, 1, 0};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
 void Module::Interface::GetTagInRangeEvent(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x0B, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    IPC::ResponseBuilder rb{ctx, 0x0B, 1, 2};
     rb.Push(RESULT_SUCCESS);
-
-    Core::System& system{Core::System::GetInstance()};
-    rb.PushCopyObjects(system.GetNFCEvent());
-    LOG_WARNING(Service_NFC, "called");
+    rb.PushCopyObjects(nfc->tag_in_range_event);
 }
 
 void Module::Interface::GetTagOutOfRangeEvent(Kernel::HLERequestContext& ctx) {
@@ -197,34 +241,73 @@ void Module::Interface::GetTagOutOfRangeEvent(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(nfc->tag_out_of_range_event);
-    LOG_WARNING(Service_NFC, "called");
 }
 
 void Module::Interface::GetTagState(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x0D, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x0D, 2, 0};
     rb.Push(RESULT_SUCCESS);
-    Core::System& system{Core::System::GetInstance()};
-    rb.PushEnum(system.GetNFCTagState());
-    LOG_WARNING(Service_NFC, "(STUBBED) called");
+    rb.PushEnum(nfc->nfc_tag_state);
 }
 
 void Module::Interface::CommunicationGetStatus(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x0F, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x0F, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushEnum(nfc->nfc_status);
-    LOG_DEBUG(Service_NFC, "(STUBBED) called");
 }
 
 void Module::Interface::Unknown1(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x1A, 0, 0};
+    IPC::ResponseBuilder rb{ctx, 0x1A, 1, 0};
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_WARNING(Service_NFC, "(STUBBED) called");
+}
+
+void Module::Interface::OpenAppData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x13, 1, 0};
+    u32 app_id{rp.Pop<u32>()};
+
+    FileUtil::IOFile nfc_file{nfc->nfc_filename, "rb"};
+    u8 e_data[AMIIBO_MAX_SIZE];
+    u8 d_data[AMIIBO_MAX_SIZE];
+    nfc_file.ReadBytes(e_data, AMIIBO_MAX_SIZE);
+
+    ResultCode result{RESULT_SUCCESS};
+
+    if (!amitool_unpack(e_data, AMIIBO_MAX_SIZE, d_data, AMIIBO_MAX_SIZE)) {
+        LOG_ERROR(Service_NFC, "Failed to decrypt");
+    } else {
+        if (memcmp(&app_id, &d_data[0xB6], sizeof(app_id))) {
+            result = ResultCode(0xC8A17638); // app id mismatch
+        } else if (!(d_data[0x2C] & 0x20)) {
+            result = ResultCode(0xC8A17628); // uninitialised
+        }
+    }
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    rb.Push(result);
+}
+
+void Module::Interface::ReadAppData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x15, 1, 0};
+    u32 size{rp.Pop<u32>()};
+    ASSERT(size >= 0xD8);
+
+    FileUtil::IOFile nfc_file{nfc->nfc_filename, "rb"};
+    u8 e_data[AMIIBO_MAX_SIZE];
+    u8 d_data[AMIIBO_MAX_SIZE];
+    nfc_file.ReadBytes(e_data, AMIIBO_MAX_SIZE);
+
+    std::vector<u8> buffer(size);
+
+    if (!amitool_unpack(e_data, AMIIBO_MAX_SIZE, d_data, AMIIBO_MAX_SIZE)) {
+        LOG_ERROR(Service_NFC, "Failed to decrypt");
+    } else {
+        std::memcpy(buffer.data(), &d_data[0xDC], size);
+    }
+
+    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_NFC, "(STUBBED) called");
+    rb.PushStaticBuffer(buffer, 0);
 }
 
 Module::Interface::Interface(std::shared_ptr<Module> nfc, const char* name)
@@ -232,9 +315,24 @@ Module::Interface::Interface(std::shared_ptr<Module> nfc, const char* name)
 
 Module::Interface::~Interface() = default;
 
+std::shared_ptr<Module> Module::Interface::GetModule() const {
+    return nfc;
+}
+
 Module::Module() {
+    tag_in_range_event =
+        Kernel::Event::Create(Kernel::ResetType::OneShot, "NFC::tag_in_range_event");
     tag_out_of_range_event =
         Kernel::Event::Create(Kernel::ResetType::OneShot, "NFC::tag_out_range_event");
+
+    FileUtil::IOFile keys_file{
+        fmt::format("{}/amiibo_keys.bin", FileUtil::GetUserPath(D_SYSDATA_IDX)), "rb"};
+    if (!keys_file.IsOpen() || keys_file.GetSize() != 160) {
+        LOG_ERROR(Service_NFC, "amiibo_keys.bin file not found or invalid.");
+    } else {
+        keys_file.ReadBytes(keys_data, 160);
+        amitool_setKeys(keys_data, 160);
+    }
 }
 
 Module::~Module() = default;

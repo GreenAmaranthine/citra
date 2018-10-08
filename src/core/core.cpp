@@ -149,28 +149,6 @@ void System::Reschedule() {
     Kernel::Reschedule();
 }
 
-void System::LoadAmiibo(const std::string& filename) {
-    nfc_filename = filename;
-    nfc_tag_in_range_event->Signal();
-    nfc_tag_state = Service::NFC::TagState::TagInRange;
-}
-
-const Kernel::SharedPtr<Kernel::Event>& System::GetNFCEvent() const {
-    return nfc_tag_in_range_event;
-}
-
-const std::string& System::GetNFCFilename() const {
-    return nfc_filename;
-}
-
-const Service::NFC::TagState& System::GetNFCTagState() const {
-    return nfc_tag_state;
-}
-
-void System::SetNFCTagState(Service::NFC::TagState state) {
-    nfc_tag_state = state;
-}
-
 System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
     LOG_DEBUG(HW_Memory, "initialized OK");
 
@@ -213,8 +191,6 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
     perf_stats.BeginSystemFrame();
 
     SetRunning(true);
-    nfc_tag_in_range_event =
-        Kernel::Event::Create(Kernel::ResetType::OneShot, "NFC::tag_in_range_event");
 
     return ResultStatus::Success;
 }

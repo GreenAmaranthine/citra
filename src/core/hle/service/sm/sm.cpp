@@ -49,7 +49,7 @@ ResultVal<Kernel::SharedPtr<Kernel::ClientPort>> ServiceManager::GetServicePort(
     const std::string& name) {
 
     CASCADE_CODE(ValidateServiceName(name));
-    auto it = registered_services.find(name);
+    auto it{registered_services.find(name)};
     if (it == registered_services.end()) {
         return ERR_SERVICE_NOT_REGISTERED;
     }

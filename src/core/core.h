@@ -12,7 +12,6 @@
 #include "common/common_types.h"
 #include "core/hle/applets/erreula.h"
 #include "core/hle/applets/swkbd.h"
-#include "core/hle/kernel/event.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/hle/shared_page.h"
@@ -197,21 +196,6 @@ public:
     }
 
     std::string file_path;
-
-    const std::string& GetNFCFilename() const;
-
-    const Service::NFC::TagState& GetNFCTagState() const;
-
-    void SetNFCTagState(Service::NFC::TagState state);
-
-    void LoadAmiibo(const std::string& path);
-
-    const Kernel::SharedPtr<Kernel::Event>& GetNFCEvent() const;
-
-    /// NFC Loading
-    Kernel::SharedPtr<Kernel::Event> nfc_tag_in_range_event;
-    std::string nfc_filename;
-    Service::NFC::TagState nfc_tag_state{Service::NFC::TagState::NotInitialized};
 
 private:
     /**

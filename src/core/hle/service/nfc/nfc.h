@@ -45,6 +45,8 @@ public:
         Interface(std::shared_ptr<Module> nfc, const char* name);
         ~Interface();
 
+        std::shared_ptr<Module> GetModule() const;
+
     protected:
         void Initialize(Kernel::HLERequestContext& ctx);
         void Shutdown(Kernel::HLERequestContext& ctx);
@@ -59,16 +61,23 @@ public:
         void GetTagState(Kernel::HLERequestContext& ctx);
         void CommunicationGetStatus(Kernel::HLERequestContext& ctx);
         void GetTagInfo(Kernel::HLERequestContext& ctx);
+        void GetAmiiboSettings(Kernel::HLERequestContext& ctx);
         void GetAmiiboConfig(Kernel::HLERequestContext& ctx);
+        void OpenAppData(Kernel::HLERequestContext& ctx);
+        void ReadAppData(Kernel::HLERequestContext& ctx);
         void Unknown1(Kernel::HLERequestContext& ctx);
+        void IsFigure(Kernel::HLERequestContext& ctx);
 
     private:
         std::shared_ptr<Module> nfc;
     };
 
-private:
+    Kernel::SharedPtr<Kernel::Event> tag_in_range_event;
     Kernel::SharedPtr<Kernel::Event> tag_out_of_range_event;
+    TagState nfc_tag_state{TagState::NotInitialized};
     CommunicationStatus nfc_status{CommunicationStatus::NfcInitialized};
+    std::string nfc_filename;
+    u8 keys_data[160];
 };
 
 void InstallInterfaces(SM::ServiceManager& service_manager);

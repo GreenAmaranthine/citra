@@ -77,6 +77,9 @@ endif()
 set(BUILD_TESTS OFF CACHE BOOL "")
 add_subdirectory(cubeb EXCLUDE_FROM_ALL)
 
+# amitool
+add_subdirectory(amitool)
+
 if (ENABLE_SCRIPTING)
     # ZeroMQ
     # libzmq includes its own clang-format target, which conflicts with the

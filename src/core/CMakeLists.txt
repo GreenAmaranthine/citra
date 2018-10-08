@@ -518,7 +518,7 @@ get_directory_property(OPENSSL_LIBS
 target_compile_definitions(core PUBLIC -DCPPHTTPLIB_OPENSSL_SUPPORT)
 
 target_link_libraries(core PUBLIC common PRIVATE audio_core network video_core ${OPENSSL_LIBS} httplib lurlparser dynarmic)
-target_link_libraries(core PUBLIC Boost::boost PRIVATE SDL2 cryptopp fmt open_source_archives)
+target_link_libraries(core PUBLIC Boost::boost amitool PRIVATE SDL2 cryptopp fmt open_source_archives)
 if (ENABLE_WEB_SERVICE)
     add_definitions(-DENABLE_WEB_SERVICE)
     target_link_libraries(core PUBLIC json-headers web_service)

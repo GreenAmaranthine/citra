@@ -6,7 +6,7 @@
 
 namespace Service::NFC {
 
-NFC_M::NFC_M(std::shared_ptr<Module> nfc) : Module::Interface{std::move(nfc), "nfc:m"}{
+NFC_M::NFC_M(std::shared_ptr<Module> nfc) : Module::Interface{std::move(nfc), "nfc:m"} {
     static const FunctionInfo functions[]{
         // clang-format off
         // nfc:u shared commands
@@ -26,11 +26,11 @@ NFC_M::NFC_M(std::shared_ptr<Module> nfc) : Module::Interface{std::move(nfc), "n
         {0x00100000, nullptr, "GetTagInfo2"},
         {0x00110000, &NFC_M::GetTagInfo, "GetTagInfo"},
         {0x00120000, nullptr, "CommunicationGetResult"},
-        {0x00130040, nullptr, "OpenAppData"},
+        {0x00130040, &NFC_M::OpenAppData, "OpenAppData"},
         {0x00140384, nullptr, "InitializeWriteAppData"},
-        {0x00150040, nullptr, "ReadAppData"},
+        {0x00150040, &NFC_M::ReadAppData, "ReadAppData"},
         {0x00160242, nullptr, "WriteAppData"},
-        {0x00170000, nullptr, "GetAmiiboSettings"},
+        {0x00170000, &NFC_M::GetAmiiboSettings, "GetAmiiboSettings"},
         {0x00180000, &NFC_M::GetAmiiboConfig, "GetAmiiboConfig"},
         {0x00190000, nullptr, "GetAppDataInitStruct"},
         // nfc:m

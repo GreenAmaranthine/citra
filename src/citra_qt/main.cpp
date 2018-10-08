@@ -1255,7 +1255,7 @@ void GMainWindow::OnSetPlayCoins() {
 
 void GMainWindow::OnLoadAmiibo() {
     auto answer{QMessageBox::question(
-        this, "Citra", "Amiibos doesn't work.\nDo you want to scan an amiibo anyway?")};
+        this, "Citra", "Amiibo feature is experimental.\nDo you want to scan an amiibo anyway?")};
     if (answer != QMessageBox::Yes) {
         return;
     }
@@ -1266,7 +1266,16 @@ void GMainWindow::OnLoadAmiibo() {
         this, "Load Amiibo", UISettings::values.amiibo_path, file_filter)};
     if (!filename.isEmpty()) {
         Core::System& system{Core::System::GetInstance()};
-        system.LoadAmiibo(filename.toStdString());
+        auto& sm{system.ServiceManager()};
+        auto nfc{sm.GetService<Service::NFC::Module::Interface>("nfc:u")};
+        if (nfc != nullptr) {
+            auto nfc_module{nfc->GetModule()};
+            if (nfc_module != nullptr) {
+                nfc_module->nfc_filename = filename.toStdString();
+                nfc_module->nfc_tag_state = Service::NFC::TagState::TagInRange;
+                nfc_module->tag_in_range_event->Signal();
+            }
+        }
     }
 }
 
