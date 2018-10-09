@@ -58,9 +58,8 @@ void IR_RST::UpdateCallback(u64 userdata, s64 cycles_late) {
     state.zr.Assign(zr_button->GetStatus());
 
     // Get current c-stick position and update c-stick direction
-    float c_stick_x_f, c_stick_y_f;
-    std::tie(c_stick_x_f, c_stick_y_f) = c_stick->GetStatus();
-    constexpr int MAX_CSTICK_RADIUS = 0x9C; // Max value for a c-stick radius
+    auto [c_stick_x_f, c_stick_y_f]{c_stick->GetStatus()};
+    constexpr int MAX_CSTICK_RADIUS{0x9C}; // Max value for a c-stick radius
     s16 c_stick_x{static_cast<s16>(c_stick_x_f * MAX_CSTICK_RADIUS)};
     s16 c_stick_y{static_cast<s16>(c_stick_y_f * MAX_CSTICK_RADIUS)};
 

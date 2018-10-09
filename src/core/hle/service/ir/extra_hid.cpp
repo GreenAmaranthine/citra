@@ -236,8 +236,7 @@ void ExtraHID::SendHIDStatus() {
     // take values in the whole range of a 12-bit integer.
     constexpr int C_STICK_RADIUS{0x7FF};
 
-    float x, y;
-    std::tie(x, y) = c_stick->GetStatus();
+    auto [x, y]{c_stick->GetStatus()};
 
     ExtraHIDResponse response;
     response.c_stick.header.Assign(static_cast<u8>(ResponseID::PollHID));

@@ -889,9 +889,7 @@ Surface FindMatch(const SurfaceCache& surface_cache, const SurfaceParams& params
                 if (!(find_flags & check_type))
                     return;
 
-                bool matched;
-                SurfaceInterval surface_interval;
-                std::tie(matched, surface_interval) = match_fn();
+                auto [matched, surface_interval]{match_fn()};
                 if (!matched)
                     return;
 
@@ -1233,9 +1231,7 @@ Surface RasterizerCache::GetTextureSurface(const Pica::Texture::TextureInfo& inf
     params.UpdateParams();
 
     if (info.width % 8 != 0 || info.height % 8 != 0) {
-        Surface src_surface{};
-        MathUtil::Rectangle<u32> rect{};
-        std::tie(src_surface, rect) = GetSurfaceSubRect(params, ScaleMatch::Ignore, true);
+        auto [src_surface, rect]{GetSurfaceSubRect(params, ScaleMatch::Ignore, true)};
 
         params.res_scale = src_surface->res_scale;
         Surface tmp_surface{CreateSurface(params)};

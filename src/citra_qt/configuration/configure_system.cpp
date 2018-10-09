@@ -266,7 +266,7 @@ void ConfigureSystem::ReadSystemSettings() {
     ui->edit_username->setText(QString::fromStdU16String(username));
 
     // set birthday
-    std::tie(birthmonth, birthday) = cfg->GetBirthday();
+    auto [birthmonth, birthday]{cfg->GetBirthday()};
     ui->combo_birthmonth->setCurrentIndex(birthmonth - 1);
     updateBirthdayComboBox(
         birthmonth -

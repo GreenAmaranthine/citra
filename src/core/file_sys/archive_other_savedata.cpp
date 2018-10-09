@@ -105,7 +105,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_OtherSaveDataGeneral::
     CASCADE_RESULT(std::tie(media_type, program_id), ParsePathGeneral(path));
 
     if (media_type == MediaType::GameCard) {
-        LOG_WARNING(Service_FS, "(stubbed) Unimplemented media type GameCard");
+        LOG_WARNING(Service_FS, "Unimplemented media type GameCard");
         return ERROR_GAMECARD_NOT_INSERTED;
     }
 

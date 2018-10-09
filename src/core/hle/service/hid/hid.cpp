@@ -102,9 +102,8 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
         circle_pad_x = override_circle_x;
         circle_pad_y = override_circle_y;
     } else {
-        float circle_pad_x_f, circle_pad_y_f;
-        std::tie(circle_pad_x_f, circle_pad_y_f) = circle_pad->GetStatus();
-        constexpr int MAX_CIRCLEPAD_POS = 0x9C; // Max value for a circle pad position
+        auto [circle_pad_x_f, circle_pad_y_f]{circle_pad->GetStatus()};
+        constexpr int MAX_CIRCLEPAD_POS{0x9C}; // Max value for a circle pad position
         circle_pad_x = static_cast<s16>(circle_pad_x_f * MAX_CIRCLEPAD_POS);
         circle_pad_y = static_cast<s16>(circle_pad_y_f * MAX_CIRCLEPAD_POS);
     }
@@ -158,9 +157,7 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
         touch_entry.y = override_touch_y;
         touch_entry.valid.Assign(override_touch_valid ? 1 : 0);
     } else {
-        float x, y;
-        bool pressed;
-        std::tie(x, y, pressed) = touch_device->GetStatus();
+        auto [x, y, pressed]{touch_device->GetStatus()};
         touch_entry.x = static_cast<u16>(x * Core::kScreenBottomWidth);
         touch_entry.y = static_cast<u16>(y * Core::kScreenBottomHeight);
         touch_entry.valid.Assign(pressed ? 1 : 0);
