@@ -236,7 +236,7 @@ FramebufferLayout FrameLayoutFromResolutionScale(u16 res_scale) {
             std::max(Settings::values.custom_top_bottom, Settings::values.custom_bottom_bottom),
             Settings::values.swap_screen);
     } else {
-        int width{}, height{};
+        int width, height;
         // TODO: add support for medium layout
         switch (Settings::values.layout_option) {
         case Settings::LayoutOption::SingleScreen:

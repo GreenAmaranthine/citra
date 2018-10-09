@@ -31,10 +31,10 @@ public:
 
     explicit Socket(const std::string& host, u16 port, u8 pad_index, u32 client_id,
                     SocketCallback callback)
-        : client_id{client_id}, timer{io_service},
-          send_endpoint{udp::endpoint(address_v4::from_string(host), port)},
-          socket{io_service, udp::endpoint(udp::v4(), 0)}, pad_index{pad_index},
-          callback{std::move(callback)} {}
+        : client_id{client_id}, timer{io_service}, send_endpoint{udp::endpoint(
+                                                       address_v4::from_string(host), port)},
+          socket{io_service, udp::endpoint(udp::v4(), 0)}, pad_index{pad_index}, callback{std::move(
+                                                                                     callback)} {}
 
     void Stop() {
         io_service.stop();
@@ -165,7 +165,7 @@ void Client::OnPadData(Response::PadData data) {
     Math::Vec3f accel{Math::MakeVec<float>(-data.accel.x, data.accel.y, -data.accel.z)};
     Math::Vec3f gyro{Math::MakeVec<float>(-data.gyro.pitch, -data.gyro.yaw, data.gyro.roll)};
     {
-        std::lock_guard<std::mutex> guard(status->update_mutex);
+        std::lock_guard<std::mutex> guard{status->update_mutex};
 
         status->motion_status = {accel, gyro};
 

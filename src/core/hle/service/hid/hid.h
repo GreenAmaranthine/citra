@@ -214,7 +214,6 @@ public:
         void GetGyroscopeLowRawToDpsCoefficient(Kernel::HLERequestContext& ctx);
         void GetGyroscopeLowCalibrateParam(Kernel::HLERequestContext& ctx);
 
-    private:
         std::shared_ptr<Module> hid;
     };
 

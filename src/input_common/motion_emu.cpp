@@ -20,11 +20,12 @@ namespace InputCommon {
 class MotionEmuDevice {
 public:
     MotionEmuDevice(int update_millisecond, float sensitivity, float tilt_clamp)
-        : update_millisecond(update_millisecond),
-          update_duration(std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-              std::chrono::milliseconds(update_millisecond))),
-          sensitivity(sensitivity), tilt_clamp(tilt_clamp),
-          motion_emu_thread(&MotionEmuDevice::MotionEmuThread, this) {}
+        : update_millisecond{update_millisecond},
+          update_duration{std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+              std::chrono::milliseconds(update_millisecond))},
+          sensitivity{sensitivity}, tilt_clamp{tilt_clamp}, motion_emu_thread{
+                                                                &MotionEmuDevice::MotionEmuThread,
+                                                                this} {}
 
     ~MotionEmuDevice() {
         if (motion_emu_thread.joinable()) {
@@ -41,19 +42,19 @@ public:
     void Tilt(int x, int y) {
         auto mouse_move{Math::MakeVec(x, y) - mouse_origin};
         if (is_tilting) {
-            std::lock_guard<std::mutex> guard(tilt_mutex);
+            std::lock_guard<std::mutex> guard{tilt_mutex};
             if (mouse_move.x == 0 && mouse_move.y == 0) {
                 tilt_angle = 0;
             } else {
                 tilt_direction = mouse_move.Cast<float>();
                 tilt_angle = std::clamp(tilt_direction.Normalize() * sensitivity, 0.0f,
-                                        MathUtil::PI * this->tilt_clamp / 180.0f);
+                                        MathUtil::PI * tilt_clamp / 180.0f);
             }
         }
     }
 
     void EndTilt() {
-        std::lock_guard<std::mutex> guard(tilt_mutex);
+        std::lock_guard<std::mutex> guard{tilt_mutex};
         tilt_angle = 0;
         is_tilting = false;
     }
@@ -61,7 +62,7 @@ public:
     std::tuple<Math::Vec3<float>, Math::Vec3<float>> GetStatus() {
         if (!Core::System::GetInstance().IsShellOpen())
             return std::make_tuple(Math::Vec3<float>(), Math::Vec3<float>());
-        std::lock_guard<std::mutex> guard(status_mutex);
+        std::lock_guard<std::mutex> guard{status_mutex};
         return status;
     }
 
@@ -98,7 +99,7 @@ private:
             old_q = q;
 
             {
-                std::lock_guard<std::mutex> guard(tilt_mutex);
+                std::lock_guard<std::mutex> guard{tilt_mutex};
 
                 // Find the quaternion describing current 3DS tilting
                 q = MakeQuaternion(Math::MakeVec(-tilt_direction.y, 0.0f, tilt_direction.x),
@@ -120,7 +121,7 @@ private:
 
             // Update the sensor state
             {
-                std::lock_guard<std::mutex> guard(status_mutex);
+                std::lock_guard<std::mutex> guard{status_mutex};
                 status = std::make_tuple(gravity, angular_rate);
             }
         }

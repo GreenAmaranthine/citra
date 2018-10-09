@@ -21,8 +21,6 @@
 
 namespace Service::HID {
 
-static std::weak_ptr<Module> current_module;
-
 // Updating period for each HID device. These empirical values are measured from a 11.2 3DS.
 constexpr u64 pad_update_ticks{BASE_CLOCK_RATE_ARM11 / 234};
 constexpr u64 accelerometer_update_ticks{BASE_CLOCK_RATE_ARM11 / 104};
@@ -449,45 +447,75 @@ void Module::SetOverrideControls(bool pad, bool touch, bool motion, bool circle)
 }
 
 void ReloadInputDevices() {
-    if (auto hid{current_module.lock()})
-        hid->ReloadInputDevices();
+    if (!Core::System::GetInstance().IsPoweredOn()) {
+        return;
+    }
+
+    std::shared_ptr<User> user{
+        Core::System::GetInstance().ServiceManager().GetService<User>("hid:USER")};
+    auto hid{user->GetModule()};
+    hid->ReloadInputDevices();
 }
 
 void SetPadState(u32 raw) {
-    if (auto hid{current_module.lock()}) {
-        hid->SetPadState(raw);
+    if (!Core::System::GetInstance().IsPoweredOn()) {
+        return;
     }
+
+    std::shared_ptr<User> user{
+        Core::System::GetInstance().ServiceManager().GetService<User>("hid:USER")};
+    auto hid{user->GetModule()};
+    hid->SetPadState(raw);
 }
 
 void SetTouchState(s16 x, s16 y, bool valid) {
-    if (auto hid{current_module.lock()}) {
-        hid->SetTouchState(x, y, valid);
+    if (!Core::System::GetInstance().IsPoweredOn()) {
+        return;
     }
+
+    std::shared_ptr<User> user{
+        Core::System::GetInstance().ServiceManager().GetService<User>("hid:USER")};
+    auto hid{user->GetModule()};
+    hid->SetTouchState(x, y, valid);
 }
 
 void SetMotionState(s16 x, s16 y, s16 z, s16 roll, s16 pitch, s16 yaw) {
-    if (auto hid{current_module.lock()}) {
-        hid->SetMotionState(x, y, z, roll, pitch, yaw);
+    if (!Core::System::GetInstance().IsPoweredOn()) {
+        return;
     }
+
+    std::shared_ptr<User> user{
+        Core::System::GetInstance().ServiceManager().GetService<User>("hid:USER")};
+    auto hid{user->GetModule()};
+    hid->SetMotionState(x, y, z, roll, pitch, yaw);
 }
 
 void SetCircleState(s16 x, s16 y) {
-    if (auto hid{current_module.lock()}) {
-        hid->SetCircleState(x, y);
+    if (!Core::System::GetInstance().IsPoweredOn()) {
+        return;
     }
+
+    std::shared_ptr<User> user{
+        Core::System::GetInstance().ServiceManager().GetService<User>("hid:USER")};
+    auto hid{user->GetModule()};
+    hid->SetCircleState(x, y);
 }
 
 void SetOverrideControls(bool pad, bool touch, bool motion, bool circle) {
-    if (auto hid{current_module.lock()}) {
-        hid->SetOverrideControls(pad, touch, motion, circle);
+    if (!Core::System::GetInstance().IsPoweredOn()) {
+        return;
     }
+
+    std::shared_ptr<User> user{
+        Core::System::GetInstance().ServiceManager().GetService<User>("hid:USER")};
+    auto hid{user->GetModule()};
+    hid->SetOverrideControls(pad, touch, motion, circle);
 }
 
 void InstallInterfaces(SM::ServiceManager& service_manager) {
     auto hid{std::make_shared<Module>()};
     std::make_shared<User>(hid)->InstallAsService(service_manager);
     std::make_shared<Spvr>(hid)->InstallAsService(service_manager);
-    current_module = hid;
 }
 
 } // namespace Service::HID

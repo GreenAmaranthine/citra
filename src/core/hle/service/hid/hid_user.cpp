@@ -6,7 +6,7 @@
 
 namespace Service::HID {
 
-User::User(std::shared_ptr<Module> hid) : Module::Interface{std::move(hid), "hid:USER"}{
+User::User(std::shared_ptr<Module> hid) : Module::Interface{std::move(hid), "hid:USER"} {
     static const FunctionInfo functions[]{
         {0x00010200, nullptr, "CalibrateTouchScreen"},
         {0x00020000, nullptr, "UpdateTouchConfig"},
@@ -23,6 +23,10 @@ User::User(std::shared_ptr<Module> hid) : Module::Interface{std::move(hid), "hid
         {0x00170000, &User::GetSoundVolume, "GetSoundVolume"},
     };
     RegisterHandlers(functions);
+}
+
+std::shared_ptr<Module> User::GetModule() {
+    return hid;
 }
 
 } // namespace Service::HID
