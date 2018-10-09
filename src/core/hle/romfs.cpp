@@ -20,7 +20,6 @@ struct Header {
     u32_le file_table_length;
     u32_le data_offset;
 };
-
 static_assert(sizeof(Header) == 0x28, "Header has incorrect size");
 
 struct DirectoryMetadata {
@@ -32,7 +31,6 @@ struct DirectoryMetadata {
     u32_le name_length; // in bytes
     // followed by directory name
 };
-
 static_assert(sizeof(DirectoryMetadata) == 0x18, "DirectoryMetadata has incorrect size");
 
 struct FileMetadata {
@@ -44,7 +42,6 @@ struct FileMetadata {
     u32_le name_length; // in bytes
     // followed by file name
 };
-
 static_assert(sizeof(FileMetadata) == 0x20, "FileMetadata has incorrect size");
 
 static bool MatchName(const u8* buffer, u32 name_length, const std::u16string& name) {
@@ -84,7 +81,7 @@ const RomFSFile GetFile(const u8* romfs, const std::vector<std::u16string>& path
             if (child_dir_offset == INVALID_FIELD) {
                 return RomFSFile();
             }
-            const u8* current_child_dir = romfs + header.dir_table_offset + child_dir_offset;
+            const u8* current_child_dir{romfs + header.dir_table_offset + child_dir_offset};
             std::memcpy(&dir, current_child_dir, sizeof(dir));
             if (MatchName(current_child_dir + sizeof(dir), dir.name_length, dir_name)) {
                 current_dir = current_child_dir;
@@ -96,9 +93,9 @@ const RomFSFile GetFile(const u8* romfs, const std::vector<std::u16string>& path
 
     // Find the file
     FileMetadata file;
-    u32 file_offset = dir.first_file_offset;
+    u32 file_offset{dir.first_file_offset};
     while (file_offset != INVALID_FIELD) {
-        const u8* current_file = romfs + header.file_table_offset + file_offset;
+        const u8* current_file{romfs + header.file_table_offset + file_offset};
         std::memcpy(&file, current_file, sizeof(file));
         if (MatchName(current_file + sizeof(file), file.name_length, file_name)) {
             return RomFSFile(romfs + header.data_offset + file.data_offset, file.data_length);
