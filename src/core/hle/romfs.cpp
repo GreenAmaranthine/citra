@@ -64,24 +64,23 @@ u64 RomFSFile::Length() const {
 }
 
 const RomFSFile GetFile(const u8* romfs, const std::vector<std::u16string>& path) {
-    constexpr u32 INVALID_FIELD = 0xFFFFFFFF;
+    constexpr u32 INVALID_FIELD{0xFFFFFFFF};
 
     // Split path into directory names and file name
-    std::vector<std::u16string> dir_names = path;
+    std::vector<std::u16string> dir_names{path};
     dir_names.pop_back();
-    const std::u16string& file_name = path.back();
+    const std::u16string& file_name{path.back()};
 
     Header header;
     std::memcpy(&header, romfs, sizeof(header));
 
     // Find directories of each level
     DirectoryMetadata dir;
-    const u8* current_dir = romfs + header.dir_table_offset;
+    const u8* current_dir{romfs + header.dir_table_offset};
     std::memcpy(&dir, current_dir, sizeof(dir));
     for (const std::u16string& dir_name : dir_names) {
-        u32 child_dir_offset;
-        child_dir_offset = dir.first_child_dir_offset;
-        while (true) {
+        u32 child_dir_offset{dir.first_child_dir_offset};
+        for (;;) {
             if (child_dir_offset == INVALID_FIELD) {
                 return RomFSFile();
             }

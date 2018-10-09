@@ -82,7 +82,7 @@ private:
 
     private:
         void Loop() {
-            while (true) {
+            for (;;) {
                 std::function<void()> task;
                 while (queue.Pop(task))
                     task();

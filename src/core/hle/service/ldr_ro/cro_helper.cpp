@@ -118,17 +118,17 @@ ResultCode CROHelper::ApplyRelocationBatch(VAddr batch, u32 symbol_address, bool
         return CROFormatError(0x10);
 
     VAddr relocation_address{batch};
-    while (true) {
+    for (;;) {
         RelocationEntry relocation;
         Memory::ReadBlock(relocation_address, &relocation, sizeof(RelocationEntry));
 
-        VAddr relocation_target = SegmentTagToAddress(relocation.target_position);
+        VAddr relocation_target{SegmentTagToAddress(relocation.target_position)};
         if (relocation_target == 0) {
             return CROFormatError(0x12);
         }
 
-        ResultCode result = ApplyRelocation(relocation_target, relocation.type, relocation.addend,
-                                            symbol_address, relocation_target);
+        ResultCode result{ApplyRelocation(relocation_target, relocation.type, relocation.addend,
+                                          symbol_address, relocation_target)};
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error applying relocation {:08X}", result.raw);
             return result;
@@ -158,7 +158,7 @@ VAddr CROHelper::FindExportNamedSymbol(const std::string& name) const {
     next.raw = entry.left.raw;
     u32 found_id{};
 
-    while (true) {
+    for (;;) {
         GetEntry(next.next_index, entry);
 
         if (next.is_end) {
@@ -1449,12 +1449,12 @@ void CROHelper::Unregister(VAddr crs_address) {
 }
 
 u32 CROHelper::GetFixEnd(u32 fix_level) const {
-    u32 end = CRO_HEADER_SIZE;
+    u32 end{CRO_HEADER_SIZE};
     end = std::max<u32>(end, GetField(CodeOffset) + GetField(CodeSize));
 
     u32 entry_size_i{2};
     int field{ModuleNameOffset};
-    while (true) {
+    for (;;) {
         end = std::max<u32>(end, GetField(static_cast<HeaderField>(field)) +
                                      GetField(static_cast<HeaderField>(field + 1)) *
                                          ENTRY_SIZE[entry_size_i]);

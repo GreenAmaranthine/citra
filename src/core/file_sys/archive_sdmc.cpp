@@ -89,7 +89,7 @@ ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFileBase(const Path& pa
 
     FileUtil::IOFile file{full_path, mode.write_flag ? "r+b" : "rb"};
     if (!file.IsOpen()) {
-        LOG_CRITICAL(Service_FS, "(unreachable) Unknown error opening {}", full_path);
+        LOG_ERROR(Service_FS, "Unknown error opening {}", full_path);
         return ERROR_NOT_FOUND;
     }
 
@@ -110,7 +110,7 @@ ResultCode SDMCArchive::DeleteFile(const Path& path) const {
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
+        LOG_ERROR(Service_FS, "Invalid mount point {}", mount_point);
         return ERROR_NOT_FOUND;
     case PathParser::PathNotFound:
     case PathParser::FileInPath:
@@ -128,7 +128,7 @@ ResultCode SDMCArchive::DeleteFile(const Path& path) const {
         return RESULT_SUCCESS;
     }
 
-    LOG_CRITICAL(Service_FS, "(unreachable) Unknown error deleting {}", full_path);
+    LOG_ERROR(Service_FS, "Unknown error deleting {}", full_path);
     return ERROR_NOT_FOUND;
 }
 
@@ -178,7 +178,7 @@ static ResultCode DeleteDirectoryHelper(const Path& path, const std::string& mou
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
+        LOG_ERROR(Service_FS, "Invalid mount point {}", mount_point);
         return ERROR_NOT_FOUND;
     case PathParser::PathNotFound:
     case PathParser::NotFound:
@@ -221,7 +221,7 @@ ResultCode SDMCArchive::CreateFile(const FileSys::Path& path, u64 size) const {
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
+        LOG_ERROR(Service_FS, "Invalid mount point {}", mount_point);
         return ERROR_NOT_FOUND;
     case PathParser::PathNotFound:
     case PathParser::FileInPath:
@@ -266,7 +266,7 @@ ResultCode SDMCArchive::CreateDirectory(const Path& path) const {
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
+        LOG_ERROR(Service_FS, "Invalid mount point {}", mount_point);
         return ERROR_NOT_FOUND;
     case PathParser::PathNotFound:
     case PathParser::FileInPath:
@@ -284,7 +284,7 @@ ResultCode SDMCArchive::CreateDirectory(const Path& path) const {
         return RESULT_SUCCESS;
     }
 
-    LOG_CRITICAL(Service_FS, "(unreachable) Unknown error creating {}", mount_point);
+    LOG_ERROR(Service_FS, "Unknown error creating {}", mount_point);
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, ErrorSummary::Canceled,
                       ErrorLevel::Status);
 }
@@ -330,7 +330,7 @@ ResultVal<std::unique_ptr<DirectoryBackend>> SDMCArchive::OpenDirectory(const Pa
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
+        LOG_ERROR(Service_FS, "Invalid mount point {}", mount_point);
         return ERROR_NOT_FOUND;
     case PathParser::PathNotFound:
     case PathParser::NotFound:

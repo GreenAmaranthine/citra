@@ -843,7 +843,8 @@ private:
             } else {
                 labels.insert(subroutine.begin);
                 shader.AddLine("uint jmp_to = " + std::to_string(subroutine.begin) + "u;");
-                shader.AddLine("while (true) {");
+                // shader.AddLine("while (true) {");
+                shader.AddLine("for (;;) {");
                 ++shader.scope;
 
                 shader.AddLine("switch (jmp_to) {");

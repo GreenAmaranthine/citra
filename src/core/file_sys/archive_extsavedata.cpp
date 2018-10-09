@@ -110,7 +110,7 @@ public:
 
         switch (path_parser.GetHostStatus(mount_point)) {
         case PathParser::InvalidMountPoint:
-            LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
+            LOG_ERROR(Service_FS, "Invalid mount point {}", mount_point);
             return ERROR_FILE_NOT_FOUND;
         case PathParser::PathNotFound:
             LOG_ERROR(Service_FS, "Path not found {}", full_path);
@@ -128,7 +128,7 @@ public:
 
         FileUtil::IOFile file{full_path, "r+b"};
         if (!file.IsOpen()) {
-            LOG_CRITICAL(Service_FS, "(unreachable) Unknown error opening {}", full_path);
+            LOG_ERROR(Service_FS, "Unknown error opening {}", full_path);
             return ERROR_FILE_NOT_FOUND;
         }
 

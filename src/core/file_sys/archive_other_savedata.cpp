@@ -62,8 +62,8 @@ ArchiveFactory_OtherSaveDataPermitted::ArchiveFactory_OtherSaveDataPermitted(
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_OtherSaveDataPermitted::Open(
     const Path& path) {
-    MediaType media_type{};
-    u64 program_id{};
+    MediaType media_type;
+    u64 program_id;
     CASCADE_RESULT(std::tie(media_type, program_id), ParsePathPermitted(path));
 
     if (media_type == MediaType::GameCard) {
@@ -82,8 +82,8 @@ ResultCode ArchiveFactory_OtherSaveDataPermitted::Format(
 
 ResultVal<ArchiveFormatInfo> ArchiveFactory_OtherSaveDataPermitted::GetFormatInfo(
     const Path& path) const {
-    MediaType media_type{};
-    u64 program_id{};
+    MediaType media_type;
+    u64 program_id;
     CASCADE_RESULT(std::tie(media_type, program_id), ParsePathPermitted(path));
 
     if (media_type == MediaType::GameCard) {
@@ -100,8 +100,8 @@ ArchiveFactory_OtherSaveDataGeneral::ArchiveFactory_OtherSaveDataGeneral(
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_OtherSaveDataGeneral::Open(
     const Path& path) {
-    MediaType media_type{};
-    u64 program_id{};
+    MediaType media_type;
+    u64 program_id;
     CASCADE_RESULT(std::tie(media_type, program_id), ParsePathGeneral(path));
 
     if (media_type == MediaType::GameCard) {
@@ -114,8 +114,8 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_OtherSaveDataGeneral::
 
 ResultCode ArchiveFactory_OtherSaveDataGeneral::Format(
     const Path& path, const FileSys::ArchiveFormatInfo& format_info) {
-    MediaType media_type{};
-    u64 program_id{};
+    MediaType media_type;
+    u64 program_id;
     CASCADE_RESULT(std::tie(media_type, program_id), ParsePathGeneral(path));
 
     if (media_type == MediaType::GameCard) {
@@ -128,8 +128,8 @@ ResultCode ArchiveFactory_OtherSaveDataGeneral::Format(
 
 ResultVal<ArchiveFormatInfo> ArchiveFactory_OtherSaveDataGeneral::GetFormatInfo(
     const Path& path) const {
-    MediaType media_type{};
-    u64 program_id{};
+    MediaType media_type;
+    u64 program_id;
     CASCADE_RESULT(std::tie(media_type, program_id), ParsePathGeneral(path));
 
     if (media_type == MediaType::GameCard) {

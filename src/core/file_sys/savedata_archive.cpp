@@ -49,7 +49,7 @@ ResultVal<std::unique_ptr<FileBackend>> SaveDataArchive::OpenFile(const Path& pa
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
+        LOG_ERROR(Service_FS, "Invalid mount point {}", mount_point);
         return ERROR_FILE_NOT_FOUND;
     case PathParser::PathNotFound:
         LOG_ERROR(Service_FS, "Path not found {}", full_path);
@@ -74,7 +74,7 @@ ResultVal<std::unique_ptr<FileBackend>> SaveDataArchive::OpenFile(const Path& pa
 
     FileUtil::IOFile file{full_path, mode.write_flag ? "r+b" : "rb"};
     if (!file.IsOpen()) {
-        LOG_CRITICAL(Service_FS, "(unreachable) Unknown error opening {}", full_path);
+        LOG_ERROR(Service_FS, "Unknown error opening {}", full_path);
         return ERROR_FILE_NOT_FOUND;
     }
 
@@ -95,7 +95,7 @@ ResultCode SaveDataArchive::DeleteFile(const Path& path) const {
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
+        LOG_ERROR(Service_FS, "Invalid mount point {}", mount_point);
         return ERROR_FILE_NOT_FOUND;
     case PathParser::PathNotFound:
         LOG_ERROR(Service_FS, "Path not found {}", full_path);
@@ -113,7 +113,7 @@ ResultCode SaveDataArchive::DeleteFile(const Path& path) const {
         return RESULT_SUCCESS;
     }
 
-    LOG_CRITICAL(Service_FS, "(unreachable) Unknown error deleting {}", full_path);
+    LOG_ERROR(Service_FS, "Unknown error deleting {}", full_path);
     return ERROR_FILE_NOT_FOUND;
 }
 
@@ -163,7 +163,7 @@ static ResultCode DeleteDirectoryHelper(const Path& path, const std::string& mou
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
+        LOG_ERROR(Service_FS, "Invalid mount point {}", mount_point);
         return ERROR_PATH_NOT_FOUND;
     case PathParser::PathNotFound:
     case PathParser::NotFound:
@@ -206,7 +206,7 @@ ResultCode SaveDataArchive::CreateFile(const FileSys::Path& path, u64 size) cons
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
+        LOG_ERROR(Service_FS, "Invalid mount point {}", mount_point);
         return ERROR_FILE_NOT_FOUND;
     case PathParser::PathNotFound:
         LOG_ERROR(Service_FS, "Path not found {}", full_path);
@@ -251,7 +251,7 @@ ResultCode SaveDataArchive::CreateDirectory(const Path& path) const {
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
+        LOG_ERROR(Service_FS, "Invalid mount point {}", mount_point);
         return ERROR_FILE_NOT_FOUND;
     case PathParser::PathNotFound:
         LOG_ERROR(Service_FS, "Path not found {}", full_path);
@@ -271,7 +271,7 @@ ResultCode SaveDataArchive::CreateDirectory(const Path& path) const {
         return RESULT_SUCCESS;
     }
 
-    LOG_CRITICAL(Service_FS, "(unreachable) Unknown error creating {}", mount_point);
+    LOG_ERROR(Service_FS, "Unknown error creating {}", mount_point);
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, ErrorSummary::Canceled,
                       ErrorLevel::Status);
 }
@@ -318,7 +318,7 @@ ResultVal<std::unique_ptr<DirectoryBackend>> SaveDataArchive::OpenDirectory(
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
+        LOG_ERROR(Service_FS, "Invalid mount point {}", mount_point);
         return ERROR_FILE_NOT_FOUND;
     case PathParser::PathNotFound:
     case PathParser::NotFound:

@@ -200,7 +200,7 @@ bool CreateFullPath(const std::string& full_path) {
     }
 
     std::size_t position{};
-    while (true) {
+    for (;;) {
         // Find next sub path
         position = full_path.find(DIR_SEP_CHR, position);
 

@@ -1506,7 +1506,7 @@ void RasterizerCache::ValidateSurface(const Surface& surface, PAddr addr, u32 si
         return;
     }
 
-    while (true) {
+    for (;;) {
         const auto it{surface->invalid_regions.find(validate_interval)};
         if (it == surface->invalid_regions.end())
             break;
