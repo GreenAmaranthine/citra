@@ -53,12 +53,14 @@ void Module::Interface::Set3DLEDState(Kernel::HLERequestContext& ctx) {
 
     u8 state{rp.Pop<u8>()};
 
-    if (state == 0) {
-        Settings::values.factor_3d = 0;
-    } else {
-        Settings::values.factor_3d = 100;
+    if (!Settings::values.disable_mh_3d) {
+        if (state == 0) {
+            Settings::values.factor_3d = 0;
+        } else {
+            Settings::values.factor_3d = 100;
+        }
+        Core::System::GetInstance().GetSharedPageHandler()->Update3DSettings();
     }
-    Core::System::GetInstance().GetSharedPageHandler()->Update3DSettings();
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);

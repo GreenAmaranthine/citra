@@ -45,15 +45,33 @@ void LogSetting(const std::string& name, const T& value) {
 
 void LogSettings() {
     LOG_INFO(Config, "Citra Configuration:");
+    LogSetting("ControlPanel_Volume", Settings::values.volume);
     LogSetting("ControlPanel_Factor3d", Settings::values.factor_3d);
+    LogSetting("ControlPanel_HeadphonesConnected", Settings::values.headphones_connected);
+    LogSetting("ControlPanel_AdapterConnected", Settings::values.p_adapter_connected);
+    LogSetting("ControlPanel_BatteryCharging", Settings::values.p_battery_charging);
+    LogSetting("ControlPanel_BatteryLevel", Settings::values.p_battery_level);
+    LogSetting("ControlPanel_NetworkState", Settings::values.n_state);
+    LogSetting("ControlPanel_WifiLinkLevel", Settings::values.n_wifi_link_level);
+    LogSetting("ControlPanel_WifiStatus", Settings::values.n_wifi_status);
     LogSetting("Core_KeyboardMode", static_cast<int>(Settings::values.keyboard_mode));
+    bool using_lle_modules{};
+    for (const auto& module : Settings::values.lle_modules) {
+        if (module.second) {
+            using_lle_modules = true;
+            break;
+        }
+    }
+    LogSetting("LLE_UsingLLEModules", using_lle_modules);
     LogSetting("Renderer_UseHwShader", Settings::values.use_hw_shader);
     LogSetting("Renderer_ShadersAccurateGs", Settings::values.shaders_accurate_gs);
     LogSetting("Renderer_ShadersAccurateMul", Settings::values.shaders_accurate_mul);
     LogSetting("Renderer_UseResolutionFactor", Settings::values.resolution_factor);
     LogSetting("Renderer_UseFrameLimit", Settings::values.use_frame_limit);
     LogSetting("Renderer_FrameLimit", Settings::values.frame_limit);
+    LogSetting("Renderer_EnableClearCache", Settings::values.enable_clear_cache);
     LogSetting("Renderer_ClearCacheMs", Settings::values.clear_cache_secs);
+    LogSetting("Renderer_MinVerticesPerThread", Settings::values.min_vertices_per_thread);
     LogSetting("Layout_LayoutOption", static_cast<int>(Settings::values.layout_option));
     LogSetting("Layout_SwapScreen", Settings::values.swap_screen);
     LogSetting("Audio_EnableAudioStretching", Settings::values.enable_audio_stretching);

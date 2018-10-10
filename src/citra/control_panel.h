@@ -18,6 +18,7 @@ public:
     explicit ControlPanel(QWidget* parent = nullptr);
     ~ControlPanel();
     void Update3D();
+    void UpdateNetwork();
 
 private:
     std::unique_ptr<Ui::ControlPanel> ui;

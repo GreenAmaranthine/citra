@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <functional>
 #include "core/hle/service/service.h"
 
 namespace Kernel {
@@ -16,6 +17,8 @@ class NWM_EXT final : public ServiceFramework<NWM_EXT> {
 public:
     NWM_EXT();
     ~NWM_EXT();
+
+    static inline std::function<void()> update_control_panel;
 
 private:
     void ControlWirelessEnabled(Kernel::HLERequestContext& ctx);

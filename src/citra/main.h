@@ -76,7 +76,6 @@ private:
     void InitializeWidgets();
     void InitializeRecentFileMenuActions();
     void InitializeHotkeys();
-
     void SetDefaultUIGeometry();
     Q_INVOKABLE void ErrEulaCallback(HLE::Applets::ErrEulaConfig& config);
     Q_INVOKABLE void SwkbdCallback(HLE::Applets::SoftwareKeyboardConfig& config,
@@ -85,6 +84,7 @@ private:
                                          HLE::Applets::MiiResult& result);
     Q_INVOKABLE void Update3D();
     Q_INVOKABLE void UpdateFrameAdvancingCallback();
+    Q_INVOKABLE void UpdateControlPanelNetwork();
     void SyncMenuUISettings();
     void RestoreUIState();
 

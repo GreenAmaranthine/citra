@@ -42,6 +42,7 @@ void NWM_EXT::ControlWirelessEnabled(Kernel::HLERequestContext& ctx) {
             SharedPage::WifiLinkLevel::Best);
         Core::System::GetInstance().GetSharedPageHandler()->SetNetworkState(
             SharedPage::NetworkState::Internet);
+        update_control_panel();
         break;
     }
 
@@ -59,6 +60,7 @@ void NWM_EXT::ControlWirelessEnabled(Kernel::HLERequestContext& ctx) {
             SharedPage::WifiLinkLevel::Off);
         Core::System::GetInstance().GetSharedPageHandler()->SetNetworkState(
             SharedPage::NetworkState::Disabled);
+        update_control_panel();
         break;
     }
 

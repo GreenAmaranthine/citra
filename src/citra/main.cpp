@@ -56,6 +56,7 @@
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/hle/service/nwm/nwm_ext.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/loader/loader.h"
 #include "core/movie.h"
@@ -684,6 +685,8 @@ void GMainWindow::BootGame(const QString& filename) {
     SharedPage::Handler::update_3d = [this] { Update3D(); };
 
     RPC::RPCServer::cb_update_frame_advancing = [this] { UpdateFrameAdvancingCallback(); };
+
+    Service::NWM::NWM_EXT::update_control_panel = [this] { UpdateControlPanelNetwork(); };
 }
 
 void GMainWindow::ShutdownGame() {
@@ -836,8 +839,9 @@ void GMainWindow::Update3D() {
         return;
     }
 
-    if (control_panel != nullptr)
+    if (control_panel != nullptr) {
         control_panel->Update3D();
+    }
 }
 
 void GMainWindow::UpdateFrameAdvancingCallback() {
@@ -850,6 +854,17 @@ void GMainWindow::UpdateFrameAdvancingCallback() {
     const bool enabled{Core::System::GetInstance().frame_limiter.GetFrameAdvancing()};
     ui.action_Enable_Frame_Advancing->setChecked(enabled);
     ui.action_Advance_Frame->setEnabled(enabled);
+}
+
+void GMainWindow::UpdateControlPanelNetwork() {
+    if (QThread::currentThread() != thread()) {
+        QMetaObject::invokeMethod(this, "UpdateControlPanelNetwork", Qt::BlockingQueuedConnection);
+        return;
+    }
+
+    if (control_panel != nullptr) {
+        control_panel->UpdateNetwork();
+    }
 }
 
 void GMainWindow::UpdateRecentFiles() {

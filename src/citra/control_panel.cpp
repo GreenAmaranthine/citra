@@ -48,19 +48,17 @@ ControlPanel::ControlPanel(QWidget* parent)
     ui->setupUi(this);
     ui->volume_slider->setValue(Settings::values.volume * ui->volume_slider->maximum());
     if (!Settings::values.disable_mh_3d) {
-        ui->slider_3d->setValue(Settings::values.factor_3d);
+        Update3D();
     }
     ui->slider_3d->setEnabled(!Settings::values.disable_mh_3d);
     ui->checkbox_headphones_connected->setChecked(Settings::values.headphones_connected);
     ui->power_adapter_connected->setChecked(Settings::values.p_adapter_connected);
     ui->power_battery_charging->setChecked(Settings::values.p_battery_charging);
     ui->power_battery_level->setCurrentIndex(Settings::values.p_battery_level - 1);
-    ui->network_wifi_status->setCurrentIndex(Settings::values.n_wifi_status);
-    ui->network_link_level->setCurrentIndex(Settings::values.n_wifi_link_level);
-    ui->network_state->setCurrentIndex(SharedPageUtil::NetworkStateToIndex(
-        static_cast<SharedPage::NetworkState>(Settings::values.n_state)));
+    UpdateNetwork();
     connect(ui->power_adapter_connected, &QCheckBox::stateChanged, [this] {
         Settings::values.p_adapter_connected = ui->power_adapter_connected->isChecked();
+
         if (Core::System::GetInstance().IsPoweredOn()) {
             Core::System::GetInstance().GetSharedPageHandler()->SetAdapterConnected(
                 static_cast<u8>(Settings::values.p_adapter_connected));
@@ -68,6 +66,7 @@ ControlPanel::ControlPanel(QWidget* parent)
     });
     connect(ui->power_battery_charging, &QCheckBox::stateChanged, [this] {
         Settings::values.p_battery_charging = ui->power_battery_charging->isChecked();
+
         if (Core::System::GetInstance().IsPoweredOn()) {
             Core::System::GetInstance().GetSharedPageHandler()->SetBatteryCharging(
                 static_cast<u8>(Settings::values.p_battery_charging));
@@ -77,6 +76,7 @@ ControlPanel::ControlPanel(QWidget* parent)
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [this] {
                 Settings::values.p_battery_level =
                     static_cast<u32>(ui->power_battery_level->currentIndex() + 1);
+
                 if (Core::System::GetInstance().IsPoweredOn()) {
                     Core::System::GetInstance().GetSharedPageHandler()->SetBatteryLevel(
                         static_cast<u8>(Settings::values.p_battery_level));
@@ -89,6 +89,7 @@ ControlPanel::ControlPanel(QWidget* parent)
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [this] {
                 Settings::values.n_wifi_link_level =
                     static_cast<u8>(ui->network_link_level->currentIndex());
+
                 if (Core::System::GetInstance().IsPoweredOn()) {
                     Core::System::GetInstance().GetSharedPageHandler()->SetWifiLinkLevel(
                         static_cast<SharedPage::WifiLinkLevel>(Settings::values.n_wifi_link_level));
@@ -98,6 +99,7 @@ ControlPanel::ControlPanel(QWidget* parent)
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [this] {
                 Settings::values.n_state = static_cast<u8>(
                     SharedPageUtil::IndexToNetworkState(ui->network_state->currentIndex()));
+
                 if (Core::System::GetInstance().IsPoweredOn()) {
                     Core::System::GetInstance().GetSharedPageHandler()->SetNetworkState(
                         static_cast<SharedPage::NetworkState>(Settings::values.n_state));
@@ -109,8 +111,10 @@ ControlPanel::ControlPanel(QWidget* parent)
     });
     connect(ui->slider_3d, &QSlider::valueChanged, [this] {
         Settings::values.factor_3d = ui->slider_3d->value();
-        if (Core::System::GetInstance().IsPoweredOn())
+
+        if (Core::System::GetInstance().IsPoweredOn()) {
             Core::System::GetInstance().GetSharedPageHandler()->Update3DSettings(true);
+        }
     });
     connect(ui->checkbox_headphones_connected, &QCheckBox::stateChanged, [this] {
         Settings::values.headphones_connected = ui->checkbox_headphones_connected->isChecked();
@@ -122,4 +126,11 @@ ControlPanel::~ControlPanel() {}
 
 void ControlPanel::Update3D() {
     ui->slider_3d->setValue(Settings::values.factor_3d);
+}
+
+void ControlPanel::UpdateNetwork() {
+    ui->network_wifi_status->setCurrentIndex(Settings::values.n_wifi_status);
+    ui->network_link_level->setCurrentIndex(Settings::values.n_wifi_link_level);
+    ui->network_state->setCurrentIndex(SharedPageUtil::NetworkStateToIndex(
+        static_cast<SharedPage::NetworkState>(Settings::values.n_state)));
 }

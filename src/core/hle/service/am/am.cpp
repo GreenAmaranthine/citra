@@ -360,8 +360,10 @@ InstallStatus InstallCIA(const std::string& path,
             auto result{installFile.Write(static_cast<u64>(total_bytes_read), bytes_read, true,
                                           static_cast<u8*>(buffer.data()))};
 
-            if (update_callback)
+            if (update_callback) {
                 update_callback(total_bytes_read, file.GetSize());
+            }
+
             if (result.Failed()) {
                 LOG_ERROR(Service_AM, "CIA file installation aborted with error code {:08x}",
                           result.Code().raw);
