@@ -163,7 +163,7 @@ System::ResultStatus System::Init(u32 system_mode) {
 
     jump_requested = false;
     shutdown_requested = false;
-    shell_open = true;
+    sleep_mode_enabled = false;
 
     // Initialize FS and CFG
     Service::FS::ArchiveInit();

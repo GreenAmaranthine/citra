@@ -60,7 +60,7 @@ public:
     }
 
     std::tuple<Math::Vec3<float>, Math::Vec3<float>> GetStatus() {
-        if (!Core::System::GetInstance().IsShellOpen())
+        if (Core::System::GetInstance().IsSleepModeEnabled())
             return std::make_tuple(Math::Vec3<float>(), Math::Vec3<float>());
         std::lock_guard<std::mutex> guard{status_mutex};
         return status;

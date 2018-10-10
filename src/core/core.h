@@ -173,12 +173,12 @@ public:
         return shared_page_handler;
     }
 
-    bool IsShellOpen() const {
-        return shell_open.load(std::memory_order_relaxed);
+    bool IsSleepModeEnabled() const {
+        return sleep_mode_enabled.load(std::memory_order_relaxed);
     }
 
-    void SetShellOpen(bool value) {
-        shell_open.store(value, std::memory_order_relaxed);
+    void SetSleepModeEnabled(bool value) {
+        sleep_mode_enabled.store(value, std::memory_order_relaxed);
     }
 
     void SetRunning(bool running) {
@@ -238,7 +238,7 @@ private:
 
     std::atomic<bool> jump_requested;
     std::atomic<bool> shutdown_requested;
-    std::atomic<bool> shell_open;
+    std::atomic<bool> sleep_mode_enabled;
     std::atomic<bool> running;
     std::mutex running_mutex;
     std::condition_variable running_cv;

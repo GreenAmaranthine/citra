@@ -19,7 +19,7 @@ public:
     ~KeyButton() override;
 
     bool GetStatus() const override {
-        if (!Core::System::GetInstance().IsShellOpen())
+        if (Core::System::GetInstance().IsSleepModeEnabled())
             return false;
         return status.load();
     }

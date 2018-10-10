@@ -252,7 +252,7 @@ void GMainWindow::InitializeHotkeys() {
     RegisterHotkey("Main Window", "Decrease Internal Resolution", QKeySequence("CTRL+D"),
                    Qt::ApplicationShortcut);
     RegisterHotkey("Main Window", "Capture Screenshot", QKeySequence("CTRL+S"));
-    RegisterHotkey("Main Window", "Toggle Shell Open", QKeySequence("F2"));
+    RegisterHotkey("Main Window", "Toggle Sleep Mode", QKeySequence("F2"));
     RegisterHotkey("Main Window", "Change CPU Ticks", QKeySequence("CTRL+T"));
     RegisterHotkey("Main Window", "Toggle Frame Advancing", QKeySequence("CTRL+A"),
                    Qt::ApplicationShortcut);
@@ -328,10 +328,12 @@ void GMainWindow::InitializeHotkeys() {
             OnCaptureScreenshot();
         }
     });
-    connect(GetHotkey("Main Window", "Toggle Shell Open", this), &QShortcut::activated, this, [&] {
+    connect(GetHotkey("Main Window", "Toggle Sleep Mode", this), &QShortcut::activated, this, [&] {
         auto& system{Core::System::GetInstance()};
         if (system.IsPoweredOn()) {
-            system.SetShellOpen(!system.IsShellOpen());
+            bool new_value{!system.IsSleepModeEnabled()};
+            system.SetSleepModeEnabled(new_value);
+            ui.action_Sleep_Mode->setChecked(new_value);
         }
     });
     connect(GetHotkey("Main Window", "Change CPU Ticks", this), &QShortcut::activated, this, [&] {
@@ -373,8 +375,6 @@ void GMainWindow::RestoreUIState() {
     restoreGeometry(UISettings::values.geometry);
     restoreState(UISettings::values.state);
     render_window->restoreGeometry(UISettings::values.renderwindow_geometry);
-
-    ui.action_Cheats->setEnabled(false);
 
     game_list->LoadInterfaceLayout();
 
@@ -436,6 +436,7 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Pause, &QAction::triggered, this, &GMainWindow::OnPauseGame);
     connect(ui.action_Stop, &QAction::triggered, this, &GMainWindow::OnStopGame);
     connect(ui.action_Restart, &QAction::triggered, this, [this] { BootGame(QString(game_path)); });
+    connect(ui.action_Sleep_Mode, &QAction::triggered, this, &GMainWindow::ToggleSleepMode);
     connect(ui.action_Configuration, &QAction::triggered, this, &GMainWindow::OnOpenConfiguration);
     connect(ui.action_Cheats, &QAction::triggered, this, &GMainWindow::OnCheats);
     connect(ui.action_Control_Panel, &QAction::triggered, this, &GMainWindow::OnControlPanel);
@@ -662,6 +663,8 @@ void GMainWindow::BootGame(const QString& filename) {
     // Update the GUI
     game_list->hide();
     game_list_placeholder->hide();
+    ui.action_Sleep_Mode->setEnabled(true);
+    ui.action_Sleep_Mode->setChecked(false);
 
     status_bar_update_timer.start(2000);
 
@@ -669,9 +672,11 @@ void GMainWindow::BootGame(const QString& filename) {
     render_window->setFocus();
 
     emulation_running = true;
+
     if (ui.action_Fullscreen->isChecked()) {
         ShowFullscreen();
     }
+
     OnStartGame();
 
     HLE::Applets::ErrEula::cb = [this](HLE::Applets::ErrEulaConfig& config) {
@@ -735,6 +740,8 @@ void GMainWindow::ShutdownGame() {
     ui.action_Enable_Frame_Advancing->setEnabled(false);
     ui.action_Enable_Frame_Advancing->setChecked(false);
     ui.action_Advance_Frame->setEnabled(false);
+    ui.action_Sleep_Mode->setEnabled(false);
+    ui.action_Sleep_Mode->setChecked(false);
     render_window->hide();
     if (game_list->isEmpty())
         game_list_placeholder->show();
@@ -1208,6 +1215,10 @@ void GMainWindow::ToggleScreenLayout() {
 void GMainWindow::OnSwapScreens() {
     Settings::values.swap_screen = ui.action_Screen_Layout_Swap_Screens->isChecked();
     Settings::Apply();
+}
+
+void GMainWindow::ToggleSleepMode() {
+    Core::System::GetInstance().SetSleepModeEnabled(ui.action_Sleep_Mode->isChecked());
 }
 
 void GMainWindow::OnOpenConfiguration() {

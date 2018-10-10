@@ -427,7 +427,7 @@ void Renderer::DrawScreens(const Layout::FramebufferLayout& layout) {
     glActiveTexture(GL_TEXTURE0);
     glUniform1i(uniform_color_texture, 0);
 
-    if (!Core::System::GetInstance().IsShellOpen())
+    if (Core::System::GetInstance().IsSleepModeEnabled())
         return;
     if (layout.top_screen_enabled) {
         if (Settings::values.disable_mh_3d || Settings::values.factor_3d == 0) {

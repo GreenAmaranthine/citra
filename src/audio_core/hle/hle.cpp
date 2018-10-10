@@ -337,7 +337,7 @@ bool DspHle::Impl::Tick() {
 }
 
 bool DspHle::Impl::IsOutputAllowed() {
-    if (Core::System::GetInstance().IsShellOpen()) {
+    if (!Core::System::GetInstance().IsSleepModeEnabled()) {
         return true;
     } else {
         return titles_output_allowed_shell_closed.count(

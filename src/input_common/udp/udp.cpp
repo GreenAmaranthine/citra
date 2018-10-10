@@ -17,7 +17,7 @@ public:
     explicit UDPTouchDevice(std::shared_ptr<DeviceStatus> status_) : status{std::move(status_)} {}
 
     std::tuple<float, float, bool> GetStatus() const {
-        if (!Core::System::GetInstance().IsShellOpen())
+        if (Core::System::GetInstance().IsSleepModeEnabled())
             return std::make_tuple(0.0f, 0.0f, false);
         std::lock_guard<std::mutex> guard{status->update_mutex};
         return status->touch_status;
@@ -32,7 +32,7 @@ public:
     explicit UDPMotionDevice(std::shared_ptr<DeviceStatus> status_) : status{std::move(status_)} {}
 
     std::tuple<Math::Vec3<float>, Math::Vec3<float>> GetStatus() const {
-        if (!Core::System::GetInstance().IsShellOpen())
+        if (Core::System::GetInstance().IsSleepModeEnabled())
             return std::make_tuple(Math::Vec3<float>(), Math::Vec3<float>());
         std::lock_guard<std::mutex> guard{status->update_mutex};
         return status->motion_status;

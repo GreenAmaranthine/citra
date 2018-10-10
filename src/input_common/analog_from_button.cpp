@@ -18,7 +18,7 @@ public:
                                                                         modifier_scale_} {}
 
     std::tuple<float, float> GetStatus() const override {
-        if (!Core::System::GetInstance().IsShellOpen())
+        if (Core::System::GetInstance().IsSleepModeEnabled())
             return std::make_tuple(0.0f, 0.0f);
         constexpr float SQRT_HALF{0.707106781f};
         int x{}, y{};

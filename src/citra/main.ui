@@ -76,6 +76,7 @@
     <addaction name="action_Pause"/>
     <addaction name="action_Stop"/>
     <addaction name="action_Restart"/>
+    <addaction name="action_Sleep_Mode"/>
     <addaction name="separator"/>
     <addaction name="action_Configuration"/>
     <addaction name="action_Control_Panel"/>
@@ -406,6 +407,17 @@
   <action name="action_Open_User_Directory">
    <property name="text">
     <string>Open User Directory</string>
+   </property>
+  </action>
+  <action name="action_Sleep_Mode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Sleep Mode</string>
    </property>
   </action>
  </widget>

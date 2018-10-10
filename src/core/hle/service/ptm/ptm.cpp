@@ -37,7 +37,7 @@ void Module::Interface::GetShellState(Kernel::HLERequestContext& ctx) {
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
-    rb.Push(Core::System::GetInstance().IsShellOpen());
+    rb.Push(!Core::System::GetInstance().IsSleepModeEnabled());
 }
 
 void Module::Interface::GetBatteryLevel(Kernel::HLERequestContext& ctx) {
