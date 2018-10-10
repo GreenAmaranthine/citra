@@ -338,7 +338,7 @@ InstallStatus InstallCIA(const std::string& path,
         Service::AM::CIAFile installFile{
             Service::AM::GetTitleMediaType(container.GetTitleMetadata().GetTitleID())};
 
-        bool title_key_available{container.GetTicket().GetTitleKey().is_initialized()};
+        bool title_key_available{container.GetTicket().GetTitleKey().has_value()};
 
         for (std::size_t i{}; i < container.GetTitleMetadata().GetContentCount(); i++) {
             if ((container.GetTitleMetadata().GetContentTypeByIndex(static_cast<u16>(i)) &

@@ -4,21 +4,22 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <thread>
 #include <tuple>
 #include <vector>
-#include <boost/optional.hpp>
 #include "common/common_types.h"
 #include "common/event.h"
 #include "common/vector_math.h"
 
 namespace InputCommon::CemuhookUDP {
 
-static constexpr u16 DEFAULT_PORT = 26760;
-static constexpr const char* DEFAULT_ADDR = "127.0.0.1";
+constexpr u16 DEFAULT_PORT{26760};
+constexpr const char* DEFAULT_ADDR{"127.0.0.1"};
 
 class Socket;
 
@@ -40,7 +41,7 @@ struct DeviceStatus {
         u16 max_x;
         u16 max_y;
     };
-    boost::optional<CalibrationData> touch_calibration;
+    std::optional<CalibrationData> touch_calibration;
 };
 
 class Client {

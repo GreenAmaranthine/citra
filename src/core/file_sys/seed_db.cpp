@@ -127,13 +127,13 @@ bool AddSeed(const Seed& seed) {
 std::optional<Seed::Data> GetSeed(u64 title_id) {
     SeedDB db;
     if (!db.Load()) {
-        return std::nullopt;
+        return {};
     }
     const auto found_seed_iter{db.FindSeedByTitleID(title_id)};
     if (found_seed_iter != db.seeds.end()) {
         return found_seed_iter->data;
     }
-    return std::nullopt;
+    return {};
 }
 
 u32 GetSeedCount() {

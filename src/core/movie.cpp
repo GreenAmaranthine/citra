@@ -437,14 +437,14 @@ static std::optional<CTMHeader> ReadHeader(const std::string& movie_file) {
     const u64 size{save_record.GetSize()};
 
     if (!save_record || size <= sizeof(CTMHeader)) {
-        return std::nullopt;
+        return {};
     }
 
     CTMHeader header{};
     save_record.ReadArray(&header, 1);
 
     if (header_magic_bytes != header.filetype) {
-        return std::nullopt;
+        return {};
     }
 
     return header;
@@ -455,7 +455,7 @@ void Movie::PrepareForPlayback(const std::string& movie_file) {
     if (!header.has_value())
         return;
 
-    init_time = header.value().clock_init_time;
+    init_time = header->clock_init_time;
 }
 
 void Movie::PrepareForRecording() {
@@ -472,15 +472,15 @@ Movie::ValidationResult Movie::ValidateMovie(const std::string& movie_file, u64 
     if (!header.has_value())
         return ValidationResult::Invalid;
 
-    return ValidateHeader(header.value(), program_id);
+    return ValidateHeader(*header, program_id);
 }
 
 u64 Movie::GetMovieProgramID(const std::string& movie_file) const {
     auto header{ReadHeader(movie_file)};
-    if (!header.has_value())
+    if (!header)
         return 0;
 
-    return static_cast<u64>(header.value().program_id);
+    return static_cast<u64>(header->program_id);
 }
 
 void Movie::Shutdown() {

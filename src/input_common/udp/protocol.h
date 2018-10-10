@@ -5,19 +5,19 @@
 #pragma once
 
 #include <array>
+#include <optional>
 #include <type_traits>
 #include <vector>
 #include <boost/crc.hpp>
-#include <boost/optional.hpp>
 #include "common/bit_field.h"
 #include "common/swap.h"
 
 namespace InputCommon::CemuhookUDP {
 
-constexpr std::size_t MAX_PACKET_SIZE = 100;
-constexpr u16 PROTOCOL_VERSION = 1001;
-constexpr u32 CLIENT_MAGIC = 0x43555344; // DSUC (but flipped for LE)
-constexpr u32 SERVER_MAGIC = 0x53555344; // DSUS (but flipped for LE)
+constexpr std::size_t MAX_PACKET_SIZE{100};
+constexpr u16 PROTOCOL_VERSION{1001};
+constexpr u32 CLIENT_MAGIC{0x43555344}; // DSUC (but flipped for LE)
+constexpr u32 SERVER_MAGIC{0x53555344}; // DSUS (but flipped for LE)
 
 enum class Type : u32 {
     Version = 0x00100000,
@@ -215,10 +215,10 @@ static_assert(sizeof(Message<PadData>) == MAX_PACKET_SIZE,
 /**
  * Create a Response Message from the data
  * @param data array of bytes sent from the server
- * @return boost::none if it failed to parse or Type if it succeeded. The client can then safely
+ * @return {} if it failed to parse or Type if it succeeded. The client can then safely
  * copy the data into the appropriate struct for that Type
  */
-boost::optional<Type> Validate(u8* data, std::size_t size);
+std::optional<Type> Validate(u8* data, std::size_t size);
 
 } // namespace Response
 

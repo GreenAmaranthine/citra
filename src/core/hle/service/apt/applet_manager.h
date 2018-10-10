@@ -5,8 +5,8 @@
 #pragma once
 
 #include <array>
+#include <optional>
 #include <vector>
-#include <boost/optional.hpp>
 #include "core/hle/kernel/event.h"
 #include "core/hle/result.h"
 #include "core/hle/service/fs/archive.h"
@@ -142,7 +142,7 @@ public:
 
 private:
     /// Parameter data to be returned in the next call to Glance/ReceiveParameter.
-    boost::optional<MessageParameter> next_parameter;
+    std::optional<MessageParameter> next_parameter;
 
     static constexpr std::size_t NumAppletSlot{4};
 

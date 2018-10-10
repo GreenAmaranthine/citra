@@ -9,7 +9,7 @@
 #include <condition_variable>
 #include <cstddef>
 #include <mutex>
-#include <boost/optional.hpp>
+#include <optional>
 #include "common/common_types.h"
 
 namespace Common {
@@ -75,7 +75,7 @@ public:
 
         ElementPtr* tmpptr{read_ptr};
         read_ptr = tmpptr->next.load(std::memory_order_acquire);
-        t = std::move(tmpptr->current.value());
+        t = std::move(*tmpptr->current);
         tmpptr->next.store(nullptr);
         delete tmpptr;
         return true;
@@ -112,7 +112,7 @@ private:
                 delete next_ptr;
         }
 
-        boost::optional<T> current;
+        std::optional<T> current;
         std::atomic<ElementPtr*> next;
     };
 

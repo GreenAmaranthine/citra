@@ -1628,9 +1628,8 @@ void main() {
     return out;
 }
 
-boost::optional<std::string> GenerateVertexShader(const Pica::Shader::ShaderSetup& setup,
-                                                  const PicaVSConfig& config,
-                                                  bool separable_shader) {
+std::optional<std::string> GenerateVertexShader(const Pica::Shader::ShaderSetup& setup,
+                                                const PicaVSConfig& config, bool separable_shader) {
     std::string out{"#version 330 core\n"};
     if (separable_shader) {
         out += "#extension GL_ARB_separate_shader_objects : enable\n";
@@ -1658,9 +1657,9 @@ boost::optional<std::string> GenerateVertexShader(const Pica::Shader::ShaderSetu
         get_output_reg, config.state.sanitize_mul, false)};
 
     if (!program_source_opt)
-        return boost::none;
+        return {};
 
-    std::string& program_source{program_source_opt.get()};
+    std::string& program_source{*program_source_opt};
 
     out += R"(
 #define uniforms vs_uniforms
@@ -1816,16 +1815,16 @@ void main() {
     return out;
 }
 
-boost::optional<std::string> GenerateGeometryShader(const Pica::Shader::ShaderSetup& setup,
-                                                    const PicaGSConfig& config,
-                                                    bool separable_shader) {
+std::optional<std::string> GenerateGeometryShader(const Pica::Shader::ShaderSetup& setup,
+                                                  const PicaGSConfig& config,
+                                                  bool separable_shader) {
     std::string out{"#version 330 core\n"};
     if (separable_shader) {
         out += "#extension GL_ARB_separate_shader_objects : enable\n";
     }
 
     if (config.state.num_inputs % config.state.attributes_per_vertex != 0)
-        return boost::none;
+        return {};
 
     switch (config.state.num_inputs / config.state.attributes_per_vertex) {
     case 1:
@@ -1844,7 +1843,7 @@ boost::optional<std::string> GenerateGeometryShader(const Pica::Shader::ShaderSe
         out += "layout(triangles_adjacency) in;\n";
         break;
     default:
-        return boost::none;
+        return {};
     }
     out += "layout(triangle_strip, max_vertices = 30) out;\n\n";
 
@@ -1873,9 +1872,9 @@ boost::optional<std::string> GenerateGeometryShader(const Pica::Shader::ShaderSe
         get_output_reg, config.state.sanitize_mul, true)};
 
     if (!program_source_opt)
-        return boost::none;
+        return {};
 
-    std::string& program_source{program_source_opt.get()};
+    std::string& program_source{*program_source_opt};
 
     out += R"(
 Vertex output_buffer;

@@ -247,7 +247,7 @@ std::optional<Rasterizer::VertexArrayInfo> Rasterizer::AnalyzeVertexArray(bool i
         PAddr address{vertex_attributes.GetPhysicalBaseAddress() + index_info.offset};
         const u8* index_address_8{Memory::GetPhysicalPointer(address)};
         if (!index_address_8)
-            return std::nullopt;
+            return {};
         const u16* index_address_16{reinterpret_cast<const u16*>(index_address_8)};
         bool index_u16{index_info.format != 0};
 

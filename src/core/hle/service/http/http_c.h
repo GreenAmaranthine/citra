@@ -6,10 +6,10 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <boost/optional.hpp>
 #include <httplib.h>
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/service.h"
@@ -135,8 +135,8 @@ public:
     std::string url;
     RequestMethod method;
     RequestState state{RequestState::NotStarted};
-    boost::optional<Proxy> proxy;
-    boost::optional<BasicAuth> basic_auth;
+    std::optional<Proxy> proxy;
+    std::optional<BasicAuth> basic_auth;
     SSLConfig ssl_config{};
     u32 socket_buffer_size;
     httplib::Headers headers;
@@ -156,7 +156,7 @@ public:
 struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
     /// The HTTP context that is currently bound to this session, this can be empty if no context
     /// has been bound. Certain commands can only be called on a session with a bound context.
-    boost::optional<Context::Handle> current_http_context;
+    std::optional<Context::Handle> current_http_context;
 
     u32 session_id;
 

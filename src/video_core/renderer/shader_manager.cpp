@@ -166,8 +166,8 @@ private:
 // program buffer from the previous shader, which is hashed into the config, resulting several
 // different config values from the same shader program.
 template <typename KeyConfigType,
-          boost::optional<std::string> (*CodeGenerator)(const Pica::Shader::ShaderSetup&,
-                                                        const KeyConfigType&, bool),
+          std::optional<std::string> (*CodeGenerator)(const Pica::Shader::ShaderSetup&,
+                                                      const KeyConfigType&, bool),
           GLenum ShaderType>
 class ShaderDoubleCache {
 public:
@@ -182,7 +182,7 @@ public:
                 return 0;
             }
 
-            std::string program{program_opt.get()};
+            std::string program{*program_opt};
             auto [iter, new_shader]{shader_cache.emplace(program, ShaderStage{separable})};
             ShaderStage& cached_shader{iter->second};
             if (new_shader) {

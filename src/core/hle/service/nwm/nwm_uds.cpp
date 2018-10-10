@@ -9,9 +9,9 @@
 #include <list>
 #include <map>
 #include <mutex>
+#include <optional>
 #include <unordered_map>
 #include <vector>
-#include <boost/optional.hpp>
 #include <cryptopp/osrng.h>
 #include "common/common_types.h"
 #include "common/logging/log.h"
@@ -608,7 +608,7 @@ void OnWifiPacketReceived(const Network::WifiPacket& packet) {
     }
 }
 
-static boost::optional<Network::MacAddress> GetNodeMacAddress(u16 dest_node_id, u8 flags) {
+static std::optional<Network::MacAddress> GetNodeMacAddress(u16 dest_node_id, u8 flags) {
     constexpr u8 BroadcastFlag{0x2};
     if ((flags & BroadcastFlag) || dest_node_id == BroadcastNetworkNodeId) {
         // Broadcast

@@ -21,12 +21,12 @@ function(copy_citra_Qt5_deps target_dir)
         Qt5Multimedia$<$<CONFIG:Debug>:d>.*
         Qt5Network$<$<CONFIG:Debug>:d>.*
     )
-    windows_copy_files(citra-qt ${Qt5_PLATFORMS_DIR} ${PLATFORMS} qwindows$<$<CONFIG:Debug>:d>.*)
-    windows_copy_files(citra-qt ${Qt5_MEDIASERVICE_DIR} ${MEDIASERVICE}
+    windows_copy_files(citra ${Qt5_PLATFORMS_DIR} ${PLATFORMS} qwindows$<$<CONFIG:Debug>:d>.*)
+    windows_copy_files(citra ${Qt5_MEDIASERVICE_DIR} ${MEDIASERVICE}
         dsengine$<$<CONFIG:Debug>:d>.*
         wmfengine$<$<CONFIG:Debug>:d>.*
     )
-    windows_copy_files(citra-qt ${Qt5_STYLES_DIR} ${STYLES} qwindowsvistastyle$<$<CONFIG:Debug>:d>.*)
+    windows_copy_files(citra ${Qt5_STYLES_DIR} ${STYLES} qwindowsvistastyle$<$<CONFIG:Debug>:d>.*)
     windows_copy_files(${target_dir} ${Qt5_IMAGEFORMATS_DIR} ${IMAGEFORMATS}
         qgif$<$<CONFIG:Debug>:d>.dll
         qicns$<$<CONFIG:Debug>:d>.dll

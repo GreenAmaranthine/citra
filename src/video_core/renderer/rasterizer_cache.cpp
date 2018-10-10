@@ -7,10 +7,10 @@
 #include <cstring>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include <boost/optional.hpp>
 #include <boost/range/iterator_range.hpp>
 #include "common/alignment.h"
 #include "common/bit_field.h"
@@ -864,7 +864,7 @@ constexpr MatchFlags operator|(MatchFlags lhs, MatchFlags rhs) {
 template <MatchFlags find_flags>
 Surface FindMatch(const SurfaceCache& surface_cache, const SurfaceParams& params,
                   ScaleMatch match_scale_type,
-                  boost::optional<SurfaceInterval> validate_interval = boost::none) {
+                  std::optional<SurfaceInterval> validate_interval = {}) {
     Surface match_surface{};
     bool match_valid{};
     u32 match_scale{};
@@ -929,6 +929,7 @@ Surface FindMatch(const SurfaceCache& surface_cache, const SurfaceParams& params
                 return std::make_pair(surface->CanSubRect(params), surface->GetInterval());
             });
             IsMatch_Helper(std::integral_constant<MatchFlags, MatchFlags::Copy>{}, [&] {
+                ASSERT(validate_interval);
                 auto copy_interval{
                     params.FromInterval(*validate_interval).GetCopyableInterval(surface)};
                 bool matched{boost::icl::length(copy_interval & *validate_interval) != 0 &&

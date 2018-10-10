@@ -384,7 +384,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     }
 
     // This command can only be called without a bound session.
-    if (session_data->current_http_context != boost::none) {
+    if (session_data->current_http_context) {
         LOG_ERROR(Service_HTTP, "Command called with a bound context");
 
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
@@ -449,7 +449,7 @@ void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    ASSERT_MSG(session_data->current_http_context == boost::none,
+    ASSERT_MSG(session_data->current_http_context,
                "Unimplemented CloseContext on context-bound session");
 
     auto itr{contexts.find(context_handle)};
@@ -499,7 +499,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     }
 
     // This command can only be called with a bound context
-    if (session_data->current_http_context == boost::none) {
+    if (!session_data->current_http_context) {
         LOG_ERROR(Service_HTTP, "Command called without a bound context");
 
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
@@ -513,7 +513,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_HTTP,
                   "Tried to add a request header on a mismatched session input context={} session "
                   "context={}",
-                  context_handle, session_data->current_http_context.get());
+                  context_handle, *session_data->current_http_context);
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
         rb.Push(ERROR_STATE_ERROR);
         rb.PushMappedBuffer(value_buffer);
@@ -561,7 +561,7 @@ void HTTP_C::OpenClientCertContext(Kernel::HLERequestContext& ctx) {
     if (!session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Command called without Initialize");
         result = ERROR_STATE_ERROR;
-    } else if (session_data->current_http_context != boost::none) {
+    } else if (session_data->current_http_context) {
         LOG_ERROR(Service_HTTP, "Command called with a bound context");
         result = ERROR_NOT_IMPLEMENTED;
     } else if (session_data->num_client_certs >= 2) {
@@ -601,7 +601,7 @@ void HTTP_C::OpenDefaultClientCertContext(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    if (session_data->current_http_context != boost::none) {
+    if (session_data->current_http_context) {
         LOG_ERROR(Service_HTTP, "Command called with a bound context");
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(ERROR_NOT_IMPLEMENTED);
@@ -1342,7 +1342,7 @@ void HTTP_C::Finalize(Kernel::HLERequestContext& ctx) {
 
     auto* session_data{GetSessionData(ctx.Session())};
     session_data->initialized = false;
-    session_data->current_http_context = boost::none;
+    session_data->current_http_context.reset();
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);

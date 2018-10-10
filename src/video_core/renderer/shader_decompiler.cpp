@@ -909,11 +909,11 @@ bool exec_shader();
 )";
 }
 
-boost::optional<std::string> DecompileProgram(const ProgramCode& program_code,
-                                              const SwizzleData& swizzle_data, u32 main_offset,
-                                              const RegGetter& inputreg_getter,
-                                              const RegGetter& outputreg_getter, bool sanitize_mul,
-                                              bool is_gs) {
+std::optional<std::string> DecompileProgram(const ProgramCode& program_code,
+                                            const SwizzleData& swizzle_data, u32 main_offset,
+                                            const RegGetter& inputreg_getter,
+                                            const RegGetter& outputreg_getter, bool sanitize_mul,
+                                            bool is_gs) {
     try {
         auto subroutines{ControlFlowAnalyzer(program_code, main_offset).MoveSubroutines()};
         GLSLGenerator generator{subroutines,     program_code,     swizzle_data, main_offset,
@@ -921,7 +921,7 @@ boost::optional<std::string> DecompileProgram(const ProgramCode& program_code,
         return generator.MoveShaderCode();
     } catch (const DecompileFail& exception) {
         LOG_INFO(HW_GPU, "Shader decompilation failed: {}", exception.what());
-        return boost::none;
+        return {};
     }
 }
 
