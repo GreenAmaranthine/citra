@@ -22,10 +22,10 @@ public:
     const MacAddress NintendoOUI;
     std::mt19937 random_gen; ///< Random number generator. Used for GenerateMacAddress
 
-    ENetHost* server = nullptr; ///< Network interface.
+    ENetHost* server{}; ///< Network interface.
 
-    std::atomic<State> state{State::Closed}; ///< Current state of the room.
-    RoomInformation room_information;        ///< Information about this room.
+    std::atomic_bool is_open{false};  ///< Whether the room is open.
+    RoomInformation room_information; ///< Information about this room.
 
     std::string password; ///< The password required to connect to this room.
 
@@ -41,7 +41,7 @@ public:
     /// This should be a std::shared_mutex as soon as C++17 is supported
 
     RoomImpl()
-        : random_gen(std::random_device()()), NintendoOUI{0x00, 0x1F, 0x32, 0x00, 0x00, 0x00} {}
+        : random_gen{std::random_device()()}, NintendoOUI{0x00, 0x1F, 0x32, 0x00, 0x00, 0x00} {}
 
     /// Thread that receives and dispatches network packets
     std::unique_ptr<std::thread> room_thread;
@@ -154,7 +154,7 @@ public:
 
 // RoomImpl
 void Room::RoomImpl::ServerLoop() {
-    while (state != State::Closed) {
+    while (is_open.load(std::memory_order_relaxed)) {
         ENetEvent event;
         if (enet_host_service(server, &event, 50) > 0) {
             switch (event.type) {
@@ -530,7 +530,7 @@ bool Room::Create(const std::string& name, const std::string& server_address, u1
     if (!room_impl->server) {
         return false;
     }
-    room_impl->state = State::Open;
+    room_impl->is_open.store(true, std::memory_order_relaxed);
 
     room_impl->room_information.name = name;
     room_impl->room_information.member_slots = max_connections;
@@ -544,8 +544,8 @@ bool Room::Create(const std::string& name, const std::string& server_address, u1
     return true;
 }
 
-Room::State Room::GetState() const {
-    return room_impl->state;
+bool Room::IsOpen() const {
+    return room_impl->is_open.load(std::memory_order_relaxed);
 }
 
 const RoomInformation& Room::GetRoomInformation() const {
@@ -570,7 +570,7 @@ bool Room::HasPassword() const {
 }
 
 void Room::Destroy() {
-    room_impl->state = State::Closed;
+    room_impl->is_open.store(false, std::memory_order_relaxed);
     room_impl->room_thread->join();
     room_impl->room_thread.reset();
 

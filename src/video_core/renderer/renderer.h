@@ -13,8 +13,6 @@
 #include "video_core/renderer/resource_manager.h"
 #include "video_core/renderer/state.h"
 
-class EmuWindow;
-
 namespace Layout {
 class FramebufferLayout;
 } // namespace Layout
@@ -38,7 +36,7 @@ struct ScreenInfo {
 
 class Renderer {
 public:
-    explicit Renderer(EmuWindow& window);
+    explicit Renderer();
     ~Renderer();
 
     /// Swap buffers (render frame)
@@ -50,10 +48,6 @@ public:
     void UpdateCurrentFramebufferLayout();
 
     Rasterizer* GetRasterizer();
-
-    EmuWindow& GetRenderWindow() {
-        return render_window;
-    }
 
 private:
     void InitOpenGLObjects();
@@ -87,6 +81,5 @@ private:
     GLuint attrib_position;
     GLuint attrib_tex_coord;
 
-    EmuWindow& render_window;
     std::unique_ptr<Rasterizer> rasterizer;
 };

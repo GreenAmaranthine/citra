@@ -5,7 +5,7 @@
 #include "common/logging/log.h"
 #include "common/param_package.h"
 #include "core/core.h"
-#include "core/frontend/input.h"
+#include "core/input.h"
 #include "core/settings.h"
 #include "input_common/udp/client.h"
 #include "input_common/udp/udp.h"

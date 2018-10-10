@@ -63,11 +63,6 @@ enum RoomMessageTypes : u8 {
 /// This is what a server [person creating a server] would use.
 class Room final {
 public:
-    enum class State : u8 {
-        Open,   ///< The room is open and ready to accept connections.
-        Closed, ///< The room is not opened and can not accept connections.
-    };
-
     struct Member {
         std::string nickname;   ///< The nickname of the member.
         GameInfo game_info;     ///< The current game of the member
@@ -78,9 +73,9 @@ public:
     ~Room();
 
     /**
-     * Gets the current state of the room.
+     * Return whether the room is open.
      */
-    State GetState() const;
+    bool IsOpen() const;
 
     /**
      * Gets the room information of the room.

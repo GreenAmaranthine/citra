@@ -25,10 +25,10 @@ std::function<void()> g_screenshot_complete_callback;
 Layout::FramebufferLayout g_screenshot_framebuffer_layout;
 
 /// Initialize the video core
-Core::System::ResultStatus Init(EmuWindow& emu_window) {
+Core::System::ResultStatus Init() {
     Pica::Init();
 
-    g_renderer = std::make_unique<Renderer>(emu_window);
+    g_renderer = std::make_unique<Renderer>();
     Core::System::ResultStatus result = g_renderer->Init();
 
     if (result != Core::System::ResultStatus::Success) {
@@ -62,9 +62,8 @@ void RequestScreenshot(void* data, std::function<void()> callback,
 }
 
 u16 GetResolutionScaleFactor() {
-    return !Settings::values.resolution_factor
-               ? g_renderer->GetRenderWindow().GetFramebufferLayout().GetScalingRatio()
-               : Settings::values.resolution_factor;
+    return !Settings::values.resolution_factor ? Frontend::GetFramebufferLayout().GetScalingRatio()
+                                               : Settings::values.resolution_factor;
 }
 
 } // namespace VideoCore

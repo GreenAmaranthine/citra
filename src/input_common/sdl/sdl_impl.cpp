@@ -20,7 +20,7 @@
 #include "common/math_util.h"
 #include "common/param_package.h"
 #include "common/threadsafe_queue.h"
-#include "core/frontend/input.h"
+#include "core/input.h"
 #include "input_common/sdl/sdl_impl.h"
 
 namespace InputCommon::SDL {

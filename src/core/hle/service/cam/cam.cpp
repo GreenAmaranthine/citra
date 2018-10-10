@@ -5,8 +5,8 @@
 #include <algorithm>
 #include "common/bit_set.h"
 #include "common/logging/log.h"
+#include "core/camera/factory.h"
 #include "core/core_timing.h"
-#include "core/frontend/camera/factory.h"
 #include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"

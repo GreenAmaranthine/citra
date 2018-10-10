@@ -74,7 +74,7 @@ System::ResultStatus System::RunLoop() {
     return status;
 }
 
-System::ResultStatus System::Load(EmuWindow& emu_window, const std::string& filepath) {
+System::ResultStatus System::Load(const std::string& filepath) {
     app_loader = Loader::GetLoader(filepath);
 
     if (!app_loader) {
@@ -98,7 +98,7 @@ System::ResultStatus System::Load(EmuWindow& emu_window, const std::string& file
         }
     }
 
-    ResultStatus init_result{Init(emu_window, system_mode.first.get())};
+    ResultStatus init_result{Init(system_mode.first.get())};
     if (init_result != ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to initialize system (Error {})!",
                      static_cast<u32>(init_result));
@@ -122,13 +122,8 @@ System::ResultStatus System::Load(EmuWindow& emu_window, const std::string& file
     }
     Memory::SetCurrentPageTable(&Kernel::g_current_process->vm_manager.page_table);
     status = ResultStatus::Success;
-    m_emu_window = &emu_window;
     m_filepath = filepath;
     return status;
-}
-
-System::ResultStatus System::Load(const std::string& path) {
-    return Load(*m_emu_window, path);
 }
 
 void System::PrepareReschedule() {
@@ -149,7 +144,7 @@ void System::Reschedule() {
     Kernel::Reschedule();
 }
 
-System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
+System::ResultStatus System::Init(u32 system_mode) {
     LOG_DEBUG(HW_Memory, "initialized OK");
 
     CoreTiming::Init();
@@ -179,7 +174,7 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
     Service::Init(service_manager);
     CheatCore::Init();
 
-    ResultStatus result{VideoCore::Init(emu_window)};
+    ResultStatus result{VideoCore::Init()};
     if (result != ResultStatus::Success) {
         return result;
     }
@@ -231,11 +226,11 @@ void System::Shutdown() {
 void System::Jump() {
     Shutdown();
     if (jump_tid == 0) {
-        Load(*m_emu_window, m_filepath);
+        Load(m_filepath);
         return;
     }
     std::string path{Service::AM::GetTitleContentPath(jump_media, jump_tid)};
-    Load(*m_emu_window, path);
+    Load(path);
 }
 
 } // namespace Core

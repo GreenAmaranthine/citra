@@ -73,7 +73,7 @@ void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
         if (!room) {
             break;
         }
-        if (room->GetState() != Network::Room::State::Open) {
+        if (!room->IsOpen()) {
             break;
         }
         Network::RoomInformation room_information{room->GetRoomInformation()};

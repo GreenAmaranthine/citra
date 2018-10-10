@@ -6,7 +6,7 @@
 
 #include <memory>
 #include <vector>
-#include "core/frontend/input.h"
+#include "core/input.h"
 #include "input_common/main.h"
 
 union SDL_Event;

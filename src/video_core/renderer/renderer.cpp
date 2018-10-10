@@ -11,7 +11,7 @@
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/core_timing.h"
-#include "core/frontend/emu_window.h"
+#include "core/frontend.h"
 #include "core/hw/gpu.h"
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
@@ -90,8 +90,7 @@ static std::array<GLfloat, 6> MakeOrthographicMatrix(const float width, const fl
     return matrix;
 }
 
-Renderer::Renderer(EmuWindow& window)
-    : render_window{window}, rasterizer{std::make_unique<Rasterizer>(window)} {
+Renderer::Renderer() : rasterizer{std::make_unique<Rasterizer>()} {
     VideoCore::g_renderer_bg_color_update_requested = true;
 }
 
@@ -170,12 +169,12 @@ void Renderer::SwapBuffers() {
         VideoCore::g_renderer_screenshot_requested = false;
     }
 
-    DrawScreens(render_window.GetFramebufferLayout());
+    DrawScreens(Frontend::GetFramebufferLayout());
 
     Core::System::GetInstance().perf_stats.EndSystemFrame();
 
     // Swap buffers
-    render_window.SwapBuffers();
+    Frontend::SwapBuffers();
 
     Core::System::GetInstance().frame_limiter.DoFrameLimiting(CoreTiming::GetGlobalTimeUs());
     Core::System::GetInstance().perf_stats.BeginSystemFrame();
@@ -516,7 +515,7 @@ static void APIENTRY DebugHandler(GLenum source, GLenum type, GLuint id, GLenum 
 
 /// Initialize the renderer
 Core::System::ResultStatus Renderer::Init() {
-    render_window.MakeCurrent();
+    Frontend::MakeCurrent();
 
     if (GLAD_GL_KHR_debug) {
         glEnable(GL_DEBUG_OUTPUT);
@@ -545,8 +544,8 @@ Core::System::ResultStatus Renderer::Init() {
 }
 
 void Renderer::UpdateCurrentFramebufferLayout() {
-    const Layout::FramebufferLayout& layout{render_window.GetFramebufferLayout()};
-    render_window.UpdateCurrentFramebufferLayout(layout.width, layout.height);
+    const Layout::FramebufferLayout& layout{Frontend::GetFramebufferLayout()};
+    Frontend::UpdateCurrentFramebufferLayout(layout.width, layout.height);
 }
 
 Rasterizer* Renderer::GetRasterizer() {

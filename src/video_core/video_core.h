@@ -7,9 +7,8 @@
 #include <atomic>
 #include <memory>
 #include "core/core.h"
-#include "core/frontend/emu_window.h"
+#include "core/frontend.h"
 
-class EmuWindow;
 class Renderer;
 
 namespace VideoCore {
@@ -30,7 +29,7 @@ extern std::function<void()> g_screenshot_complete_callback;
 extern Layout::FramebufferLayout g_screenshot_framebuffer_layout;
 
 /// Initialize the video core
-Core::System::ResultStatus Init(EmuWindow& emu_window);
+Core::System::ResultStatus Init();
 
 /// Shutdown the video core
 void Shutdown();

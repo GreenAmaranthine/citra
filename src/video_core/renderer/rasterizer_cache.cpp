@@ -20,7 +20,6 @@
 #include "common/scope_exit.h"
 #include "common/vector_math.h"
 #include "core/core_timing.h"
-#include "core/frontend/emu_window.h"
 #include "core/memory.h"
 #include "core/settings.h"
 #include "video_core/pica_state.h"

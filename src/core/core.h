@@ -19,7 +19,6 @@
 #include "core/memory.h"
 #include "core/perf_stats.h"
 
-class EmuWindow;
 class CPU;
 
 namespace AudioCore {
@@ -105,12 +104,9 @@ public:
 
     /**
      * Load an executable application.
-     * @param emu_window Reference to the host-system window used for video output and keyboard
-     *                   input.
      * @param filepath String path to the executable application to load on the host file system.
      * @returns ResultStatus code, indicating if the operation succeeded.
      */
-    ResultStatus Load(EmuWindow& emu_window, const std::string& filepath);
     ResultStatus Load(const std::string& filepath);
 
     /**
@@ -200,12 +196,10 @@ public:
 private:
     /**
      * Initialize the emulated system.
-     * @param emu_window Reference to the host-system window used for video output and keyboard
-     *                   input.
      * @param system_mode The system mode.
      * @return ResultStatus code, indicating if the operation succeeded.
      */
-    ResultStatus Init(EmuWindow& emu_window, u32 system_mode);
+    ResultStatus Init(u32 system_mode);
 
     /// Reschedule the core emulation
     void Reschedule();
@@ -238,7 +232,6 @@ private:
     ResultStatus status;
     std::string status_details;
 
-    EmuWindow* m_emu_window;
     std::string m_filepath;
     u64 jump_tid;
     Service::FS::MediaType jump_media;

@@ -13,9 +13,9 @@
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
-#include "core/frontend/input.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
+#include "core/input.h"
 #include "core/settings.h"
 
 namespace Kernel {

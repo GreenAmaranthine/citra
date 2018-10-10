@@ -138,10 +138,10 @@ std::list<Network::WifiPacket> GetReceivedBeacons(const MacAddress& sender) {
 
 /// Sends a WifiPacket to the room we're currently connected to.
 void SendPacket(Network::WifiPacket& packet) {
-    if (auto room_member{Network::GetRoomMember().lock()}) {
-        if (room_member->GetState() == Network::RoomMember::State::Joined) {
-            packet.transmitter_address = room_member->GetMacAddress();
-            room_member->SendWifiPacket(packet);
+    if (auto member{Network::GetRoomMember().lock()}) {
+        if (member->GetState() == Network::RoomMember::State::Joined) {
+            packet.transmitter_address = member->GetMacAddress();
+            member->SendWifiPacket(packet);
         }
     }
 }

@@ -240,11 +240,11 @@ uint64 CityHash64WithSeeds(const char* s, std::size_t len, uint64 seed0, uint64 
 // A subroutine for CityHash128().  Returns a decent 128-bit hash for strings
 // of any length representable in signed long.  Based on City and Murmur.
 static uint128 CityMurmur(const char* s, std::size_t len, uint128 seed) {
-    uint64 a = Uint128Low64(seed);
-    uint64 b = Uint128High64(seed);
-    uint64 c = 0;
-    uint64 d = 0;
-    signed long l = static_cast<long>(len) - 16;
+    uint64 a{Uint128Low64(seed)};
+    uint64 b{Uint128High64(seed)};
+    uint64 c{};
+    uint64 d{};
+    signed long l{static_cast<long>(len) - 16};
     if (l <= 0) { // len <= 16
         a = ShiftMix(a * k1) * k1;
         c = b * k1 + HashLen0to16(s, len);
@@ -277,9 +277,9 @@ uint128 CityHash128WithSeed(const char* s, std::size_t len, uint128 seed) {
     // We expect len >= 128 to be the common case.  Keep 56 bytes of state:
     // v, w, x, y, and z.
     pair<uint64, uint64> v, w;
-    uint64 x = Uint128Low64(seed);
-    uint64 y = Uint128High64(seed);
-    uint64 z = len * k1;
+    uint64 x{Uint128Low64(seed)};
+    uint64 y{Uint128High64(seed)};
+    uint64 z{len * k1};
     v.first = Rotate(y ^ k1, 49) * k1 + Fetch64(s);
     v.second = Rotate(v.first, 42) * k1 + Fetch64(s + 8);
     w.first = Rotate(y + z, 35) * k1 + x;
@@ -313,7 +313,7 @@ uint128 CityHash128WithSeed(const char* s, std::size_t len, uint128 seed) {
     w.first *= 9;
     v.first *= k0;
     // If 0 < len < 128, hash up to 4 chunks of 32 bytes each from the end of s.
-    for (std::size_t tail_done = 0; tail_done < len;) {
+    for (std::size_t tail_done{}; tail_done < len;) {
         tail_done += 32;
         y = Rotate(x + y, 42) * k0 + v.second;
         w.first += Fetch64(s + len - tail_done + 16);

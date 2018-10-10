@@ -26,13 +26,12 @@
 #include "video_core/renderer/stream_buffer.h"
 #include "video_core/shader/shader.h"
 
-class EmuWindow;
 class ShaderProgramManager;
 struct ScreenInfo;
 
 class Rasterizer {
 public:
-    explicit Rasterizer(EmuWindow& render_window);
+    explicit Rasterizer();
     ~Rasterizer();
 
     void AddTriangle(const Pica::Shader::OutputVertex& v0, const Pica::Shader::OutputVertex& v1,
@@ -247,8 +246,6 @@ private:
     OpenGLState state;
 
     RasterizerCache res_cache;
-
-    EmuWindow& emu_window;
 
     std::vector<HardwareVertex> vertex_batch;
 

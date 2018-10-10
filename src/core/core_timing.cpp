@@ -137,8 +137,9 @@ void ScheduleEvent(s64 cycles_into_future, const EventType* event_type, u64 user
     s64 timeout{static_cast<s64>(GetTicks()) + cycles_into_future};
 
     // If this event needs to be scheduled before the next advance(), force one early
-    if (!is_global_timer_sane)
+    if (!is_global_timer_sane) {
         ForceExceptionCheck(cycles_into_future);
+    }
 
     event_queue.emplace_back(Event{timeout, event_fifo_id++, userdata, event_type});
     std::push_heap(event_queue.begin(), event_queue.end(), std::greater<>());
@@ -202,7 +203,7 @@ void Advance() {
     is_global_timer_sane = true;
 
     while (!event_queue.empty() && event_queue.front().time <= global_timer) {
-        Event evt = std::move(event_queue.front());
+        Event evt{std::move(event_queue.front())};
         std::pop_heap(event_queue.begin(), event_queue.end(), std::greater<>());
         event_queue.pop_back();
         evt.type->callback(evt.userdata, global_timer - evt.time);

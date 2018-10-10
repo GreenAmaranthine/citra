@@ -56,7 +56,7 @@ static void PrintVersion() {
 /// Application entry point
 int main(int argc, char** argv) {
     Common::DetachedTasks detached_tasks;
-    int option_index{0};
+    int option_index{};
     char* endarg;
 
     // This is just to be able to link against core
@@ -153,7 +153,7 @@ int main(int argc, char** argv) {
         PrintHelp(argv[0]);
         return -1;
     }
-    bool announce = true;
+    bool announce{true};
     if (username.empty()) {
         announce = false;
         std::cout << "username is empty: Hosting a private room\n\n";
@@ -185,7 +185,7 @@ int main(int argc, char** argv) {
         if (announce) {
             announce_session->Start();
         }
-        while (room->GetState() == Network::Room::State::Open) {
+        while (room->IsOpen()) {
             std::string in;
             std::cin >> in;
             if (in.size() > 0) {
@@ -197,7 +197,7 @@ int main(int argc, char** argv) {
                 Network::Shutdown();
                 return 0;
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds{100});
         }
         if (announce) {
             announce_session->Stop();

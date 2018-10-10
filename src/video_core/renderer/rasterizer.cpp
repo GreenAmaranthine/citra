@@ -34,11 +34,11 @@ static bool IsVendorAmd() {
            gpu_renderer == "Intel(R) HD Graphics 4400";
 }
 
-Rasterizer::Rasterizer(EmuWindow& window)
+Rasterizer::Rasterizer()
     : is_amd{IsVendorAmd()}, vertex_buffer{GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE, is_amd},
       uniform_buffer{GL_UNIFORM_BUFFER, UNIFORM_BUFFER_SIZE, false},
       index_buffer{GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE, false},
-      texture_buffer{GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE, false}, emu_window{window} {
+      texture_buffer{GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE, false} {
 
     SyncSettings();
 

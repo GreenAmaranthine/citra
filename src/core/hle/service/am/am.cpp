@@ -300,16 +300,19 @@ bool CIAFile::Close() const {
         // For each content ID in the old TMD, check if there is a matching ID in the new
         // TMD. If a CIA contains (and wrote to) an identical ID, it should be kept while
         // IDs which only existed for the old TMD should be deleted.
-        for (u16 old_index = 0; old_index < old_tmd.GetContentCount(); old_index++) {
+        for (u16 old_index{}; old_index < old_tmd.GetContentCount(); old_index++) {
             bool abort{};
-            for (u16 new_index = 0; new_index < new_tmd.GetContentCount(); new_index++) {
+
+            for (u16 new_index{}; new_index < new_tmd.GetContentCount(); new_index++) {
                 if (old_tmd.GetContentIDByIndex(old_index) ==
                     new_tmd.GetContentIDByIndex(new_index)) {
                     abort = true;
                 }
             }
-            if (abort)
+
+            if (abort) {
                 break;
+            }
 
             FileUtil::Delete(GetTitleContentPath(media_type, old_tmd.GetTitleID(), old_index));
         }
@@ -592,8 +595,7 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
             content_info.type = tmd.GetContentTypeByIndex(content_requested[i]);
             content_info.content_id = tmd.GetContentIDByIndex(content_requested[i]);
             content_info.size = tmd.GetContentSizeByIndex(content_requested[i]);
-            content_info.ownership =
-                OWNERSHIP_OWNED; // TODO: Pull this from the ticket.
+            content_info.ownership = OWNERSHIP_OWNED; // TODO: Pull this from the ticket.
 
             if (FileUtil::Exists(GetTitleContentPath(media_type, title_id, content_requested[i]))) {
                 content_info.ownership |= OWNERSHIP_DOWNLOADED;
@@ -648,8 +650,7 @@ void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
             content_info.type = tmd.GetContentTypeByIndex(i);
             content_info.content_id = tmd.GetContentIDByIndex(i);
             content_info.size = tmd.GetContentSizeByIndex(i);
-            content_info.ownership =
-                OWNERSHIP_OWNED; // TODO: Pull this from the ticket.
+            content_info.ownership = OWNERSHIP_OWNED; // TODO: Pull this from the ticket.
 
             if (FileUtil::Exists(GetTitleContentPath(media_type, title_id, i))) {
                 content_info.ownership |= OWNERSHIP_DOWNLOADED;

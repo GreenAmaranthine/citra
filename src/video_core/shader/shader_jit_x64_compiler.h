@@ -113,8 +113,8 @@ private:
     Xbyak::Label CompilePrelude_Log2();
     Xbyak::Label CompilePrelude_Exp2();
 
-    const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_code = nullptr;
-    const std::array<u32, MAX_SWIZZLE_DATA_LENGTH>* swizzle_data = nullptr;
+    const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_code{};
+    const std::array<u32, MAX_SWIZZLE_DATA_LENGTH>* swizzle_data{};
 
     /// Mapping of Pica VS instructions to pointers in the emitted code
     std::array<Xbyak::Label, MAX_PROGRAM_CODE_LENGTH> instruction_labels;

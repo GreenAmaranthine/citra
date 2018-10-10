@@ -58,17 +58,17 @@ add_library(core STATIC
     file_sys/ticket.h
     file_sys/title_metadata.cpp
     file_sys/title_metadata.h
-    frontend/camera/blank_camera.cpp
-    frontend/camera/blank_camera.h
-    frontend/camera/factory.cpp
-    frontend/camera/factory.h
-    frontend/camera/interface.cpp
-    frontend/camera/interface.h
-    frontend/emu_window.cpp
-    frontend/emu_window.h
-    frontend/framebuffer_layout.cpp
-    frontend/framebuffer_layout.h
-    frontend/input.h
+    camera/blank_camera.cpp
+    camera/blank_camera.h
+    camera/factory.cpp
+    camera/factory.h
+    camera/interface.cpp
+    camera/interface.h
+    frontend.cpp
+    frontend.h
+    framebuffer_layout.cpp
+    framebuffer_layout.h
+    input.h
     hle/applets/applet.cpp
     hle/applets/applet.h
     hle/applets/erreula.cpp

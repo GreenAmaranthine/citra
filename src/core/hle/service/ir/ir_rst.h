@@ -9,9 +9,9 @@
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/swap.h"
-#include "core/frontend/input.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
+#include "core/input.h"
 
 namespace Kernel {
 class Event;

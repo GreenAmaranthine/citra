@@ -34,13 +34,15 @@ std::weak_ptr<RoomMember> GetRoomMember() {
 
 void Shutdown() {
     if (g_room_member) {
-        if (g_room_member->IsConnected())
+        if (g_room_member->IsConnected()) {
             g_room_member->Leave();
+        }
         g_room_member.reset();
     }
     if (g_room) {
-        if (g_room->GetState() == Room::State::Open)
+        if (g_room->IsOpen()) {
             g_room->Destroy();
+        }
         g_room.reset();
     }
     enet_deinitialize();
