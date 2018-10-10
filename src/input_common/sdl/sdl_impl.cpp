@@ -121,6 +121,15 @@ public:
                         decltype(&SDL_JoystickClose) deleter = &SDL_JoystickClose) {
         sdl_joystick =
             std::unique_ptr<SDL_Joystick, decltype(&SDL_JoystickClose)>(joystick, deleter);
+        for (auto& button : state.buttons) {
+            button.second = false;
+        }
+        for (auto& axis : state.axes) {
+            axis.second = 0;
+        }
+        for (auto& hat : state.hats) {
+            hat.second = 0;
+        }
     }
 
 private:

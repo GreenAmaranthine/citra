@@ -247,6 +247,10 @@ void GMainWindow::InitializeHotkeys() {
                    Qt::ApplicationShortcut);
     RegisterHotkey("Main Window", "Decrease Speed Limit", QKeySequence("-"),
                    Qt::ApplicationShortcut);
+    RegisterHotkey("Main Window", "Increase Internal Resolution", QKeySequence("CTRL+I"),
+                   Qt::ApplicationShortcut);
+    RegisterHotkey("Main Window", "Decrease Internal Resolution", QKeySequence("CTRL+D"),
+                   Qt::ApplicationShortcut);
     RegisterHotkey("Main Window", "Capture Screenshot", QKeySequence("CTRL+S"));
     RegisterHotkey("Main Window", "Toggle Shell Open", QKeySequence("F2"));
     RegisterHotkey("Main Window", "Change CPU Ticks", QKeySequence("CTRL+T"));
@@ -307,6 +311,18 @@ void GMainWindow::InitializeHotkeys() {
                     UpdateStatusBar();
                 }
             });
+    connect(GetHotkey("Main Window", "Increase Internal Resolution", this), &QShortcut::activated,
+            this, [&] {
+                if (Settings::values.resolution_factor < 10) {
+                    ++Settings::values.resolution_factor;
+                }
+            });
+    connect(GetHotkey("Main Window", "Decrease Internal Resolution", this), &QShortcut::activated,
+            this, [&] {
+                if (Settings::values.resolution_factor > 0) {
+                    --Settings::values.resolution_factor;
+                }
+            });
     connect(GetHotkey("Main Window", "Capture Screenshot", this), &QShortcut::activated, this, [&] {
         if (Core::System::GetInstance().IsRunning()) {
             OnCaptureScreenshot();
@@ -327,8 +343,10 @@ void GMainWindow::InitializeHotkeys() {
         if (ok) {
             Settings::values.ticks_mode = Settings::TicksMode::Custom;
             Settings::values.ticks = ticks;
-            if (Core::System::GetInstance().IsPoweredOn())
+
+            if (Core::System::GetInstance().IsPoweredOn()) {
                 Core::GetCPU().SyncSettings();
+            }
         } else {
             QMessageBox::critical(this, "Error", "Invalid number");
         }
@@ -1367,20 +1385,41 @@ void GMainWindow::OnPlayMovie() {
         return;
 
     if (emulation_running) {
-        if (!ValidateMovie(path))
+        if (!ValidateMovie(path)) {
             return;
+        }
     } else {
         u64 program_id{Core::Movie::GetInstance().GetMovieProgramID(path.toStdString())};
         QString game_path{game_list->FindGameByProgramID(program_id)};
         if (game_path.isEmpty()) {
-            QMessageBox::warning(this, "Game Not Found",
-                                 "The movie you are trying to play is from a game that is not "
-                                 "in the game list. If you own the game, please add the game "
-                                 "folder to the game list and try to play the movie again.");
+            const int num_recent_files{
+                std::min(UISettings::values.recent_files.size(), max_recent_files_item)};
+            for (int i{}; i < num_recent_files; i++) {
+                QString path{actions_recent_files[i]->data().toString()};
+                if (!path.isEmpty()) {
+                    if (QFile::exists(path)) {
+                        auto loader{Loader::GetLoader(path.toStdString())};
+                        u64 program_id_file;
+                        if (loader->ReadProgramId(program_id_file) ==
+                                Loader::ResultStatus::Success &&
+                            program_id_file == program_id) {
+                            game_path = path;
+                        }
+                    }
+                }
+            }
+            if (game_path.isEmpty()) {
+                QMessageBox::warning(this, "Game Not Found",
+                                     "The movie you are trying to play is from a game that is not "
+                                     "in the game list and is not in the recent files. If you own "
+                                     "the game, add the game folder to the game list or open the "
+                                     "game and try to play the movie again.");
+                return;
+            }
+        }
+        if (!ValidateMovie(path, program_id)) {
             return;
         }
-        if (!ValidateMovie(path, program_id))
-            return;
         Core::Movie::GetInstance().PrepareForPlayback(path.toStdString());
         BootGame(game_path);
     }

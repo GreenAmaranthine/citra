@@ -633,7 +633,7 @@ const QStringList GameList::supported_file_extensions{
     {"3ds", "3dsx", "elf", "axf", "cci", "cxi", "app"}};
 
 static bool HasSupportedFileExtension(const std::string& file_name) {
-    QFileInfo file = QFileInfo(QString::fromStdString(file_name));
+    QFileInfo file{QFileInfo(QString::fromStdString(file_name))};
     return GameList::supported_file_extensions.contains(file.suffix(), Qt::CaseInsensitive);
 }
 

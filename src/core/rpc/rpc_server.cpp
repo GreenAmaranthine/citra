@@ -12,7 +12,7 @@
 
 namespace RPC {
 
-RPCServer::RPCServer() : server(*this) {
+RPCServer::RPCServer() : server{*this} {
     LOG_INFO(RPC, "Starting RPC server ...");
 
     Start();
