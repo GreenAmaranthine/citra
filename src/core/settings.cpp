@@ -55,6 +55,7 @@ void LogSettings() {
     LogSetting("ControlPanel_WifiLinkLevel", Settings::values.n_wifi_link_level);
     LogSetting("ControlPanel_WifiStatus", Settings::values.n_wifi_status);
     LogSetting("Core_KeyboardMode", static_cast<int>(Settings::values.keyboard_mode));
+    LogSetting("Core_EnableNSLaunch", Settings::values.enable_ns_launch);
     bool using_lle_modules{};
     for (const auto& module : Settings::values.lle_modules) {
         if (module.second) {

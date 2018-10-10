@@ -449,8 +449,9 @@ void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    ASSERT_MSG(session_data->current_http_context,
-               "Unimplemented CloseContext on context-bound session");
+    if (session_data->current_http_context) {
+        session_data->current_http_context.reset();
+    }
 
     auto itr{contexts.find(context_handle)};
     if (itr == contexts.end()) {
@@ -1047,7 +1048,7 @@ void HTTP_C::AddTrustedRootCA(Kernel::HLERequestContext& ctx) {
 
     itr->second.ssl_config.enable_root_cert_chain = true;
 
-    RootCertChain::RootCACert cert{};
+    RootCertChain::RootCACert cert;
     cert.session_id = session_data->session_id;
     cert.handle = ++itr->second.ssl_config.root_ca_chain.certs_counter;
     cert.certificate.resize(buffer_size);
@@ -1075,7 +1076,7 @@ void HTTP_C::AddDefaultCert(Kernel::HLERequestContext& ctx) {
 
     itr->second.ssl_config.enable_root_cert_chain = true;
 
-    RootCertChain::RootCACert cert{};
+    RootCertChain::RootCACert cert;
     cert.session_id = session_data->session_id;
     cert.handle = ++itr->second.ssl_config.root_ca_chain.certs_counter;
     cert.certificate = default_root_certs[cert_id].certificate;
@@ -1099,7 +1100,7 @@ void HTTP_C::RootCertChainAddCert(Kernel::HLERequestContext& ctx) {
     auto itr{root_cert_chains.find(context_id)};
     ASSERT(itr != root_cert_chains.end());
 
-    RootCertChain::RootCACert cert{};
+    RootCertChain::RootCACert cert;
     cert.session_id = session_data->session_id;
     cert.handle = ++itr->second.certs_counter;
     buffer.Read(cert.certificate.data(), 0, buffer_size);
@@ -1368,7 +1369,8 @@ void HTTP_C::CreateRootCertChain(Kernel::HLERequestContext& ctx) {
     auto* session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
 
-    RootCertChain chain{};
+    RootCertChain chain;
+    chain.session_id = session_data->session_id;
     chain.handle = ++root_cert_chains_counter;
     ++session_data->num_root_cert_chains;
     root_cert_chains.emplace(chain.handle, chain);
@@ -1407,7 +1409,7 @@ void HTTP_C::RootCertChainAddDefaultCert(Kernel::HLERequestContext& ctx) {
     auto itr{root_cert_chains.find(context_id)};
     ASSERT(itr != root_cert_chains.end());
 
-    RootCertChain::RootCACert cert{};
+    RootCertChain::RootCACert cert;
     cert.session_id = session_data->session_id;
     cert.handle = ++itr->second.certs_counter;
     cert.certificate = default_root_certs[cert_id].certificate;

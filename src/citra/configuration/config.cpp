@@ -180,6 +180,7 @@ void Config::ReadValues() {
     qt_config->beginGroup("Core");
     Settings::values.keyboard_mode =
         static_cast<Settings::KeyboardMode>(qt_config->value("keyboard_mode", 1).toInt());
+    Settings::values.enable_ns_launch = qt_config->value("enable_ns_launch", false).toBool();
     qt_config->endGroup();
 
     qt_config->beginGroup("LLE");
@@ -438,6 +439,7 @@ void Config::SaveValues() {
 
     qt_config->beginGroup("Core");
     qt_config->setValue("keyboard_mode", static_cast<int>(Settings::values.keyboard_mode));
+    qt_config->setValue("enable_ns_launch", Settings::values.enable_ns_launch);
     qt_config->endGroup();
 
     qt_config->beginGroup("LLE");

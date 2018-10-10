@@ -9,10 +9,15 @@
 #include "core/hle/service/ns/ns.h"
 #include "core/hle/service/ns/ns_s.h"
 #include "core/loader/loader.h"
+#include "core/settings.h"
 
 namespace Service::NS {
 
 Kernel::SharedPtr<Kernel::Process> LaunchTitleImpl(FS::MediaType media_type, u64 title_id) {
+    if (!Settings::values.enable_ns_launch) {
+        return nullptr;
+    }
+
     std::string path{AM::GetTitleContentPath(media_type, title_id)};
     auto loader{Loader::GetLoader(path)};
 

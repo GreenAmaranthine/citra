@@ -134,6 +134,7 @@ struct Values {
 
     // Core
     KeyboardMode keyboard_mode;
+    bool enable_ns_launch;
 
     // LLE
     std::unordered_map<std::string, bool> lle_modules;
