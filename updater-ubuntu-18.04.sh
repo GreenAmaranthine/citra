@@ -66,7 +66,7 @@ RESULT=$?
 if [ $RESULT -eq 0 ]; then
     echo "Build succeeded"
     echo "Opening Citra"
-    ./bin/citra-qt
+    ./bin/citra
 else
     echo "Build failed"
 fi
