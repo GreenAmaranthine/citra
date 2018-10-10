@@ -2,8 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <QDesktopServices>
-#include <QUrl>
 #include "citra/configuration/configure_general.h"
 #include "citra/ui_settings.h"
 #include "citra/util/console.h"
@@ -19,11 +17,6 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
     : QWidget{parent}, ui{std::make_unique<Ui::ConfigureGeneral>()} {
 
     ui->setupUi(this);
-
-    connect(ui->open_log_button, &QPushButton::pressed, []() {
-        QString path{QString::fromStdString(FileUtil::GetUserPath(D_LOGS_IDX))};
-        QDesktopServices::openUrl(QUrl::fromLocalFile(path));
-    });
 
 #ifndef _WIN32
     ui->toggle_console->setText("Enable logging to console");

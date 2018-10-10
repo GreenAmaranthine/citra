@@ -642,7 +642,6 @@ const std::string& GetUserPath(const unsigned int DirIDX) {
         paths[D_SDMC_IDX] = paths[D_USER_IDX] + SDMC_DIR DIR_SEP;
         paths[D_NAND_IDX] = paths[D_USER_IDX] + NAND_DIR DIR_SEP;
         paths[D_SYSDATA_IDX] = paths[D_USER_IDX] + SYSDATA_DIR DIR_SEP;
-        paths[D_LOGS_IDX] = paths[D_USER_IDX] + LOG_DIR DIR_SEP;
     }
 
     return paths[DirIDX];

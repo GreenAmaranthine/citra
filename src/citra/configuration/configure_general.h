@@ -22,5 +22,6 @@ public:
 
 private:
     void setConfiguration();
+
     std::unique_ptr<Ui::ConfigureGeneral> ui;
 };

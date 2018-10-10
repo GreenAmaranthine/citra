@@ -13,10 +13,12 @@
 #include <thread>
 #include <glad/glad.h>
 #define QT_NO_OPENGL
+#include <QDesktopServices>
 #include <QDesktopWidget>
 #include <QFileDialog>
 #include <QFutureWatcher>
 #include <QMessageBox>
+#include <QUrl>
 #include <QtConcurrent/QtConcurrentRun>
 #include <QtGui>
 #include <QtWidgets>
@@ -92,9 +94,8 @@ GMainWindow::GMainWindow() : config{new Config()}, emu_thread{nullptr} {
     Log::Filter log_filter;
     log_filter.ParseFilterString(Settings::values.log_filter);
     Log::SetGlobalFilter(log_filter);
-    FileUtil::CreateFullPath(FileUtil::GetUserPath(D_LOGS_IDX));
     Log::AddBackend(
-        std::make_unique<Log::FileBackend>(FileUtil::GetUserPath(D_LOGS_IDX) + LOG_FILE));
+        std::make_unique<Log::FileBackend>(FileUtil::GetUserPath(D_USER_IDX) + LOG_FILE));
     Util::ToggleConsole();
     Settings::LogSettings();
 
@@ -213,6 +214,7 @@ void GMainWindow::InitializeRecentFileMenuActions() {
     for (int i{}; i < max_recent_files_item; ++i) {
         actions_recent_files[i] = new QAction(this);
         actions_recent_files[i]->setVisible(false);
+
         connect(actions_recent_files[i], &QAction::triggered, this, &GMainWindow::OnMenuRecentFile);
 
         ui.menu_recent_files->addAction(actions_recent_files[i]);
@@ -405,13 +407,10 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Load_File, &QAction::triggered, this, &GMainWindow::OnMenuLoadFile);
     connect(ui.action_Install_CIA, &QAction::triggered, this, &GMainWindow::OnMenuInstallCIA);
     connect(ui.action_Exit, &QAction::triggered, this, &QMainWindow::close);
-    connect(ui.action_Select_SDMC_Directory, &QAction::triggered, this, [&] {
-        QString dir{QFileDialog::getExistingDirectory(this, "Set SD Card Directory", ".")};
-        if (dir.isEmpty())
-            return;
-        Settings::values.sdmc_dir = dir.toStdString();
-        game_list->PopulateAsync(UISettings::values.game_dirs);
-    });
+    connect(ui.action_Open_User_Directory, &QAction::triggered, this,
+            &GMainWindow::OnOpenUserDirectory);
+    connect(ui.action_Select_SDMC_Directory, &QAction::triggered, this,
+            &GMainWindow::OnSelectSDMCDirectory);
     connect(ui.action_Load_Amiibo, &QAction::triggered, this, &GMainWindow::OnLoadAmiibo);
 
     // Emulation
@@ -567,10 +566,8 @@ bool GMainWindow::LoadROM(const QString& filename) {
         case Core::System::ResultStatus::ErrorVideoCore:
             QMessageBox::critical(
                 this, "Video Core Error",
-                "An error has occured. Please see the log for more details."
-                "To access the log, Click Open Log Location in the general tab of the "
-                "configuration window.<br/><br/>"
-                "Ensure that you have the latest graphics drivers for your GPU.");
+                "An error has occured. Please see the log for more details.<br/>Ensure that you "
+                "have the latest graphics drivers for your GPU.");
             break;
 
         case Core::System::ResultStatus::ErrorVideoCore_ErrorGenericDrivers:
@@ -1237,6 +1234,19 @@ void GMainWindow::OnSetPlayCoins() {
         Service::PTM::SetPlayCoins(play_coins);
 }
 
+void GMainWindow::OnOpenUserDirectory() {
+    QString path{QString::fromStdString(FileUtil::GetUserPath(D_USER_IDX))};
+    QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+}
+
+void GMainWindow::OnSelectSDMCDirectory() {
+    QString dir{QFileDialog::getExistingDirectory(this, "Set SD Card Directory", ".")};
+    if (dir.isEmpty())
+        return;
+    Settings::values.sdmc_dir = dir.toStdString();
+    game_list->PopulateAsync(UISettings::values.game_dirs);
+}
+
 void GMainWindow::OnLoadAmiibo() {
     auto answer{QMessageBox::question(
         this, "Citra", "Amiibo feature is experimental.\nDo you want to scan an amiibo anyway?")};
@@ -1456,15 +1466,15 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, const std::stri
     }
 
     case Core::System::ResultStatus::ShutdownRequested: {
-        if (cheats_window != nullptr)
+        if (cheats_window != nullptr) {
             cheats_window->close();
+        }
         break;
     }
 
     case Core::System::ResultStatus::FatalError: {
-        message = "A fatal error occured. Check the log for details.<br/>To access the log, "
-                  "Click Open Log Location in the general tab of the configuration "
-                  "window.<br/>Continuing emulation may result in crashes and bugs.";
+        message = "A fatal error occured. Check the log for details.<br/>Continuing emulation may "
+                  "result in crashes and bugs.";
         title = "Fatal Error";
         status_message = "Fatal Error encountered";
         break;

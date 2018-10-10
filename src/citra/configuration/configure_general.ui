@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>311</width>
-    <height>359</height>
+    <width>279</width>
+    <height>276</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -35,6 +35,9 @@
             </item>
             <item>
              <widget class="QComboBox" name="combobox_keyboard_mode">
+              <property name="currentIndex">
+               <number>1</number>
+              </property>
               <item>
                <property name="text">
                 <string>StdIn</string>
@@ -81,17 +84,6 @@
           </item>
           <item>
            <widget class="QLineEdit" name="log_filter_edit"/>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_9">
-          <item>
-           <widget class="QPushButton" name="open_log_button">
-            <property name="text">
-             <string>Open Log Location</string>
-            </property>
-           </widget>
           </item>
          </layout>
         </item>

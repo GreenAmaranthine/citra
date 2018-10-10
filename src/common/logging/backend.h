@@ -118,4 +118,5 @@ Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsign
  * never get the message
  */
 void SetGlobalFilter(const Filter& filter);
+
 } // namespace Log

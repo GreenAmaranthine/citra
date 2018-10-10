@@ -26,8 +26,7 @@
 #define LOG_DIR "log"
 
 // Filenames
-// Files in the directory returned by GetUserPath(D_LOGS_IDX)
-#define LOG_FILE "citra_log.txt"
+#define LOG_FILE "log.txt"
 
 // System files
 #define AES_KEYS "aes_keys.txt"

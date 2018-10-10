@@ -77,6 +77,7 @@ private:
     void InitializeRecentFileMenuActions();
     void InitializeHotkeys();
     void SetDefaultUIGeometry();
+
     Q_INVOKABLE void ErrEulaCallback(HLE::Applets::ErrEulaConfig& config);
     Q_INVOKABLE void SwkbdCallback(HLE::Applets::SoftwareKeyboardConfig& config,
                                    std::u16string& text);
@@ -85,6 +86,7 @@ private:
     Q_INVOKABLE void Update3D();
     Q_INVOKABLE void UpdateFrameAdvancingCallback();
     Q_INVOKABLE void UpdateControlPanelNetwork();
+
     void SyncMenuUISettings();
     void RestoreUIState();
 
@@ -147,6 +149,8 @@ private slots:
     void OnSetPlayCoins();
     void OnCheats();
     void OnControlPanel();
+    void OnOpenUserDirectory();
+    void OnSelectSDMCDirectory();
     void OnLoadAmiibo();
     void OnToggleFilterBar();
     void ToggleFullscreen();
