@@ -111,6 +111,7 @@ public:
         void CheckNew3DS(Kernel::HLERequestContext& ctx);
         void IsStandardMemoryLayout(Kernel::HLERequestContext& ctx);
         void ReplySleepQuery(Kernel::HLERequestContext& ctx);
+        void SendDeliverArg(Kernel::HLERequestContext& ctx);
         void ReceiveDeliverArg(Kernel::HLERequestContext& ctx);
 
     private:

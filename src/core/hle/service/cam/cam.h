@@ -283,7 +283,6 @@ public:
         void DriverInitialize(Kernel::HLERequestContext& ctx);
         void DriverFinalize(Kernel::HLERequestContext& ctx);
 
-    private:
         std::shared_ptr<Module> cam;
     };
 

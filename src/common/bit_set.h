@@ -27,21 +27,25 @@ static inline int CountSetBits(T v) {
     v = (v + (v >> 4)) & (T) ~(T)0 / 255 * 15;
     return (T)(v * ((T) ~(T)0 / 255)) >> (sizeof(T) - 1) * 8;
 }
+
 static inline int LeastSignificantSetBit(u8 val) {
     unsigned long index;
     _BitScanForward(&index, val);
     return (int)index;
 }
+
 static inline int LeastSignificantSetBit(u16 val) {
     unsigned long index;
     _BitScanForward(&index, val);
     return (int)index;
 }
+
 static inline int LeastSignificantSetBit(u32 val) {
     unsigned long index;
     _BitScanForward(&index, val);
     return (int)index;
 }
+
 static inline int LeastSignificantSetBit(u64 val) {
     unsigned long index;
     _BitScanForward64(&index, val);
@@ -51,24 +55,31 @@ static inline int LeastSignificantSetBit(u64 val) {
 static inline int CountSetBits(u8 val) {
     return __builtin_popcount(val);
 }
+
 static inline int CountSetBits(u16 val) {
     return __builtin_popcount(val);
 }
+
 static inline int CountSetBits(u32 val) {
     return __builtin_popcount(val);
 }
+
 static inline int CountSetBits(u64 val) {
     return __builtin_popcountll(val);
 }
+
 static inline int LeastSignificantSetBit(u8 val) {
     return __builtin_ctz(val);
 }
+
 static inline int LeastSignificantSetBit(u16 val) {
     return __builtin_ctz(val);
 }
+
 static inline int LeastSignificantSetBit(u32 val) {
     return __builtin_ctz(val);
 }
+
 static inline int LeastSignificantSetBit(u64 val) {
     return __builtin_ctzll(val);
 }
@@ -102,11 +113,13 @@ public:
     // A reference to a particular bit, returned from operator[].
     class Ref {
     public:
-        Ref(Ref&& other) : m_bs(other.m_bs), m_mask(other.m_mask) {}
-        Ref(BitSet* bs, IntTy mask) : m_bs(bs), m_mask(mask) {}
+        Ref(Ref&& other) : m_bs{other.m_bs}, m_mask{other.m_mask} {}
+        Ref(BitSet* bs, IntTy mask) : m_bs{bs}, m_mask{mask} {}
+
         operator bool() const {
             return (m_bs->m_val & m_mask) != 0;
         }
+
         bool operator=(bool set) {
             m_bs->m_val = (m_bs->m_val & ~m_mask) | (set ? m_mask : 0);
             return set;
@@ -120,25 +133,30 @@ public:
     // A STL-like iterator is required to be able to use range-based for loops.
     class Iterator {
     public:
-        Iterator(const Iterator& other) : m_val(other.m_val) {}
-        Iterator(IntTy val) : m_val(val) {}
+        Iterator(const Iterator& other) : m_val{other.m_val} {}
+        Iterator(IntTy val) : m_val{val} {}
+
         int operator*() {
             // This will never be called when m_val == 0, because that would be the end() iterator
             return LeastSignificantSetBit(m_val);
         }
+
         Iterator& operator++() {
             // Unset least significant set bit
             m_val &= m_val - IntTy(1);
             return *this;
         }
+
         Iterator operator++(int _) {
             Iterator other{*this};
             ++*this;
             return other;
         }
+
         bool operator==(Iterator other) const {
             return m_val == other.m_val;
         }
+
         bool operator!=(Iterator other) const {
             return m_val != other.m_val;
         }
@@ -147,8 +165,10 @@ public:
         IntTy m_val;
     };
 
-    BitSet() : m_val(0) {}
-    explicit BitSet(IntTy val) : m_val(val) {}
+    BitSet() : m_val{0} {}
+
+    explicit BitSet(IntTy val) : m_val{val} {}
+
     BitSet(std::initializer_list<int> init) {
         m_val = 0;
         for (int bit : init)
@@ -162,43 +182,57 @@ public:
     Ref operator[](std::size_t bit) {
         return Ref(this, (IntTy)1 << bit);
     }
+
     const Ref operator[](std::size_t bit) const {
         return (*const_cast<BitSet*>(this))[bit];
     }
+
     bool operator==(BitSet other) const {
         return m_val == other.m_val;
     }
+
     bool operator!=(BitSet other) const {
         return m_val != other.m_val;
     }
+
     bool operator<(BitSet other) const {
         return m_val < other.m_val;
     }
+
     bool operator>(BitSet other) const {
         return m_val > other.m_val;
     }
+
     BitSet operator|(BitSet other) const {
         return BitSet(m_val | other.m_val);
     }
+
     BitSet operator&(BitSet other) const {
         return BitSet(m_val & other.m_val);
     }
+
     BitSet operator^(BitSet other) const {
         return BitSet(m_val ^ other.m_val);
     }
+
     BitSet operator~() const {
         return BitSet(~m_val);
     }
+
     BitSet& operator|=(BitSet other) {
         return *this = *this | other;
     }
+
     BitSet& operator&=(BitSet other) {
         return *this = *this & other;
     }
+
     BitSet& operator^=(BitSet other) {
         return *this = *this ^ other;
     }
+
     operator u32() = delete;
+
     operator bool() {
         return m_val != 0;
     }

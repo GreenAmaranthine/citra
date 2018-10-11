@@ -371,41 +371,42 @@ void Module::Interface::CancelParameter(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::PrepareToStartApplication(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x15, 5, 0};
-    u32 title_info1{rp.Pop<u32>()};
-    u32 title_info2{rp.Pop<u32>()};
-    u32 title_info3{rp.Pop<u32>()};
-    u32 title_info4{rp.Pop<u32>()};
+    IPC::RequestParser rp{ctx, 0x15, sizeof(FS::ProgramInfo) / sizeof(u32), 0};
+    FS::ProgramInfo program_info{rp.PopRaw<FS::ProgramInfo>()};
     u32 flags{rp.Pop<u32>()};
 
     if (flags & 0x00000100) {
         apt->unknown_ns_state_field = 1;
     }
 
+    apt->jump_tid = program_info.program_id;
+    apt->jump_media = static_cast<FS::MediaType>(program_info.media_type);
+
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS); // No error
 
-    LOG_WARNING(
-        Service_APT,
-        "(STUBBED) called, title_info1={:#010X}, title_info2={:#010X}, title_info3={:#010X},"
-        "title_info4={:#010X}, flags={:#010X}",
-        title_info1, title_info2, title_info3, title_info4, flags);
+    LOG_DEBUG(Service_APT, "program_id=0x{:016X}, media_type=0x{:X}, flags={:#010X}",
+              program_info.program_id, program_info.media_type, flags);
 }
 
 void Module::Interface::StartApplication(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x1B, 3, 4};
-    u32 buffer1_size{rp.Pop<u32>()};
-    u32 buffer2_size{rp.Pop<u32>()};
-    u32 flag{rp.Pop<u32>()};
-    std::vector<u8> buffer1{rp.PopStaticBuffer()};
-    std::vector<u8> buffer2{rp.PopStaticBuffer()};
+    u32 parameter_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x300))};
+    u32 hmac_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x20))};
+    u8 paused{rp.Pop<u8>()};
+    argument = rp.PopStaticBuffer();
+    argument.resize(parameter_size);
+    argument_source = Kernel::g_current_process->codeset->program_id;
+    hmac = rp.PopStaticBuffer();
+    hmac.resize(hmac_size);
+
+    Core::System::GetInstance().RequestJump(apt->jump_tid, apt->jump_media);
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS); // No error
 
-    LOG_WARNING(Service_APT,
-                "(STUBBED) called, buffer1_size={:#010X}, buffer2_size={:#010X}, flag={:#010X}",
-                buffer1_size, buffer2_size, flag);
+    LOG_DEBUG(Service_APT, "parameter_size={:#010X}, hmac_size={:#010X}, paused={}", parameter_size,
+              hmac_size, paused);
 }
 
 void Module::Interface::AppletUtility(Kernel::HLERequestContext& ctx) {
@@ -540,8 +541,8 @@ void Module::Interface::PrepareToDoApplicationJump(Kernel::HLERequestContext& ct
 
 void Module::Interface::DoApplicationJump(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x32, 2, 4};
-    u32 parameter_size{rp.Pop<u32>()};
-    u32 hmac_size{rp.Pop<u32>()};
+    u32 parameter_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x300))};
+    u32 hmac_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x20))};
     argument = rp.PopStaticBuffer();
     argument.resize(parameter_size);
     argument_source = Kernel::g_current_process->codeset->program_id;
@@ -707,7 +708,9 @@ void Module::Interface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_APT, "startup_argument_type={}, parameter_size={:#010X}",
               static_cast<u32>(startup_argument_type), parameter_size);
 
-    argument.resize(parameter_size);
+    if (!argument.empty()) {
+        argument.resize(parameter_size);
+    }
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
     rb.Push(RESULT_SUCCESS);
@@ -849,6 +852,7 @@ void Module::Interface::ReplySleepQuery(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x3E, 2, 0};
     AppletId app_id{rp.PopEnum<AppletId>()};
     QueryReply query_reply{rp.PopEnum<QueryReply>()};
+
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
@@ -878,6 +882,20 @@ void Module::Interface::ReceiveDeliverArg(Kernel::HLERequestContext& ctx) {
         hmac.clear();
         argument_source = 0;
     }
+}
+
+void Module::Interface::SendDeliverArg(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x34, 2, 4};
+    u32 parameter_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x300))};
+    u32 hmac_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x20))};
+    argument = rp.PopStaticBuffer();
+    argument.resize(parameter_size);
+    argument_source = Kernel::g_current_process->codeset->program_id;
+    hmac = rp.PopStaticBuffer();
+    hmac.resize(hmac_size);
+
+    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    rb.Push(RESULT_SUCCESS);
 }
 
 Module::Interface::Interface(std::shared_ptr<Module> apt, const char* name, u32 max_session)

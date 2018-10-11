@@ -11,6 +11,7 @@ namespace Service::CAM {
 class CAM_U final : public Module::Interface {
 public:
     explicit CAM_U(std::shared_ptr<Module> cam);
+    std::shared_ptr<Module> GetModule();
 };
 
 } // namespace Service::CAM

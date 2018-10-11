@@ -6,6 +6,7 @@
 #include "common/bit_set.h"
 #include "common/logging/log.h"
 #include "core/camera/factory.h"
+#include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
@@ -20,8 +21,6 @@
 #include "core/settings.h"
 
 namespace Service::CAM {
-
-static std::weak_ptr<Module> current_cam;
 
 // built-in resolution parameters
 constexpr std::array<Resolution, 8> PRESET_RESOLUTION{{
@@ -179,7 +178,7 @@ void Module::ActivatePort(int port_id, int camera_id) {
 template <int max_index>
 class CommandParamBitSet : public BitSet8 {
 public:
-    explicit CommandParamBitSet(u8 command_param) : BitSet8{command_param} {}
+    explicit CommandParamBitSet(u8 command_param) : BitSet8(command_param) {}
 
     bool IsValid() const {
         return m_val < (1 << max_index);
@@ -1050,14 +1049,18 @@ void Module::LoadCameraImplementation(CameraConfig& camera, int camera_id) {
 }
 
 void ReloadCameraDevices() {
-    if (auto cam{current_cam.lock()})
-        cam->ReloadCameraDevices();
+    if (!Core::System::GetInstance().IsPoweredOn()) {
+        return;
+    }
+
+    std::shared_ptr<CAM_U> u{
+        Core::System::GetInstance().ServiceManager().GetService<CAM_U>("cam:u")};
+    auto cam{u->GetModule()};
+    cam->ReloadCameraDevices();
 }
 
 void InstallInterfaces(SM::ServiceManager& service_manager) {
     auto cam{std::make_shared<Module>()};
-    current_cam = cam;
-
     std::make_shared<CAM_U>(cam)->InstallAsService(service_manager);
     std::make_shared<CAM_S>(cam)->InstallAsService(service_manager);
     std::make_shared<CAM_C>(cam)->InstallAsService(service_manager);

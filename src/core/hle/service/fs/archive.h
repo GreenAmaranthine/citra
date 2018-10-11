@@ -21,7 +21,8 @@ class FileBackend;
 
 /// The unique system identifier hash, also known as ID0
 static constexpr char SYSTEM_ID[]{"00000000000000000000000000000000"};
-/// The scrambled SD card CID, also known as ID1
+
+/// The scrambled SD card ID, also known as ID1
 static constexpr char SDCARD_ID[]{"00000000000000000000000000000000"};
 
 namespace Loader {
@@ -46,6 +47,12 @@ enum class ArchiveIdCode : u32 {
 
 /// Media types for the archives
 enum class MediaType : u32 { NAND = 0, SDMC = 1, GameCard = 2 };
+
+struct ProgramInfo {
+    u64 program_id;
+    u8 media_type;
+    INSERT_PADDING_BYTES(0x7);
+};
 
 typedef u64 ArchiveHandle;
 

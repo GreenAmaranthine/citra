@@ -37,20 +37,15 @@ void Module::Interface::SetStorageInfo(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::UnregisterStorage(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x03, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x03, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
     LOG_WARNING(Service_BOSS, "(STUBBED) called");
 }
 
 void Module::Interface::GetStorageInfo(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x04, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x04, 1, 0};
     rb.Push(RESULT_SUCCESS);
-    rb.Push<u32>(0);
 
     LOG_WARNING(Service_BOSS, "(STUBBED) called");
 }
@@ -84,9 +79,7 @@ void Module::Interface::RegisterPrivateClientCert(Kernel::HLERequestContext& ctx
 }
 
 void Module::Interface::GetNewArrivalFlag(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x07, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x07, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(new_arrival_flag);
 
@@ -110,17 +103,15 @@ void Module::Interface::SetOptoutFlag(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_BOSS, "called, optout_flag={}", optout_flag);
+    LOG_DEBUG(Service_BOSS, "optout_flag={}", optout_flag);
 }
 
 void Module::Interface::GetOptoutFlag(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x0A, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x0A, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(optout_flag);
 
-    LOG_WARNING(Service_BOSS, "called, optout_flag={}", optout_flag);
+    LOG_DEBUG(Service_BOSS, "optout_flag={}", optout_flag);
 }
 
 void Module::Interface::RegisterTask(Kernel::HLERequestContext& ctx) {
@@ -168,9 +159,7 @@ void Module::Interface::ReconfigureTask(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetTaskIdList(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x0E, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x0E, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
     LOG_WARNING(Service_BOSS, "(STUBBED) called");
@@ -412,9 +401,7 @@ void Module::Interface::CancelTask(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetTaskFinishHandle(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x1F, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    IPC::ResponseBuilder rb{ctx, 0x1F, 1, 2};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects<Kernel::Event>(boss->task_finish_event);
 
@@ -644,9 +631,7 @@ void Module::Interface::RegisterStorageEntry(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetStorageEntryInfo(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x30, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(3, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x30, 3, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0); // stub 0 (32bit value)
     rb.Push<u16>(0); // stub 0 (16bit value)
@@ -671,9 +656,7 @@ void Module::Interface::SetStorageOption(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetStorageOption(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x32, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(5, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x32, 5, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0); // stub 0 (32bit value)
     rb.Push<u8>(0);  // stub 0 (8bit value)
