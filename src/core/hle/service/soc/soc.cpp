@@ -387,7 +387,7 @@ void Module::Interface::Bind(Kernel::HLERequestContext& ctx) {
 
     sockaddr sock_addr{CTRSockAddr::ToPlatform(ctr_sock_addr)};
 
-    s32 ret = ::bind(socket_handle, &sock_addr, std::max<u32>(sizeof(sock_addr), len));
+    s32 ret{::bind(socket_handle, &sock_addr, std::max<u32>(sizeof(sock_addr), len))};
 
     if (ret != 0)
         ret = TranslateError(GET_ERRNO);
@@ -677,7 +677,7 @@ void Module::Interface::Poll(Kernel::HLERequestContext& ctx) {
     std::vector<pollfd> platform_pollfd(nfds);
     std::transform(ctr_fds.begin(), ctr_fds.end(), platform_pollfd.begin(), CTRPollFD::ToPlatform);
 
-    s32 ret = ::poll(platform_pollfd.data(), nfds, timeout);
+    s32 ret{::poll(platform_pollfd.data(), nfds, timeout)};
 
     // Now update the output pollfd structure
     std::transform(platform_pollfd.begin(), platform_pollfd.end(), ctr_fds.begin(),
@@ -703,7 +703,7 @@ void Module::Interface::GetSockName(Kernel::HLERequestContext& ctx) {
 
     sockaddr dest_addr{};
     socklen_t dest_addr_len{sizeof(dest_addr)};
-    s32 ret = ::getsockname(socket_handle, &dest_addr, &dest_addr_len);
+    s32 ret{::getsockname(socket_handle, &dest_addr, &dest_addr_len)};
 
     CTRSockAddr ctr_dest_addr{CTRSockAddr::FromPlatform(dest_addr)};
     std::vector<u8> dest_addr_buff(sizeof(ctr_dest_addr));
@@ -740,7 +740,7 @@ void Module::Interface::GetPeerName(Kernel::HLERequestContext& ctx) {
 
     sockaddr dest_addr{};
     socklen_t dest_addr_len{sizeof(dest_addr)};
-    int ret = ::getpeername(socket_handle, &dest_addr, &dest_addr_len);
+    int ret{::getpeername(socket_handle, &dest_addr, &dest_addr_len)};
 
     CTRSockAddr ctr_dest_addr{CTRSockAddr::FromPlatform(dest_addr)};
     std::vector<u8> dest_addr_buff(sizeof(ctr_dest_addr));
