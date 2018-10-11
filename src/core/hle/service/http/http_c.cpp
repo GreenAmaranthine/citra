@@ -5,6 +5,7 @@
 #include <LUrlParser.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
+#include <httplib.h>
 #include "core/core.h"
 #include "core/file_sys/archive_ncch.h"
 #include "core/file_sys/file_backend.h"

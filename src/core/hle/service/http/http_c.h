@@ -10,9 +10,12 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <httplib.h>
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/service.h"
+
+namespace httplib {
+struct Response;
+} // namespace httplib
 
 namespace Core {
 class System;
