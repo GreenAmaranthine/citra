@@ -157,9 +157,15 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     Service::CFG::InstallInterfaces(*this);
 
     HW::Init();
+<<<<<<< HEAD
     Kernel::Init(system_mode);
     Service::Init(service_manager, *this);
     CheatCore::Init();
+=======
+    kernel = std::make_unique<Kernel::KernelSystem>(system_mode);
+    Service::Init(*this, service_manager);
+    GDBStub::Init();
+>>>>>>> f446fd1fe... Kernel: add KernelSystem class
 
     ResultStatus result{VideoCore::Init(frontend)};
     if (result != ResultStatus::Success) {
@@ -192,8 +198,12 @@ const Service::FS::ArchiveManager& System::ArchiveManager() const {
     return *archive_manager;
 }
 
-Frontend& System::GetFrontend() {
-    return *m_frontend;
+Kernel::KernelSystem& System::Kernel() {
+    return *kernel;
+}
+
+const Kernel::KernelSystem& System::Kernel() const {
+    return *kernel;
 }
 
 const Frontend& System::GetFrontend() const {
@@ -205,7 +215,7 @@ void System::Shutdown() {
     CheatCore::Shutdown();
     VideoCore::Shutdown();
     Service::Shutdown();
-    Kernel::Shutdown();
+    kernel.reset();
     HW::Shutdown();
 #ifdef ENABLE_SCRIPTING
     rpc_server.reset();

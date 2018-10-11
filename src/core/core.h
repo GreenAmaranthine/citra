@@ -38,6 +38,10 @@ namespace Service::FS {
 class ArchiveManager;
 } // namespace Service::FS
 
+namespace Kernel {
+class KernelSystem;
+}
+
 namespace Core {
 
 class System {
@@ -150,11 +154,17 @@ public:
     /// Gets a const reference to the archive manager
     const Service::FS::ArchiveManager& ArchiveManager() const;
 
+    /// Gets a const reference to the frontend.
+    const Frontend& GetFrontend() const;
+
+    /// Gets a reference to the kernel
+    Kernel::KernelSystem& Kernel();
+
     // Gets a reference to the frontend.
     Frontend& GetFrontend();
 
-    /// Gets a const reference to the frontend.
-    const Frontend& GetFrontend() const;
+    /// Gets a const reference to the kernel
+    const Kernel::KernelSystem& Kernel() const;
 
     PerfStats perf_stats;
     FrameLimiter frame_limiter;
@@ -228,15 +238,17 @@ private:
     /// Service manager
     std::shared_ptr<Service::SM::ServiceManager> service_manager;
 
+#ifdef ENABLE_SCRIPTING
+    /// RPC server for scripting support
+    std::unique_ptr<RPC::RPCServer> rpc_server;
+#endif
+
     /// Shared page
     std::shared_ptr<SharedPage::Handler> shared_page_handler;
 
     std::unique_ptr<Service::FS::ArchiveManager> archive_manager;
 
-#ifdef ENABLE_SCRIPTING
-    /// RPC server for scripting support
-    std::unique_ptr<RPC::RPCServer> rpc_server;
-#endif
+    std::unique_ptr<Kernel::KernelSystem> kernel;
 
     static System s_instance;
 
