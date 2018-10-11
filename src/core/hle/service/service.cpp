@@ -173,7 +173,6 @@ void ServiceFrameworkBase::ReportUnimplementedFunction(u32* cmd_buf, const Funct
     buf.push_back('}');
 
     LOG_ERROR(Service, "unimplemented {}", fmt::to_string(buf));
-    cmd_buf[1] = RESULT_SUCCESS.raw;
 }
 
 void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_session) {
