@@ -25,8 +25,8 @@ void ReloadInputDevices() {
 void InstallInterfaces(Core::System& system) {
     auto& service_manager{system.ServiceManager()};
     std::make_shared<IR_U>()->InstallAsService(service_manager);
-    std::make_shared<IR_USER>()->InstallAsService(service_manager);
-    std::make_shared<IR_RST>()->InstallAsService(service_manager);
+    std::make_shared<IR_USER>(system)->InstallAsService(service_manager);
+    std::make_shared<IR_RST>(system)->InstallAsService(service_manager);
 }
 
 } // namespace Service::IR

@@ -274,9 +274,8 @@ void Module::Interface::EnableGyroscopeLow(Kernel::HLERequestContext& ctx) {
 void Module::Interface::DisableGyroscopeLow(Kernel::HLERequestContext& ctx) {
     --hid->enable_gyroscope_count;
     // Unschedules the gyroscope update event if the gyroscope was just disabled
-    if (hid->enable_gyroscope_count == 0) {
+    if (hid->enable_gyroscope_count == 0)
         CoreTiming::UnscheduleEvent(hid->gyroscope_update_event, 0);
-    }
     IPC::ResponseBuilder rb{ctx, 0x14, 1, 0};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HID, "called");

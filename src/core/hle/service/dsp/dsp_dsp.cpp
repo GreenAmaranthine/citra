@@ -350,7 +350,7 @@ bool DSP_DSP::HasTooManyEventsRegistered() const {
     return number >= max_number_of_interrupt_events;
 }
 
-DSP_DSP::DSP_DSP() : ServiceFramework{"dsp::DSP"} {
+DSP_DSP::DSP_DSP(Core::System& system) : ServiceFramework{"dsp::DSP"} {
     static const FunctionInfo functions[]{
         {0x00010040, &DSP_DSP::RecvData, "RecvData"},
         {0x00020040, &DSP_DSP::RecvDataIsReady, "RecvDataIsReady"},
@@ -388,7 +388,8 @@ DSP_DSP::DSP_DSP() : ServiceFramework{"dsp::DSP"} {
         {0x00210000, &DSP_DSP::GetIsDspOccupied, "GetIsDspOccupied"},
     };
     RegisterHandlers(functions);
-    semaphore_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "DSP_DSP::semaphore_event");
+    semaphore_event =
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "DSP_DSP::semaphore_event");
 }
 
 DSP_DSP::~DSP_DSP() {
@@ -398,7 +399,7 @@ DSP_DSP::~DSP_DSP() {
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager{system.ServiceManager()};
-    auto dsp = std::make_shared<DSP_DSP>();
+    auto dsp{std::make_shared<DSP_DSP>(system)};
     dsp->InstallAsService(service_manager);
     Core::DSP().SetServiceToInterrupt(std::move(dsp));
 }

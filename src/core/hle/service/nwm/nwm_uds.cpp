@@ -736,9 +736,10 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
         return;
     }
     // Create a new event for this bind node.
-    auto event{Kernel::Event::Create(Kernel::ResetType::OneShot,
-                                     "NWM::BindNodeEvent" + std::to_string(bind_node_id))};
+    auto event{system.Kernel().CreateEvent(Kernel::ResetType::OneShot,
+                                           "NWM::BindNodeEvent" + std::to_string(bind_node_id))};
     std::lock_guard<std::mutex> lock{connection_status_mutex};
+
     ASSERT(channel_data.find(data_channel) == channel_data.end());
     // TODO: Support more than one bind node per channel.
     channel_data[data_channel] = {bind_node_id, data_channel, network_node_id, event};
@@ -1171,7 +1172,8 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework{"nwm::UDS"} {
         {0x00220402, nullptr, "ScanOnConnection"},
     };
     connection_status_event =
-        Kernel::Event::Create(Kernel::ResetType::OneShot, "NWM::connection_status_event");
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "NWM::connection_status_event");
+
     RegisterHandlers(functions);
     beacon_broadcast_event =
         CoreTiming::RegisterEvent("UDS::BeaconBroadcastCallback", BeaconBroadcastCallback);

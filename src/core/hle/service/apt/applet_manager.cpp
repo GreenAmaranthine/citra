@@ -473,9 +473,9 @@ AppletManager::AppletManager() {
         slot_data.registered = false;
         slot_data.loaded = false;
         slot_data.notification_event =
-            Kernel::Event::Create(Kernel::ResetType::OneShot, "APT:Notification");
+            system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "APT:Notification");
         slot_data.parameter_event =
-            Kernel::Event::Create(Kernel::ResetType::OneShot, "APT:Parameter");
+            system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "APT:Parameter");
     }
     HLE::Applets::Init();
 }

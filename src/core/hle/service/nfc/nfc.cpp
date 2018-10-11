@@ -571,24 +571,23 @@ void Module::Interface::RemoveAmiibo() {
     nfc->tag_out_of_range_event->Signal();
 }
 
-Module::Module() {
+Module::Module(Core::System& system) {
     tag_in_range_event =
-        Kernel::Event::Create(Kernel::ResetType::OneShot, "NFC::tag_in_range_event");
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "NFC::tag_in_range_event");
     tag_out_of_range_event =
-        Kernel::Event::Create(Kernel::ResetType::OneShot, "NFC::tag_out_range_event");
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "NFC::tag_out_range_event");
 
     FileUtil::IOFile keys_file{
         fmt::format("{}amiibo_keys.bin", FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir)),
         "rb"};
-    if (!keys_file.IsOpen() || keys_file.GetSize() != 160) {
+    if (!keys_file.IsOpen() || keys_file.GetSize() != 160)
         LOG_ERROR(Service_NFC, "amiibo_keys.bin file not found or invalid.");
-    } else {
+    else {
         std::array<u8, 160> keys;
         keys_file.ReadBytes(keys.data(), 160);
         int ret{amitool_setKeys(keys.data(), 160)};
-        if (ret != 0) {
+        if (ret != 0)
             LOG_ERROR(Service_NFC, "failed to set keys (error {})", ret);
-        }
     }
 }
 
@@ -606,7 +605,7 @@ void Module::UpdateAmiiboData() {
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager{system.ServiceManager()};
-    auto nfc{std::make_shared<Module>()};
+    auto nfc{std::make_shared<Module>(system)};
     std::make_shared<NFC_M>(nfc)->InstallAsService(service_manager);
     std::make_shared<NFC_U>(nfc)->InstallAsService(service_manager);
 }

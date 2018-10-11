@@ -367,10 +367,10 @@ IR_USER::IR_USER() : ServiceFramework{"ir:USER", 1} {
         {0x001A0040, nullptr, "SetOwnMachineId"},
     };
     RegisterHandlers(functions);
-    using namespace Kernel;
-    conn_status_event = Event::Create(ResetType::OneShot, "IR:ConnectionStatusEvent");
-    send_event = Event::Create(ResetType::OneShot, "IR:SendEvent");
-    receive_event = Event::Create(ResetType::OneShot, "IR:ReceiveEvent");
+    conn_status_event =
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "IR:ConnectionStatusEvent");
+    send_event = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "IR:SendEvent");
+    receive_event = Kersystem.Kernel().CreateEvent(Kernel::ResetType::OneShot, "IR:ReceiveEvent");
     extra_hid =
         std::make_unique<ExtraHID>([this](const std::vector<u8>& data) { PutToReceive(data); });
 }

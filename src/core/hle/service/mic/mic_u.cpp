@@ -31,7 +31,10 @@ enum class SampleRate : u8 {
 };
 
 struct MIC_U::Impl {
-    SDL_AudioDeviceID dev;
+    explicit Impl(Core::System& system) {
+        buffer_full_event =
+            system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "MIC_U::buffer_full_event");
+    }
 
     void MapSharedMem(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp{ctx, 0x01, 1, 2};
@@ -252,8 +255,7 @@ struct MIC_U::Impl {
     }
 
     u32 client_version{};
-    Kernel::SharedPtr<Kernel::Event> buffer_full_event{
-        Kernel::Event::Create(Kernel::ResetType::OneShot, "MIC_U::buffer_full_event")};
+    Kernel::SharedPtr<Kernel::Event> buffer_full_event;
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
     u8 mic_gain{};
     bool mic_power{};
@@ -265,6 +267,7 @@ struct MIC_U::Impl {
     u32 audio_buffer_offset{};
     u32 audio_buffer_size{};
     bool audio_buffer_loop{};
+    SDL_AudioDeviceID dev;
 };
 
 void MIC_U::MapSharedMem(Kernel::HLERequestContext& ctx) {
@@ -331,7 +334,8 @@ void MIC_U::SetClientVersion(Kernel::HLERequestContext& ctx) {
     impl->SetClientVersion(ctx);
 }
 
-MIC_U::MIC_U() : ServiceFramework{"mic:u", 1}, impl{std::make_unique<Impl>()} {
+MIC_U::MIC_U(Core::System& system)
+    : ServiceFramework{"mic:u", 1}, impl{std::make_unique<Impl>(system)} {
     static const FunctionInfo functions[]{
         {0x00010042, &MIC_U::MapSharedMem, "MapSharedMem"},
         {0x00020000, &MIC_U::UnmapSharedMem, "UnmapSharedMem"},
@@ -361,7 +365,7 @@ void MIC_U::ReloadDevice() {
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager{system.ServiceManager()};
-    std::make_shared<MIC_U>()->InstallAsService(service_manager);
+    std::make_shared<MIC_U>(system)->InstallAsService(service_manager);
 }
 
 void ReloadDevice() {

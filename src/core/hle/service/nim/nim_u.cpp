@@ -8,7 +8,7 @@
 
 namespace Service::NIM {
 
-NIM_U::NIM_U() : ServiceFramework{"nim:u", 2} {
+NIM_U::NIM_U(Core::System& system) : ServiceFramework{"nim:u", 2} {
     const FunctionInfo functions[]{
         {0x00010000, nullptr, "StartSysUpdate"},
         {0x00020000, nullptr, "GetUpdateDownloadProgress"},
@@ -20,7 +20,7 @@ NIM_U::NIM_U() : ServiceFramework{"nim:u", 2} {
     };
     RegisterHandlers(functions);
     nim_system_update_event =
-        Kernel::Event::Create(Kernel::ResetType::OneShot, "NIM System Update Event");
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "NIM System Update Event");
 }
 
 NIM_U::~NIM_U() = default;

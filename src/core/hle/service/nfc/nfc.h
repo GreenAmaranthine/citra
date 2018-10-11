@@ -53,7 +53,7 @@ enum class Type : u8 {
 
 class Module final {
 public:
-    Module();
+    explicit Module(Core::System& system);
     ~Module();
     void UpdateAmiiboData();
 

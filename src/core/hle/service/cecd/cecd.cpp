@@ -1212,9 +1212,9 @@ Module::Interface::Interface(std::shared_ptr<Module> cecd, const char* name)
     : ServiceFramework{name}, cecd{std::move(cecd)} {}
 
 Module::Module(Core::System& system) : system{system} {
-    cecinfo_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "CECD::cecinfo_event");
+    cecinfo_event = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "CECD::cecinfo_event");
     change_state_event =
-        Kernel::Event::Create(Kernel::ResetType::OneShot, "CECD::change_state_event");
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "CECD::change_state_event");
     std::string nand_directory{
         FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir + "/")};
     FileSys::ArchiveFactory_SystemSaveData systemsavedata_factory{nand_directory};

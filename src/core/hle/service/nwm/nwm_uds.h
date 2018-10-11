@@ -110,6 +110,8 @@ public:
     ~NWM_UDS();
 
 private:
+    Core::System& system;
+
     void UpdateNetworkAttribute(Kernel::HLERequestContext& ctx);
     void Shutdown(Kernel::HLERequestContext& ctx);
     void DestroyNetwork(Kernel::HLERequestContext& ctx);
