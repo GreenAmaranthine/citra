@@ -785,7 +785,7 @@ Module::Module(Core::System& system) : system{system} {
         Kernel::SharedMemory::Create(nullptr, 0x332000, // 3272 KB
                                      MemoryPermission::ReadWrite, MemoryPermission::Read, 0,
                                      Kernel::MemoryRegion::SYSTEM, "APT:SharedFont");
-    lock = Kernel::Mutex::Create(false, "APT_U:Lock");
+    lock = system.Kernel().CreateMutex(false, "APT_U:Lock");
     if (LoadSharedFont())
         shared_font_loaded = true;
     else
