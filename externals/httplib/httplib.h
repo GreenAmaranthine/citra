@@ -100,14 +100,14 @@ struct ci {
 
 enum class HttpVersion { v1_0 = 0, v1_1 };
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
 enum class SSLVerifyMode {
+#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
     None = SSL_VERIFY_NONE,
     Peer = SSL_VERIFY_PEER,
     FailNoPeerCert = SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
     VerifyOnce =  SSL_VERIFY_CLIENT_ONCE
-};
 #endif
+};
 
 typedef std::multimap<std::string, std::string, detail::ci>  Headers;
 
