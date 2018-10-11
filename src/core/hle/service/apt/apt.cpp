@@ -284,7 +284,7 @@ void Module::Interface::SendParameter(Kernel::HLERequestContext& ctx) {
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
 
-    MessageParameter param{};
+    MessageParameter param;
     param.destination_id = dst_app_id;
     param.sender_id = src_app_id;
     param.object = std::move(object);
@@ -788,7 +788,7 @@ void Module::Interface::Unwrap(Kernel::HLERequestContext& ctx) {
     // Reads nonce and cipher text
     HW::AES::CCMNonce nonce{};
     input.Read(nonce.data(), 0, nonce_size);
-    u32 cipher_size = input_size - nonce_size;
+    u32 cipher_size{input_size - nonce_size};
     std::vector<u8> cipher(cipher_size);
     input.Read(cipher.data(), nonce_size, cipher_size);
 
@@ -815,9 +815,7 @@ void Module::Interface::Unwrap(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::CheckNew3DSApp(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x101, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x101, 2, 0};
 
     if (apt->unknown_ns_state_field) {
         rb.Push(RESULT_SUCCESS);
@@ -825,16 +823,11 @@ void Module::Interface::CheckNew3DSApp(Kernel::HLERequestContext& ctx) {
     } else {
         PTM::CheckNew3DS(rb);
     }
-
-    LOG_WARNING(Service_APT, "(STUBBED) called");
 }
 
 void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x102, 2, 0};
-
     PTM::CheckNew3DS(rb);
-
-    LOG_WARNING(Service_APT, "(STUBBED) called");
 }
 
 void Module::Interface::IsStandardMemoryLayout(Kernel::HLERequestContext& ctx) {
@@ -842,10 +835,11 @@ void Module::Interface::IsStandardMemoryLayout(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
 
-    if (CFG::IsNewModeEnabled())
+    if (CFG::IsNewModeEnabled()) {
         rb.Push<u32>((ConfigMem::config_mem.app_mem_type != 7) ? 1 : 0);
-    else
+    } else {
         rb.Push<u32>((ConfigMem::config_mem.app_mem_type == 0) ? 1 : 0);
+    }
 }
 
 void Module::Interface::ReplySleepQuery(Kernel::HLERequestContext& ctx) {

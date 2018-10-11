@@ -372,7 +372,7 @@ ResultCode AppletManager::FinishPreloadingLibraryApplet(AppletId applet_id) {
 ResultCode AppletManager::StartLibraryApplet(AppletId applet_id,
                                              Kernel::SharedPtr<Kernel::Object> object,
                                              const std::vector<u8>& buffer) {
-    MessageParameter param{};
+    MessageParameter param;
     param.destination_id = applet_id;
     param.sender_id = AppletId::Application;
     param.object = object;
