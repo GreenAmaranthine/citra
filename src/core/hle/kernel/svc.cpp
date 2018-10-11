@@ -595,8 +595,8 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
 
 /// Create an address arbiter (to allocate access to shared resources)
 static ResultCode CreateAddressArbiter(Handle* out_handle) {
-    SharedPtr<AddressArbiter> arbiter{AddressArbiter::Create()};
-    *out_handle = g_handle_table.Create(std::move(arbiter));
+    SharedPtr<AddressArbiter> arbiter{Core::System::GetInstance().Kernel().CreateAddressArbiter()};
+    CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(arbiter)));
     LOG_TRACE(Kernel_SVC, "returned handle=0x{:08X}", *out_handle);
     return RESULT_SUCCESS;
 }
