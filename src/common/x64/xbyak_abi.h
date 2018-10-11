@@ -65,6 +65,7 @@ const BitSet32 ABI_ALL_CALLER_SAVED = BuildRegSet({
     Xbyak::util::r9,
     Xbyak::util::r10,
     Xbyak::util::r11,
+
     // XMMs
     Xbyak::util::xmm0,
     Xbyak::util::xmm1,
@@ -84,6 +85,7 @@ const BitSet32 ABI_ALL_CALLEE_SAVED = BuildRegSet({
     Xbyak::util::r13,
     Xbyak::util::r14,
     Xbyak::util::r15,
+
     // XMMs
     Xbyak::util::xmm6,
     Xbyak::util::xmm7,
@@ -97,7 +99,7 @@ const BitSet32 ABI_ALL_CALLEE_SAVED = BuildRegSet({
     Xbyak::util::xmm15,
 });
 
-constexpr std::size_t ABI_SHADOW_SPACE = 0x20;
+constexpr std::size_t ABI_SHADOW_SPACE{0x20};
 
 #else
 
@@ -118,6 +120,7 @@ const BitSet32 ABI_ALL_CALLER_SAVED = BuildRegSet({
     Xbyak::util::r9,
     Xbyak::util::r10,
     Xbyak::util::r11,
+
     // XMMs
     Xbyak::util::xmm0,
     Xbyak::util::xmm1,
@@ -163,7 +166,7 @@ inline void ABI_CalculateFrameSize(BitSet32 regs, std::size_t rsp_alignment,
         subtraction = rsp_alignment & 0xF;
     }
     subtraction += 0x10 * xmm_count;
-    std::size_t xmm_base_subtraction = subtraction;
+    std::size_t xmm_base_subtraction{subtraction};
     subtraction += needed_frame_size;
     subtraction += ABI_SHADOW_SPACE;
     // Final alignment.
@@ -212,7 +215,7 @@ inline void ABI_PopRegistersAndAdjustStack(Xbyak::CodeGenerator& code, BitSet32 
     }
 
     // GPRs need to be popped in reverse order
-    for (int reg_index = 15; reg_index >= 0; reg_index--) {
+    for (int reg_index{15}; reg_index >= 0; reg_index--) {
         if (regs[reg_index]) {
             code.pop(IndexToReg64(reg_index));
         }

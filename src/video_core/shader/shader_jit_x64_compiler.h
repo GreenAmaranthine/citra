@@ -22,7 +22,7 @@ using nihstro::SwizzlePattern;
 namespace Pica::Shader {
 
 /// Memory allocated for each compiled shader
-constexpr std::size_t MAX_SHADER_SIZE = MAX_PROGRAM_CODE_LENGTH * 64;
+constexpr std::size_t MAX_SHADER_SIZE{MAX_PROGRAM_CODE_LENGTH * 64};
 
 /**
  * This class implements the shader JIT compiler. It recompiles a Pica shader program into x86_64
@@ -127,7 +127,7 @@ private:
     std::vector<unsigned> return_offsets;
 
     unsigned program_counter{}; ///< Offset of the next instruction to decode
-    bool looping = false;       ///< True if compiling a loop, used to check for nested loops
+    bool looping{};             ///< True if compiling a loop, used to check for nested loops
 
     using CompiledShader = void(const void* setup, void* state, const u8* start_addr);
     CompiledShader* program{};

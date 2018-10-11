@@ -96,66 +96,34 @@ const JitFunction instr_table[64] = {
     &JitShader::Compile_MAD,    // mad
 };
 
-// The following is used to alias some commonly used registers. Generally, RAX-RDX and XMM0-XMM3 can
-// be used as scratch registers within a compiler function. The other registers have designated
-// purposes, as documented below:
-
-/// Pointer to the uniform memory
-static const Reg64 UNIFORMS = r9;
-/// The two 32-bit VS address offset registers set by the MOVA instruction
-static const Reg64 ADDROFFS_REG_0 = r10;
-static const Reg64 ADDROFFS_REG_1 = r11;
-/// VS loop count register (Multiplied by 16)
-static const Reg32 LOOPCOUNT_REG = r12d;
-/// Current VS loop iteration number (we could probably use LOOPCOUNT_REG, but this quicker)
-static const Reg32 LOOPCOUNT = esi;
-/// Number to increment LOOPCOUNT_REG by on each loop iteration (Multiplied by 16)
-static const Reg32 LOOPINC = edi;
-/// Result of the previous CMP instruction for the X-component comparison
-static const Reg64 COND0 = r13;
-/// Result of the previous CMP instruction for the Y-component comparison
-static const Reg64 COND1 = r14;
-/// Pointer to the UnitState instance for the current VS unit
-static const Reg64 STATE = r15;
-/// SIMD scratch register
-static const Xmm SCRATCH = xmm0;
-/// Loaded with the first swizzled source register, otherwise can be used as a scratch register
-static const Xmm SRC1 = xmm1;
-/// Loaded with the second swizzled source register, otherwise can be used as a scratch register
-static const Xmm SRC2 = xmm2;
-/// Loaded with the third swizzled source register, otherwise can be used as a scratch register
-static const Xmm SRC3 = xmm3;
-/// Additional scratch register
-static const Xmm SCRATCH2 = xmm4;
-/// Constant vector of [1.0f, 1.0f, 1.0f, 1.0f], used to efficiently set a vector to one
-static const Xmm ONE = xmm14;
-/// Constant vector of [-0.f, -0.f, -0.f, -0.f], used to efficiently negate a vector with XOR
-static const Xmm NEGBIT = xmm15;
-
 // State registers that must not be modified by external functions calls
-// Scratch registers, e.g., SRC1 and SCRATCH, have to be saved on the side if needed
+// Scratch registers, e.g., xmm1 and xmm0, have to be saved on the side if needed
 static const BitSet32 persistent_regs = BuildRegSet({
     // Pointers to register blocks
-    UNIFORMS,
-    STATE,
+    r9,
+    r15,
+
     // Cached registers
-    ADDROFFS_REG_0,
-    ADDROFFS_REG_1,
-    LOOPCOUNT_REG,
-    COND0,
-    COND1,
+    r10,
+    r11,
+    r12d,
+    r13,
+    r14,
+
     // Constants
-    ONE,
-    NEGBIT,
+    xmm14,
+    xmm15,
+
     // Loop variables
-    LOOPCOUNT,
-    LOOPINC,
+    esi,
+    edi,
 });
 
 /// Raw constant for the source register selector that indicates no swizzling is performed
-static const u8 NO_SRC_REG_SWIZZLE = 0x1b;
+constexpr u8 NO_SRC_REG_SWIZZLE{0x1b};
+
 /// Raw constant for the destination register enable mask that indicates all components are enabled
-static const u8 NO_DEST_REG_MASK = 0xf;
+constexpr u8 NO_DEST_REG_MASK{0xf};
 
 static void LogCritical(const char* msg) {
     LOG_CRITICAL(HW_GPU, "{}", msg);
@@ -181,10 +149,10 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
     std::size_t src_offset;
 
     if (src_reg.GetRegisterType() == RegisterType::FloatUniform) {
-        src_ptr = UNIFORMS;
+        src_ptr = r9;
         src_offset = Uniforms::GetFloatUniformOffset(src_reg.GetIndex());
     } else {
-        src_ptr = STATE;
+        src_ptr = r15;
         src_offset = UnitState::InputOffset(src_reg);
     }
 
@@ -213,13 +181,13 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
     if (src_num == offset_src && address_register_index != 0) {
         switch (address_register_index) {
         case 1: // address offset 1
-            movaps(dest, xword[src_ptr + ADDROFFS_REG_0 + src_offset_disp]);
+            movaps(dest, xword[src_ptr + r10 + src_offset_disp]);
             break;
         case 2: // address offset 2
-            movaps(dest, xword[src_ptr + ADDROFFS_REG_1 + src_offset_disp]);
+            movaps(dest, xword[src_ptr + r11 + src_offset_disp]);
             break;
         case 3: // address offset 3
-            movaps(dest, xword[src_ptr + LOOPCOUNT_REG.cvt64() + src_offset_disp]);
+            movaps(dest, xword[src_ptr + r12d.cvt64() + src_offset_disp]);
             break;
         default:
             UNREACHABLE();
@@ -245,7 +213,7 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
     // If the source register should be negated, flip the negative bit using XOR
     const bool negate[] = {swiz.negate_src1, swiz.negate_src2, swiz.negate_src3};
     if (negate[src_num - 1]) {
-        xorps(dest, NEGBIT);
+        xorps(dest, xmm15);
     }
 }
 
@@ -268,19 +236,19 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
     // If all components are enabled, write the result to the destination register
     if (swiz.dest_mask == NO_DEST_REG_MASK) {
         // Store dest back to memory
-        movaps(xword[STATE + dest_offset_disp], src);
+        movaps(xword[r15 + dest_offset_disp], src);
 
     } else {
         // Not all components are enabled, so mask the result when storing to the destination
         // register...
-        movaps(SCRATCH, xword[STATE + dest_offset_disp]);
+        movaps(xmm0, xword[r15 + dest_offset_disp]);
 
         u8 mask{static_cast<u8>(((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) |
                                 ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1))};
-        blendps(SCRATCH, src, mask);
+        blendps(xmm0, src, mask);
 
         // Store dest back to memory
-        movaps(xword[STATE + dest_offset_disp], SCRATCH);
+        movaps(xword[r15 + dest_offset_disp], xmm0);
     }
 }
 
@@ -309,28 +277,28 @@ void JitShader::Compile_EvaluateCondition(Instruction instr) {
     // Note: NXOR is used below to check for equality
     switch (instr.flow_control.op) {
     case Instruction::FlowControlType::Or:
-        mov(eax, COND0);
-        mov(ebx, COND1);
+        mov(eax, r13);
+        mov(ebx, r14);
         xor_(eax, (instr.flow_control.refx.Value() ^ 1));
         xor_(ebx, (instr.flow_control.refy.Value() ^ 1));
         or_(eax, ebx);
         break;
 
     case Instruction::FlowControlType::And:
-        mov(eax, COND0);
-        mov(ebx, COND1);
+        mov(eax, r13);
+        mov(ebx, r14);
         xor_(eax, (instr.flow_control.refx.Value() ^ 1));
         xor_(ebx, (instr.flow_control.refy.Value() ^ 1));
         and_(eax, ebx);
         break;
 
     case Instruction::FlowControlType::JustX:
-        mov(eax, COND0);
+        mov(eax, r13);
         xor_(eax, (instr.flow_control.refx.Value() ^ 1));
         break;
 
     case Instruction::FlowControlType::JustY:
-        mov(eax, COND1);
+        mov(eax, r14);
         xor_(eax, (instr.flow_control.refy.Value() ^ 1));
         break;
     }
@@ -338,7 +306,7 @@ void JitShader::Compile_EvaluateCondition(Instruction instr) {
 
 void JitShader::Compile_UniformCondition(Instruction instr) {
     std::size_t offset = Uniforms::GetBoolUniformOffset(instr.flow_control.bool_uniform_id);
-    cmp(byte[UNIFORMS + offset], 0);
+    cmp(byte[r9 + offset], 0);
 }
 
 BitSet32 JitShader::PersistentCallerSavedRegs() {
@@ -346,134 +314,134 @@ BitSet32 JitShader::PersistentCallerSavedRegs() {
 }
 
 void JitShader::Compile_ADD(Instruction instr) {
-    Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
-    Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
-    addps(SRC1, SRC2);
-    Compile_DestEnable(instr, SRC1);
+    Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
+    Compile_SwizzleSrc(instr, 2, instr.common.src2, xmm2);
+    addps(xmm1, xmm2);
+    Compile_DestEnable(instr, xmm1);
 }
 
 void JitShader::Compile_DP3(Instruction instr) {
-    Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
-    Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
+    Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
+    Compile_SwizzleSrc(instr, 2, instr.common.src2, xmm2);
 
-    Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
+    Compile_SanitizedMul(xmm1, xmm2, xmm0);
 
-    movaps(SRC2, SRC1);
-    shufps(SRC2, SRC2, _MM_SHUFFLE(1, 1, 1, 1));
+    movaps(xmm2, xmm1);
+    shufps(xmm2, xmm2, _MM_SHUFFLE(1, 1, 1, 1));
 
-    movaps(SRC3, SRC1);
-    shufps(SRC3, SRC3, _MM_SHUFFLE(2, 2, 2, 2));
+    movaps(xmm3, xmm1);
+    shufps(xmm3, xmm3, _MM_SHUFFLE(2, 2, 2, 2));
 
-    shufps(SRC1, SRC1, _MM_SHUFFLE(0, 0, 0, 0));
-    addps(SRC1, SRC2);
-    addps(SRC1, SRC3);
+    shufps(xmm1, xmm1, _MM_SHUFFLE(0, 0, 0, 0));
+    addps(xmm1, xmm2);
+    addps(xmm1, xmm3);
 
-    Compile_DestEnable(instr, SRC1);
+    Compile_DestEnable(instr, xmm1);
 }
 
 void JitShader::Compile_DP4(Instruction instr) {
-    Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
-    Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
+    Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
+    Compile_SwizzleSrc(instr, 2, instr.common.src2, xmm2);
 
-    Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
+    Compile_SanitizedMul(xmm1, xmm2, xmm0);
 
-    haddps(SRC1, SRC1);
-    haddps(SRC1, SRC1);
+    haddps(xmm1, xmm1);
+    haddps(xmm1, xmm1);
 
-    Compile_DestEnable(instr, SRC1);
+    Compile_DestEnable(instr, xmm1);
 }
 
 void JitShader::Compile_DPH(Instruction instr) {
     if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::DPHI) {
-        Compile_SwizzleSrc(instr, 1, instr.common.src1i, SRC1);
-        Compile_SwizzleSrc(instr, 2, instr.common.src2i, SRC2);
+        Compile_SwizzleSrc(instr, 1, instr.common.src1i, xmm1);
+        Compile_SwizzleSrc(instr, 2, instr.common.src2i, xmm2);
     } else {
-        Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
-        Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
+        Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
+        Compile_SwizzleSrc(instr, 2, instr.common.src2, xmm2);
     }
 
     // Set 4th component to 1.0
-    blendps(SRC1, ONE, 0b1000);
+    blendps(xmm1, xmm14, 0b1000);
 
-    Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
+    Compile_SanitizedMul(xmm1, xmm2, xmm0);
 
-    haddps(SRC1, SRC1);
-    haddps(SRC1, SRC1);
+    haddps(xmm1, xmm1);
+    haddps(xmm1, xmm1);
 
-    Compile_DestEnable(instr, SRC1);
+    Compile_DestEnable(instr, xmm1);
 }
 
 void JitShader::Compile_EX2(Instruction instr) {
-    Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
+    Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
     call(exp2_subroutine);
-    Compile_DestEnable(instr, SRC1);
+    Compile_DestEnable(instr, xmm1);
 }
 
 void JitShader::Compile_LG2(Instruction instr) {
-    Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
+    Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
     call(log2_subroutine);
-    Compile_DestEnable(instr, SRC1);
+    Compile_DestEnable(instr, xmm1);
 }
 
 void JitShader::Compile_MUL(Instruction instr) {
-    Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
-    Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
-    Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
-    Compile_DestEnable(instr, SRC1);
+    Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
+    Compile_SwizzleSrc(instr, 2, instr.common.src2, xmm2);
+    Compile_SanitizedMul(xmm1, xmm2, xmm0);
+    Compile_DestEnable(instr, xmm1);
 }
 
 void JitShader::Compile_SGE(Instruction instr) {
     if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::SGEI) {
-        Compile_SwizzleSrc(instr, 1, instr.common.src1i, SRC1);
-        Compile_SwizzleSrc(instr, 2, instr.common.src2i, SRC2);
+        Compile_SwizzleSrc(instr, 1, instr.common.src1i, xmm1);
+        Compile_SwizzleSrc(instr, 2, instr.common.src2i, xmm2);
     } else {
-        Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
-        Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
+        Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
+        Compile_SwizzleSrc(instr, 2, instr.common.src2, xmm2);
     }
 
-    cmpleps(SRC2, SRC1);
-    andps(SRC2, ONE);
+    cmpleps(xmm2, xmm1);
+    andps(xmm2, xmm14);
 
-    Compile_DestEnable(instr, SRC2);
+    Compile_DestEnable(instr, xmm2);
 }
 
 void JitShader::Compile_SLT(Instruction instr) {
     if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::SLTI) {
-        Compile_SwizzleSrc(instr, 1, instr.common.src1i, SRC1);
-        Compile_SwizzleSrc(instr, 2, instr.common.src2i, SRC2);
+        Compile_SwizzleSrc(instr, 1, instr.common.src1i, xmm1);
+        Compile_SwizzleSrc(instr, 2, instr.common.src2i, xmm2);
     } else {
-        Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
-        Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
+        Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
+        Compile_SwizzleSrc(instr, 2, instr.common.src2, xmm2);
     }
 
-    cmpltps(SRC1, SRC2);
-    andps(SRC1, ONE);
+    cmpltps(xmm1, xmm2);
+    andps(xmm1, xmm14);
 
-    Compile_DestEnable(instr, SRC1);
+    Compile_DestEnable(instr, xmm1);
 }
 
 void JitShader::Compile_FLR(Instruction instr) {
-    Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
+    Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
 
-    roundps(SRC1, SRC1, _MM_FROUND_FLOOR);
+    roundps(xmm1, xmm1, _MM_FROUND_FLOOR);
 
-    Compile_DestEnable(instr, SRC1);
+    Compile_DestEnable(instr, xmm1);
 }
 
 void JitShader::Compile_MAX(Instruction instr) {
-    Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
-    Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
-    // SSE semantics match PICA200 ones: In case of NaN, SRC2 is returned.
-    maxps(SRC1, SRC2);
-    Compile_DestEnable(instr, SRC1);
+    Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
+    Compile_SwizzleSrc(instr, 2, instr.common.src2, xmm2);
+    // SSE semantics match PICA200 ones: In case of NaN, xmm2 is returned.
+    maxps(xmm1, xmm2);
+    Compile_DestEnable(instr, xmm1);
 }
 
 void JitShader::Compile_MIN(Instruction instr) {
-    Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
-    Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
-    // SSE semantics match PICA200 ones: In case of NaN, SRC2 is returned.
-    minps(SRC1, SRC2);
-    Compile_DestEnable(instr, SRC1);
+    Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
+    Compile_SwizzleSrc(instr, 2, instr.common.src2, xmm2);
+    // SSE semantics match PICA200 ones: In case of NaN, xmm2 is returned.
+    minps(xmm1, xmm2);
+    Compile_DestEnable(instr, xmm1);
 }
 
 void JitShader::Compile_MOVA(Instruction instr) {
@@ -483,85 +451,85 @@ void JitShader::Compile_MOVA(Instruction instr) {
         return; // NoOp
     }
 
-    Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
+    Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
 
     // Convert floats to integers using truncation (only care about X and Y components)
-    cvttps2dq(SRC1, SRC1);
+    cvttps2dq(xmm1, xmm1);
 
     // Get result
-    movq(rax, SRC1);
+    movq(rax, xmm1);
 
     // Handle destination enable
     if (swiz.DestComponentEnabled(0) && swiz.DestComponentEnabled(1)) {
         // Move and sign-extend low 32 bits
-        movsxd(ADDROFFS_REG_0, eax);
+        movsxd(r10, eax);
 
         // Move and sign-extend high 32 bits
         shr(rax, 32);
-        movsxd(ADDROFFS_REG_1, eax);
+        movsxd(r11, eax);
 
         // Multiply by 16 to be used as an offset later
-        shl(ADDROFFS_REG_0, 4);
-        shl(ADDROFFS_REG_1, 4);
+        shl(r10, 4);
+        shl(r11, 4);
     } else {
         if (swiz.DestComponentEnabled(0)) {
             // Move and sign-extend low 32 bits
-            movsxd(ADDROFFS_REG_0, eax);
+            movsxd(r10, eax);
 
             // Multiply by 16 to be used as an offset later
-            shl(ADDROFFS_REG_0, 4);
+            shl(r10, 4);
         } else if (swiz.DestComponentEnabled(1)) {
             // Move and sign-extend high 32 bits
             shr(rax, 32);
-            movsxd(ADDROFFS_REG_1, eax);
+            movsxd(r11, eax);
 
             // Multiply by 16 to be used as an offset later
-            shl(ADDROFFS_REG_1, 4);
+            shl(r11, 4);
         }
     }
 }
 
 void JitShader::Compile_MOV(Instruction instr) {
-    Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
-    Compile_DestEnable(instr, SRC1);
+    Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
+    Compile_DestEnable(instr, xmm1);
 }
 
 void JitShader::Compile_RCP(Instruction instr) {
-    Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
+    Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
 
     // TODO: RCPSS is a pretty rough approximation, this might cause problems if Pica
     // performs this operation more accurately. This should be checked on hardware.
-    rcpss(SRC1, SRC1);
-    shufps(SRC1, SRC1, _MM_SHUFFLE(0, 0, 0, 0)); // XYWZ -> XXXX
+    rcpss(xmm1, xmm1);
+    shufps(xmm1, xmm1, _MM_SHUFFLE(0, 0, 0, 0)); // XYWZ -> XXXX
 
-    Compile_DestEnable(instr, SRC1);
+    Compile_DestEnable(instr, xmm1);
 }
 
 void JitShader::Compile_RSQ(Instruction instr) {
-    Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
+    Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
 
     // TODO: RSQRTSS is a pretty rough approximation, this might cause problems if Pica
     // performs this operation more accurately. This should be checked on hardware.
-    rsqrtss(SRC1, SRC1);
-    shufps(SRC1, SRC1, _MM_SHUFFLE(0, 0, 0, 0)); // XYWZ -> XXXX
+    rsqrtss(xmm1, xmm1);
+    shufps(xmm1, xmm1, _MM_SHUFFLE(0, 0, 0, 0)); // XYWZ -> XXXX
 
-    Compile_DestEnable(instr, SRC1);
+    Compile_DestEnable(instr, xmm1);
 }
 
 void JitShader::Compile_NOP(Instruction instr) {}
 
 void JitShader::Compile_END(Instruction instr) {
     // Save conditional code
-    mov(byte[STATE + offsetof(UnitState, conditional_code[0])], COND0.cvt8());
-    mov(byte[STATE + offsetof(UnitState, conditional_code[1])], COND1.cvt8());
+    mov(byte[r15 + offsetof(UnitState, conditional_code[0])], r13.cvt8());
+    mov(byte[r15 + offsetof(UnitState, conditional_code[1])], r14.cvt8());
 
     // Save address/loop registers
-    sar(ADDROFFS_REG_0, 4);
-    sar(ADDROFFS_REG_1, 4);
-    sar(LOOPCOUNT_REG, 4);
-    mov(dword[STATE + offsetof(UnitState, address_registers[0])], ADDROFFS_REG_0.cvt32());
-    mov(dword[STATE + offsetof(UnitState, address_registers[1])], ADDROFFS_REG_1.cvt32());
-    mov(dword[STATE + offsetof(UnitState, address_registers[2])], LOOPCOUNT_REG);
+    sar(r10, 4);
+    sar(r11, 4);
+    sar(r12d, 4);
+    mov(dword[r15 + offsetof(UnitState, address_registers[0])], r10.cvt32());
+    mov(dword[r15 + offsetof(UnitState, address_registers[1])], r11.cvt32());
+    mov(dword[r15 + offsetof(UnitState, address_registers[2])], r12d);
 
     ABI_PopRegistersAndAdjustStack(*this, ABI_ALL_CALLEE_SAVED, 8, 16);
     ret();
@@ -608,8 +576,8 @@ void JitShader::Compile_CMP(Instruction instr) {
     Op op_x{instr.common.compare_op.x};
     Op op_y{instr.common.compare_op.y};
 
-    Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
-    Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
+    Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
+    Compile_SwizzleSrc(instr, 2, instr.common.src2, xmm2);
 
     // SSE doesn't have greater-than (GT) or greater-equal (GE) comparison operators. You need to
     // emulate them by swapping the lhs and rhs and using LT and LE. NLT and NLE can't be used here
@@ -617,50 +585,50 @@ void JitShader::Compile_CMP(Instruction instr) {
     static const u8 cmp[] = {CMP_EQ, CMP_NEQ, CMP_LT, CMP_LE, CMP_LT, CMP_LE};
 
     bool invert_op_x{(op_x == Op::GreaterThan || op_x == Op::GreaterEqual)};
-    Xmm lhs_x = invert_op_x ? SRC2 : SRC1;
-    Xmm rhs_x = invert_op_x ? SRC1 : SRC2;
+    Xmm lhs_x = invert_op_x ? xmm2 : xmm1;
+    Xmm rhs_x = invert_op_x ? xmm1 : xmm2;
 
     if (op_x == op_y) {
         // Compare X-component and Y-component together
         cmpps(lhs_x, rhs_x, cmp[op_x]);
-        movq(COND0, lhs_x);
+        movq(r13, lhs_x);
 
-        mov(COND1, COND0);
+        mov(r14, r13);
     } else {
         bool invert_op_y{(op_y == Op::GreaterThan || op_y == Op::GreaterEqual)};
-        Xmm lhs_y = invert_op_y ? SRC2 : SRC1;
-        Xmm rhs_y = invert_op_y ? SRC1 : SRC2;
+        Xmm lhs_y = invert_op_y ? xmm2 : xmm1;
+        Xmm rhs_y = invert_op_y ? xmm1 : xmm2;
 
         // Compare X-component
-        movaps(SCRATCH, lhs_x);
-        cmpss(SCRATCH, rhs_x, cmp[op_x]);
+        movaps(xmm0, lhs_x);
+        cmpss(xmm0, rhs_x, cmp[op_x]);
 
         // Compare Y-component
         cmpps(lhs_y, rhs_y, cmp[op_y]);
 
-        movq(COND0, SCRATCH);
-        movq(COND1, lhs_y);
+        movq(r13, xmm0);
+        movq(r14, lhs_y);
     }
 
-    shr(COND0.cvt32(), 31); // ignores upper 32 bits in source
-    shr(COND1, 63);
+    shr(r13.cvt32(), 31); // ignores upper 32 bits in source
+    shr(r14, 63);
 }
 
 void JitShader::Compile_MAD(Instruction instr) {
-    Compile_SwizzleSrc(instr, 1, instr.mad.src1, SRC1);
+    Compile_SwizzleSrc(instr, 1, instr.mad.src1, xmm1);
 
     if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MADI) {
-        Compile_SwizzleSrc(instr, 2, instr.mad.src2i, SRC2);
-        Compile_SwizzleSrc(instr, 3, instr.mad.src3i, SRC3);
+        Compile_SwizzleSrc(instr, 2, instr.mad.src2i, xmm2);
+        Compile_SwizzleSrc(instr, 3, instr.mad.src3i, xmm3);
     } else {
-        Compile_SwizzleSrc(instr, 2, instr.mad.src2, SRC2);
-        Compile_SwizzleSrc(instr, 3, instr.mad.src3, SRC3);
+        Compile_SwizzleSrc(instr, 2, instr.mad.src2, xmm2);
+        Compile_SwizzleSrc(instr, 3, instr.mad.src3, xmm3);
     }
 
-    Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
-    addps(SRC1, SRC3);
+    Compile_SanitizedMul(xmm1, xmm2, xmm0);
+    addps(xmm1, xmm3);
 
-    Compile_DestEnable(instr, SRC1);
+    Compile_DestEnable(instr, xmm1);
 }
 
 void JitShader::Compile_IF(Instruction instr) {
@@ -703,18 +671,18 @@ void JitShader::Compile_LOOP(Instruction instr) {
     looping = true;
 
     // This decodes the fields from the integer uniform at index instr.flow_control.int_uniform_id.
-    // The Y (LOOPCOUNT_REG) and Z (LOOPINC) component are kept multiplied by 16 (Left shifted by
+    // The Y (r12d) and Z (edi) component are kept multiplied by 16 (Left shifted by
     // 4 bits) to be used as an offset into the 16-byte vector registers later
     std::size_t offset = Uniforms::GetIntUniformOffset(instr.flow_control.int_uniform_id);
-    mov(LOOPCOUNT, dword[UNIFORMS + offset]);
-    mov(LOOPCOUNT_REG, LOOPCOUNT);
-    shr(LOOPCOUNT_REG, 4);
-    and_(LOOPCOUNT_REG, 0xFF0); // Y-component is the start
-    mov(LOOPINC, LOOPCOUNT);
-    shr(LOOPINC, 12);
-    and_(LOOPINC, 0xFF0);               // Z-component is the incrementer
-    movzx(LOOPCOUNT, LOOPCOUNT.cvt8()); // X-component is iteration count
-    add(LOOPCOUNT, 1);                  // Iteration count is X-component + 1
+    mov(esi, dword[r9 + offset]);
+    mov(r12d, esi);
+    shr(r12d, 4);
+    and_(r12d, 0xFF0); // Y-component is the start
+    mov(edi, esi);
+    shr(edi, 12);
+    and_(edi, 0xFF0);       // Z-component is the incrementer
+    movzx(esi, esi.cvt8()); // X-component is iteration count
+    add(esi, 1);            // Iteration count is X-component + 1
 
     Label l_loop_start;
     L(l_loop_start);
@@ -722,9 +690,9 @@ void JitShader::Compile_LOOP(Instruction instr) {
     loop_break_label = Xbyak::Label();
     Compile_Block(instr.flow_control.dest_offset + 1);
 
-    add(LOOPCOUNT_REG, LOOPINC); // Increment LOOPCOUNT_REG by Z-component
-    sub(LOOPCOUNT, 1);           // Increment loop count by 1
-    jnz(l_loop_start);           // Loop if not equal
+    add(r12d, edi);    // Increment r12d by Z-component
+    sub(esi, 1);       // Increment loop count by 1
+    jnz(l_loop_start); // Loop if not equal
     L(*loop_break_label);
     loop_break_label.reset();
 
@@ -756,7 +724,7 @@ static void Emit(GSEmitter* emitter, Math::Vec4<float24> (*output)[16]) {
 
 void JitShader::Compile_EMIT(Instruction instr) {
     Label have_emitter, end;
-    mov(rax, qword[STATE + offsetof(UnitState, emitter_ptr)]);
+    mov(rax, qword[r15 + offsetof(UnitState, emitter_ptr)]);
     test(rax, rax);
     jnz(have_emitter);
 
@@ -769,7 +737,7 @@ void JitShader::Compile_EMIT(Instruction instr) {
     L(have_emitter);
     ABI_PushRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
     mov(ABI_PARAM1, rax);
-    mov(ABI_PARAM2, STATE);
+    mov(ABI_PARAM2, r15);
     add(ABI_PARAM2, static_cast<Xbyak::uint32>(offsetof(UnitState, registers.output)));
     CallFarFunction(*this, Emit);
     ABI_PopRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
@@ -778,7 +746,7 @@ void JitShader::Compile_EMIT(Instruction instr) {
 
 void JitShader::Compile_SETE(Instruction instr) {
     Label have_emitter, end;
-    mov(rax, qword[STATE + offsetof(UnitState, emitter_ptr)]);
+    mov(rax, qword[r15 + offsetof(UnitState, emitter_ptr)]);
     test(rax, rax);
     jnz(have_emitter);
 
@@ -877,30 +845,30 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     ABI_PushRegistersAndAdjustStack(*this, ABI_ALL_CALLEE_SAVED, 8, 16);
     mov(qword[rsp + 8], 0xFFFFFFFFFFFFFFFFULL);
 
-    mov(UNIFORMS, ABI_PARAM1);
-    mov(STATE, ABI_PARAM2);
+    mov(r9, ABI_PARAM1);
+    mov(r15, ABI_PARAM2);
 
     // Load address/loop registers
-    movsxd(ADDROFFS_REG_0, dword[STATE + offsetof(UnitState, address_registers[0])]);
-    movsxd(ADDROFFS_REG_1, dword[STATE + offsetof(UnitState, address_registers[1])]);
-    mov(LOOPCOUNT_REG, dword[STATE + offsetof(UnitState, address_registers[2])]);
-    shl(ADDROFFS_REG_0, 4);
-    shl(ADDROFFS_REG_1, 4);
-    shl(LOOPCOUNT_REG, 4);
+    movsxd(r10, dword[r15 + offsetof(UnitState, address_registers[0])]);
+    movsxd(r11, dword[r15 + offsetof(UnitState, address_registers[1])]);
+    mov(r12d, dword[r15 + offsetof(UnitState, address_registers[2])]);
+    shl(r10, 4);
+    shl(r11, 4);
+    shl(r12d, 4);
 
     // Load conditional code
-    mov(COND0, byte[STATE + offsetof(UnitState, conditional_code[0])]);
-    mov(COND1, byte[STATE + offsetof(UnitState, conditional_code[1])]);
+    mov(r13, byte[r15 + offsetof(UnitState, conditional_code[0])]);
+    mov(r14, byte[r15 + offsetof(UnitState, conditional_code[1])]);
 
     // Used to set a register to one
     static const __m128 one = {1.f, 1.f, 1.f, 1.f};
     mov(rax, reinterpret_cast<std::size_t>(&one));
-    movaps(ONE, xword[rax]);
+    movaps(xmm14, xword[rax]);
 
     // Used to negate registers
     static const __m128 neg = {-0.f, -0.f, -0.f, -0.f};
     mov(rax, reinterpret_cast<std::size_t>(&neg));
-    movaps(NEGBIT, xword[rax]);
+    movaps(xmm15, xword[rax]);
 
     // Jump to start of the shader program
     jmp(ABI_PARAM3);
@@ -969,53 +937,53 @@ Xbyak::Label JitShader::CompilePrelude_Log2() {
     align(16);
     L(input_out_of_range);
     je(input_is_zero);
-    movaps(SRC1, xword[rip + default_qnan_vector]);
+    movaps(xmm1, xword[rip + default_qnan_vector]);
     ret();
     L(input_is_zero);
-    movaps(SRC1, xword[rip + negative_infinity_vector]);
+    movaps(xmm1, xword[rip + negative_infinity_vector]);
     ret();
 
     align(16);
     L(subroutine);
 
     // Here we handle edge cases: input in {NaN, 0, -Inf, Negative}.
-    xorps(SCRATCH, SCRATCH);
-    ucomiss(SCRATCH, SRC1);
+    xorps(xmm0, xmm0);
+    ucomiss(xmm0, xmm1);
     jp(input_is_nan);
     jae(input_out_of_range);
 
     // Split input
-    movd(eax, SRC1);
+    movd(eax, xmm1);
     mov(edx, eax);
     and_(eax, 0x7f800000);
     and_(edx, 0x007fffff);
-    movss(SCRATCH, xword[rip + c0]); // Preload c0.
+    movss(xmm0, xword[rip + c0]); // Preload c0.
     or_(edx, 0x3f800000);
-    movd(SRC1, edx);
-    // SRC1 now contains the mantissa of the input.
-    mulss(SCRATCH, SRC1);
+    movd(xmm1, edx);
+    // xmm1 now contains the mantissa of the input.
+    mulss(xmm0, xmm1);
     shr(eax, 23);
     sub(eax, 0x7f);
-    cvtsi2ss(SCRATCH2, eax);
-    // SCRATCH2 now contains the exponent of the input.
+    cvtsi2ss(xmm4, eax);
+    // xmm4 now contains the exponent of the input.
 
     // Complete computation of polynomial
-    addss(SCRATCH, xword[rip + c1]);
-    mulss(SCRATCH, SRC1);
-    addss(SCRATCH, xword[rip + c2]);
-    mulss(SCRATCH, SRC1);
-    addss(SCRATCH, xword[rip + c3]);
-    mulss(SCRATCH, SRC1);
-    subss(SRC1, ONE);
-    addss(SCRATCH, xword[rip + c4]);
-    mulss(SCRATCH, SRC1);
-    addss(SCRATCH2, SCRATCH);
+    addss(xmm0, xword[rip + c1]);
+    mulss(xmm0, xmm1);
+    addss(xmm0, xword[rip + c2]);
+    mulss(xmm0, xmm1);
+    addss(xmm0, xword[rip + c3]);
+    mulss(xmm0, xmm1);
+    subss(xmm1, xmm14);
+    addss(xmm0, xword[rip + c4]);
+    mulss(xmm0, xmm1);
+    addss(xmm4, xmm0);
 
     // Duplicate result across vector
-    xorps(SRC1, SRC1); // break dependency chain
-    movss(SRC1, SCRATCH2);
+    xorps(xmm1, xmm1); // break dependency chain
+    movss(xmm1, xmm4);
     L(input_is_nan);
-    shufps(SRC1, SRC1, _MM_SHUFFLE(0, 0, 0, 0));
+    shufps(xmm1, xmm1, _MM_SHUFFLE(0, 0, 0, 0));
 
     ret();
 
@@ -1054,40 +1022,40 @@ Xbyak::Label JitShader::CompilePrelude_Exp2() {
     L(subroutine);
 
     // Handle edge cases
-    ucomiss(SRC1, SRC1);
+    ucomiss(xmm1, xmm1);
     jp(ret_label);
     // Clamp to maximum range since we shift the value directly into the exponent.
-    minss(SRC1, xword[rip + input_max]);
-    maxss(SRC1, xword[rip + input_min]);
+    minss(xmm1, xword[rip + input_max]);
+    maxss(xmm1, xword[rip + input_min]);
 
     // Decompose input
-    movss(SCRATCH, SRC1);
-    movss(SCRATCH2, xword[rip + c0]); // Preload c0.
-    subss(SCRATCH, xword[rip + half]);
-    cvtss2si(eax, SCRATCH);
-    cvtsi2ss(SCRATCH, eax);
-    // SCRATCH now contains input rounded to the nearest integer.
+    movss(xmm0, xmm1);
+    movss(xmm4, xword[rip + c0]); // Preload c0.
+    subss(xmm0, xword[rip + half]);
+    cvtss2si(eax, xmm0);
+    cvtsi2ss(xmm0, eax);
+    // xmm0 now contains input rounded to the nearest integer.
     add(eax, 0x7f);
-    subss(SRC1, SCRATCH);
-    // SRC1 contains input - round(input), which is in [-0.5, 0.5).
-    mulss(SCRATCH2, SRC1);
+    subss(xmm1, xmm0);
+    // xmm1 contains input - round(input), which is in [-0.5, 0.5).
+    mulss(xmm4, xmm1);
     shl(eax, 23);
-    movd(SCRATCH, eax);
-    // SCRATCH contains 2^(round(input)).
+    movd(xmm0, eax);
+    // xmm0 contains 2^(round(input)).
 
     // Complete computation of polynomial.
-    addss(SCRATCH2, xword[rip + c1]);
-    mulss(SCRATCH2, SRC1);
-    addss(SCRATCH2, xword[rip + c2]);
-    mulss(SCRATCH2, SRC1);
-    addss(SCRATCH2, xword[rip + c3]);
-    mulss(SRC1, SCRATCH2);
-    addss(SRC1, xword[rip + c4]);
-    mulss(SRC1, SCRATCH);
+    addss(xmm4, xword[rip + c1]);
+    mulss(xmm4, xmm1);
+    addss(xmm4, xword[rip + c2]);
+    mulss(xmm4, xmm1);
+    addss(xmm4, xword[rip + c3]);
+    mulss(xmm1, xmm4);
+    addss(xmm1, xword[rip + c4]);
+    mulss(xmm1, xmm0);
 
     // Duplicate result across vector
     L(ret_label);
-    shufps(SRC1, SRC1, _MM_SHUFFLE(0, 0, 0, 0));
+    shufps(xmm1, xmm1, _MM_SHUFFLE(0, 0, 0, 0));
 
     ret();
 
