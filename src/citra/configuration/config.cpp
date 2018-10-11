@@ -492,14 +492,17 @@ void Config::SaveValues() {
                         QString::fromStdString(Settings::values.camera_name[OuterRightCamera]));
     qt_config->setValue("camera_outer_right_config",
                         QString::fromStdString(Settings::values.camera_config[OuterRightCamera]));
+    qt_config->setValue("camera_outer_right_flip", Settings::values.camera_flip[OuterRightCamera]);
     qt_config->setValue("camera_inner_name",
                         QString::fromStdString(Settings::values.camera_name[InnerCamera]));
     qt_config->setValue("camera_inner_config",
                         QString::fromStdString(Settings::values.camera_config[InnerCamera]));
+    qt_config->setValue("camera_inner_flip", Settings::values.camera_flip[InnerCamera]);
     qt_config->setValue("camera_outer_left_name",
                         QString::fromStdString(Settings::values.camera_name[OuterLeftCamera]));
     qt_config->setValue("camera_outer_left_config",
                         QString::fromStdString(Settings::values.camera_config[OuterLeftCamera]));
+    qt_config->setValue("camera_outer_left_flip", Settings::values.camera_flip[OuterLeftCamera]);
     qt_config->endGroup();
 
     qt_config->beginGroup("Data Storage");
