@@ -31,7 +31,7 @@ static_assert(sizeof(SelfNCCHFilePath) == 12, "NCCHFilePath has wrong size!");
 // once, in a single read operation.
 class ExeFSSectionFile final : public FileBackend {
 public:
-    explicit ExeFSSectionFile(std::shared_ptr<std::vector<u8>> data_) : data(std::move(data_)) {}
+    explicit ExeFSSectionFile(std::shared_ptr<std::vector<u8>> data_) : data{std::move(data_)} {}
 
     ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override {
         if (offset != 0) {
