@@ -56,14 +56,6 @@ void LogSettings() {
     LogSetting("ControlPanel_WifiStatus", Settings::values.n_wifi_status);
     LogSetting("Core_KeyboardMode", static_cast<int>(Settings::values.keyboard_mode));
     LogSetting("Core_EnableNSLaunch", Settings::values.enable_ns_launch);
-    bool using_lle_modules{};
-    for (const auto& module : Settings::values.lle_modules) {
-        if (module.second) {
-            using_lle_modules = true;
-            break;
-        }
-    }
-    LogSetting("LLE_UsingLLEModules", using_lle_modules);
     LogSetting("Renderer_UseHwShader", Settings::values.use_hw_shader);
     LogSetting("Renderer_ShadersAccurateGs", Settings::values.shaders_accurate_gs);
     LogSetting("Renderer_ShadersAccurateMul", Settings::values.shaders_accurate_mul);
@@ -75,6 +67,14 @@ void LogSettings() {
     LogSetting("Renderer_MinVerticesPerThread", Settings::values.min_vertices_per_thread);
     LogSetting("Layout_LayoutOption", static_cast<int>(Settings::values.layout_option));
     LogSetting("Layout_SwapScreen", Settings::values.swap_screen);
+    bool using_lle_modules{};
+    for (const auto& module : Settings::values.lle_modules) {
+        if (module.second) {
+            using_lle_modules = true;
+            break;
+        }
+    }
+    LogSetting("LLE_UsingLLEModules", using_lle_modules);
     LogSetting("Audio_EnableAudioStretching", Settings::values.enable_audio_stretching);
     LogSetting("Audio_OutputDevice", Settings::values.output_device);
     LogSetting("Audio_InputDevice", Settings::values.input_device);
