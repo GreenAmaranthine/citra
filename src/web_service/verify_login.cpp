@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <json.hpp>
-#include "common/logging/log.h"
+#include "common/web_result.h"
 #include "web_service/verify_login.h"
 #include "web_service/web_backend.h"
 
@@ -16,10 +16,8 @@ bool VerifyLogin(const std::string& host, const std::string& username, const std
         return false;
     nlohmann::json json = nlohmann::json::parse(reply);
     const auto iter{json.find("username")};
-
     if (iter == json.end())
         return username.empty();
-
     return username == *iter;
 }
 
