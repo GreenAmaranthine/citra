@@ -62,20 +62,20 @@ private:
         if (auto type{Response::Validate(receive_buffer.data(), bytes_transferred)}) {
             switch (*type) {
             case Type::Version: {
-                Response::Version version{};
+                Response::Version version;
                 std::memcpy(&version, &receive_buffer[sizeof(Header)], sizeof(Response::Version));
                 callback.version(std::move(version));
                 break;
             }
             case Type::PortInfo: {
-                Response::PortInfo port_info{};
+                Response::PortInfo port_info;
                 std::memcpy(&port_info, &receive_buffer[sizeof(Header)],
                             sizeof(Response::PortInfo));
                 callback.port_info(std::move(port_info));
                 break;
             }
             case Type::PadData: {
-                Response::PadData pad_data{};
+                Response::PadData pad_data;
                 std::memcpy(&pad_data, &receive_buffer[sizeof(Header)], sizeof(Response::PadData));
                 callback.pad_data(std::move(pad_data));
                 break;
