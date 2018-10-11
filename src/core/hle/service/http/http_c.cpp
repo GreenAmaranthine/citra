@@ -1697,13 +1697,14 @@ void HTTP_C::LoadDefaultCerts() {
         LOG_ERROR(Service_HTTP, "Could not locate start position for certificates in SSL module");
         return;
     }
-    for (auto& cert : default_root_certs) {
-        if (pos + cert.size > code_buffer.size()) {
+    for (auto& c : default_root_certs) {
+        auto* cert{&c};
+        if (pos + cert->size > code_buffer.size()) {
             LOG_ERROR(Service_HTTP, "SSL module size too small");
             return;
         }
-        cert.certificate = std::vector<u8>(&code_buffer[pos], &code_buffer[pos + cert.size]);
-        pos += cert.size;
+        cert->certificate = std::vector<u8>(&code_buffer[pos], &code_buffer[pos + cert->size]);
+        pos += cert->size;
     }
 }
 
