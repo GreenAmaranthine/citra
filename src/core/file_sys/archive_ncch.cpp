@@ -83,13 +83,12 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         Service::AM::GetTitleContentPath(media_type, title_id, openfile_path.content_index)};
     auto ncch_container{NCCHContainer(file_path)};
 
-    Loader::ResultStatus result{};
-    std::unique_ptr<FileBackend> file{};
+    Loader::ResultStatus result;
+    std::unique_ptr<FileBackend> file;
 
     // NCCH RomFS
     if (openfile_path.filepath_type == NCCHFilePathType::RomFS) {
-        std::shared_ptr<RomFSReader> romfs_file{};
-
+        std::shared_ptr<RomFSReader> romfs_file;
         result = ncch_container.ReadRomFS(romfs_file);
         std::unique_ptr<DelayGenerator> delay_generator{std::make_unique<RomFSDelayGenerator>()};
         file = std::make_unique<IVFCFile>(std::move(romfs_file), std::move(delay_generator));

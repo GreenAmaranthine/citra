@@ -403,12 +403,13 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
 }
 
 void ReloadDevice() {
-    if (!Core::System::GetInstance().IsPoweredOn()) {
+    auto& system{Core::System::GetInstance()};
+
+    if (!system.IsPoweredOn()) {
         return;
     }
 
-    std::shared_ptr<MIC_U> mic{
-        Core::System::GetInstance().ServiceManager().GetService<MIC_U>("mic:u")};
+    auto mic{system.ServiceManager().GetService<MIC_U>("mic:u")};
     mic->ReloadDevice();
 }
 

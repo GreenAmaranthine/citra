@@ -152,6 +152,7 @@ public:
     public:
         Interface(std::shared_ptr<Module> am, const char* name, u32 max_session);
         ~Interface();
+        std::shared_ptr<Module> GetModule();
 
     protected:
         void GetNumPrograms(Kernel::HLERequestContext& ctx);
@@ -188,10 +189,16 @@ public:
         void GetMetaSizeFromCia(Kernel::HLERequestContext& ctx);
         void GetMetaDataFromCia(Kernel::HLERequestContext& ctx);
         void GetDeviceID(Kernel::HLERequestContext& ctx);
+        void DeleteUserProgramsAtomically(Kernel::HLERequestContext& ctx);
 
     private:
         std::shared_ptr<Module> am;
     };
+
+    /**
+     * Scans all storage mediums for titles for listing.
+     */
+    void ScanForAllTitles();
 
 private:
     /**
@@ -199,11 +206,6 @@ private:
      * @param media_type the storage medium to scan
      */
     void ScanForTitles(Service::FS::MediaType media_type);
-
-    /**
-     * Scans all storage mediums for titles for listing.
-     */
-    void ScanForAllTitles();
 
     bool cia_installing{};
     std::array<std::vector<u64_le>, 3> am_title_list;

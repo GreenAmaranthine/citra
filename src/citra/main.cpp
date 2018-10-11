@@ -56,6 +56,7 @@
 #include "core/core.h"
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
+#include "core/hle/service/am/am_u.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/nwm/nwm_ext.h"
@@ -518,7 +519,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
         return false;
     }
 
-    Core::System& system{Core::System::GetInstance()};
+    auto& system{Core::System::GetInstance()};
 
     const Core::System::ResultStatus result{system.Load(filename.toStdString())};
 
@@ -1082,6 +1083,14 @@ void GMainWindow::OnCIAInstallFinished() {
     game_list->setDirectoryWatcherEnabled(true);
     ui.action_Install_CIA->setEnabled(true);
     game_list->PopulateAsync(UISettings::values.game_dirs);
+
+    auto& system{Core::System::GetInstance()};
+
+    if (system.IsPoweredOn()) {
+        auto u{system.ServiceManager().GetService<Service::AM::AM_U>("am:u")};
+        auto am{u->GetModule()};
+        am->ScanForAllTitles();
+    }
 }
 
 void GMainWindow::OnMenuRecentFile() {
@@ -1288,15 +1297,15 @@ void GMainWindow::OnLoadAmiibo() {
     const QString filename{QFileDialog::getOpenFileName(
         this, "Load Amiibo", UISettings::values.amiibo_path, file_filter)};
     if (!filename.isEmpty()) {
-        Core::System& system{Core::System::GetInstance()};
+        auto& system{Core::System::GetInstance()};
         auto& sm{system.ServiceManager()};
-        auto nfc{sm.GetService<Service::NFC::Module::Interface>("nfc:u")};
-        if (nfc != nullptr) {
-            auto nfc_module{nfc->GetModule()};
-            if (nfc_module != nullptr) {
-                nfc_module->nfc_filename = filename.toStdString();
-                nfc_module->nfc_tag_state = Service::NFC::TagState::TagInRange;
-                nfc_module->tag_in_range_event->Signal();
+        auto u{sm.GetService<Service::NFC::Module::Interface>("nfc:u")};
+        if (u != nullptr) {
+            auto nfc{u->GetModule()};
+            if (nfc != nullptr) {
+                nfc->nfc_filename = filename.toStdString();
+                nfc->nfc_tag_state = Service::NFC::TagState::TagInRange;
+                nfc->tag_in_range_event->Signal();
             }
         }
     }

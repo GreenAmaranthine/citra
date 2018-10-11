@@ -537,6 +537,10 @@ Module::Interface::Interface(std::shared_ptr<Module> am, const char* name, u32 m
 
 Module::Interface::~Interface() = default;
 
+std::shared_ptr<Module> Module::Interface::GetModule() {
+    return am;
+}
+
 void Module::Interface::GetNumPrograms(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0001, 1, 0};
     u32 media_type{rp.Pop<u8>()};
@@ -1458,6 +1462,49 @@ void Module::Interface::GetDeviceID(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0xDEADC0DE);
     rb.Push<u32>(0xDEADC0DE);
+}
+
+void Module::Interface::DeleteUserProgramsAtomically(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x0029, 2, 2};
+    auto media_type{rp.PopEnum<FS::MediaType>()};
+    u32 count{rp.Pop<u32>()};
+    auto buffer{rp.PopMappedBuffer()};
+
+    u32 offset{};
+    u64 title_id;
+
+    for (u32 i{}; i < count; ++i) {
+        buffer.Read(&title_id, offset, sizeof(u64));
+        offset += sizeof(u64);
+
+        u16 category{static_cast<u16>((title_id >> 32) & 0xFFFF)};
+        u8 variation{static_cast<u8>(title_id & 0xFF)};
+        if (category & CATEGORY_SYSTEM || category & CATEGORY_DLP || variation & VARIATION_SYSTEM) {
+            LOG_ERROR(Service_AM, "Trying to uninstall system app");
+            IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+            rb.Push(ResultCode(ErrCodes::TryingToUninstallSystemApp, ErrorModule::AM,
+                               ErrorSummary::InvalidArgument, ErrorLevel::Usage));
+            return;
+        }
+        LOG_INFO(Service_AM, "Deleting title 0x{:016x}", title_id);
+        std::string path{GetTitlePath(media_type, title_id)};
+        if (!FileUtil::Exists(path)) {
+            IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+            rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::AM,
+                               ErrorSummary::InvalidState, ErrorLevel::Permanent));
+            LOG_ERROR(Service_AM, "Title not found");
+            return;
+        }
+        if (!FileUtil::DeleteDirRecursively(path)) {
+            LOG_ERROR(Service_AM, "DeleteDirRecursively failed: {}", GetLastErrorMsg());
+        }
+    }
+
+    am->ScanForAllTitles();
+
+    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    rb.Push(RESULT_SUCCESS);
+    rb.PushMappedBuffer(buffer);
 }
 
 Module::Module() {

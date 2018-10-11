@@ -447,67 +447,73 @@ void Module::SetOverrideControls(bool pad, bool touch, bool motion, bool circle)
 }
 
 void ReloadInputDevices() {
-    if (!Core::System::GetInstance().IsPoweredOn()) {
+    auto& system{Core::System::GetInstance()};
+
+    if (!system.IsPoweredOn()) {
         return;
     }
 
-    std::shared_ptr<User> user{
-        Core::System::GetInstance().ServiceManager().GetService<User>("hid:USER")};
+    auto user{system.ServiceManager().GetService<User>("hid:USER")};
     auto hid{user->GetModule()};
     hid->ReloadInputDevices();
 }
 
 void SetPadState(u32 raw) {
-    if (!Core::System::GetInstance().IsPoweredOn()) {
+    auto& system{Core::System::GetInstance()};
+
+    if (!system.IsPoweredOn()) {
         return;
     }
 
-    std::shared_ptr<User> user{
-        Core::System::GetInstance().ServiceManager().GetService<User>("hid:USER")};
+    auto user{system.ServiceManager().GetService<User>("hid:USER")};
     auto hid{user->GetModule()};
     hid->SetPadState(raw);
 }
 
 void SetTouchState(s16 x, s16 y, bool valid) {
-    if (!Core::System::GetInstance().IsPoweredOn()) {
+    auto& system{Core::System::GetInstance()};
+
+    if (!system.IsPoweredOn()) {
         return;
     }
 
-    std::shared_ptr<User> user{
-        Core::System::GetInstance().ServiceManager().GetService<User>("hid:USER")};
+    auto user{system.ServiceManager().GetService<User>("hid:USER")};
     auto hid{user->GetModule()};
     hid->SetTouchState(x, y, valid);
 }
 
 void SetMotionState(s16 x, s16 y, s16 z, s16 roll, s16 pitch, s16 yaw) {
-    if (!Core::System::GetInstance().IsPoweredOn()) {
+    auto& system{Core::System::GetInstance()};
+
+    if (!system.IsPoweredOn()) {
         return;
     }
 
-    std::shared_ptr<User> user{
-        Core::System::GetInstance().ServiceManager().GetService<User>("hid:USER")};
+    auto user{system.ServiceManager().GetService<User>("hid:USER")};
     auto hid{user->GetModule()};
     hid->SetMotionState(x, y, z, roll, pitch, yaw);
 }
 
 void SetCircleState(s16 x, s16 y) {
-    if (!Core::System::GetInstance().IsPoweredOn()) {
+    auto& system{Core::System::GetInstance()};
+
+    if (!system.IsPoweredOn()) {
         return;
     }
 
-    std::shared_ptr<User> user{
-        Core::System::GetInstance().ServiceManager().GetService<User>("hid:USER")};
+    auto user{system.ServiceManager().GetService<User>("hid:USER")};
     auto hid{user->GetModule()};
     hid->SetCircleState(x, y);
 }
 
 void SetOverrideControls(bool pad, bool touch, bool motion, bool circle) {
-    if (!Core::System::GetInstance().IsPoweredOn()) {
+    auto& system{Core::System::GetInstance()};
+
+    if (!system.IsPoweredOn()) {
         return;
     }
 
-    std::shared_ptr<User> user{
-        Core::System::GetInstance().ServiceManager().GetService<User>("hid:USER")};
+    auto user{system.ServiceManager().GetService<User>("hid:USER")};
     auto hid{user->GetModule()};
     hid->SetOverrideControls(pad, touch, motion, circle);
 }

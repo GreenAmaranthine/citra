@@ -12,14 +12,16 @@
 namespace Service::IR {
 
 void ReloadInputDevices() {
-    if (!Core::System::GetInstance().IsPoweredOn()) {
+    auto& system{Core::System::GetInstance()};
+
+    if (!system.IsPoweredOn()) {
         return;
     }
 
-    auto& sm{Core::System::GetInstance().ServiceManager()};
+    auto& sm{system.ServiceManager()};
 
-    std::shared_ptr<IR_USER> ir_user{sm.GetService<IR_USER>("ir:USER")};
-    std::shared_ptr<IR_RST> ir_rst{sm.GetService<IR_RST>("ir:rst")};
+    auto ir_user{sm.GetService<IR_USER>("ir:USER")};
+    auto ir_rst{sm.GetService<IR_RST>("ir:rst")};
     ir_user->ReloadInputDevices();
     ir_rst->ReloadInputDevices();
 }

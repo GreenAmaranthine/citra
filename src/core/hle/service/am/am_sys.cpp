@@ -48,7 +48,7 @@ AM_SYS::AM_SYS(std::shared_ptr<Module> am) : Module::Interface{std::move(am), "a
         {0x00260044, nullptr, "GetTicketLimitInfos"},
         {0x00270044, nullptr, "GetDemoLaunchInfos"},
         {0x00280108, nullptr, "ReadTwlBackupInfoEx"},
-        {0x00290082, nullptr, "DeleteUserProgramsAtomically"},
+        {0x00290082, &AM_SYS::DeleteUserProgramsAtomically, "DeleteUserProgramsAtomically"},
         {0x002A00C0, nullptr, "GetNumExistingContentInfosSystem"},
         {0x002B0142, nullptr, "ListExistingContentInfosSystem"},
         {0x002C0084, nullptr, "GetProgramInfosIgnorePlatform"},

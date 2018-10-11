@@ -1049,12 +1049,13 @@ void Module::LoadCameraImplementation(CameraConfig& camera, int camera_id) {
 }
 
 void ReloadCameraDevices() {
-    if (!Core::System::GetInstance().IsPoweredOn()) {
+    auto& system{Core::System::GetInstance()};
+
+    if (!system.IsPoweredOn()) {
         return;
     }
 
-    std::shared_ptr<CAM_U> u{
-        Core::System::GetInstance().ServiceManager().GetService<CAM_U>("cam:u")};
+    auto u{system.ServiceManager().GetService<CAM_U>("cam:u")};
     auto cam{u->GetModule()};
     cam->ReloadCameraDevices();
 }
