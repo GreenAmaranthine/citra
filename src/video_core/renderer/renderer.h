@@ -14,7 +14,7 @@
 #include "video_core/renderer/state.h"
 
 namespace Layout {
-class FramebufferLayout;
+struct FramebufferLayout;
 } // namespace Layout
 
 /// Structure used for storing information about the textures for each 3DS screen

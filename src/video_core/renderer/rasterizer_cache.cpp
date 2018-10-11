@@ -897,12 +897,12 @@ Surface FindMatch(const SurfaceCache& surface_cache, const SurfaceParams& params
                     return;
 
                 // Found a match, update only if this is better than the previous one
-                auto UpdateMatch = [&] {
+                auto UpdateMatch{[&, surface_interval = surface_interval] {
                     match_surface = surface;
                     match_valid = is_valid;
                     match_scale = surface->res_scale;
                     match_interval = surface_interval;
-                };
+                }};
 
                 if (surface->res_scale > match_scale) {
                     UpdateMatch();
