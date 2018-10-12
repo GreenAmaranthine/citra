@@ -56,6 +56,7 @@
 #include "core/core.h"
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
+#include "core/file_sys/seed_db.h"
 #include "core/hle/service/am/am_u.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
@@ -425,6 +426,7 @@ void GMainWindow::ConnectMenuEvents() {
     // File
     connect(ui.action_Load_File, &QAction::triggered, this, &GMainWindow::OnMenuLoadFile);
     connect(ui.action_Install_CIA, &QAction::triggered, this, &GMainWindow::OnMenuInstallCIA);
+    connect(ui.action_Add_Seed, &QAction::triggered, this, &GMainWindow::OnMenuAddSeed);
     connect(ui.action_Exit, &QAction::triggered, this, &QMainWindow::close);
     connect(ui.action_Open_User_Directory, &QAction::triggered, this,
             &GMainWindow::OnOpenUserDirectory);
@@ -1039,6 +1041,30 @@ void GMainWindow::OnMenuInstallCIA() {
         }
         emit CIAInstallFinished();
     });
+}
+
+void GMainWindow::OnMenuAddSeed() {
+    QString filepath{QFileDialog::getOpenFileName(this, "Add Seed", ".")};
+    if (filepath.isEmpty())
+        return;
+    QString program_id_s{QInputDialog::getText(this, "Add Seed", "Enter the program ID")};
+    if (program_id_s.isEmpty())
+        return;
+    bool ok{};
+    u64 program_id{program_id_s.toULongLong(&ok, 16)};
+    if (!ok) {
+        QMessageBox::critical(this, "Error", "Invalid program ID");
+        return;
+    }
+    FileSys::Seed seed{};
+    seed.title_id = program_id;
+    FileUtil::IOFile file{filepath.toStdString(), "rb"};
+    file.ReadBytes(seed.data.data(), seed.data.size());
+    FileSys::SeedDB db;
+    db.Load();
+    db.Add(seed);
+    db.Save();
+    game_list->PopulateAsync(UISettings::values.game_dirs);
 }
 
 void GMainWindow::OnUpdateProgress(std::size_t written, std::size_t total) {

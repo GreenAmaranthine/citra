@@ -59,6 +59,7 @@
     </widget>
     <addaction name="action_Load_File"/>
     <addaction name="action_Install_CIA"/>
+    <addaction name="action_Add_Seed"/>
     <addaction name="separator"/>
     <addaction name="action_Open_User_Directory"/>
     <addaction name="menu_recent_files"/>
@@ -418,6 +419,11 @@
    </property>
    <property name="text">
     <string>Sleep Mode</string>
+   </property>
+  </action>
+  <action name="action_Add_Seed">
+   <property name="text">
+    <string>Add Seed</string>
    </property>
   </action>
  </widget>

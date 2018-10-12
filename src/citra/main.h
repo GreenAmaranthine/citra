@@ -141,6 +141,7 @@ private slots:
     void OnGameListShowList(bool show);
     void OnMenuLoadFile();
     void OnMenuInstallCIA();
+    void OnMenuAddSeed();
     void OnUpdateProgress(std::size_t written, std::size_t total);
     void OnCIAInstallReport(Service::AM::InstallStatus status, QString filepath);
     void OnCIAInstallFinished();
