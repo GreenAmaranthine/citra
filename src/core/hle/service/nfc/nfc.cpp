@@ -330,7 +330,7 @@ void Module::Interface::Unknown0x1A(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_NFC, "called");
 }
 
-void Module::Interface::Unknown0x1B(Kernel::HLERequestContext& ctx) {
+void Module::Interface::GetIdentificationBlock(Kernel::HLERequestContext& ctx) {
     IdentificationBlockRaw identification_block_raw{};
     FileUtil::IOFile nfc_file{nfc->nfc_filename, "rb"};
     // go to offset of the Amiibo identification block
