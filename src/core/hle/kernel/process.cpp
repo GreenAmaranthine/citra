@@ -22,8 +22,8 @@ namespace Kernel {
 // Lists all processes that exist in the current session.
 static std::vector<SharedPtr<Process>> process_list;
 
-SharedPtr<CodeSet> CodeSet::Create(std::string name, u64 program_id) {
-    SharedPtr<CodeSet> codeset{new CodeSet};
+SharedPtr<CodeSet> KernelSystem::CreateCodeSet(std::string name, u64 program_id) {
+    SharedPtr<CodeSet> codeset{new CodeSet(*this)};
 
     codeset->name = std::move(name);
     codeset->program_id = program_id;
@@ -31,7 +31,7 @@ SharedPtr<CodeSet> CodeSet::Create(std::string name, u64 program_id) {
     return codeset;
 }
 
-CodeSet::CodeSet() {}
+CodeSet::CodeSet(KernelSystem& system) {}
 CodeSet::~CodeSet() {}
 
 u32 Process::next_process_id;
