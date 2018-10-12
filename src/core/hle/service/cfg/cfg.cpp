@@ -206,8 +206,8 @@ void Module::Interface::GenHashConsoleUnique(Kernel::HLERequestContext& ctx) {
         std::array<u8, CryptoPP::SHA256::DIGESTSIZE> hash;
         CryptoPP::SHA256().CalculateDigest(hash.data(), buffer.data(), sizeof(buffer));
         u32 low, high;
-        memcpy(&low, &hash[hash.size() - 8], sizeof(u32));
-        memcpy(&high, &hash[hash.size() - 4], sizeof(u32));
+        std::memcpy(&low, &hash[hash.size() - 8], sizeof(u32));
+        std::memcpy(&high, &hash[hash.size() - 4], sizeof(u32));
         rb.Push(low);
         rb.Push(high);
     } else {
@@ -444,7 +444,7 @@ ResultVal<void*> Module::GetConfigInfoBlockPointer(u32 block_id, u32 size, u32 f
 ResultCode Module::GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, void* output) {
     void* pointer;
     CASCADE_RESULT(pointer, GetConfigInfoBlockPointer(block_id, size, flag));
-    memcpy(output, pointer, size);
+    std::memcpy(output, pointer, size);
 
     return RESULT_SUCCESS;
 }
@@ -452,7 +452,7 @@ ResultCode Module::GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, void* ou
 ResultCode Module::SetConfigInfoBlock(u32 block_id, u32 size, u32 flag, const void* input) {
     void* pointer;
     CASCADE_RESULT(pointer, GetConfigInfoBlockPointer(block_id, size, flag));
-    memcpy(pointer, input, size);
+    std::memcpy(pointer, input, size);
     return RESULT_SUCCESS;
 }
 
@@ -478,10 +478,10 @@ ResultCode Module::CreateConfigInfoBlk(u32 block_id, u16 size, u16 flags, const 
         config->block_entries[config->total_entries].offset_or_data = offset;
 
         // Write the data at the new offset
-        memcpy(&cfg_config_file_buffer[offset], data, size);
+        std::memcpy(&cfg_config_file_buffer[offset], data, size);
     } else {
         // The offset_or_data field in the header contains the data itself if it's 4 bytes or less
-        memcpy(&config->block_entries[config->total_entries].offset_or_data, data, size);
+        std::memcpy(&config->block_entries[config->total_entries].offset_or_data, data, size);
     }
 
     ++config->total_entries;

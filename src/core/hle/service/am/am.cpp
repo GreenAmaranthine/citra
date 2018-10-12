@@ -210,7 +210,7 @@ ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush
         std::size_t buf_max_size{
             std::min(static_cast<std::size_t>(offset + length), FileSys::CIA_HEADER_SIZE)};
         data.resize(buf_max_size);
-        memcpy(data.data() + offset, buffer, buf_copy_size);
+        std::memcpy(data.data() + offset, buffer, buf_copy_size);
 
         // We have enough data to load a CIA header and parse it.
         if (written >= FileSys::CIA_HEADER_SIZE) {
@@ -235,7 +235,7 @@ ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush
             buf_loaded};
         std::size_t buf_max_size{std::min(offset + length, container.GetContentOffset())};
         data.resize(buf_max_size);
-        memcpy(data.data() + copy_offset, buffer + buf_offset, buf_copy_size);
+        std::memcpy(data.data() + copy_offset, buffer + buf_offset, buf_copy_size);
     }
 
     // TODO: Write out .tik files to nand?

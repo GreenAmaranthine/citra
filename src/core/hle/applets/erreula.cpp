@@ -22,7 +22,7 @@ ResultCode ErrEula::ReceiveParameter(const Service::APT::MessageParameter& param
     // Create the SharedMemory that will hold the framebuffer data
     Service::APT::CaptureBufferInfo capture_info;
     ASSERT(sizeof(capture_info) == parameter.buffer.size());
-    memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
+    std::memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
 
     // TODO: allocated memory never released
     using Kernel::MemoryPermission;

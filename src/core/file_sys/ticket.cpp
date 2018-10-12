@@ -32,8 +32,8 @@ Loader::ResultStatus Ticket::Load(const std::vector<u8> file_data, std::size_t o
 
     // Read signature + ticket body
     ticket_signature.resize(signature_size);
-    memcpy(ticket_signature.data(), &file_data[offset + sizeof(u32_be)], signature_size);
-    memcpy(&ticket_body, &file_data[offset + body_start], sizeof(Body));
+    std::memcpy(ticket_signature.data(), &file_data[offset + sizeof(u32_be)], signature_size);
+    std::memcpy(&ticket_body, &file_data[offset + body_start], sizeof(Body));
 
     return Loader::ResultStatus::Success;
 }

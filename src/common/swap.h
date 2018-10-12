@@ -310,7 +310,7 @@ public:
 
     // v++
     swapped_t operator++(int) {
-        swapped_t old = *this;
+        swapped_t old{*this};
         value = swap(swap() + 1);
         return old;
     }

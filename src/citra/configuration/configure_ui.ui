@@ -2,9 +2,6 @@
 <ui version="4.0">
  <class>ConfigureUi</class>
  <widget class="QWidget" name="ConfigureUi">
-  <property name="windowTitle">
-   <string>Form</string>
-  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -12,6 +9,9 @@
     <width>290</width>
     <height>280</height>
    </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -110,6 +110,11 @@
               <string>Title ID</string>
              </property>
             </item>
+            <item>
+             <property name="text">
+              <string>Publisher</string>
+             </property>
+            </item>
            </widget>
           </item>
          </layout>
@@ -150,6 +155,11 @@
               <string>Title ID</string>
              </property>
             </item>
+            <item>
+             <property name="text">
+              <string>Publisher</string>
+             </property>
+            </item>
            </widget>
           </item>
          </layout>
@@ -170,6 +180,12 @@
     <spacer>
      <property name="orientation">
       <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
      </property>
     </spacer>
    </item>

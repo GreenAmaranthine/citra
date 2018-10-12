@@ -24,7 +24,7 @@ protected:
 
 public:
     RequestHelperBase(Kernel::HLERequestContext& context, Header desired_header)
-        : context(&context), cmdbuf(context.CommandBuffer()), header(desired_header) {}
+        : context{&context}, cmdbuf{context.CommandBuffer()}, header{desired_header} {}
 
     /// Returns the total size of the request in words
     std::size_t TotalSize() const {
@@ -37,9 +37,8 @@ public:
     }
 
     void Skip(unsigned size_in_words, bool set_to_null) {
-        if (set_to_null) {
-            memset(cmdbuf + index, 0, size_in_words * sizeof(u32));
-        }
+        if (set_to_null)
+            std::memset(cmdbuf + index, 0, size_in_words * sizeof(u32));
         index += size_in_words;
     }
 };
@@ -47,7 +46,7 @@ public:
 class ResponseBuilder : public RequestHelperBase {
 public:
     ResponseBuilder(Kernel::HLERequestContext& context, Header command_header)
-        : RequestHelperBase(context, command_header) {
+        : RequestHelperBase{context, command_header} {
         // From this point we will start overwriting the existing command buffer, so it's safe to
         // release all previous incoming Object pointers since they won't be usable anymore.
         context.ClearIncomingObjects();
@@ -56,8 +55,8 @@ public:
 
     ResponseBuilder(Kernel::HLERequestContext& context, u16 command_id, unsigned normal_params_size,
                     unsigned translate_params_size)
-        : ResponseBuilder(
-              context, Header{MakeHeader(command_id, normal_params_size, translate_params_size)}) {}
+        : ResponseBuilder{
+              context, Header{MakeHeader(command_id, normal_params_size, translate_params_size)}} {}
 
     // Validate on destruction, as there shouldn't be any case where we don't want it
     ~ResponseBuilder() {
@@ -198,12 +197,12 @@ inline void ResponseBuilder::PushMappedBuffer(const Kernel::MappedBuffer& mapped
 class RequestParser : public RequestHelperBase {
 public:
     RequestParser(Kernel::HLERequestContext& context, Header desired_header)
-        : RequestHelperBase(context, desired_header) {}
+        : RequestHelperBase{context, desired_header} {}
 
     RequestParser(Kernel::HLERequestContext& context, u16 command_id, unsigned normal_params_size,
                   unsigned translate_params_size)
-        : RequestParser(context,
-                        Header{MakeHeader(command_id, normal_params_size, translate_params_size)}) {
+        : RequestParser{context,
+                        Header{MakeHeader(command_id, normal_params_size, translate_params_size)}} {
     }
 
     ResponseBuilder MakeBuilder(u32 normal_params_size, u32 translate_params_size,

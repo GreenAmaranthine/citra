@@ -122,7 +122,7 @@ void GameListSearchField::setFocus() {
 }
 
 GameListSearchField::GameListSearchField(GameList* parent) : QWidget{parent} {
-    KeyReleaseEater* keyReleaseEater = new KeyReleaseEater(parent);
+    KeyReleaseEater* keyReleaseEater{new KeyReleaseEater(parent)};
     layout_filter = new QHBoxLayout;
     layout_filter->setMargin(8);
     label_filter = new QLabel;

@@ -25,7 +25,7 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
     // Create the SharedMemory that will hold the framebuffer data
     Service::APT::CaptureBufferInfo capture_info;
     ASSERT(sizeof(capture_info) == parameter.buffer.size());
-    memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
+    std::memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
 
     using Kernel::MemoryPermission;
 
@@ -52,7 +52,7 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
 ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& parameter) {
     is_running = true;
 
-    memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
+    std::memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
 
     MiiResult result{};
     if (config.magic_value != MiiSelectorMagic) {

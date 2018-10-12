@@ -175,14 +175,14 @@ Math::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned int 
         u8 alpha{255};
         if (has_alpha) {
             u64_le packed_alpha;
-            memcpy(&packed_alpha, subtile_ptr, sizeof(u64));
+            std::memcpy(&packed_alpha, subtile_ptr, sizeof(u64));
             subtile_ptr += sizeof(u64);
 
             alpha = Color::Convert4To8((packed_alpha >> (4 * (x * subtile_width + y))) & 0xF);
         }
 
         u64_le subtile_data;
-        memcpy(&subtile_data, subtile_ptr, sizeof(u64));
+        std::memcpy(&subtile_data, subtile_ptr, sizeof(u64));
 
         return Math::MakeVec(SampleETC1Subtile(subtile_data, x, y), alpha);
     }

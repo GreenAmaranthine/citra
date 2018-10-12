@@ -152,12 +152,12 @@ private:
     }
 
     void SetPacketInfo(u32 index, const PacketInfo& packet_info) {
-        memcpy(GetPacketInfoPointer(index), &packet_info, sizeof(PacketInfo));
+        std::memcpy(GetPacketInfoPointer(index), &packet_info, sizeof(PacketInfo));
     }
 
     PacketInfo GetPacketInfo(u32 index) {
         PacketInfo packet_info;
-        memcpy(&packet_info, GetPacketInfoPointer(index), sizeof(PacketInfo));
+        std::memcpy(&packet_info, GetPacketInfoPointer(index), sizeof(PacketInfo));
         return packet_info;
     }
 
@@ -168,7 +168,7 @@ private:
 
     void UpdateBufferInfo() {
         if (info_offset) {
-            memcpy(shared_memory->GetPointer(info_offset), &info, sizeof(info));
+            std::memcpy(shared_memory->GetPointer(info_offset), &info, sizeof(info));
         }
     }
 

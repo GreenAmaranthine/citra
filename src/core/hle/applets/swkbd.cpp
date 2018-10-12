@@ -162,7 +162,7 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
     // Create the SharedMemory that will hold the framebuffer data
     Service::APT::CaptureBufferInfo capture_info;
     ASSERT(sizeof(capture_info) == parameter.buffer.size());
-    memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
+    std::memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
 
     using Kernel::MemoryPermission;
 
@@ -190,7 +190,7 @@ ResultCode SoftwareKeyboard::StartImpl(const Service::APT::AppletStartupParamete
     ASSERT_MSG(parameter.buffer.size() == sizeof(config),
                "The size of the parameter (SoftwareKeyboardConfig) is wrong");
 
-    memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
+    std::memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
 
     text_memory =
         boost::static_pointer_cast<Kernel::SharedMemory, Kernel::Object>(parameter.object);
@@ -335,8 +335,8 @@ void SoftwareKeyboard::Update() {
         }
 
         std::u16string utf16_input{Common::UTF8ToUTF16(input)};
-        memcpy(text_memory->GetPointer(), utf16_input.c_str(),
-               utf16_input.length() * sizeof(char16_t));
+        std::memcpy(text_memory->GetPointer(), utf16_input.c_str(),
+                    utf16_input.length() * sizeof(char16_t));
         config.text_length = static_cast<u16>(utf16_input.size());
         config.text_offset = 0;
         Finalize();
@@ -347,7 +347,7 @@ void SoftwareKeyboard::Update() {
             UNREACHABLE_MSG("Qt keyboard callback is nullptr");
         std::u16string text;
         cb(config, text);
-        memcpy(text_memory->GetPointer(), text.c_str(), text.length() * sizeof(char16_t));
+        std::memcpy(text_memory->GetPointer(), text.c_str(), text.length() * sizeof(char16_t));
         Finalize();
         break;
     }

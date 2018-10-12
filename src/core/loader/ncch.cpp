@@ -130,7 +130,7 @@ void AppLoader_NCCH::ParseRegionLockoutInfo() {
     std::vector<u8> smdh_buffer;
     if (ReadIcon(smdh_buffer) == ResultStatus::Success && smdh_buffer.size() >= sizeof(SMDH)) {
         SMDH smdh;
-        memcpy(&smdh, smdh_buffer.data(), sizeof(SMDH));
+        std::memcpy(&smdh, smdh_buffer.data(), sizeof(SMDH));
         u32 region_lockout{smdh.region_lockout};
         constexpr u32 REGION_COUNT{7};
         std::vector<u32> regions;
@@ -230,15 +230,15 @@ ResultStatus AppLoader_NCCH::ReadUpdateRomFS(std::shared_ptr<FileSys::RomFSReade
 }
 
 ResultStatus AppLoader_NCCH::ReadTitle(std::string& title) {
-    std::vector<u8> data{};
-    Loader::SMDH smdh{};
+    std::vector<u8> data;
+    Loader::SMDH smdh;
     ReadIcon(data);
 
     if (!Loader::IsValidSMDH(data)) {
         return ResultStatus::ErrorInvalidFormat;
     }
 
-    memcpy(&smdh, data.data(), sizeof(Loader::SMDH));
+    std::memcpy(&smdh, data.data(), sizeof(Loader::SMDH));
 
     const auto& short_title{smdh.GetShortTitle(SMDH::TitleLanguage::English)};
     auto title_end{std::find(short_title.begin(), short_title.end(), u'\0')};

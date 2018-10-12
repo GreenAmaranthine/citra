@@ -28,7 +28,7 @@ static std::vector<u8> GenerateLLCHeader(EtherType protocol) {
     header.protocol = protocol;
 
     std::vector<u8> buffer(sizeof(header));
-    memcpy(buffer.data(), &header, sizeof(header));
+    std::memcpy(buffer.data(), &header, sizeof(header));
 
     return buffer;
 }
@@ -53,7 +53,7 @@ static std::vector<u8> GenerateSecureDataHeader(u16 data_size, u8 channel, u16 d
     header.src_node_id = src_node_id;
 
     std::vector<u8> buffer(sizeof(header));
-    memcpy(buffer.data(), &header, sizeof(header));
+    std::memcpy(buffer.data(), &header, sizeof(header));
 
     return buffer;
 }

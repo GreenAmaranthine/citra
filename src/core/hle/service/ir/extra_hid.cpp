@@ -251,7 +251,7 @@ void ExtraHID::SendHIDStatus() {
     Core::Movie::GetInstance().HandleExtraHidResponse(response);
 
     std::vector<u8> response_buffer(sizeof(response));
-    memcpy(response_buffer.data(), &response, sizeof(response));
+    std::memcpy(response_buffer.data(), &response, sizeof(response));
     Send(response_buffer);
 }
 

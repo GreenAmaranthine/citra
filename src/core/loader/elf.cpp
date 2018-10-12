@@ -296,14 +296,12 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
     std::size_t current_image_position{};
 
     SharedPtr<CodeSet> codeset{CodeSet::Create("", 0)};
-
     for (unsigned int i{}; i < header->e_phnum; ++i) {
         Elf32_Phdr* p{&segments[i]};
         LOG_DEBUG(Loader, "Type: {} Vaddr: {:08X} Filesz: {:08X} Memsz: {:08X} ", p->p_type,
                   p->p_vaddr, p->p_filesz, p->p_memsz);
-
         if (p->p_type == PT_LOAD) {
-            CodeSet::Segment* codeset_segment{};
+            CodeSet::Segment* codeset_segment;
             u32 permission_flags{p->p_flags & (PF_R | PF_W | PF_X)};
             if (permission_flags == (PF_R | PF_X)) {
                 codeset_segment = &codeset->CodeSegment();
@@ -316,7 +314,6 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
                           p->p_flags);
                 continue;
             }
-
             if (codeset_segment->size != 0) {
                 LOG_ERROR(Loader,
                           "ELF has more than one segment of the same type. Skipping extra "
@@ -324,19 +321,15 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
                           i);
                 continue;
             }
-
             u32 segment_addr{base_addr + p->p_vaddr};
             u32 aligned_size{(p->p_memsz + 0xFFF) & ~0xFFF};
-
             codeset_segment->offset = current_image_position;
             codeset_segment->addr = segment_addr;
             codeset_segment->size = aligned_size;
-
-            memcpy(&program_image[current_image_position], GetSegmentPtr(i), p->p_filesz);
+            std::memcpy(&program_image[current_image_position], GetSegmentPtr(i), p->p_filesz);
             current_image_position += aligned_size;
         }
     }
-
     codeset->entrypoint = base_addr + header->e_entry;
     codeset->memory = std::make_shared<std::vector<u8>>(std::move(program_image));
 

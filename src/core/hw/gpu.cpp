@@ -108,13 +108,13 @@ static void MemoryFill(const Regs::MemoryFillConfig& config) {
             u32 value = config.value_32bit;
             std::size_t len{(end - start) / sizeof(u32)};
             for (std::size_t i{}; i < len; ++i)
-                memcpy(&start[i * sizeof(u32)], &value, sizeof(u32));
+                std::memcpy(&start[i * sizeof(u32)], &value, sizeof(u32));
         }
     } else {
         // fill with 16-bit values
         u16 value_16bit{static_cast<u16>(config.value_16bit.Value())};
         for (u8* ptr{start}; ptr < end; ptr += sizeof(u16))
-            memcpy(ptr, &value_16bit, sizeof(u16));
+            std::memcpy(ptr, &value_16bit, sizeof(u16));
     }
 }
 

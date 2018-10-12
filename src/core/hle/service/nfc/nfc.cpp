@@ -237,9 +237,9 @@ void Module::Interface::GetAmiiboSettings(Kernel::HLERequestContext& ctx) {
         IPC::ResponseBuilder rb{ctx, 0x17, 1, 0};
         rb.Push(ResultCode(0xC8A17628)); // Uninitialised
     } else {
-        memcpy(amsettings.mii.data(), &nfc->decrypted_data[0x4C], amsettings.mii.size());
-        memcpy(amsettings.nickname.data(), &nfc->decrypted_data[0x38],
-               4 * 5); // amiibo doesn't have the null terminator
+        std::memcpy(amsettings.mii.data(), &nfc->decrypted_data[0x4C], amsettings.mii.size());
+        std::memcpy(amsettings.nickname.data(), &nfc->decrypted_data[0x38],
+                    4 * 5); // amiibo doesn't have the null terminator
         amsettings.flags = nfc->decrypted_data[0x2C] &
                            0xF; // TODO: We should only load some of these values if the unused
                                 // flag bits are set correctly https://3dbrew.org/wiki/Amiibo
@@ -430,7 +430,7 @@ void Module::Interface::OpenAppData(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
         result = ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
                             ErrorSummary::InvalidState, ErrorLevel::Status);
-    } else if (memcmp(&app_id, &nfc->decrypted_data[0xB6], sizeof(app_id))) {
+    } else if (std::memcmp(&app_id, &nfc->decrypted_data[0xB6], sizeof(app_id))) {
         result = ResultCode(0xC8A17638); // App ID mismatch
     } else if (!(nfc->decrypted_data[0x2C] & 0x20)) {
         result = ResultCode(0xC8A17628); // Uninitialised
