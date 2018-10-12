@@ -1331,10 +1331,13 @@ void GMainWindow::OnLoadAmiibo() {
         nfc->nfc_tag_state = Service::NFC::TagState::TagInRange;
         nfc->tag_in_range_event->Signal();
         QTimer::singleShot(2000, [&system] {
-            auto u{system.ServiceManager().GetService<Service::NFC::Module::Interface>("nfc:u")};
-            auto nfc{u->GetModule()};
-            nfc->nfc_tag_state = Service::NFC::TagState::TagOutOfRange;
-            nfc->tag_out_of_range_event->Signal();
+            if (system.IsPoweredOn()) {
+                auto u{
+                    system.ServiceManager().GetService<Service::NFC::Module::Interface>("nfc:u")};
+                auto nfc{u->GetModule()};
+                nfc->nfc_tag_state = Service::NFC::TagState::TagOutOfRange;
+                nfc->tag_out_of_range_event->Signal();
+            }
         });
     }
 }
