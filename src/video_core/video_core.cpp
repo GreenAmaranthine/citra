@@ -29,7 +29,7 @@ Core::System::ResultStatus Init() {
     Pica::Init();
 
     g_renderer = std::make_unique<Renderer>();
-    Core::System::ResultStatus result = g_renderer->Init();
+    Core::System::ResultStatus result{g_renderer->Init()};
 
     if (result != Core::System::ResultStatus::Success) {
         LOG_ERROR(Render, "initialization failed !");

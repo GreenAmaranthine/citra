@@ -12,6 +12,7 @@
 #include "common/string_util.h"
 #include "core/core.h"
 #include "core/file_sys/archive_extsavedata.h"
+#include "core/file_sys/archive_savedata.h"
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/seed_db.h"
@@ -430,6 +431,23 @@ void FS_USER::GetFreeBytes(Kernel::HLERequestContext& ctx) {
     }
 }
 
+void FS_USER::GetCardType(Kernel::HLERequestContext& ctx) {
+    IPC::ResponseBuilder rb{ctx, 0x813, 2, 0};
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<u8>(0); // CTR card = 0, TWL card = 1
+
+    LOG_WARNING(Service_FS, "(STUBBED) called");
+}
+
+void FS_USER::DeleteSdmcRoot(Kernel::HLERequestContext& ctx) {
+    FileUtil::DeleteDirRecursively(fmt::format(
+        "{}Nintendo 3DS/{}/", FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/"),
+        SYSTEM_CID));
+
+    IPC::ResponseBuilder rb{ctx, 0x841, 1, 0};
+    rb.Push(RESULT_SUCCESS);
+}
+
 void FS_USER::CreateExtSaveData(Kernel::HLERequestContext& ctx) {
     // TODO: Figure out the other parameters.
     IPC::RequestParser rp{ctx, 0x0851, 9, 2};
@@ -699,11 +717,26 @@ void FS_USER::GetNumSeeds(Kernel::HLERequestContext& ctx) {
     rb.Push<u32>(FileSys::GetSeedCount());
 }
 
+void FS_USER::CheckUpdatedDat(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x886, 3, 0};
+    MediaType media_type{static_cast<MediaType>(rp.Pop<u8>())};
+    u64 title_id{rp.Pop<u64>()};
+
+    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(FileUtil::Exists(fmt::format(
+        "{}updated.dat",
+        FileSys::ArchiveSource_SDSaveData::GetSaveDataPathFor(
+            FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/"), title_id))));
+}
+
 void FS_USER::AddSeed(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x87A, 6, 0};
     u64 title_id{rp.Pop<u64>()};
     FileSys::Seed::Data seed{rp.PopRaw<FileSys::Seed::Data>()};
+
     FileSys::AddSeed({title_id, seed, {}});
+
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
@@ -786,13 +819,15 @@ void FS_USER::EnumerateExtSaveData(Kernel::HLERequestContext& ctx) {
         entries, 1);
     for (const FileUtil::FSTEntry& high : entries.children) {
         for (const FileUtil::FSTEntry& low : high.children) {
-            std::string tid_string{id_entry_size == 4 ? low.virtualName
-                                                      : high.virtualName + low.virtualName};
-            if (tid_string.length() == (id_entry_size * 2)) {
-                u64 tid{std::stoull(tid_string.c_str(), nullptr, 16)};
-                buffer.Write(&tid, offset, sizeof(u64));
-                offset += sizeof(u64);
-                ++count;
+            if (count < buffer_size / sizeof(u64)) {
+                std::string tid_string{id_entry_size == 4 ? low.virtualName
+                                                          : high.virtualName + low.virtualName};
+                if (tid_string.length() == (id_entry_size * 2)) {
+                    u64 tid{std::stoull(tid_string.c_str(), nullptr, 16)};
+                    buffer.Write(&tid, offset, sizeof(u64));
+                    offset += sizeof(u64);
+                    ++count;
+                }
             }
         }
     }
@@ -818,10 +853,12 @@ void FS_USER::EnumerateSystemSaveData(Kernel::HLERequestContext& ctx) {
         for (const FileUtil::FSTEntry& low : high.children) {
             std::string tid_string{high.virtualName + low.virtualName};
             if (tid_string.length() == AM::TITLE_ID_VALID_LENGTH) {
-                u64 tid{std::stoull(tid_string.c_str(), nullptr, 16)};
-                buffer.Write(&tid, offset, sizeof(u64));
-                offset += sizeof(u64);
-                ++count;
+                if (count < buffer_size / sizeof(u64)) {
+                    u64 tid{std::stoull(tid_string.c_str(), nullptr, 16)};
+                    buffer.Write(&tid, offset, sizeof(u64));
+                    offset += sizeof(u64);
+                    ++count;
+                }
             }
         }
     }
@@ -860,6 +897,30 @@ void FS_USER::ReadExtSaveDataIcon(Kernel::HLERequestContext& ctx) {
     rb.PushStaticBuffer(smdh_buffer, 0);
 }
 
+void FS_USER::GetSdmcCid(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x819, 1, 2};
+    u32 buffer_size{rp.Pop<u32>()};
+    auto buffer{rp.PopStaticBuffer()};
+
+    std::memcpy(buffer.data(), SDCARD_CID, buffer_size);
+
+    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    rb.Push(RESULT_SUCCESS);
+    rb.PushStaticBuffer(buffer, 0);
+}
+
+void FS_USER::GetNandCid(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x81A, 1, 2};
+    u32 buffer_size{rp.Pop<u32>()};
+    auto buffer{rp.PopStaticBuffer()};
+
+    std::memcpy(buffer.data(), SYSTEM_CID, buffer_size);
+
+    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    rb.Push(RESULT_SUCCESS);
+    rb.PushStaticBuffer(buffer, 0);
+}
+
 FS_USER::FS_USER() : ServiceFramework{"fs:USER", 30} {
     static const FunctionInfo functions[]{
         {0x000100C6, nullptr, "Dummy1"},
@@ -882,14 +943,14 @@ FS_USER::FS_USER() : ServiceFramework{"fs:USER", 30} {
         {0x08100200, &FS_USER::CreateLegacySystemSaveData, "CreateLegacySystemSaveData"},
         {0x08110040, nullptr, "DeleteSystemSaveData"},
         {0x08120080, &FS_USER::GetFreeBytes, "GetFreeBytes"},
-        {0x08130000, nullptr, "GetCardType"},
+        {0x08130000, &FS_USER::GetCardType, "GetCardType"},
         {0x08140000, nullptr, "GetSdmcArchiveResource"},
         {0x08150000, nullptr, "GetNandArchiveResource"},
         {0x08160000, nullptr, "GetSdmcFatfsError"},
         {0x08170000, &FS_USER::IsSdmcDetected, "IsSdmcDetected"},
         {0x08180000, &FS_USER::IsSdmcWriteable, "IsSdmcWritable"},
-        {0x08190042, nullptr /*&FS_USER::GetSdmcCid*/, "GetSdmcCid"},
-        {0x081A0042, nullptr /*&FS_USER::GetNandCid*/, "GetNandCid"},
+        {0x08190042, &FS_USER::GetSdmcCid, "GetSdmcCid"},
+        {0x081A0042, &FS_USER::GetNandCid, "GetNandCid"},
         {0x081B0000, nullptr, "GetSdmcSpeedInfo"},
         {0x081C0000, nullptr, "GetNandSpeedInfo"},
         {0x081D0042, nullptr, "GetSdmcLog"},
@@ -928,7 +989,7 @@ FS_USER::FS_USER() : ServiceFramework{"fs:USER", 30} {
         {0x083E00C2, nullptr, "QueryTotalQuotaSize"},
         {0x083F00C0, nullptr, "GetExtDataBlockSize"},
         {0x08400040, nullptr, "AbnegateAccessRight"},
-        {0x08410000, nullptr, "DeleteSdmcRoot"},
+        {0x08410000, &FS_USER::DeleteSdmcRoot, "DeleteSdmcRoot"},
         {0x08420040, nullptr, "DeleteAllExtSaveDataOnNand"},
         {0x08430000, nullptr, "InitializeCtrFileSystem"},
         {0x08440000, nullptr, "CreateSeed"},
@@ -973,7 +1034,7 @@ FS_USER::FS_USER() : ServiceFramework{"fs:USER", 30} {
         {0x086F0040, &FS_USER::GetThisSaveDataSecureValue, "GetThisSaveDataSecureValue"},
         {0x087A0180, &FS_USER::AddSeed, "AddSeed"},
         {0x087D0000, &FS_USER::GetNumSeeds, "GetNumSeeds"},
-        {0x088600C0, nullptr, "CheckUpdatedDat"},
+        {0x088600C0, &FS_USER::CheckUpdatedDat, "CheckUpdatedDat"},
     };
     RegisterHandlers(functions);
 }

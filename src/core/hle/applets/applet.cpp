@@ -96,9 +96,10 @@ static void AppletUpdateEvent(u64 applet_id, s64 cycles_late) {
 }
 
 ResultCode Applet::Start(const Service::APT::AppletStartupParameter& parameter) {
-    ResultCode result = StartImpl(parameter);
+    ResultCode result{StartImpl(parameter)};
     if (result.IsError())
         return result;
+
     // Schedule the update event
     CoreTiming::ScheduleEvent(usToCycles(applet_update_interval_us), applet_update_event,
                               static_cast<u64>(id));

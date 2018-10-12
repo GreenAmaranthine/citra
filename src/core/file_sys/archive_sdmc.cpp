@@ -41,7 +41,7 @@ ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFile(const Path& path,
 
 ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFileBase(const Path& path,
                                                                   const Mode& mode) const {
-    LOG_DEBUG(Service_FS, "called path={} mode={:01X}", path.DebugStr(), mode.hex);
+    LOG_DEBUG(Service_FS, "called, path={}, mode={:01X}", path.DebugStr(), mode.hex);
 
     const PathParser path_parser{path};
 
@@ -64,7 +64,7 @@ ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFileBase(const Path& pa
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
+        LOG_ERROR(Service_FS, "Invalid mount point {}", mount_point);
         return ERROR_NOT_FOUND;
     case PathParser::PathNotFound:
     case PathParser::FileInPath:
@@ -354,7 +354,7 @@ u64 SDMCArchive::GetFreeBytes() const {
 }
 
 ArchiveFactory_SDMC::ArchiveFactory_SDMC(const std::string& sdmc_directory)
-    : sdmc_directory(sdmc_directory) {
+    : sdmc_directory{sdmc_directory} {
 
     LOG_DEBUG(Service_FS, "Directory {} set as SDMC.", sdmc_directory);
 }
@@ -374,7 +374,7 @@ bool ArchiveFactory_SDMC::Initialize() {
 }
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SDMC::Open(const Path& path) {
-    auto archive = std::make_unique<SDMCArchive>(sdmc_directory);
+    auto archive{std::make_unique<SDMCArchive>(sdmc_directory)};
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 

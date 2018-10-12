@@ -52,7 +52,7 @@ public:
                       "Not a base of ServiceFrameworkBase");
         auto service{registered_services.find(service_name)};
         if (service == registered_services.end()) {
-            LOG_DEBUG(Service, "Can't find service: {}", service_name);
+            LOG_ERROR(Service, "Can't find service: {}", service_name);
             return nullptr;
         }
         auto port{service->second->GetServerPort()};

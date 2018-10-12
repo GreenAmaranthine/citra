@@ -469,7 +469,7 @@ private:
     static ResultCode ForEachAutoLinkCRO(VAddr crs_address, FunctionObject func) {
         VAddr current = crs_address;
         while (current != 0) {
-            CROHelper cro(current);
+            CROHelper cro{current};
             CASCADE_RESULT(bool next, func(cro));
             if (!next)
                 break;

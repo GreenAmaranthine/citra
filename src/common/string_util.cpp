@@ -276,9 +276,8 @@ std::string Join(const std::vector<std::string>& elements, const char* const sep
                   std::ostream_iterator<std::string>(os, separator));
 
         // Drop the trailing delimiter.
-        std::string result = os.str();
+        std::string result{os.str()};
         result.pop_back();
-
         return result;
     }
 }

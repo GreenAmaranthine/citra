@@ -221,7 +221,7 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
         return RESULT_SUCCESS;
     }
 
-    ResultCode result = vm_manager.UnmapRange(target, size);
+    ResultCode result{vm_manager.UnmapRange(target, size)};
     if (result.IsError())
         return result;
 

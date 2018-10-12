@@ -59,7 +59,7 @@ void RO::Initialize(Kernel::HLERequestContext& ctx) {
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
 
-    ClientSlot* slot = GetSessionData(ctx.Session());
+    ClientSlot* slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs != 0) {
         LOG_ERROR(Service_LDR, "Already initialized");
         rb.Push(ERROR_ALREADY_INITIALIZED);
@@ -103,11 +103,11 @@ void RO::Initialize(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    ResultCode result = RESULT_SUCCESS;
+    ResultCode result{RESULT_SUCCESS};
 
     if (crs_buffer_ptr != crs_address) {
         // TODO: should be memory aliasing
-        std::shared_ptr<std::vector<u8>> crs_mem = std::make_shared<std::vector<u8>>(crs_size);
+        std::shared_ptr<std::vector<u8>> crs_mem{std::make_shared<std::vector<u8>>(crs_size)};
         Memory::ReadBlock(crs_buffer_ptr, crs_mem->data(), crs_size);
         result = process->vm_manager
                      .MapMemoryBlock(crs_address, crs_mem, 0, crs_size, Kernel::MemoryState::Code)
@@ -135,7 +135,7 @@ void RO::Initialize(Kernel::HLERequestContext& ctx) {
         LOG_WARNING(Service_LDR, "crs_buffer_ptr == crs_address (0x{:08X})", crs_address);
     }
 
-    CROHelper crs(crs_address);
+    CROHelper crs{crs_address};
     crs.InitCRS();
 
     result = crs.Rebase(0, crs_size, 0, 0, 0, 0, true);
@@ -146,7 +146,6 @@ void RO::Initialize(Kernel::HLERequestContext& ctx) {
     }
 
     slot->memory_synchronizer.SynchronizeOriginalMemory(*process);
-
     slot->loaded_crs = crs_address;
 
     rb.Push(RESULT_SUCCESS);
@@ -205,7 +204,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
 
-    ClientSlot* slot = GetSessionData(ctx.Session());
+    ClientSlot* slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
         rb.Push(ERROR_NOT_INITIALIZED);
@@ -264,11 +263,11 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
         return;
     }
 
-    ResultCode result = RESULT_SUCCESS;
+    ResultCode result{RESULT_SUCCESS};
 
     if (cro_buffer_ptr != cro_address) {
         // TODO: should be memory aliasing
-        std::shared_ptr<std::vector<u8>> cro_mem = std::make_shared<std::vector<u8>>(cro_size);
+        std::shared_ptr<std::vector<u8>> cro_mem{std::make_shared<std::vector<u8>>(cro_size)};
         Memory::ReadBlock(cro_buffer_ptr, cro_mem->data(), cro_size);
         result = process->vm_manager
                      .MapMemoryBlock(cro_address, cro_mem, 0, cro_size, Kernel::MemoryState::Code)
@@ -300,7 +299,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
         LOG_WARNING(Service_LDR, "cro_buffer_ptr == cro_address (0x{:08X})", cro_address);
     }
 
-    CROHelper cro(cro_address);
+    CROHelper cro{cro_address};
 
     result = cro.VerifyHash(cro_size, crr_address);
     if (result.IsError()) {
@@ -384,11 +383,11 @@ void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_LDR, "called, cro_address=0x{:08X}, zero={}, cro_buffer_ptr=0x{:08X}",
               cro_address, zero, cro_buffer_ptr);
 
-    CROHelper cro(cro_address);
+    CROHelper cro{cro_address};
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
 
-    ClientSlot* slot = GetSessionData(ctx.Session());
+    ClientSlot* slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
         rb.Push(ERROR_NOT_INITIALIZED);
@@ -413,7 +412,7 @@ void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
 
     cro.Unregister(slot->loaded_crs);
 
-    ResultCode result = cro.Unlink(slot->loaded_crs);
+    ResultCode result{cro.Unlink(slot->loaded_crs)};
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error unlinking CRO {:08X}", result.raw);
         rb.Push(result);
@@ -456,11 +455,11 @@ void RO::LinkCRO(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_LDR, "called, cro_address=0x{:08X}", cro_address);
 
-    CROHelper cro(cro_address);
+    CROHelper cro{cro_address};
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
 
-    ClientSlot* slot = GetSessionData(ctx.Session());
+    ClientSlot* slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
         rb.Push(ERROR_NOT_INITIALIZED);
@@ -481,7 +480,7 @@ void RO::LinkCRO(Kernel::HLERequestContext& ctx) {
 
     LOG_INFO(Service_LDR, "Linking CRO {}", cro.ModuleName());
 
-    ResultCode result = cro.Link(slot->loaded_crs, false);
+    ResultCode result{cro.Link(slot->loaded_crs, false)};
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error linking CRO {:08X}", result.raw);
     }
@@ -498,11 +497,11 @@ void RO::UnlinkCRO(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_LDR, "called, cro_address=0x{:08X}", cro_address);
 
-    CROHelper cro(cro_address);
+    CROHelper cro{cro_address};
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
 
-    ClientSlot* slot = GetSessionData(ctx.Session());
+    ClientSlot* slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
         rb.Push(ERROR_NOT_INITIALIZED);
@@ -523,7 +522,7 @@ void RO::UnlinkCRO(Kernel::HLERequestContext& ctx) {
 
     LOG_INFO(Service_LDR, "Unlinking CRO {}", cro.ModuleName());
 
-    ResultCode result = cro.Unlink(slot->loaded_crs);
+    ResultCode result{cro.Unlink(slot->loaded_crs)};
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error unlinking CRO {:08X}", result.raw);
     }
@@ -542,19 +541,19 @@ void RO::Shutdown(Kernel::HLERequestContext& ctx) {
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
 
-    ClientSlot* slot = GetSessionData(ctx.Session());
+    ClientSlot* slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
         rb.Push(ERROR_NOT_INITIALIZED);
         return;
     }
 
-    CROHelper crs(slot->loaded_crs);
+    CROHelper crs{slot->loaded_crs};
     crs.Unrebase(true);
 
     slot->memory_synchronizer.SynchronizeOriginalMemory(*process);
 
-    ResultCode result = RESULT_SUCCESS;
+    ResultCode result{RESULT_SUCCESS};
 
     // TODO: verify the behaviour when buffer_ptr == address
     if (slot->loaded_crs != crs_buffer_ptr) {

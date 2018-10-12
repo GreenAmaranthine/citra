@@ -153,8 +153,8 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
     }
 
     // Map the memory block into the target process
-    auto result = target_process->vm_manager.MapMemoryBlock(
-        target_address, backing_block, backing_block_offset, size, MemoryState::Shared);
+    auto result{target_process->vm_manager.MapMemoryBlock(
+        target_address, backing_block, backing_block_offset, size, MemoryState::Shared)};
     if (result.Failed()) {
         LOG_ERROR(
             Kernel,

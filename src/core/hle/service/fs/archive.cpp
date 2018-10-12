@@ -310,13 +310,13 @@ Kernel::SharedPtr<Kernel::ClientSession> File::Connect() {
 }
 
 std::size_t File::GetSessionFileOffset(Kernel::SharedPtr<Kernel::ServerSession> session) {
-    const FileSessionSlot* slot = GetSessionData(session);
+    const FileSessionSlot* slot{GetSessionData(session)};
     ASSERT(slot);
     return slot->offset;
 }
 
 std::size_t File::GetSessionFileSize(Kernel::SharedPtr<Kernel::ServerSession> session) {
-    const FileSessionSlot* slot = GetSessionData(session);
+    const FileSessionSlot* slot{GetSessionData(session)};
     ASSERT(slot);
     return slot->size;
 }

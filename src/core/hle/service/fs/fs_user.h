@@ -71,8 +71,13 @@ private:
     void GetSdmcCid(Kernel::HLERequestContext& ctx);
     void GetNandCid(Kernel::HLERequestContext& ctx);
     void ReadExtSaveDataIcon(Kernel::HLERequestContext& ctx);
+    void GetCardType(Kernel::HLERequestContext& ctx);
+    void DeleteSdmcRoot(Kernel::HLERequestContext& ctx);
+    void InitializeCtrFileSystem(Kernel::HLERequestContext& ctx);
+    void GetSdmcCtrRootPath(Kernel::HLERequestContext& ctx);
+    void CheckUpdatedDat(Kernel::HLERequestContext& ctx);
 
-    u32 priority = -1; ///< For SetPriority and GetPriority service functions
+    s32 priority = -1; ///< For SetPriority and GetPriority service functions
 };
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
