@@ -213,10 +213,11 @@ static bool AttemptLLE(const ServiceModuleInfo& service_module) {
 }
 
 /// Initialize ServiceManager
-void Init(std::shared_ptr<SM::ServiceManager>& sm, Core::System& system) {
-    SM::ServiceManager::InstallInterfaces(sm);
+void Init(Core::System& core) {
+    SM::ServiceManager::InstallInterfaces(core);
     for (const auto& service_module : service_module_map)
-        service_module.init_function(system);
+        if (!AttemptLLE(service_module))
+            service_module.init_function(core);
     LOG_DEBUG(Service, "initialized OK");
 }
 

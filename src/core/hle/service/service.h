@@ -187,7 +187,7 @@ private:
 };
 
 /// Initialize ServiceManager
-void Init(std::shared_ptr<SM::ServiceManager>& sm, Core::System& system);
+void Init(Core::System& system);
 
 /// Shutdown ServiceManager
 void Shutdown();

@@ -5,6 +5,7 @@
 #include <tuple>
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/core.h"
 #include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/client_port.h"
@@ -58,13 +59,16 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_SRV, "name_len=0x{:X} -> ERR_INVALID_NAME_SIZE", name_len);
         return;
     }
-    std::string name{name_buf.data(), name_len};
+    std::string name(name_buf.data(), name_len);
+
     // TODO: Permission checks go here
+
     auto get_handle{[name, this](Kernel::SharedPtr<Kernel::Thread> thread,
                                  Kernel::HLERequestContext& ctx,
                                  Kernel::ThreadWakeupReason reason) {
-        LOG_INFO(Service_SRV, "service={} wakeup", name);
-        auto client_port{service_manager->GetServicePort(name)};
+        LOG_ERROR(Service_SRV, "called service={} wakeup", name);
+        auto client_port{system.ServiceManager().GetServicePort(name)};
+
         auto session{client_port.Unwrap()->Connect()};
         if (session.Succeeded()) {
             LOG_DEBUG(Service_SRV, "service={} -> session={}", name, (*session)->GetObjectId());
@@ -81,7 +85,8 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
             rb.Push(session.Code());
         }
     }};
-    auto client_port{service_manager->GetServicePort(name)};
+
+    auto client_port{system.ServiceManager().GetServicePort(name)};
     if (client_port.Failed()) {
         if (wait_until_available && client_port.Code() == ERR_SERVICE_NOT_REGISTERED) {
             LOG_INFO(Service_SRV, "service={} delayed", name);
@@ -144,8 +149,8 @@ void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
     auto name_buf{rp.PopRaw<std::array<char, 8>>()};
     std::size_t name_len{rp.Pop<u32>()};
     u32 max_sessions{rp.Pop<u32>()};
-    std::string name{name_buf.data(), std::min(name_len, name_buf.size())};
-    auto port{service_manager->RegisterService(name, max_sessions)};
+    std::string name(name_buf.data(), std::min(name_len, name_buf.size()));
+    auto port{system.ServiceManager().RegisterService(name, max_sessions)};
     if (port.Failed()) {
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(port.Code());
@@ -162,8 +167,7 @@ void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
     rb.PushMoveObjects(port.Unwrap());
 }
 
-SRV::SRV(std::shared_ptr<ServiceManager> service_manager)
-    : ServiceFramework{"srv:", 4}, service_manager{std::move(service_manager)} {
+SRV::SRV(Core::System& system) : ServiceFramework{"srv:", 4}, system{system} {
     static const FunctionInfo functions[]{
         {0x00010002, &SRV::RegisterClient, "RegisterClient"},
         {0x00020000, &SRV::EnableNotification, "EnableNotification"},

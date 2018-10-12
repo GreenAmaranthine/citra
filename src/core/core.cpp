@@ -163,7 +163,7 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     CheatCore::Init();
 =======
     kernel = std::make_unique<Kernel::KernelSystem>(system_mode);
-    Service::Init(*this, service_manager);
+    Service::Init(*this);
     GDBStub::Init();
 >>>>>>> f446fd1fe... Kernel: add KernelSystem class
 
