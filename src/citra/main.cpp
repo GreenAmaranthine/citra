@@ -922,15 +922,13 @@ void GMainWindow::OnGameListOpenFolder(u64 data_id, GameListOpenTarget target) {
     switch (target) {
     case GameListOpenTarget::SAVE_DATA: {
         open_target = "Save Data";
-        std::string sdmc_dir{Settings::values.sdmc_dir.empty() ? FileUtil::GetUserPath(D_SDMC_IDX)
-                                                               : Settings::values.sdmc_dir + "/"};
+        std::string sdmc_dir{FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/")};
         path = FileSys::ArchiveSource_SDSaveData::GetSaveDataPathFor(sdmc_dir, data_id);
         break;
     }
     case GameListOpenTarget::EXT_DATA: {
         open_target = "Extra Data";
-        std::string sdmc_dir{Settings::values.sdmc_dir.empty() ? FileUtil::GetUserPath(D_SDMC_IDX)
-                                                               : Settings::values.sdmc_dir + "/"};
+        std::string sdmc_dir{FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/")};
         path = FileSys::GetExtDataPathFromId(sdmc_dir, data_id);
         break;
     }
@@ -969,8 +967,7 @@ void GMainWindow::OnGameListOpenDirectory(QString directory) {
     QString path{};
     if (directory == "INSTALLED") {
         path = QString::fromStdString(
-            (Settings::values.sdmc_dir.empty() ? FileUtil::GetUserPath(D_SDMC_IDX)
-                                               : std::string(Settings::values.sdmc_dir + "/")) +
+            FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/") +
             "Nintendo "
             "3DS/00000000000000000000000000000000/00000000000000000000000000000000/title/00040000");
     } else if (directory == "SYSTEM") {

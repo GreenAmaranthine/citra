@@ -332,7 +332,7 @@ void Module::Interface::DeleteConfigNANDSavefile(Kernel::HLERequestContext& ctx)
 void Module::Interface::GetLocalFriendCodeSeedData(Kernel::HLERequestContext& ctx, u16 id) {
     IPC::RequestParser rp{ctx, id, 1, 2};
     rp.Skip(1, false);
-    auto buffer{rp.PopMappedBuffer()};
+    auto& buffer{rp.PopMappedBuffer()};
     auto [exists, lfcs]{PS::GetLocalFriendCodeSeedTuple()};
     buffer.Write(&lfcs, 0, sizeof(PS::LocalFriendCodeSeed));
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
@@ -352,7 +352,7 @@ void Module::Interface::CreateConfigInfoBlk(Kernel::HLERequestContext& ctx) {
     u32 block_id{rp.Pop<u32>()};
     u16 size{rp.Pop<u16>()};
     u16 flags{rp.Pop<u16>()};
-    auto buffer{rp.PopMappedBuffer()};
+    auto& buffer{rp.PopMappedBuffer()};
     std::vector<u8> data(buffer.GetSize());
     buffer.Read(data.data(), 0, buffer.GetSize());
     cfg->CreateConfigInfoBlk(block_id, size, flags, data.data());
@@ -365,7 +365,7 @@ void Module::Interface::SetGetLocalFriendCodeSeedData(Kernel::HLERequestContext&
     IPC::RequestParser rp{ctx, 0x080B, 2, 2};
     u32 size{rp.Pop<u32>()};
     u8 flag{rp.Pop<u8>()};
-    auto buffer{rp.PopMappedBuffer()};
+    auto& buffer{rp.PopMappedBuffer()};
     auto [exists, lfcs]{PS::GetLocalFriendCodeSeedTuple()};
     if (flag != 0) {
         buffer.Write(&lfcs, 0, sizeof(PS::LocalFriendCodeSeed));
@@ -385,7 +385,7 @@ void Module::Interface::SetGetLocalFriendCodeSeedData(Kernel::HLERequestContext&
 void Module::Interface::SetLocalFriendCodeSeedSignature(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x080C, 1, 2};
     u32 buffer_size{rp.Pop<u32>()};
-    auto buffer{rp.PopMappedBuffer()};
+    auto& buffer{rp.PopMappedBuffer()};
     auto [exists, lfcs]{PS::GetLocalFriendCodeSeedTuple()};
     buffer.Read(lfcs.signature, 0, buffer_size);
     const std::string path{

@@ -26,7 +26,7 @@ std::string GetSystemSaveDataPath(const std::string& mount_point, const Path& pa
 }
 
 std::string GetSystemSaveDataContainerPath(const std::string& mount_point) {
-    return fmt::format("{}data/{}/sysdata/", mount_point, SYSTEM_ID);
+    return fmt::format("{}data/{}/sysdata/", mount_point, SYSTEM_CID);
 }
 
 Path ConstructSystemSaveDataBinaryPath(u32 high, u32 low) {

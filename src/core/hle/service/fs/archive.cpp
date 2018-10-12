@@ -585,8 +585,7 @@ ResultCode DeleteExtSaveData(MediaType media_type, u32 high, u32 low) {
     if (media_type == MediaType::NAND) {
         media_type_directory = FileUtil::GetUserPath(D_NAND_IDX);
     } else if (media_type == MediaType::SDMC) {
-        media_type_directory = Settings::values.sdmc_dir.empty() ? FileUtil::GetUserPath(D_SDMC_IDX)
-                                                                 : Settings::values.sdmc_dir + "/";
+        media_type_directory = FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/");
     } else {
         LOG_ERROR(Service_FS, "Unsupported media type {}", static_cast<u32>(media_type));
         return ResultCode(-1); // TODO: Find the right error code
@@ -629,9 +628,8 @@ void RegisterArchiveTypes() {
     // TODO: Add the other archive types (see here for the known types:
     // http://3dbrew.org/wiki/FS:OpenArchive#Archive_idcodes).
 
-    std::string sdmc_directory{Settings::values.sdmc_dir.empty() ? FileUtil::GetUserPath(D_SDMC_IDX)
-                                                                 : Settings::values.sdmc_dir + "/"};
-    std::string nand_directory = FileUtil::GetUserPath(D_NAND_IDX);
+    std::string sdmc_directory{FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/")};
+    std::string nand_directory{FileUtil::GetUserPath(D_NAND_IDX)};
     auto sdmc_factory{std::make_unique<FileSys::ArchiveFactory_SDMC>(sdmc_directory)};
     if (sdmc_factory->Initialize())
         RegisterArchiveType(std::move(sdmc_factory), ArchiveIdCode::SDMC);

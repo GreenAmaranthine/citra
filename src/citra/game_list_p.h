@@ -318,9 +318,8 @@ public:
     QVariant data(int role) const override {
         if (role == Qt::DisplayRole) {
             std::string path, filename, extension;
-            std::string sdmc_dir{Settings::values.sdmc_dir.empty()
-                                     ? FileUtil::GetUserPath(D_SDMC_IDX)
-                                     : Settings::values.sdmc_dir + "/"};
+            std::string sdmc_dir{
+                FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/")};
             Common::SplitPath(data(FullPathRole).toString().toStdString(), &path, &filename,
                               &extension);
 

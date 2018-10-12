@@ -619,7 +619,11 @@ static const std::string GetDataDirectory() {
 
 // Returns a string with a Citra data dir or file in the user's home
 // directory.
-const std::string& GetUserPath(const unsigned int DirIDX) {
+const std::string& GetUserPath(const unsigned int DirIDX, const std::string& settings_sdmc_dir) {
+    if (DirIDX == D_SDMC_IDX && settings_sdmc_dir.length() > 1) {
+        return settings_sdmc_dir;
+    }
+
     static std::string paths[NUM_PATH_INDICES];
 
     // Set up all paths and files on the first run

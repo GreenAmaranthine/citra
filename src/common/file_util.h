@@ -123,7 +123,8 @@ bool SetCurrentDir(const std::string& directory);
 
 // Returns a pointer to a string with a Citra data dir in the user's home
 // directory.
-const std::string& GetUserPath(const unsigned int DirIDX);
+const std::string& GetUserPath(const unsigned int DirIDX,
+                               const std::string& settings_sdmc_dir = "");
 
 // Returns the path to where the sys file are
 std::string GetSysDirectory();

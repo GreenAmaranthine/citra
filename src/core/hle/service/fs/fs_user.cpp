@@ -11,6 +11,8 @@
 #include "common/scope_exit.h"
 #include "common/string_util.h"
 #include "core/core.h"
+#include "core/file_sys/archive_extsavedata.h"
+#include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/seed_db.h"
 #include "core/hle/ipc.h"
@@ -764,6 +766,100 @@ void FS_USER::GetThisSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_FS, "(STUBBED) called, secure_value_slot={}", secure_value_slot);
 }
 
+void FS_USER::EnumerateExtSaveData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x855, 4, 2};
+    u32 buffer_size{rp.Pop<u32>()};
+    MediaType media_type{rp.PopEnum<MediaType>()};
+    u32 id_entry_size{rp.Pop<u32>()};
+    u8 shared{rp.Pop<u8>()};
+    auto& buffer{rp.PopMappedBuffer()};
+
+    u32 count{};
+    u32 offset{};
+
+    FileUtil::FSTEntry entries{};
+    FileUtil::ScanDirectoryTree(
+        shared == 1
+            ? FileSys::GetExtDataContainerPath(FileUtil::GetUserPath(D_NAND_IDX), true)
+            : FileSys::GetExtDataContainerPath(
+                  FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/"), false),
+        entries, 1);
+    for (const FileUtil::FSTEntry& high : entries.children) {
+        for (const FileUtil::FSTEntry& low : high.children) {
+            std::string tid_string{id_entry_size == 4 ? low.virtualName
+                                                      : high.virtualName + low.virtualName};
+            if (tid_string.length() == (id_entry_size * 2)) {
+                u64 tid{std::stoull(tid_string.c_str(), nullptr, 16)};
+                buffer.Write(&tid, offset, sizeof(u64));
+                offset += sizeof(u64);
+                ++count;
+            }
+        }
+    }
+
+    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<u32>(count);
+    rb.PushMappedBuffer(buffer);
+}
+
+void FS_USER::EnumerateSystemSaveData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x860, 1, 2};
+    u32 buffer_size{rp.Pop<u32>()};
+    auto& buffer{rp.PopMappedBuffer()};
+
+    u32 count{};
+    u32 offset{};
+
+    FileUtil::FSTEntry entries{};
+    FileUtil::ScanDirectoryTree(
+        FileSys::GetSystemSaveDataContainerPath(FileUtil::GetUserPath(D_NAND_IDX)), entries, 1);
+    for (const FileUtil::FSTEntry& high : entries.children) {
+        for (const FileUtil::FSTEntry& low : high.children) {
+            std::string tid_string{high.virtualName + low.virtualName};
+            if (tid_string.length() == AM::TITLE_ID_VALID_LENGTH) {
+                u64 tid{std::stoull(tid_string.c_str(), nullptr, 16)};
+                buffer.Write(&tid, offset, sizeof(u64));
+                offset += sizeof(u64);
+                ++count;
+            }
+        }
+    }
+
+    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<u32>(count);
+    rb.PushMappedBuffer(buffer);
+}
+
+void FS_USER::ReadExtSaveDataIcon(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x855, 5, 2};
+    ExtSaveDataInfo info{rp.PopRaw<ExtSaveDataInfo>()};
+    u32 smdh_size{rp.Pop<u32>()};
+    auto smdh_buffer{rp.PopStaticBuffer()};
+
+    FileUtil::IOFile file{
+        FileSys::GetExtDataPathFromId(
+            info.media_type == static_cast<u8>(MediaType::NAND)
+                ? FileUtil::GetUserPath(D_NAND_IDX)
+                : FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/"),
+            info.save_id),
+        "rb"};
+
+    u32 read_size{};
+
+    if (file.IsOpen()) {
+        u8 data[smdh_size];
+        read_size = static_cast<u32>(file.ReadBytes(data, smdh_size));
+        std::memcpy(smdh_buffer.data(), data, read_size);
+    }
+
+    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<u32>(read_size);
+    rb.PushStaticBuffer(smdh_buffer, 0);
+}
+
 FS_USER::FS_USER() : ServiceFramework{"fs:USER", 30} {
     static const FunctionInfo functions[]{
         {0x000100C6, nullptr, "Dummy1"},
@@ -792,8 +888,8 @@ FS_USER::FS_USER() : ServiceFramework{"fs:USER", 30} {
         {0x08160000, nullptr, "GetSdmcFatfsError"},
         {0x08170000, &FS_USER::IsSdmcDetected, "IsSdmcDetected"},
         {0x08180000, &FS_USER::IsSdmcWriteable, "IsSdmcWritable"},
-        {0x08190042, nullptr, "GetSdmcCid"},
-        {0x081A0042, nullptr, "GetNandCid"},
+        {0x08190042, nullptr /*&FS_USER::GetSdmcCid*/, "GetSdmcCid"},
+        {0x081A0042, nullptr /*&FS_USER::GetNandCid*/, "GetNandCid"},
         {0x081B0000, nullptr, "GetSdmcSpeedInfo"},
         {0x081C0000, nullptr, "GetNandSpeedInfo"},
         {0x081D0042, nullptr, "GetSdmcLog"},
@@ -850,9 +946,9 @@ FS_USER::FS_USER() : ServiceFramework{"fs:USER", 30} {
         {0x08500040, nullptr, "GetSpecialFileSize"},
         {0x08510242, &FS_USER::CreateExtSaveData, "CreateExtSaveData"},
         {0x08520100, &FS_USER::DeleteExtSaveData, "DeleteExtSaveData"},
-        {0x08530142, nullptr, "ReadExtSaveDataIcon"},
+        {0x08530142, &FS_USER::ReadExtSaveDataIcon, "ReadExtSaveDataIcon"},
         {0x085400C0, nullptr, "GetExtDataBlockSize"},
-        {0x08550102, nullptr, "EnumerateExtSaveData"},
+        {0x08550102, &FS_USER::EnumerateExtSaveData, "EnumerateExtSaveData"},
         {0x08560240, &FS_USER::CreateSystemSaveData, "CreateSystemSaveData"},
         {0x08570080, &FS_USER::DeleteSystemSaveData, "DeleteSystemSaveData"},
         {0x08580000, nullptr, "StartDeviceMoveAsSource"},
@@ -863,7 +959,7 @@ FS_USER::FS_USER() : ServiceFramework{"fs:USER", 30} {
         {0x085D01C0, nullptr, "SetFsCompatibilityInfo"},
         {0x085E0040, nullptr, "ResetCardCompatibilityParameter"},
         {0x085F0040, nullptr, "SwitchCleanupInvalidSaveData"},
-        {0x08600042, nullptr, "EnumerateSystemSaveData"},
+        {0x08600042, &FS_USER::EnumerateSystemSaveData, "EnumerateSystemSaveData"},
         {0x08610042, &FS_USER::InitializeWithSdkVersion, "InitializeWithSdkVersion"},
         {0x08620040, &FS_USER::SetPriority, "SetPriority"},
         {0x08630000, &FS_USER::GetPriority, "GetPriority"},

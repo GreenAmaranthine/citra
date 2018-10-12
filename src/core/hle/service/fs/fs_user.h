@@ -9,6 +9,21 @@
 
 namespace Service::FS {
 
+struct ExtSaveDataInfo {
+    u8 media_type;
+    u8 unknown;
+    u16 reserved;
+    u64 save_id;
+    u32 reserved2;
+};
+
+struct SystemSaveDataInfo {
+    u8 media_type;
+    u8 unknown;
+    u16 reserved;
+    u32 save_id;
+};
+
 class FS_USER final : public ServiceFramework<FS_USER> {
 public:
     FS_USER();
@@ -51,6 +66,11 @@ private:
     void SetSaveDataSecureValue(Kernel::HLERequestContext& ctx);
     void GetSaveDataSecureValue(Kernel::HLERequestContext& ctx);
     void GetThisSaveDataSecureValue(Kernel::HLERequestContext& ctx);
+    void EnumerateExtSaveData(Kernel::HLERequestContext& ctx);
+    void EnumerateSystemSaveData(Kernel::HLERequestContext& ctx);
+    void GetSdmcCid(Kernel::HLERequestContext& ctx);
+    void GetNandCid(Kernel::HLERequestContext& ctx);
+    void ReadExtSaveDataIcon(Kernel::HLERequestContext& ctx);
 
     u32 priority = -1; ///< For SetPriority and GetPriority service functions
 };

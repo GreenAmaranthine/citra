@@ -48,7 +48,7 @@ void Module::Interface::GetAccountDataBlock(Kernel::HLERequestContext& ctx) {
     u8 unk{rp.Pop<u8>()};
     u32 size{rp.Pop<u32>()};
     BlkID id{rp.PopEnum<BlkID>()};
-    auto buffer{rp.PopMappedBuffer()};
+    auto& buffer{rp.PopMappedBuffer()};
     switch (id) {
     case BlkID::NNID: {
         std::string nnid{Common::UTF16ToUTF8(CFG::GetCurrentModule()->GetUsername())};

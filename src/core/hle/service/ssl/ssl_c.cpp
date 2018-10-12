@@ -25,7 +25,7 @@ void SSL_C::Initialize(Kernel::HLERequestContext& ctx) {
 void SSL_C::GenerateRandomData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x11, 1, 2};
     u32 size{rp.Pop<u32>()};
-    auto buffer{rp.PopMappedBuffer()};
+    auto& buffer{rp.PopMappedBuffer()};
 
     // Fill the output buffer with random data.
     u32 data{};

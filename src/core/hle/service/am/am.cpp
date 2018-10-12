@@ -488,13 +488,12 @@ std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid) {
 
 std::string GetMediaTitlePath(Service::FS::MediaType media_type) {
     if (media_type == Service::FS::MediaType::NAND)
-        return fmt::format("{}{}/title/", FileUtil::GetUserPath(D_NAND_IDX), SYSTEM_ID);
+        return fmt::format("{}{}/title/", FileUtil::GetUserPath(D_NAND_IDX), SYSTEM_CID);
 
     if (media_type == Service::FS::MediaType::SDMC)
         return fmt::format("{}Nintendo 3DS/{}/{}/title/",
-                           Settings::values.sdmc_dir.empty() ? FileUtil::GetUserPath(D_SDMC_IDX)
-                                                             : Settings::values.sdmc_dir + "/",
-                           SYSTEM_ID, SDCARD_ID);
+                           FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/"),
+                           SYSTEM_CID, SDCARD_CID);
 
     if (media_type == Service::FS::MediaType::GameCard) {
         // TODO: get current app parent folder if TID matches?
@@ -1093,7 +1092,7 @@ void Module::Interface::CommitImportPrograms(Kernel::HLERequestContext& ctx) {
     auto media_type{static_cast<Service::FS::MediaType>(rp.Pop<u8>())};
     u32 title_count{rp.Pop<u32>()};
     u8 database{rp.Pop<u8>()};
-    auto buffer{rp.PopMappedBuffer()};
+    auto& buffer{rp.PopMappedBuffer()};
 
     // Note: This function is basically a no-op for us since we don't use title.db or ticket.db
     // files to keep track of installed titles.
@@ -1468,7 +1467,7 @@ void Module::Interface::DeleteUserProgramsAtomically(Kernel::HLERequestContext& 
     IPC::RequestParser rp{ctx, 0x0029, 2, 2};
     auto media_type{rp.PopEnum<FS::MediaType>()};
     u32 count{rp.Pop<u32>()};
-    auto buffer{rp.PopMappedBuffer()};
+    auto& buffer{rp.PopMappedBuffer()};
 
     u32 offset{};
     u64 title_id;

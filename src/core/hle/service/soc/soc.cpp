@@ -45,7 +45,7 @@
 #define WSAEMULTIHOP -1 // Invalid dummy value
 #define ERRNO(x) WSA##x
 #define GET_ERRNO WSAGetLastError()
-#define poll(x, y, z) WSAPoll(x, y, z);
+#define poll(x, y, z) WSAPoll(x, y, z)
 #else
 #define ERRNO(x) x
 #define GET_ERRNO errno

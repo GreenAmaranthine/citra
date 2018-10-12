@@ -170,9 +170,9 @@ std::string GetExtSaveDataPath(const std::string& mount_point, const Path& path)
 
 std::string GetExtDataContainerPath(const std::string& mount_point, bool shared) {
     if (shared)
-        return fmt::format("{}data/{}/extdata/", mount_point, SYSTEM_ID);
+        return fmt::format("{}data/{}/extdata/", mount_point, SYSTEM_CID);
 
-    return fmt::format("{}Nintendo 3DS/{}/{}/extdata/", mount_point, SYSTEM_ID, SDCARD_ID);
+    return fmt::format("{}Nintendo 3DS/{}/{}/extdata/", mount_point, SYSTEM_CID, SDCARD_CID);
 }
 
 std::string GetExtDataPathFromId(const std::string& mount_point, u64 extdata_id) {

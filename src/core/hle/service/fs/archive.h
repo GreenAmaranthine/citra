@@ -20,10 +20,10 @@ class FileBackend;
 } // namespace FileSys
 
 /// The unique system identifier hash, also known as ID0
-static constexpr char SYSTEM_ID[]{"00000000000000000000000000000000"};
+static constexpr char SYSTEM_CID[]{"00000000000000000000000000000000"};
 
-/// The scrambled SD card ID, also known as ID1
-static constexpr char SDCARD_ID[]{"00000000000000000000000000000000"};
+/// The scrambled SD card CID, also known as ID1
+static constexpr char SDCARD_CID[]{"00000000000000000000000000000000"};
 
 namespace Loader {
 class AppLoader;
