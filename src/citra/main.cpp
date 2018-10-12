@@ -1311,10 +1311,12 @@ void GMainWindow::OnSelectSDMCDirectory() {
 }
 
 void GMainWindow::OnLoadAmiibo() {
+    OnPauseGame();
     const QString extensions{"*.bin"};
     const QString file_filter{QString("Amiibo File") + " (" + extensions + ");;" +
                               "All Files (*.*)"};
     const QString filename{QFileDialog::getOpenFileName(this, "Load Amiibo", ".", file_filter)};
+    OnStartGame();
     if (!filename.isEmpty()) {
         auto nfc{Core::System::GetInstance()
                      .ServiceManager()
@@ -1323,6 +1325,7 @@ void GMainWindow::OnLoadAmiibo() {
         nfc->nfc_filename = filename.toStdString();
         nfc->nfc_tag_state = Service::NFC::TagState::TagInRange;
         nfc->tag_in_range_event->Signal();
+        ui.action_Remove_Amiibo->setEnabled(true);
     }
 }
 
