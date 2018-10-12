@@ -153,6 +153,7 @@ private slots:
     void OnOpenUserDirectory();
     void OnSelectSDMCDirectory();
     void OnLoadAmiibo();
+    void OnRemoveAmiibo();
     void OnToggleFilterBar();
     void ToggleFullscreen();
     void ChangeScreenLayout();

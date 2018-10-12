@@ -77,7 +77,7 @@ private:
     void GetSdmcCtrRootPath(Kernel::HLERequestContext& ctx);
     void CheckUpdatedDat(Kernel::HLERequestContext& ctx);
 
-    s32 priority = -1; ///< For SetPriority and GetPriority service functions
+    u32 priority = -1; ///< For SetPriority and GetPriority service functions
 };
 
 void InstallInterfaces(SM::ServiceManager& service_manager);

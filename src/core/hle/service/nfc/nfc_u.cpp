@@ -32,7 +32,8 @@ NFC_U::NFC_U(std::shared_ptr<Module> nfc) : Module::Interface{std::move(nfc), "n
         {0x00170000, &NFC_U::GetAmiiboSettings, "GetAmiiboSettings"},
         {0x00180000, &NFC_U::GetAmiiboConfig, "GetAmiiboConfig"},
         {0x00190000, nullptr, "GetAppDataInitStruct"},
-        {0x001A0000, &NFC_U::Unknown1, "Unknown1"},
+        {0x001A0000, &NFC_U::Unknown0x1A, "Unknown0x1A"},
+        {0x001B0000, &NFC_U::Unknown0x1B, "Unknown0x1B"},
         // clang-format on
     };
     RegisterHandlers(functions);

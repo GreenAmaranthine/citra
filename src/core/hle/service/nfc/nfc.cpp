@@ -19,46 +19,65 @@ namespace Service::NFC {
 #define AMIIBO_DAY_FROM_DATE(dt) (*((&dt) + 1) & 0x1F)
 
 struct TagInfo {
-    u16 id_offset_size; /// "u16 size/offset of the below ID data. Normally this is 0x7. When this
-                        /// is <=10, this field is the size of the below ID data. When this is >10,
-                        /// this is the offset of the 10-byte ID data, relative to
-                        /// structstart+4+<offsetfield-10>. It's unknown in what cases this 10-byte
-                        /// ID data is used."
-    u8 unk_x2;          //"Unknown u8, normally 0x0."
-    u8 unk_x3;          //"Unknown u8, normally 0x2."
+    u16_le id_offset_size; /// "u16 size/offset of the below ID data. Normally this is 0x7. When
+                           /// this is <=10, this field is the size of the below ID data. When this
+                           /// is >10, this is the offset of the 10-byte ID data, relative to
+                           /// structstart+4+<offsetfield-10>. It's unknown in what cases this
+                           /// 10-byte ID data is used."
+    u8 unk_x2;             //"Unknown u8, normally 0x0."
+    u8 unk_x3;             //"Unknown u8, normally 0x2."
     std::array<u8, 0x28> id; //"ID data. When the above size field is 0x7, this is the 7-byte NFC
                              // tag UID, followed by all-zeros."
 };
 
 struct AmiiboConfig {
-    u16 lastwritedate_year;
+    u16_le lastwritedate_year;
     u8 lastwritedate_month;
     u8 lastwritedate_day;
-    u16 write_counter;
-    u8 characterID[3]; /// the first element is the collection ID, the second the character in this
-                       /// collection, the third the variant
-    u8 series;         /// ID of the series
-    u16 amiiboID; /// ID shared by all exact same amiibo. Some amiibo are only distinguished by this
-                  /// one like regular SMB Series Mario and the gold one
-    u8 type;      /// Type of amiibo 0 = figure, 1 = card, 2 = plush
+    u16_le write_counter;
+    std::array<u8, 3> characterID; /// the first element is the collection ID, the second the
+                                   /// character in this collection, the third the variant
+    u8 series;                     /// ID of the series
+    u16_le amiiboID; /// ID shared by all exact same amiibo. Some amiibo are only distinguished by
+                     /// this one like regular SMB Series Mario and the gold one
+    u8 type;         /// Type of amiibo 0 = figure, 1 = card, 2 = plush
     u8 pagex4_byte3;
-    u16 appdata_size; /// "NFC module writes hard-coded u8 value 0xD8 here. This is the size of the
+    u16_le
+        appdata_size; /// "NFC module writes hard-coded u8 value 0xD8 here. This is the size of the
                       /// Amiibo AppData, apps can use this with the AppData R/W commands. ..."
     INSERT_PADDING_BYTES(
         0x30); /// "Unused / reserved: this is cleared by NFC module but never written after that."
 };
 
 struct AmiiboSettings {
-    u8 mii[0x60];     /// "Owner Mii."
-    u16 nickname[11]; /// "UTF-16BE Amiibo nickname."
+    u8 mii[0x60];                    /// "Owner Mii."
+    std::array<u16_le, 11> nickname; /// "UTF-16BE Amiibo nickname."
     u8 flags; /// "This is plaintext_amiibosettingsdata[0] & 0xF." See also the NFC_amiiboFlag
               /// enums.
     u8 countrycodeid; /// "This is plaintext_amiibosettingsdata[1]." "Country Code ID, from the
                       /// system which setup this amiibo."
-    u16 setupdate_year;
+    u16_le setupdate_year;
     u8 setupdate_month;
     u8 setupdate_day;
     INSERT_PADDING_BYTES(0x2C); // Normally all-zero?
+};
+
+struct IdentificationBlockRaw {
+    u16_le char_id;
+    u8 char_variant;
+    u8 figure_type;
+    u16_be model_number;
+    u8 series;
+    INSERT_PADDING_BYTES(0x2F);
+};
+
+struct IdentificationBlockReply {
+    u16_le char_id;
+    u8 char_variant;
+    u8 series;
+    u16_le model_number;
+    u8 figure_type;
+    INSERT_PADDING_BYTES(0x2F);
 };
 
 void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
@@ -182,7 +201,7 @@ void Module::Interface::GetAmiiboSettings(Kernel::HLERequestContext& ctx) {
         } else {
             result = RESULT_SUCCESS;
             memcpy(amsettings.mii, &d_data[0x4C], sizeof(amsettings.mii));
-            memcpy(amsettings.nickname, &d_data[0x38],
+            memcpy(amsettings.nickname.data(), &d_data[0x38],
                    4 * 5); // amiibo doesnt have the null terminator
             amsettings.flags =
                 d_data[0x2C] & 0xF; // todo: we should only load some of these values if the unused
@@ -255,13 +274,6 @@ void Module::Interface::CommunicationGetStatus(Kernel::HLERequestContext& ctx) {
     rb.PushEnum(nfc->nfc_status);
 }
 
-void Module::Interface::Unknown1(Kernel::HLERequestContext& ctx) {
-    IPC::ResponseBuilder rb{ctx, 0x1A, 1, 0};
-    rb.Push(RESULT_SUCCESS);
-
-    LOG_WARNING(Service_NFC, "(STUBBED) called");
-}
-
 void Module::Interface::OpenAppData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x13, 1, 0};
     u32 app_id{rp.Pop<u32>()};
@@ -308,6 +320,35 @@ void Module::Interface::ReadAppData(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(buffer, 0);
+}
+
+void Module::Interface::Unknown0x1A(Kernel::HLERequestContext& ctx) {
+    nfc->nfc_tag_state = TagState::Unknown6;
+
+    IPC::ResponseBuilder rb{ctx, 0x1A, 1, 0};
+    rb.Push(RESULT_SUCCESS);
+    LOG_DEBUG(Service_NFC, "called");
+}
+
+void Module::Interface::Unknown0x1B(Kernel::HLERequestContext& ctx) {
+    IdentificationBlockRaw identification_block_raw{};
+    FileUtil::IOFile nfc_file{nfc->nfc_filename, "rb"};
+    // go to offset of the Amiibo identification block
+    nfc_file.Seek(0x54, SEEK_SET);
+    nfc_file.ReadBytes(&identification_block_raw, 0x7);
+
+    IdentificationBlockReply identification_block_reply{};
+    identification_block_reply.char_id = identification_block_raw.char_id;
+    identification_block_reply.char_variant = identification_block_raw.char_variant;
+    identification_block_reply.series = identification_block_raw.series;
+    identification_block_reply.model_number = identification_block_raw.model_number;
+    identification_block_reply.figure_type = identification_block_raw.figure_type;
+
+    IPC::ResponseBuilder rb{ctx, 0x1B, 0x1F, 0};
+    rb.Push(RESULT_SUCCESS);
+    rb.PushRaw<IdentificationBlockReply>(identification_block_reply);
+
+    LOG_DEBUG(Service_NFC, "called");
 }
 
 Module::Interface::Interface(std::shared_ptr<Module> nfc, const char* name)

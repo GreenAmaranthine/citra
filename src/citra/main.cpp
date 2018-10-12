@@ -433,6 +433,7 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Select_SDMC_Directory, &QAction::triggered, this,
             &GMainWindow::OnSelectSDMCDirectory);
     connect(ui.action_Load_Amiibo, &QAction::triggered, this, &GMainWindow::OnLoadAmiibo);
+    connect(ui.action_Remove_Amiibo, &QAction::triggered, this, &GMainWindow::OnRemoveAmiibo);
 
     // Emulation
     connect(ui.action_Start, &QAction::triggered, this, &GMainWindow::OnStartGame);
@@ -740,6 +741,7 @@ void GMainWindow::ShutdownGame() {
     ui.action_Select_SDMC_Directory->setEnabled(true);
     ui.action_Capture_Screenshot->setEnabled(false);
     ui.action_Load_Amiibo->setEnabled(false);
+    ui.action_Remove_Amiibo->setEnabled(false);
     ui.action_Enable_Frame_Advancing->setEnabled(false);
     ui.action_Enable_Frame_Advancing->setChecked(false);
     ui.action_Advance_Frame->setEnabled(false);
@@ -1309,23 +1311,30 @@ void GMainWindow::OnSelectSDMCDirectory() {
 }
 
 void GMainWindow::OnLoadAmiibo() {
-    auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn()) {
-        return;
-    }
-
     const QString extensions{"*.bin"};
     const QString file_filter{QString("Amiibo File") + " (" + extensions + ");;" +
                               "All Files (*.*)"};
-    const QString filename{QFileDialog::getOpenFileName(
-        this, "Load Amiibo", UISettings::values.amiibo_path, file_filter)};
+    const QString filename{QFileDialog::getOpenFileName(this, "Load Amiibo", ".", file_filter)};
     if (!filename.isEmpty()) {
-        auto u{system.ServiceManager().GetService<Service::NFC::Module::Interface>("nfc:u")};
-        auto nfc{u->GetModule()};
+        auto nfc{Core::System::GetInstance()
+                     .ServiceManager()
+                     .GetService<Service::NFC::Module::Interface>("nfc:u")
+                     ->GetModule()};
         nfc->nfc_filename = filename.toStdString();
         nfc->nfc_tag_state = Service::NFC::TagState::TagInRange;
         nfc->tag_in_range_event->Signal();
     }
+}
+
+void GMainWindow::OnRemoveAmiibo() {
+    auto nfc{Core::System::GetInstance()
+                 .ServiceManager()
+                 .GetService<Service::NFC::Module::Interface>("nfc:u")
+                 ->GetModule()};
+    nfc->nfc_filename.clear();
+    nfc->nfc_tag_state = Service::NFC::TagState::TagOutOfRange;
+    nfc->tag_out_of_range_event->Signal();
+    ui.action_Remove_Amiibo->setEnabled(false);
 }
 
 void GMainWindow::OnToggleFilterBar() {
