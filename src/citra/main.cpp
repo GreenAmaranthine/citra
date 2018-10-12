@@ -1309,6 +1309,11 @@ void GMainWindow::OnSelectSDMCDirectory() {
 }
 
 void GMainWindow::OnLoadAmiibo() {
+    auto& system{Core::System::GetInstance()};
+    if (!system.IsPoweredOn()) {
+        return;
+    }
+
     auto answer{QMessageBox::question(
         this, "Citra", "Amiibo feature is experimental.\nDo you want to scan an amiibo anyway?")};
     if (answer != QMessageBox::Yes) {
@@ -1320,17 +1325,17 @@ void GMainWindow::OnLoadAmiibo() {
     const QString filename{QFileDialog::getOpenFileName(
         this, "Load Amiibo", UISettings::values.amiibo_path, file_filter)};
     if (!filename.isEmpty()) {
-        auto& system{Core::System::GetInstance()};
-        auto& sm{system.ServiceManager()};
-        auto u{sm.GetService<Service::NFC::Module::Interface>("nfc:u")};
-        if (u != nullptr) {
+        auto u{system.ServiceManager().GetService<Service::NFC::Module::Interface>("nfc:u")};
+        auto nfc{u->GetModule()};
+        nfc->nfc_filename = filename.toStdString();
+        nfc->nfc_tag_state = Service::NFC::TagState::TagInRange;
+        nfc->tag_in_range_event->Signal();
+        QTimer::singleShot(2000, [&system] {
+            auto u{system.ServiceManager().GetService<Service::NFC::Module::Interface>("nfc:u")};
             auto nfc{u->GetModule()};
-            if (nfc != nullptr) {
-                nfc->nfc_filename = filename.toStdString();
-                nfc->nfc_tag_state = Service::NFC::TagState::TagInRange;
-                nfc->tag_in_range_event->Signal();
-            }
-        }
+            nfc->nfc_tag_state = Service::NFC::TagState::TagOutOfRange;
+            nfc->tag_out_of_range_event->Signal();
+        });
     }
 }
 
