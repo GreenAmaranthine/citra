@@ -1314,11 +1314,6 @@ void GMainWindow::OnLoadAmiibo() {
         return;
     }
 
-    auto answer{QMessageBox::question(
-        this, "Citra", "Amiibo feature is experimental.\nDo you want to scan an amiibo anyway?")};
-    if (answer != QMessageBox::Yes) {
-        return;
-    }
     const QString extensions{"*.bin"};
     const QString file_filter{QString("Amiibo File") + " (" + extensions + ");;" +
                               "All Files (*.*)"};
@@ -1330,15 +1325,6 @@ void GMainWindow::OnLoadAmiibo() {
         nfc->nfc_filename = filename.toStdString();
         nfc->nfc_tag_state = Service::NFC::TagState::TagInRange;
         nfc->tag_in_range_event->Signal();
-        QTimer::singleShot(2000, [&system] {
-            if (system.IsPoweredOn()) {
-                auto u{
-                    system.ServiceManager().GetService<Service::NFC::Module::Interface>("nfc:u")};
-                auto nfc{u->GetModule()};
-                nfc->nfc_tag_state = Service::NFC::TagState::TagOutOfRange;
-                nfc->tag_out_of_range_event->Signal();
-            }
-        });
     }
 }
 
