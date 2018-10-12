@@ -886,9 +886,10 @@ void FS_USER::ReadExtSaveDataIcon(Kernel::HLERequestContext& ctx) {
     u32 read_size{};
 
     if (file.IsOpen()) {
-        u8 data[smdh_size];
+        u8* data{new u8[smdh_size]};
         read_size = static_cast<u32>(file.ReadBytes(data, smdh_size));
         std::memcpy(smdh_buffer.data(), data, read_size);
+        delete[] data;
     }
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
