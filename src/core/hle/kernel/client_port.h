@@ -52,13 +52,15 @@ public:
     void ConnectionClosed();
 
 private:
-    ClientPort();
+    explicit ClientPort(KernelSystem& kernel);
     ~ClientPort() override;
 
     SharedPtr<ServerPort> server_port; ///< ServerPort associated with this client port.
     u32 max_sessions{};    ///< Maximum number of simultaneous sessions the port can have
     u32 active_sessions{}; ///< Number of currently open sessions to this port
     std::string name;      ///< Name of client port (optional)
+
+    friend class KernelSystem;
 };
 
 /// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort SVC.

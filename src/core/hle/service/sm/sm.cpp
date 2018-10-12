@@ -20,11 +20,13 @@ static ResultCode ValidateServiceName(const std::string& name) {
     return RESULT_SUCCESS;
 }
 
+ServiceManager::ServiceManager(Core::System& system) : system(system) {}
+
 void ServiceManager::InstallInterfaces(Core::System& system) {
     ASSERT(system.ServiceManager().srv_interface.expired());
 
     auto srv{std::make_shared<SRV>(system)};
-    srv->InstallAsNamedPort();
+    srv->InstallAsNamedPort(system.Kernel());
     system.ServiceManager().srv_interface = srv;
 }
 
@@ -36,7 +38,7 @@ ResultVal<Kernel::SharedPtr<Kernel::ServerPort>> ServiceManager::RegisterService
     if (registered_services.find(name) != registered_services.end())
         return ERR_ALREADY_REGISTERED;
 
-    auto [server_port, client_port]{Kernel::ServerPort::CreatePortPair(max_sessions, name)};
+    auto [server_port, client_port]{system.Kernel().CreatePortPair(max_sessions, name)};
 
     registered_services.emplace(std::move(name), std::move(client_port));
     return MakeResult<Kernel::SharedPtr<Kernel::ServerPort>>(std::move(server_port));

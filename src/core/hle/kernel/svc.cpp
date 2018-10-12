@@ -1027,10 +1027,16 @@ static ResultCode CreatePort(Handle* server_port, Handle* client_port, VAddr nam
                              u32 max_sessions) {
     // TODO: Implement named ports.
     ASSERT_MSG(name_address == 0, "Named ports are currently unimplemented");
-    auto ports{ServerPort::CreatePortPair(max_sessions)};
-    *client_port = g_handle_table.Create(std::move(std::get<SharedPtr<ClientPort>>(ports)));
-    *server_port = g_handle_table.Create(std::move(std::get<SharedPtr<ServerPort>>(ports)));
-    LOG_TRACE(Kernel_SVC, "max_sessions={}", max_sessions);
+
+    auto ports{Core::System::GetInstance().Kernel().CreatePortPair(max_sessions)};
+    CASCADE_RESULT(*client_port,
+                   g_handle_table.Create(std::move(std::get<SharedPtr<ClientPort>>(ports))));
+    // Note: The 3DS kernel also leaks the client port handle if the server port handle fails to be
+    // created.
+    CASCADE_RESULT(*server_port,
+                   g_handle_table.Create(std::move(std::get<SharedPtr<ServerPort>>(ports))));
+
+    LOG_TRACE(Kernel_SVC, "called max_sessions={}", max_sessions);
     return RESULT_SUCCESS;
 }
 

@@ -13,22 +13,19 @@
 
 namespace Kernel {
 
-std::unordered_map<std::string, SharedPtr<ClientPort>> g_named_ports;
-
-ClientPort::ClientPort() = default;
+ClientPort::ClientPort(KernelSystem& kernel) {}
 ClientPort::~ClientPort() = default;
 
 ResultVal<SharedPtr<ClientSession>> ClientPort::Connect() {
     // Note: Threads do not wait for the server endpoint to call
     // AcceptSession before returning from this call.
 
-    if (active_sessions >= max_sessions) {
+    if (active_sessions >= max_sessions)
         return ERR_MAX_CONNECTIONS_REACHED;
-    }
     active_sessions++;
 
     // Create a new session pair, let the created sessions inherit the parent port's HLE handler.
-    auto sessions = ServerSession::CreateSessionPair(server_port->GetName(), this);
+    auto sessions{ServerSession::CreateSessionPair(server_port->GetName(), this)};
 
     if (server_port->hle_handler)
         server_port->hle_handler->ClientConnected(std::get<SharedPtr<ServerSession>>(sessions));

@@ -19,6 +19,7 @@ class System;
 } // namespace Core
 
 namespace Kernel {
+class KernelSystem;
 class ClientPort;
 class ServerPort;
 class ServerSession;
@@ -61,7 +62,7 @@ public:
     void InstallAsService(SM::ServiceManager& service_manager);
 
     /// Creates a port pair and registers it on the kernel's global port registry.
-    void InstallAsNamedPort();
+    void InstallAsNamedPort(Kernel::KernelSystem& kernel);
 
     void HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
 

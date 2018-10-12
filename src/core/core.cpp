@@ -146,7 +146,8 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
 #ifdef ENABLE_SCRIPTING
     rpc_server = std::make_unique<RPC::RPCServer>();
 #endif
-    service_manager = std::make_shared<Service::SM::ServiceManager>();
+
+    service_manager = std::make_shared<Service::SM::ServiceManager>(*this);
     shared_page_handler = std::make_shared<SharedPage::Handler>();
     archive_manager = std::make_unique<Service::FS::ArchiveManager>();
     shutdown_requested = false;
@@ -157,15 +158,11 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     Service::CFG::InstallInterfaces(*this);
 
     HW::Init();
-<<<<<<< HEAD
     Kernel::Init(system_mode);
     Service::Init(service_manager, *this);
     CheatCore::Init();
-=======
     kernel = std::make_unique<Kernel::KernelSystem>(system_mode);
     Service::Init(*this);
-    GDBStub::Init();
->>>>>>> f446fd1fe... Kernel: add KernelSystem class
 
     ResultStatus result{VideoCore::Init(frontend)};
     if (result != ResultStatus::Success) {
