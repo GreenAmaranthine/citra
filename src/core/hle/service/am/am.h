@@ -211,6 +211,12 @@ private:
      */
     void ScanForTitles(Service::FS::MediaType media_type);
 
+    /**
+     * Scans all storage mediums for titles for listing.
+     */
+    void ScanForAllTitles();
+
+    Core::System& system;
     bool cia_installing{};
     std::array<std::vector<u64_le>, 3> am_title_list;
     Kernel::SharedPtr<Kernel::Mutex> system_updater_mutex;

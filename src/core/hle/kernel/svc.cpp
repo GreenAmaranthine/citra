@@ -1050,11 +1050,14 @@ static ResultCode CreateSessionToPort(Handle* out_client_session, Handle client_
 }
 
 static ResultCode CreateSession(Handle* server_session, Handle* client_session) {
-    auto sessions{ServerSession::CreateSessionPair()};
+    auto sessions{Core::System::GetInstance().Kernel().CreateSessionPair()};
+
     auto& server{std::get<SharedPtr<ServerSession>>(sessions)};
-    *server_session = g_handle_table.Create(std::move(server));
+    CASCADE_RESULT(*server_session, g_handle_table.Create(std::move(server)));
+
     auto& client{std::get<SharedPtr<ClientSession>>(sessions)};
-    *client_session = g_handle_table.Create(std::move(client));
+    CASCADE_RESULT(*client_session, g_handle_table.Create(std::move(client)));
+
     LOG_TRACE(Kernel_SVC, "called");
     return RESULT_SUCCESS;
 }

@@ -887,7 +887,9 @@ void Module::Interface::BeginImportProgram(Kernel::HLERequestContext& ctx) {
     // Create our CIAFile handle for the app to write to, and while the app writes
     // Citra will store contents out to sdmc/nand
     const FileSys::Path cia_path{};
-    auto file{std::make_shared<Service::FS::File>(std::make_unique<CIAFile>(media_type), cia_path)};
+    auto file{std::make_shared<Service::FS::File>(am->system, std::make_unique<CIAFile>(media_type),
+                                                  cia_path)};
+
     am->cia_installing = true;
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS); // No error
@@ -907,8 +909,9 @@ void Module::Interface::BeginImportProgramTemporarily(Kernel::HLERequestContext&
     // Create our CIAFile handle for the app to write to, and while the app writes Citra will store
     // contents out to sdmc/nand
     const FileSys::Path cia_path{};
-    auto file{std::make_shared<Service::FS::File>(std::make_unique<CIAFile>(FS::MediaType::NAND),
-                                                  cia_path)};
+    auto file{std::make_shared<Service::FS::File>(
+        am->system, std::make_unique<CIAFile>(FS::MediaType::NAND), cia_path)};
+
     am->cia_installing = true;
     IPC::ResponseBuilder rb{ctx, 0x0403, 1, 2};
     rb.Push(RESULT_SUCCESS); // No error
@@ -1309,7 +1312,7 @@ void Module::Interface::DeleteUserProgramsAtomically(Kernel::HLERequestContext& 
     rb.PushMappedBuffer(buffer);
 }
 
-Module::Module(Core::System& system) {
+Module::Module(Core::System& system) : system{system} {
     ScanForAllTitles();
     system_updater_mutex = system.Kernel().CreateMutex(false, "AM::SystemUpdaterMutex");
 }

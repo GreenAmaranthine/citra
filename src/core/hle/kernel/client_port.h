@@ -55,6 +55,7 @@ private:
     explicit ClientPort(KernelSystem& kernel);
     ~ClientPort() override;
 
+    KernelSystem& kernel;
     SharedPtr<ServerPort> server_port; ///< ServerPort associated with this client port.
     u32 max_sessions{};    ///< Maximum number of simultaneous sessions the port can have
     u32 active_sessions{}; ///< Number of currently open sessions to this port
