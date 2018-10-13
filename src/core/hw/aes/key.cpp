@@ -304,6 +304,7 @@ void InitKeys() {
     static bool initialized{};
     if (initialized)
         return;
+    LoadBootromKeys();
     LoadPresetKeys();
     initialized = true;
 }
