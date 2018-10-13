@@ -47,7 +47,7 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
 
 std::tuple<bool, LocalFriendCodeSeed> GetLocalFriendCodeSeedTuple() {
     const std::string path{
-        fmt::format("{}/LocalFriendCodeSeed_B", FileUtil::GetUserPath(D_SYSDATA_IDX))};
+        fmt::format("{}LocalFriendCodeSeed_B", FileUtil::GetUserPath(D_SYSDATA_IDX))};
     if (FileUtil::Exists(path)) {
         LocalFriendCodeSeed lfcs{};
         FileUtil::IOFile file{path, "rb"};

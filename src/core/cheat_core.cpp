@@ -44,8 +44,8 @@ void RefreshCheats() {
 }
 
 static std::string GetFilePath() {
-    return FileUtil::GetUserPath(D_USER_IDX) + "cheats" + DIR_SEP +
-           fmt::format("{:016X}", Kernel::g_current_process->codeset->program_id) + ".txt";
+    return fmt::format("{}cheats/{:016X}.txt", FileUtil::GetUserPath(D_USER_IDX),
+                       Kernel::g_current_process->codeset->program_id);
 }
 
 Engine::Engine() {

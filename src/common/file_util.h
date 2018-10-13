@@ -237,6 +237,7 @@ public:
     bool IsGood() const {
         return m_good;
     }
+
     explicit operator bool() const {
         return IsGood();
     }
@@ -255,7 +256,7 @@ public:
 
 private:
     std::FILE* m_file{};
-    bool m_good = true;
+    bool m_good{true};
 };
 
 } // namespace FileUtil

@@ -365,7 +365,7 @@ Module::Module() {
         Kernel::Event::Create(Kernel::ResetType::OneShot, "NFC::tag_out_range_event");
 
     FileUtil::IOFile keys_file{
-        fmt::format("{}/amiibo_keys.bin", FileUtil::GetUserPath(D_SYSDATA_IDX)), "rb"};
+        fmt::format("{}amiibo_keys.bin", FileUtil::GetUserPath(D_SYSDATA_IDX)), "rb"};
     if (!keys_file.IsOpen() || keys_file.GetSize() != 160) {
         LOG_ERROR(Service_NFC, "amiibo_keys.bin file not found or invalid.");
     } else {
