@@ -1015,16 +1015,13 @@ void GMainWindow::OnGameListShowList(bool show) {
 }
 
 void GMainWindow::OnMenuLoadFile() {
-    QString extensions{};
-    for (const auto& piece : game_list->supported_file_extensions)
-        extensions += "*." + piece + " ";
+    const QString extensions{QString("*.").append(GameList::supported_file_extensions.join(" *."))};
+    const QString file_filter{QString("3DS Executable (%1);;All Files (*.*)").arg(extensions)};
+    const QString filename{QFileDialog::getOpenFileName(this, "Load File", ".", file_filter)};
+    if (filename.isEmpty())
+        return;
 
-    QString file_filter{QString("3DS Executable (%1);;All Files (*.*)").arg(extensions)};
-
-    QString filename{QFileDialog::getOpenFileName(this, "Load File", ".", file_filter)};
-    if (!filename.isEmpty()) {
-        BootGame(filename);
-    }
+    BootGame(filename);
 }
 
 void GMainWindow::OnMenuInstallCIA() {
