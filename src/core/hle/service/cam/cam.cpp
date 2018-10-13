@@ -1050,7 +1050,6 @@ void Module::LoadCameraImplementation(CameraConfig& camera, int camera_id) {
 
 void ReloadCameraDevices() {
     auto& system{Core::System::GetInstance()};
-
     if (!system.IsPoweredOn()) {
         return;
     }

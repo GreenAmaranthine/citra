@@ -13,7 +13,6 @@ namespace Service::IR {
 
 void ReloadInputDevices() {
     auto& system{Core::System::GetInstance()};
-
     if (!system.IsPoweredOn()) {
         return;
     }

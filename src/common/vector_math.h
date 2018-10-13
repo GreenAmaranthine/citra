@@ -213,7 +213,7 @@ public:
     }
 
     constexpr Vec3() = default;
-    constexpr Vec3(const T& x_, const T& y_, const T& z_) : x(x_), y(y_), z(z_) {}
+    constexpr Vec3(const T& x_, const T& y_, const T& z_) : x{x_}, y{y_}, z{z_} {}
 
     template <typename T2>
     constexpr Vec3<T2> Cast() const {
@@ -436,7 +436,7 @@ public:
 
     constexpr Vec4() = default;
     constexpr Vec4(const T& x_, const T& y_, const T& z_, const T& w_)
-        : x(x_), y(y_), z(z_), w(w_) {}
+        : x{x_}, y{y_}, z{z_}, w{w_} {}
 
     template <typename T2>
     constexpr Vec4<T2> Cast() const {

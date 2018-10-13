@@ -15,7 +15,7 @@ namespace FileSys {
 /// Archive backend for general save data archive type (SaveData and SystemSaveData)
 class SaveDataArchive : public ArchiveBackend {
 public:
-    explicit SaveDataArchive(const std::string& mount_point_) : mount_point(mount_point_) {}
+    explicit SaveDataArchive(const std::string& mount_point_) : mount_point{mount_point_} {}
 
     std::string GetName() const override {
         return "SaveDataArchive: " + mount_point;

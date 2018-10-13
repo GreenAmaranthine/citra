@@ -404,7 +404,6 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
 
 void ReloadDevice() {
     auto& system{Core::System::GetInstance()};
-
     if (!system.IsPoweredOn()) {
         return;
     }

@@ -17,14 +17,14 @@ class QScreen;
 
 class GGLWidgetInternal;
 class GMainWindow;
-class GRenderWindow;
+class Screens;
 class QTouchEvent;
 
 class EmuThread : public QThread {
     Q_OBJECT
 
 public:
-    explicit EmuThread(GRenderWindow* render_window);
+    explicit EmuThread(Screens* screens);
 
     /**
      * Start emulation (on new thread)
@@ -44,18 +44,18 @@ private:
     bool running{};
     std::atomic<bool> stop_run{false};
 
-    GRenderWindow* render_window{};
+    Screens* screens;
 
 signals:
     void ErrorThrown(Core::System::ResultStatus, const std::string&);
 };
 
-class GRenderWindow : public QWidget {
+class Screens : public QWidget {
     Q_OBJECT
 
 public:
-    GRenderWindow(QWidget* parent, EmuThread* emu_thread);
-    ~GRenderWindow();
+    Screens(QWidget* parent, EmuThread* emu_thread);
+    ~Screens();
 
     /**
      * Clip the provided coordinates to be inside the touchscreen area.

@@ -145,14 +145,14 @@ GMainWindow::GMainWindow() : config{new Config()}, emu_thread{nullptr} {
 
 GMainWindow::~GMainWindow() {
     // will get automatically deleted otherwise
-    if (render_window->parent() == nullptr)
-        delete render_window;
+    if (screens->parent() == nullptr)
+        delete screens;
     Network::Shutdown();
 }
 
 void GMainWindow::InitializeWidgets() {
-    render_window = new GRenderWindow(this, emu_thread.get());
-    render_window->hide();
+    screens = new Screens(this, emu_thread.get());
+    screens->hide();
 
     game_list = new GameList(this);
     ui.horizontalLayout->addWidget(game_list);
@@ -280,13 +280,13 @@ void GMainWindow::InitializeHotkeys() {
             return;
         BootGame(QString(game_path));
     });
-    connect(GetHotkey("Main Window", "Swap Screens", render_window), &QShortcut::activated,
+    connect(GetHotkey("Main Window", "Swap Screens", screens), &QShortcut::activated,
             ui.action_Screen_Layout_Swap_Screens, &QAction::trigger);
-    connect(GetHotkey("Main Window", "Toggle Screen Layout", render_window), &QShortcut::activated,
-            this, &GMainWindow::ToggleScreenLayout);
-    connect(GetHotkey("Main Window", "Fullscreen", render_window), &QShortcut::activated,
+    connect(GetHotkey("Main Window", "Toggle Screen Layout", screens), &QShortcut::activated, this,
+            &GMainWindow::ToggleScreenLayout);
+    connect(GetHotkey("Main Window", "Fullscreen", screens), &QShortcut::activated,
             ui.action_Fullscreen, &QAction::trigger);
-    connect(GetHotkey("Main Window", "Fullscreen", render_window), &QShortcut::activatedAmbiguously,
+    connect(GetHotkey("Main Window", "Fullscreen", screens), &QShortcut::activatedAmbiguously,
             ui.action_Fullscreen, &QAction::trigger);
     connect(GetHotkey("Main Window", "Exit Fullscreen", this), &QShortcut::activated, this, [&] {
         if (emulation_running) {
@@ -376,16 +376,16 @@ void GMainWindow::SetDefaultUIGeometry() {
 void GMainWindow::RestoreUIState() {
     restoreGeometry(UISettings::values.geometry);
     restoreState(UISettings::values.state);
-    render_window->restoreGeometry(UISettings::values.renderwindow_geometry);
+    screens->restoreGeometry(UISettings::values.screens_geometry);
 
     game_list->LoadInterfaceLayout();
 
-    render_window->BackupGeometry();
-    ui.horizontalLayout->addWidget(render_window);
-    render_window->setFocusPolicy(Qt::ClickFocus);
+    screens->BackupGeometry();
+    ui.horizontalLayout->addWidget(screens);
+    screens->setFocusPolicy(Qt::ClickFocus);
     if (emulation_running) {
-        render_window->setVisible(true);
-        render_window->setFocus();
+        screens->setVisible(true);
+        screens->setFocus();
         game_list->hide();
     }
 
@@ -408,10 +408,8 @@ void GMainWindow::ConnectWidgetEvents() {
             &GMainWindow::OnGameListAddDirectory);
     connect(game_list, &GameList::ShowList, this, &GMainWindow::OnGameListShowList);
 
-    connect(this, &GMainWindow::EmulationStarting, render_window,
-            &GRenderWindow::OnEmulationStarting);
-    connect(this, &GMainWindow::EmulationStopping, render_window,
-            &GRenderWindow::OnEmulationStopping);
+    connect(this, &GMainWindow::EmulationStarting, screens, &Screens::OnEmulationStarting);
+    connect(this, &GMainWindow::EmulationStopping, screens, &Screens::OnEmulationStopping);
 
     connect(&status_bar_update_timer, &QTimer::timeout, this, &GMainWindow::UpdateStatusBar);
 
@@ -512,8 +510,8 @@ bool GMainWindow::LoadROM(const QString& filename) {
     if (emu_thread != nullptr)
         ShutdownGame();
 
-    render_window->InitRenderTarget();
-    render_window->MakeCurrent();
+    screens->InitRenderTarget();
+    screens->MakeCurrent();
 
     if (!gladLoadGL()) {
         QMessageBox::critical(this, "OpenGL 3.3 Unsupported",
@@ -657,12 +655,12 @@ void GMainWindow::BootGame(const QString& filename) {
         return;
 
     // Create and start the emulation thread
-    emu_thread = std::make_unique<EmuThread>(render_window);
+    emu_thread = std::make_unique<EmuThread>(screens);
     emit EmulationStarting(emu_thread.get());
-    render_window->moveContext();
+    screens->moveContext();
     emu_thread->start();
 
-    connect(render_window, &GRenderWindow::Closed, this, &GMainWindow::OnStopGame);
+    connect(screens, &Screens::Closed, this, &GMainWindow::OnStopGame);
 
     // Update the GUI
     game_list->hide();
@@ -672,8 +670,8 @@ void GMainWindow::BootGame(const QString& filename) {
 
     status_bar_update_timer.start(2000);
 
-    render_window->show();
-    render_window->setFocus();
+    screens->show();
+    screens->setFocus();
 
     emulation_running = true;
 
@@ -729,7 +727,7 @@ void GMainWindow::ShutdownGame() {
     Camera::QtMultimediaCameraHandler::ReleaseHandlers();
 
     // The emulation is stopped, so closing the window or not does not matter anymore
-    disconnect(render_window, &GRenderWindow::Closed, this, &GMainWindow::OnStopGame);
+    disconnect(screens, &Screens::Closed, this, &GMainWindow::OnStopGame);
 
     // Update the GUI
     ui.action_Start->setEnabled(false);
@@ -747,7 +745,7 @@ void GMainWindow::ShutdownGame() {
     ui.action_Advance_Frame->setEnabled(false);
     ui.action_Sleep_Mode->setEnabled(false);
     ui.action_Sleep_Mode->setChecked(false);
-    render_window->hide();
+    screens->hide();
     if (game_list->isEmpty())
         game_list_placeholder->show();
     else
@@ -1504,7 +1502,7 @@ void GMainWindow::OnCaptureScreenshot() {
     OnStartGame();
     if (path.isEmpty())
         return;
-    render_window->CaptureScreenshot(UISettings::values.screenshot_resolution_factor, path);
+    screens->CaptureScreenshot(UISettings::values.screenshot_resolution_factor, path);
 }
 
 void GMainWindow::UpdateStatusBar() {
@@ -1625,7 +1623,7 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
 
     if (!ui.action_Fullscreen->isChecked()) {
         UISettings::values.geometry = saveGeometry();
-        UISettings::values.renderwindow_geometry = render_window->saveGeometry();
+        UISettings::values.screens_geometry = screens->saveGeometry();
     }
     UISettings::values.state = saveState();
     UISettings::values.fullscreen = ui.action_Fullscreen->isChecked();
@@ -1639,7 +1637,7 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     if (emu_thread != nullptr)
         ShutdownGame();
 
-    render_window->close();
+    screens->close();
     multiplayer_state->Close();
     QWidget::closeEvent(event);
 }
@@ -1753,7 +1751,7 @@ int main(int argc, char* argv[]) {
     // generating shaders
     setlocale(LC_ALL, "C");
 
-    GMainWindow main_window{};
+    GMainWindow main_window;
 
     // Register camera factories
     Camera::RegisterFactory("image", std::make_unique<Camera::StillImageCameraFactory>());
@@ -1767,10 +1765,10 @@ int main(int argc, char* argv[]) {
 #endif
     main_window.show();
     int result{app.exec()};
-    SDL_QuitSubSystem(SDL_INIT_AUDIO);
 #ifdef _WIN32
     WSACleanup();
 #endif
+    SDL_QuitSubSystem(SDL_INIT_AUDIO);
     detached_tasks.WaitForAllTasks();
     return result;
 }

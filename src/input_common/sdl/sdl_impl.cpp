@@ -436,7 +436,8 @@ private:
 /// An analog device factory that creates analog devices from SDL joystick
 class SDLAnalogFactory final : public Input::Factory<Input::AnalogDevice> {
 public:
-    explicit SDLAnalogFactory(SDLState& state_) : state(state_) {}
+    explicit SDLAnalogFactory(SDLState& state_) : state{state_} {}
+
     /**
      * Creates analog device from joystick axes
      * @param params contains parameters for creating the device:
@@ -489,7 +490,7 @@ SDLState::SDLState() {
             SDL_Event event;
             while (initialized) {
                 SDL_PumpEvents();
-                std::this_thread::sleep_for(std::chrono::duration(10ms));
+                std::this_thread::sleep_for(std::chrono::duration{10ms});
             }
         });
     }

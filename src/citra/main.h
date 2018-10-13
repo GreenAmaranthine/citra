@@ -29,7 +29,7 @@ class GameList;
 enum class GameListOpenTarget;
 class GameListPlaceholder;
 class GImageInfo;
-class GRenderWindow;
+class Screens;
 class MultiplayerState;
 template <typename>
 class QFutureWatcher;
@@ -179,7 +179,7 @@ private:
 
     Ui::MainWindow ui;
 
-    GRenderWindow* render_window;
+    Screens* screens;
 
     GameList* game_list;
     GameListPlaceholder* game_list_placeholder;

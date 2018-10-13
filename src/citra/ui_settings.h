@@ -36,7 +36,7 @@ struct Values {
     QByteArray geometry;
     QByteArray state;
 
-    QByteArray renderwindow_geometry;
+    QByteArray screens_geometry;
 
     QByteArray gamelist_header_state;
 

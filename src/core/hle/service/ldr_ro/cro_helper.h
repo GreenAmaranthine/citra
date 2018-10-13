@@ -228,7 +228,7 @@ private:
         BitField<4, 28, u32_le> offset_into_segment;
 
         SegmentTag() = default;
-        explicit SegmentTag(u32 raw_) : raw(raw_) {}
+        explicit SegmentTag(u32 raw_) : raw{raw_} {}
     };
 
     /// Information of a segment in this module.

@@ -76,7 +76,7 @@ private:
 // open RomFS and ExeFS, excluding the .code section.
 class SelfNCCHArchive final : public ArchiveBackend {
 public:
-    explicit SelfNCCHArchive(const NCCHData& ncch_data_) : ncch_data(ncch_data_) {}
+    explicit SelfNCCHArchive(const NCCHData& ncch_data_) : ncch_data{ncch_data_} {}
 
     std::string GetName() const override {
         return "SelfNCCHArchive";

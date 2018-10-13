@@ -302,8 +302,7 @@ void Config::ReadValues() {
     qt_config->beginGroup("UILayout");
     UISettings::values.geometry = qt_config->value("geometry").toByteArray();
     UISettings::values.state = qt_config->value("state").toByteArray();
-    UISettings::values.renderwindow_geometry =
-        qt_config->value("geometryRenderWindow").toByteArray();
+    UISettings::values.screens_geometry = qt_config->value("geometryScreens").toByteArray();
     UISettings::values.gamelist_header_state =
         qt_config->value("gameListHeaderState").toByteArray();
     qt_config->endGroup();
@@ -543,7 +542,7 @@ void Config::SaveValues() {
     qt_config->beginGroup("UILayout");
     qt_config->setValue("geometry", UISettings::values.geometry);
     qt_config->setValue("state", UISettings::values.state);
-    qt_config->setValue("geometryRenderWindow", UISettings::values.renderwindow_geometry);
+    qt_config->setValue("geometryScreens", UISettings::values.screens_geometry);
     qt_config->setValue("gameListHeaderState", UISettings::values.gamelist_header_state);
     qt_config->endGroup();
 

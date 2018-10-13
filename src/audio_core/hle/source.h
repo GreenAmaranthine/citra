@@ -28,7 +28,7 @@ namespace HLE {
  */
 class Source final {
 public:
-    explicit Source(std::size_t source_id_) : source_id(source_id_) {
+    explicit Source(std::size_t source_id_) : source_id{source_id_} {
         Reset();
     }
 

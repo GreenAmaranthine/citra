@@ -448,7 +448,6 @@ void Module::SetOverrideControls(bool pad, bool touch, bool motion, bool circle)
 
 void ReloadInputDevices() {
     auto& system{Core::System::GetInstance()};
-
     if (!system.IsPoweredOn()) {
         return;
     }
@@ -460,7 +459,6 @@ void ReloadInputDevices() {
 
 void SetPadState(u32 raw) {
     auto& system{Core::System::GetInstance()};
-
     if (!system.IsPoweredOn()) {
         return;
     }
@@ -472,7 +470,6 @@ void SetPadState(u32 raw) {
 
 void SetTouchState(s16 x, s16 y, bool valid) {
     auto& system{Core::System::GetInstance()};
-
     if (!system.IsPoweredOn()) {
         return;
     }
@@ -484,7 +481,6 @@ void SetTouchState(s16 x, s16 y, bool valid) {
 
 void SetMotionState(s16 x, s16 y, s16 z, s16 roll, s16 pitch, s16 yaw) {
     auto& system{Core::System::GetInstance()};
-
     if (!system.IsPoweredOn()) {
         return;
     }
@@ -496,7 +492,6 @@ void SetMotionState(s16 x, s16 y, s16 z, s16 roll, s16 pitch, s16 yaw) {
 
 void SetCircleState(s16 x, s16 y) {
     auto& system{Core::System::GetInstance()};
-
     if (!system.IsPoweredOn()) {
         return;
     }
@@ -508,7 +503,6 @@ void SetCircleState(s16 x, s16 y) {
 
 void SetOverrideControls(bool pad, bool touch, bool motion, bool circle) {
     auto& system{Core::System::GetInstance()};
-
     if (!system.IsPoweredOn()) {
         return;
     }

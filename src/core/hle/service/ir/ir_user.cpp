@@ -68,9 +68,9 @@ class BufferManager {
 public:
     BufferManager(Kernel::SharedPtr<Kernel::SharedMemory> shared_memory_, u32 info_offset_,
                   u32 buffer_offset_, u32 max_packet_count_, u32 buffer_size)
-        : shared_memory(shared_memory_), info_offset(info_offset_), buffer_offset(buffer_offset_),
-          max_packet_count(max_packet_count_),
-          max_data_size(buffer_size - sizeof(PacketInfo) * max_packet_count_) {
+        : shared_memory{shared_memory_}, info_offset{info_offset_}, buffer_offset{buffer_offset_},
+          max_packet_count{max_packet_count_},
+          max_data_size{static_cast<u32>(buffer_size - sizeof(PacketInfo) * max_packet_count_)} {
         UpdateBufferInfo();
     }
 
@@ -431,7 +431,7 @@ void IR_USER::ReloadInputDevices() {
     extra_hid->RequestInputDevicesReload();
 }
 
-IRDevice::IRDevice(SendFunc send_func_) : send_func(send_func_) {}
+IRDevice::IRDevice(SendFunc send_func_) : send_func{send_func_} {}
 IRDevice::~IRDevice() = default;
 
 void IRDevice::Send(const std::vector<u8>& data) {

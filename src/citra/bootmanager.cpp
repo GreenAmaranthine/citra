@@ -20,10 +20,10 @@
 #include "input_common/motion_emu.h"
 #include "video_core/video_core.h"
 
-EmuThread::EmuThread(GRenderWindow* render_window) : render_window{render_window} {}
+EmuThread::EmuThread(Screens* screens) : screens{screens} {}
 
 void EmuThread::run() {
-    render_window->MakeCurrent();
+    screens->MakeCurrent();
     stop_run = false;
     auto& system{Core::System::GetInstance()};
     while (!stop_run) {
@@ -42,7 +42,7 @@ void EmuThread::run() {
 
     // Shutdown the core emulation
     system.Shutdown();
-    render_window->moveContext();
+    screens->moveContext();
 }
 
 // This class overrides paintEvent and resizeEvent to prevent the GUI thread from stealing GL
@@ -50,8 +50,7 @@ void EmuThread::run() {
 // The corresponding functionality is handled in EmuThread instead
 class GGLWidgetInternal : public QGLWidget {
 public:
-    GGLWidgetInternal(QGLFormat fmt, GRenderWindow* parent)
-        : QGLWidget{fmt, parent}, parent{parent} {}
+    GGLWidgetInternal(QGLFormat fmt, Screens* parent) : QGLWidget{fmt, parent}, parent{parent} {}
 
     void paintEvent(QPaintEvent* ev) override {}
 
@@ -61,11 +60,11 @@ public:
     }
 
 private:
-    GRenderWindow* parent;
+    Screens* parent;
 };
 
-class GRenderWindow::TouchState : public Input::Factory<Input::TouchDevice>,
-                                  public std::enable_shared_from_this<TouchState> {
+class Screens::TouchState : public Input::Factory<Input::TouchDevice>,
+                            public std::enable_shared_from_this<TouchState> {
 public:
     std::unique_ptr<Input::TouchDevice> Create(const Common::ParamPackage&) override {
         return std::make_unique<Device>(shared_from_this());
@@ -95,13 +94,11 @@ private:
     };
 };
 
-GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread)
-    : QWidget{parent}, emu_thread{emu_thread} {
+Screens::Screens(QWidget* parent, EmuThread* emu_thread) : QWidget{parent}, emu_thread{emu_thread} {
 
     touch_state = std::make_shared<TouchState>();
     Input::RegisterFactory<Input::TouchDevice>("emu_window", touch_state);
 
-    setWindowTitle("Render Window");
     setAttribute(Qt::WA_AcceptTouchEvents);
 
     InputCommon::Init();
@@ -118,12 +115,12 @@ GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread)
     });
 }
 
-GRenderWindow::~GRenderWindow() {
+Screens::~Screens() {
     Input::UnregisterFactory<Input::TouchDevice>("emu_window");
     InputCommon::Shutdown();
 }
 
-void GRenderWindow::moveContext() {
+void Screens::moveContext() {
     DoneCurrent();
 
     // If the thread started running, move the GL Context to the new thread. Otherwise, move it
@@ -134,7 +131,7 @@ void GRenderWindow::moveContext() {
     child->context()->moveToThread(thread);
 }
 
-void GRenderWindow::SwapBuffers() {
+void Screens::SwapBuffers() {
     // In our multi-threaded QGLWidget use case we shouldn't need to call `makeCurrent`,
     // since we never call `doneCurrent` in this thread.
     // However:
@@ -145,11 +142,11 @@ void GRenderWindow::SwapBuffers() {
     child->swapBuffers();
 }
 
-void GRenderWindow::MakeCurrent() {
+void Screens::MakeCurrent() {
     child->makeCurrent();
 }
 
-void GRenderWindow::DoneCurrent() {
+void Screens::DoneCurrent() {
     child->doneCurrent();
 }
 
@@ -158,7 +155,7 @@ void GRenderWindow::DoneCurrent() {
 // Older versions get the window size (density independent pixels),
 // and hence, do not support DPI scaling ("retina" displays).
 // The result will be a viewport that is smaller than the extent of the window.
-void GRenderWindow::OnFramebufferSizeChanged() {
+void Screens::OnFramebufferSizeChanged() {
     // Screen changes potentially incur a change in screen DPI, hence we should update the
     // framebuffer size
     qreal pixel_ratio{windowPixelRatio()};
@@ -167,22 +164,22 @@ void GRenderWindow::OnFramebufferSizeChanged() {
     UpdateCurrentFramebufferLayout(width, height);
 }
 
-void GRenderWindow::BackupGeometry() {
+void Screens::BackupGeometry() {
     geometry = ((QGLWidget*)this)->saveGeometry();
 }
 
-void GRenderWindow::RestoreGeometry() {
+void Screens::RestoreGeometry() {
     // We don't want to back up the geometry here (obviously)
     QWidget::restoreGeometry(geometry);
 }
 
-void GRenderWindow::restoreGeometry(const QByteArray& geometry) {
+void Screens::restoreGeometry(const QByteArray& geometry) {
     // Make sure users of this class don't need to deal with backing up the geometry themselves
     QWidget::restoreGeometry(geometry);
     BackupGeometry();
 }
 
-QByteArray GRenderWindow::saveGeometry() {
+QByteArray Screens::saveGeometry() {
     // If we are a top-level widget, store the current geometry
     // otherwise, store the last backup
     if (parent() == nullptr)
@@ -191,31 +188,31 @@ QByteArray GRenderWindow::saveGeometry() {
         return geometry;
 }
 
-qreal GRenderWindow::windowPixelRatio() const {
+qreal Screens::windowPixelRatio() const {
     // windowHandle() might not be accessible until the window is displayed to screen.
     return windowHandle() ? windowHandle()->screen()->devicePixelRatio() : 1.0f;
 }
 
-std::pair<unsigned, unsigned> GRenderWindow::ScaleTouch(const QPointF pos) const {
+std::pair<unsigned, unsigned> Screens::ScaleTouch(const QPointF pos) const {
     const qreal pixel_ratio{windowPixelRatio()};
     return {static_cast<unsigned>(std::max(std::round(pos.x() * pixel_ratio), qreal{0.0})),
             static_cast<unsigned>(std::max(std::round(pos.y() * pixel_ratio), qreal{0.0}))};
 }
 
-void GRenderWindow::closeEvent(QCloseEvent* event) {
+void Screens::closeEvent(QCloseEvent* event) {
     emit Closed();
     QWidget::closeEvent(event);
 }
 
-void GRenderWindow::keyPressEvent(QKeyEvent* event) {
+void Screens::keyPressEvent(QKeyEvent* event) {
     InputCommon::GetKeyboard()->PressKey(event->key());
 }
 
-void GRenderWindow::keyReleaseEvent(QKeyEvent* event) {
+void Screens::keyReleaseEvent(QKeyEvent* event) {
     InputCommon::GetKeyboard()->ReleaseKey(event->key());
 }
 
-void GRenderWindow::mousePressEvent(QMouseEvent* event) {
+void Screens::mousePressEvent(QMouseEvent* event) {
     if (event->source() == Qt::MouseEventSynthesizedBySystem)
         return; // touch input is handled in TouchBeginEvent
 
@@ -228,7 +225,7 @@ void GRenderWindow::mousePressEvent(QMouseEvent* event) {
     }
 }
 
-void GRenderWindow::mouseMoveEvent(QMouseEvent* event) {
+void Screens::mouseMoveEvent(QMouseEvent* event) {
     if (event->source() == Qt::MouseEventSynthesizedBySystem)
         return; // touch input is handled in TouchUpdateEvent
 
@@ -238,7 +235,7 @@ void GRenderWindow::mouseMoveEvent(QMouseEvent* event) {
     InputCommon::GetMotionEmu()->Tilt(pos.x(), pos.y());
 }
 
-void GRenderWindow::mouseReleaseEvent(QMouseEvent* event) {
+void Screens::mouseReleaseEvent(QMouseEvent* event) {
     if (event->source() == Qt::MouseEventSynthesizedBySystem)
         return; // touch input is handled in TouchEndEvent
 
@@ -248,13 +245,13 @@ void GRenderWindow::mouseReleaseEvent(QMouseEvent* event) {
         InputCommon::GetMotionEmu()->EndTilt();
 }
 
-void GRenderWindow::TouchBeginEvent(const QTouchEvent* event) {
+void Screens::TouchBeginEvent(const QTouchEvent* event) {
     // TouchBegin always has exactly one touch point, so take the .first()
     const auto [x, y]{ScaleTouch(event->touchPoints().first().pos())};
     TouchPressed(x, y);
 }
 
-void GRenderWindow::TouchUpdateEvent(const QTouchEvent* event) {
+void Screens::TouchUpdateEvent(const QTouchEvent* event) {
     QPointF pos;
     int active_points{};
 
@@ -272,11 +269,11 @@ void GRenderWindow::TouchUpdateEvent(const QTouchEvent* event) {
     TouchMoved(x, y);
 }
 
-void GRenderWindow::TouchEndEvent() {
+void Screens::TouchEndEvent() {
     TouchReleased();
 }
 
-bool GRenderWindow::event(QEvent* event) {
+bool Screens::event(QEvent* event) {
     if (event->type() == QEvent::TouchBegin) {
         TouchBeginEvent(static_cast<QTouchEvent*>(event));
         return true;
@@ -291,12 +288,12 @@ bool GRenderWindow::event(QEvent* event) {
     return QWidget::event(event);
 }
 
-void GRenderWindow::focusOutEvent(QFocusEvent* event) {
+void Screens::focusOutEvent(QFocusEvent* event) {
     QWidget::focusOutEvent(event);
     InputCommon::GetKeyboard()->ReleaseAllKeys();
 }
 
-void GRenderWindow::InitRenderTarget() {
+void Screens::InitRenderTarget() {
     if (child) {
         delete child;
     }
@@ -330,7 +327,7 @@ void GRenderWindow::InitRenderTarget() {
     BackupGeometry();
 }
 
-void GRenderWindow::CaptureScreenshot(u16 res_scale, const QString& screenshot_path) {
+void Screens::CaptureScreenshot(u16 res_scale, const QString& screenshot_path) {
     if (!res_scale) {
         res_scale = VideoCore::GetResolutionScaleFactor();
     }
@@ -345,11 +342,11 @@ void GRenderWindow::CaptureScreenshot(u16 res_scale, const QString& screenshot_p
                                  layout);
 }
 
-void GRenderWindow::OnEmulationStarting(EmuThread* emu_thread) {
+void Screens::OnEmulationStarting(EmuThread* emu_thread) {
     this->emu_thread = emu_thread;
 }
 
-void GRenderWindow::OnEmulationStopping() {
+void Screens::OnEmulationStopping() {
     emu_thread = nullptr;
 }
 
@@ -375,7 +372,7 @@ static bool IsWithinTouchscreen(const Layout::FramebufferLayout& layout, unsigne
     }
 }
 
-std::tuple<unsigned, unsigned> GRenderWindow::ClipToTouchScreen(unsigned new_x, unsigned new_y) {
+std::tuple<unsigned, unsigned> Screens::ClipToTouchScreen(unsigned new_x, unsigned new_y) {
     new_x = std::max(new_x, framebuffer_layout.bottom_screen.left);
     new_x = std::min(new_x, framebuffer_layout.bottom_screen.right - 1);
 
@@ -385,7 +382,7 @@ std::tuple<unsigned, unsigned> GRenderWindow::ClipToTouchScreen(unsigned new_x, 
     return std::make_tuple(new_x, new_y);
 }
 
-void GRenderWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
+void Screens::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
     if (!IsWithinTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y)) {
         return;
     }
@@ -408,14 +405,14 @@ void GRenderWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y)
     touch_state->touch_pressed = true;
 }
 
-void GRenderWindow::TouchReleased() {
+void Screens::TouchReleased() {
     std::lock_guard<std::mutex> guard{touch_state->mutex};
     touch_state->touch_pressed = false;
     touch_state->touch_x = 0;
     touch_state->touch_y = 0;
 }
 
-void GRenderWindow::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
+void Screens::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
     if (!touch_state->touch_pressed) {
         return;
     }
@@ -427,7 +424,7 @@ void GRenderWindow::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
     TouchPressed(framebuffer_x, framebuffer_y);
 }
 
-void GRenderWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) {
+void Screens::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) {
     Layout::FramebufferLayout layout;
     if (Settings::values.custom_layout) {
         layout = Layout::CustomFrameLayout(width, height, Settings::values.swap_screen);
@@ -455,10 +452,10 @@ void GRenderWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned heig
     framebuffer_layout = std::move(layout);
 }
 
-void GRenderWindow::showEvent(QShowEvent* event) {
+void Screens::showEvent(QShowEvent* event) {
     QWidget::showEvent(event);
 
     // windowHandle() is not initialized until the Window is shown, so we connect it here.
-    connect(windowHandle(), &QWindow::screenChanged, this, &GRenderWindow::OnFramebufferSizeChanged,
+    connect(windowHandle(), &QWindow::screenChanged, this, &Screens::OnFramebufferSizeChanged,
             Qt::UniqueConnection);
 }
