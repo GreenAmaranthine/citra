@@ -34,7 +34,7 @@ ClientRoomWindow::ClientRoomWindow(QWidget* parent)
                 &ClientRoomWindow::OnRoomUpdate);
         connect(this, &ClientRoomWindow::StateChanged, this, &::ClientRoomWindow::OnStateChange);
     } else {
-        // TODO (jroweboy) network was not initialized?
+        // TODO: network was not initialized?
     }
 
     connect(ui->disconnect, &QPushButton::pressed, [this] { Disconnect(); });

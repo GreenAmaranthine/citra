@@ -514,7 +514,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     }
 
     case PICA_REG_INDEX(vs.bool_uniforms):
-        // TODO (wwylele): does regs.pipeline.gs_unit_exclusive_configuration affect this?
+        // TODO: does regs.pipeline.gs_unit_exclusive_configuration affect this?
         WriteUniformBoolReg(g_state.vs, g_state.regs.vs.bool_uniforms.Value());
         break;
 
@@ -522,7 +522,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     case PICA_REG_INDEX_WORKAROUND(vs.int_uniforms[1], 0x2b2):
     case PICA_REG_INDEX_WORKAROUND(vs.int_uniforms[2], 0x2b3):
     case PICA_REG_INDEX_WORKAROUND(vs.int_uniforms[3], 0x2b4): {
-        // TODO (wwylele): does regs.pipeline.gs_unit_exclusive_configuration affect this?
+        // TODO: does regs.pipeline.gs_unit_exclusive_configuration affect this?
         auto index{(id - PICA_REG_INDEX_WORKAROUND(vs.int_uniforms[0], 0x2b1))};
         auto values{regs.vs.int_uniforms[index]};
         WriteUniformIntReg(g_state.vs, index,
@@ -538,7 +538,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[5], 0x2c6):
     case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[6], 0x2c7):
     case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[7], 0x2c8): {
-        // TODO (wwylele): does regs.pipeline.gs_unit_exclusive_configuration affect this?
+        // TODO: does regs.pipeline.gs_unit_exclusive_configuration affect this?
         WriteUniformFloatReg(g_state.regs.vs, g_state.vs, vs_float_regs_counter,
                              vs_uniform_write_buffer, value);
         break;

@@ -73,7 +73,7 @@ void IR_RST::UpdateCallback(u64 userdata, s64 cycles_late) {
         state.c_stick_right.Assign(direction.right);
     }
 
-    // TODO (wwylele): implement raw C-stick data for raw_c_stick = true
+    // TODO: implement raw C-stick data for raw_c_stick = true
 
     const u32 last_entry_index{mem->index};
     mem->index = next_pad_index;

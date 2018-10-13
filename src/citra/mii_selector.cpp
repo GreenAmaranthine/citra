@@ -4,34 +4,13 @@
 
 #include <string>
 #include <QMessageBox>
+#include <boost/crc.hpp>
 #include "citra/mii_selector.h"
 #include "common/file_util.h"
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "ui_mii_selector.h"
-
-u16 crc16_ccitt(const u8* buf, std::size_t len, u32 starting_val) {
-    if (!buf) {
-        return -1;
-    }
-
-    u32 crc{starting_val};
-
-    static const u16 POLY{0x1021};
-
-    for (std::size_t i{}; i < len; i++) {
-        for (int bit{7}; bit >= 0; bit--) {
-            crc = ((crc << 1) | ((buf[i] >> bit) & 0x1)) ^ (crc & 0x8000 ? POLY : 0);
-        }
-    }
-
-    for (int _{}; _ < 16; _++) {
-        crc = (crc << 1) ^ (crc & 0x8000 ? POLY : 0);
-    }
-
-    return (u16)(crc & 0xffff);
-}
 
 MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiConfig& config,
                                      HLE::Applets::MiiResult& result)
@@ -74,10 +53,10 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
 
     u32 id;
     u32 offset{0x8};
-    std::array<u8, 0x5C> mii;
+    std::array<u8, MiiSize> mii;
 
     for (int i{}; i < 100; ++i) {
-        file->Read(offset, 0x5C, mii.data());
+        file->Read(offset, MiiSize, mii.data());
         std::memcpy(&id, mii.data(), sizeof(u32));
         if (id != 0) {
             std::u16string name(10, '\0');
@@ -85,7 +64,7 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
             miis.emplace(ui->mii->count(), mii);
             ui->mii->addItem(QString::fromStdU16String(name));
         }
-        offset += 0x5C;
+        offset += MiiSize;
     }
 
     if (miis.empty()) {
@@ -98,9 +77,10 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
     }
 
     connect(ui->ok, &QPushButton::released, this, [&] {
-        std::memcpy(result.selected_mii_data, miis.at(ui->mii->currentIndex()).data(), 0x5C);
-        result.mii_data_checksum =
-            crc16_ccitt(result.selected_mii_data, 0x5C + sizeof(result.pad49), 0);
+        std::memcpy(result.selected_mii_data.data(), miis.at(ui->mii->currentIndex()).data(),
+                    MiiSize);
+        result.mii_data_checksum = boost::crc<16, 0x1021, 0, 0, false, false>(
+            result.selected_mii_data.data(), MiiSize + sizeof(result.pad51));
         result.selected_guest_mii_index = 0xFFFFFFFF;
         close();
     });

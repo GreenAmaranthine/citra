@@ -95,7 +95,7 @@ ChatRoom::ChatRoom(QWidget* parent) : QWidget{parent}, ui{std::make_unique<Ui::C
             [this](const Network::ChatEntry& chat) { emit ChatReceived(chat); });
         connect(this, &ChatRoom::ChatReceived, this, &ChatRoom::OnChatReceive);
     } else {
-        // TODO (jroweboy) network was not initialized?
+        // TODO: network was not initialized?
     }
 
     // Connect all the widgets to the appropriate events

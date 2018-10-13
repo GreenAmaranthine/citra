@@ -224,7 +224,7 @@ void Y2R_U::SetSendingY(Kernel::HLERequestContext& ctx) {
     conversion.src_Y.transfer_unit = rp.Pop<u32>();
     conversion.src_Y.gap = rp.Pop<u32>();
     auto process{rp.PopObject<Kernel::Process>()};
-    // TODO (wwylele): pass process handle to y2r engine or convert VAddr to PAddr
+    // TODO: pass process handle to y2r engine or convert VAddr to PAddr
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
@@ -243,7 +243,7 @@ void Y2R_U::SetSendingU(Kernel::HLERequestContext& ctx) {
     conversion.src_U.transfer_unit = rp.Pop<u32>();
     conversion.src_U.gap = rp.Pop<u32>();
     auto process{rp.PopObject<Kernel::Process>()};
-    // TODO (wwylele): pass the process handle to y2r engine or convert VAddr to PAddr
+    // TODO: pass the process handle to y2r engine or convert VAddr to PAddr
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
@@ -263,7 +263,7 @@ void Y2R_U::SetSendingV(Kernel::HLERequestContext& ctx) {
     conversion.src_V.transfer_unit = rp.Pop<u32>();
     conversion.src_V.gap = rp.Pop<u32>();
     auto process{rp.PopObject<Kernel::Process>()};
-    // TODO (wwylele): pass the process handle to y2r engine or convert VAddr to PAddr
+    // TODO: pass the process handle to y2r engine or convert VAddr to PAddr
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
@@ -283,7 +283,7 @@ void Y2R_U::SetSendingYUYV(Kernel::HLERequestContext& ctx) {
     conversion.src_YUYV.transfer_unit = rp.Pop<u32>();
     conversion.src_YUYV.gap = rp.Pop<u32>();
     auto process{rp.PopObject<Kernel::Process>()};
-    // TODO (wwylele): pass the process handle to y2r engine or convert VAddr to PAddr
+    // TODO: pass the process handle to y2r engine or convert VAddr to PAddr
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
@@ -343,7 +343,7 @@ void Y2R_U::SetReceiving(Kernel::HLERequestContext& ctx) {
     conversion.dst.transfer_unit = rp.Pop<u32>();
     conversion.dst.gap = rp.Pop<u32>();
     auto dst_process{rp.PopObject<Kernel::Process>()};
-    // TODO (wwylele): pass the process handle to y2r engine or convert VAddr to PAddr
+    // TODO: pass the process handle to y2r engine or convert VAddr to PAddr
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);

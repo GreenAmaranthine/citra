@@ -52,7 +52,7 @@ void RO::Initialize(Kernel::HLERequestContext& ctx) {
     VAddr crs_buffer_ptr{rp.Pop<u32>()};
     u32 crs_size{rp.Pop<u32>()};
     VAddr crs_address{rp.Pop<u32>()};
-    // TODO (wwylele): RO service checks the descriptor here and return error 0xD9001830 for
+    // TODO: RO service checks the descriptor here and return error 0xD9001830 for
     // incorrect descriptor. This error return should be probably built in IPC::RequestParser.
     // All other service functions below have the same issue.
     auto process{rp.PopObject<Kernel::Process>()};

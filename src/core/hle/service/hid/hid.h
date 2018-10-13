@@ -165,7 +165,7 @@ struct SharedMem {
  */
 struct GyroscopeCalibrateParam {
     struct {
-        // TODO (wwylele): figure out the exact meaning of these params
+        // TODO: figure out the exact meaning of these params
         s16 zero_point;
         s16 positive_unit_point;
         s16 negative_unit_point;

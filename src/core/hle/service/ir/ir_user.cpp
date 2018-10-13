@@ -38,8 +38,7 @@ struct SharedMemoryHeader {
 static_assert(sizeof(SharedMemoryHeader) == 16, "SharedMemoryHeader has wrong size!");
 
 /**
- * A manager of the send/receive buffers in the shared memory. Currently it is only used for the
- * receive buffer.
+ * A manager of the send/receive buffers in the shared memory.
  *
  * A buffer consists of three parts:
  *     - BufferInfo: stores available count of packets, and their position in the PacketInfo
@@ -184,7 +183,7 @@ private:
 /// Wraps the payload into packet and puts it to the receive buffer
 void IR_USER::PutToReceive(const std::vector<u8>& payload) {
     LOG_TRACE(Service_IR, "called, data={}", Common::ArrayToString(payload.data(), payload.size()));
-    std::size_t size = payload.size();
+    std::size_t size{payload.size()};
 
     std::vector<u8> packet;
 
@@ -194,7 +193,7 @@ void IR_USER::PutToReceive(const std::vector<u8>& payload) {
     // fixed value
     packet.push_back(0xA5);
     // destination network ID
-    u8 network_id = *(shared_memory->GetPointer(offsetof(SharedMemoryHeader, network_id)));
+    u8 network_id{*(shared_memory->GetPointer(offsetof(SharedMemoryHeader, network_id)))};
     packet.push_back(network_id);
 
     // puts the size info.
@@ -262,10 +261,10 @@ void IR_USER::RequireConnection(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x06, 1, 0};
     const u8 device_id{rp.Pop<u8>()};
 
-    u8* shared_memory_ptr = shared_memory->GetPointer();
+    u8* shared_memory_ptr{shared_memory->GetPointer()};
     if (device_id == 1) {
         // These values are observed on a New 3DS. The meaning of them is unclear.
-        // TODO (wwylele): should assign network_id a (random?) number
+        // TODO: should assign network_id a (random?) number
         shared_memory_ptr[offsetof(SharedMemoryHeader, connection_status)] = 2;
         shared_memory_ptr[offsetof(SharedMemoryHeader, connection_role)] = 2;
         shared_memory_ptr[offsetof(SharedMemoryHeader, connected)] = 1;
@@ -282,25 +281,19 @@ void IR_USER::RequireConnection(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_INFO(Service_IR, "called, device_id = {}", device_id);
+    LOG_DEBUG(Service_IR, "device_id={}", device_id);
 }
 
 void IR_USER::GetReceiveEvent(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x0A, 1, 2};
-
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(receive_event);
-
-    LOG_INFO(Service_IR, "called");
 }
 
 void IR_USER::GetSendEvent(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x0B, 1, 2};
-
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(send_event);
-
-    LOG_INFO(Service_IR, "called");
 }
 
 void IR_USER::Disconnect(Kernel::HLERequestContext& ctx) {

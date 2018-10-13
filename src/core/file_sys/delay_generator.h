@@ -10,7 +10,7 @@ class DelayGenerator {
 public:
     virtual u64 GetReadDelayNs(std::size_t length) = 0;
 
-    // TODO (B3N30): Add getter for all other file/directory io operations
+    // TODO: Add getter for all other file/directory io operations
 };
 
 class DefaultDelayGenerator : public DelayGenerator {

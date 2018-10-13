@@ -298,7 +298,7 @@ static bool BlitTextures(GLuint src_tex, const MathUtil::Rectangle<u32>& src_rec
         buffers = GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT;
     }
 
-    // TODO (wwylele): use GL_NEAREST for shadow map texture
+    // TODO: use GL_NEAREST for shadow map texture
     // Note: shadow map is treated as RGBA8 format in PICA, as well as in the rasterizer cache, but
     // doing linear intepolation componentwise would cause incorrect value. However, for a
     // well-programmed game this code path should be rarely executed for shadow map with
