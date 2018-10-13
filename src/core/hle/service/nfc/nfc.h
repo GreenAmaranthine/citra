@@ -4,10 +4,15 @@
 
 #pragma once
 
+#include <atomic>
 #include <memory>
+#include <mutex>
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
+extern "C" {
+#include "nfc3d/amitool.h"
+}
 
 namespace Kernel {
 class Event;
@@ -45,8 +50,8 @@ public:
     public:
         Interface(std::shared_ptr<Module> nfc, const char* name);
         ~Interface();
-
-        std::shared_ptr<Module> GetModule() const;
+        void LoadAmiibo(const std::string& path);
+        void RemoveAmiibo();
 
     protected:
         void Initialize(Kernel::HLERequestContext& ctx);
@@ -74,12 +79,15 @@ public:
         std::shared_ptr<Module> nfc;
     };
 
+private:
     Kernel::SharedPtr<Kernel::Event> tag_in_range_event;
     Kernel::SharedPtr<Kernel::Event> tag_out_of_range_event;
-    TagState nfc_tag_state{TagState::NotInitialized};
+    std::atomic<TagState> nfc_tag_state{TagState::NotInitialized};
     CommunicationStatus nfc_status{CommunicationStatus::NfcInitialized};
-    std::string nfc_filename;
-    u8 keys_data[160];
+    std::array<u8, 160> keys{};
+    std::array<u8, AMIIBO_MAX_SIZE> encrypted_data{};
+    std::array<u8, AMIIBO_MAX_SIZE> decrypted_data{};
+    std::mutex mutex;
 };
 
 void InstallInterfaces(SM::ServiceManager& service_manager);

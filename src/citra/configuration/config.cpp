@@ -120,7 +120,6 @@ void Config::ReadValues() {
     }
     qt_config->endArray();
     Settings::values.profile = qt_config->value("profile", 0).toInt();
-
     if (size == 0) {
         Settings::ControllerProfile profile{};
         profile.name = "default";
@@ -134,7 +133,6 @@ void Config::ReadValues() {
             if (profile.buttons[i].empty())
                 profile.buttons[i] = default_param;
         }
-
         for (int i{}; i < Settings::NativeAnalog::NumAnalogs; ++i) {
             std::string default_param{InputCommon::GenerateAnalogParamFromKeys(
                 default_analogs[i][0], default_analogs[i][1], default_analogs[i][2],
@@ -147,7 +145,6 @@ void Config::ReadValues() {
             if (profile.analogs[i].empty())
                 profile.analogs[i] = default_param;
         }
-
         profile.motion_device =
             qt_config
                 ->value("motion_device",
@@ -156,7 +153,6 @@ void Config::ReadValues() {
                 .toStdString();
         profile.touch_device =
             qt_config->value("touch_device", "engine:emu_window").toString().toStdString();
-
         profile.udp_input_address =
             qt_config->value("udp_input_address", InputCommon::CemuhookUDP::DEFAULT_ADDR)
                 .toString()
@@ -164,17 +160,13 @@ void Config::ReadValues() {
         profile.udp_input_port = static_cast<u16>(
             qt_config->value("udp_input_port", InputCommon::CemuhookUDP::DEFAULT_PORT).toInt());
         profile.udp_pad_index = static_cast<u8>(qt_config->value("udp_pad_index", 0).toUInt());
-
         Settings::values.profiles.push_back(profile);
     }
-
     if (Settings::values.profile <= size) {
         Settings::values.profile = 0;
         LOG_ERROR(Config, "Invalid profile index");
     }
-
     Settings::LoadProfile(Settings::values.profile);
-
     qt_config->endGroup();
 
     qt_config->beginGroup("Core");

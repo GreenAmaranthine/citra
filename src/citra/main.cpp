@@ -644,7 +644,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
 }
 
 void GMainWindow::BootGame(const QString& filename) {
-    LOG_INFO(Frontend, "Citra starting...");
+    LOG_INFO(Frontend, "Booting {}", filename.toStdString());
     StoreRecentFile(filename); // Put the filename on top of the list
 
     if (movie_record_on_start) {
@@ -1318,23 +1318,17 @@ void GMainWindow::OnLoadAmiibo() {
     if (!filename.isEmpty()) {
         auto nfc{Core::System::GetInstance()
                      .ServiceManager()
-                     .GetService<Service::NFC::Module::Interface>("nfc:u")
-                     ->GetModule()};
-        nfc->nfc_filename = filename.toStdString();
-        nfc->nfc_tag_state = Service::NFC::TagState::TagInRange;
-        nfc->tag_in_range_event->Signal();
+                     .GetService<Service::NFC::Module::Interface>("nfc:u")};
+        nfc->LoadAmiibo(filename.toStdString());
         ui.action_Remove_Amiibo->setEnabled(true);
     }
 }
 
 void GMainWindow::OnRemoveAmiibo() {
-    auto nfc{Core::System::GetInstance()
-                 .ServiceManager()
-                 .GetService<Service::NFC::Module::Interface>("nfc:u")
-                 ->GetModule()};
-    nfc->nfc_filename.clear();
-    nfc->nfc_tag_state = Service::NFC::TagState::TagOutOfRange;
-    nfc->tag_out_of_range_event->Signal();
+    auto nfc{
+        Core::System::GetInstance().ServiceManager().GetService<Service::NFC::Module::Interface>(
+            "nfc:u")};
+    nfc->RemoveAmiibo();
     ui.action_Remove_Amiibo->setEnabled(false);
 }
 

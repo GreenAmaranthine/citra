@@ -8,9 +8,6 @@
 #include "core/hle/service/nfc/nfc.h"
 #include "core/hle/service/nfc/nfc_m.h"
 #include "core/hle/service/nfc/nfc_u.h"
-extern "C" {
-#include "nfc3d/amitool.h"
-}
 
 namespace Service::NFC {
 
@@ -50,7 +47,7 @@ struct AmiiboConfig {
 };
 
 struct AmiiboSettings {
-    u8 mii[0x60];                    /// "Owner Mii."
+    std::array<u8, 0x60> mii;        /// "Owner Mii."
     std::array<u16_le, 11> nickname; /// "UTF-16BE Amiibo nickname."
     u8 flags; /// "This is plaintext_amiibosettingsdata[0] & 0xF." See also the NFC_amiiboFlag
               /// enums.
@@ -133,19 +130,17 @@ void Module::Interface::StartTagScanning(Kernel::HLERequestContext& ctx) {
 void Module::Interface::GetTagInfo(Kernel::HLERequestContext& ctx) {
     TagInfo tag_info{};
 
-    FileUtil::IOFile nfc_file{nfc->nfc_filename, "rb"};
-    u8 data[AMIIBO_MAX_SIZE];
-    nfc_file.ReadBytes(data, AMIIBO_MAX_SIZE);
-
+    nfc->mutex.lock();
     tag_info.id_offset_size = 0x7;
     tag_info.unk_x3 = 0x02;
-    tag_info.id[0] = data[0];
-    tag_info.id[1] = data[1];
-    tag_info.id[2] = data[2];
-    tag_info.id[3] = data[4];
-    tag_info.id[4] = data[5];
-    tag_info.id[5] = data[6];
-    tag_info.id[6] = data[7];
+    tag_info.id[0] = nfc->encrypted_data[0];
+    tag_info.id[1] = nfc->encrypted_data[1];
+    tag_info.id[2] = nfc->encrypted_data[2];
+    tag_info.id[3] = nfc->encrypted_data[4];
+    tag_info.id[4] = nfc->encrypted_data[5];
+    tag_info.id[5] = nfc->encrypted_data[6];
+    tag_info.id[6] = nfc->encrypted_data[7];
+    nfc->mutex.unlock();
 
     IPC::ResponseBuilder rb{ctx, 0x11, (sizeof(TagInfo) / sizeof(u32)) + 1, 0};
     rb.Push(RESULT_SUCCESS);
@@ -155,28 +150,21 @@ void Module::Interface::GetTagInfo(Kernel::HLERequestContext& ctx) {
 void Module::Interface::GetAmiiboConfig(Kernel::HLERequestContext& ctx) {
     AmiiboConfig amiibo_config{};
 
-    FileUtil::IOFile nfc_file{nfc->nfc_filename, "rb"};
-    u8 e_data[AMIIBO_MAX_SIZE];
-    u8 d_data[AMIIBO_MAX_SIZE];
-    nfc_file.ReadBytes(e_data, AMIIBO_MAX_SIZE);
+    nfc->mutex.lock();
+    amiibo_config.lastwritedate_year = AMIIBO_YEAR_FROM_DATE(nfc->decrypted_data[0x32]);
+    amiibo_config.lastwritedate_month = AMIIBO_MONTH_FROM_DATE(nfc->decrypted_data[0x32]);
+    amiibo_config.lastwritedate_day = AMIIBO_DAY_FROM_DATE(nfc->decrypted_data[0x32]);
 
-    if (!amitool_unpack(e_data, AMIIBO_MAX_SIZE, d_data, AMIIBO_MAX_SIZE)) {
-        LOG_ERROR(Service_NFC, "Failed to decrypt");
-    } else {
-        amiibo_config.lastwritedate_year = AMIIBO_YEAR_FROM_DATE(d_data[0x32]);
-        amiibo_config.lastwritedate_month = AMIIBO_MONTH_FROM_DATE(d_data[0x32]);
-        amiibo_config.lastwritedate_day = AMIIBO_DAY_FROM_DATE(d_data[0x32]);
-
-        amiibo_config.write_counter = (d_data[0xB4] << 8) | d_data[0xB5];
-        amiibo_config.characterID[0] = d_data[0x1DC];
-        amiibo_config.characterID[1] = d_data[0x1DD];
-        amiibo_config.characterID[2] = d_data[0x1DE];
-        amiibo_config.series = d_data[0x1e2];
-        amiibo_config.amiiboID = (d_data[0x1e0] << 8) | d_data[0x1e1];
-        amiibo_config.type = d_data[0x1DF];
-        amiibo_config.pagex4_byte3 = d_data[0x2B]; // raw page 0x4 byte 0x3, dec byte
-        amiibo_config.appdata_size = 0xD8;
-    }
+    amiibo_config.write_counter = (nfc->decrypted_data[0xB4] << 8) | nfc->decrypted_data[0xB5];
+    amiibo_config.characterID[0] = nfc->decrypted_data[0x1DC];
+    amiibo_config.characterID[1] = nfc->decrypted_data[0x1DD];
+    amiibo_config.characterID[2] = nfc->decrypted_data[0x1DE];
+    amiibo_config.series = nfc->decrypted_data[0x1e2];
+    amiibo_config.amiiboID = (nfc->decrypted_data[0x1e0] << 8) | nfc->decrypted_data[0x1e1];
+    amiibo_config.type = nfc->decrypted_data[0x1DF];
+    amiibo_config.pagex4_byte3 = nfc->decrypted_data[0x2B]; // raw page 0x4 byte 0x3, dec byte
+    amiibo_config.appdata_size = 0xD8;
+    nfc->mutex.unlock();
 
     IPC::ResponseBuilder rb{ctx, 0x18, 17, 0};
     rb.Push(RESULT_SUCCESS);
@@ -185,34 +173,26 @@ void Module::Interface::GetAmiiboConfig(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetAmiiboSettings(Kernel::HLERequestContext& ctx) {
     AmiiboSettings amsettings{};
-
-    FileUtil::IOFile nfc_file{nfc->nfc_filename, "rb"};
-    u8 e_data[AMIIBO_MAX_SIZE];
-    u8 d_data[AMIIBO_MAX_SIZE];
-    nfc_file.ReadBytes(e_data, AMIIBO_MAX_SIZE);
-
     ResultCode result{RESULT_SUCCESS};
 
-    if (!amitool_unpack(e_data, AMIIBO_MAX_SIZE, d_data, AMIIBO_MAX_SIZE)) {
-        LOG_ERROR(Service_NFC, "Failed to decrypt");
+    nfc->mutex.lock();
+    if (!(nfc->decrypted_data[0x2C] & 0x10)) {
+        result = ResultCode(0xC8A17628); // uninitialised
     } else {
-        if (!(d_data[0x2C] & 0x10)) {
-            result = ResultCode(0xC8A17628); // uninitialised
-        } else {
-            result = RESULT_SUCCESS;
-            memcpy(amsettings.mii, &d_data[0x4C], sizeof(amsettings.mii));
-            memcpy(amsettings.nickname.data(), &d_data[0x38],
-                   4 * 5); // amiibo doesnt have the null terminator
-            amsettings.flags =
-                d_data[0x2C] & 0xF; // todo: we should only load some of these values if the unused
-                                    // flag bits are set correctly https://3dbrew.org/wiki/Amiibo
-            amsettings.countrycodeid = d_data[0x2D];
+        result = RESULT_SUCCESS;
+        memcpy(amsettings.mii.data(), &nfc->decrypted_data[0x4C], amsettings.mii.size());
+        memcpy(amsettings.nickname.data(), &nfc->decrypted_data[0x38],
+               4 * 5); // amiibo doesnt have the null terminator
+        amsettings.flags = nfc->decrypted_data[0x2C] &
+                           0xF; // todo: we should only load some of these values if the unused
+                                // flag bits are set correctly https://3dbrew.org/wiki/Amiibo
+        amsettings.countrycodeid = nfc->decrypted_data[0x2D];
 
-            amsettings.setupdate_year = AMIIBO_YEAR_FROM_DATE(d_data[0x30]);
-            amsettings.setupdate_month = AMIIBO_MONTH_FROM_DATE(d_data[0x30]);
-            amsettings.setupdate_day = AMIIBO_DAY_FROM_DATE(d_data[0x30]);
-        }
+        amsettings.setupdate_year = AMIIBO_YEAR_FROM_DATE(nfc->decrypted_data[0x30]);
+        amsettings.setupdate_month = AMIIBO_MONTH_FROM_DATE(nfc->decrypted_data[0x30]);
+        amsettings.setupdate_day = AMIIBO_DAY_FROM_DATE(nfc->decrypted_data[0x30]);
     }
+    nfc->mutex.unlock();
 
     IPC::ResponseBuilder rb{ctx, 0x17, (sizeof(AmiiboSettings) / sizeof(u32)) + 1, 0};
     rb.Push(RESULT_SUCCESS);
@@ -265,7 +245,7 @@ void Module::Interface::GetTagOutOfRangeEvent(Kernel::HLERequestContext& ctx) {
 void Module::Interface::GetTagState(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x0D, 2, 0};
     rb.Push(RESULT_SUCCESS);
-    rb.PushEnum(nfc->nfc_tag_state);
+    rb.PushEnum(nfc->nfc_tag_state.load());
 }
 
 void Module::Interface::CommunicationGetStatus(Kernel::HLERequestContext& ctx) {
@@ -278,22 +258,15 @@ void Module::Interface::OpenAppData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x13, 1, 0};
     u32 app_id{rp.Pop<u32>()};
 
-    FileUtil::IOFile nfc_file{nfc->nfc_filename, "rb"};
-    u8 e_data[AMIIBO_MAX_SIZE];
-    u8 d_data[AMIIBO_MAX_SIZE];
-    nfc_file.ReadBytes(e_data, AMIIBO_MAX_SIZE);
-
     ResultCode result{RESULT_SUCCESS};
 
-    if (!amitool_unpack(e_data, AMIIBO_MAX_SIZE, d_data, AMIIBO_MAX_SIZE)) {
-        LOG_ERROR(Service_NFC, "Failed to decrypt");
-    } else {
-        if (memcmp(&app_id, &d_data[0xB6], sizeof(app_id))) {
-            result = ResultCode(0xC8A17638); // app id mismatch
-        } else if (!(d_data[0x2C] & 0x20)) {
-            result = ResultCode(0xC8A17628); // uninitialised
-        }
+    nfc->mutex.lock();
+    if (memcmp(&app_id, &nfc->decrypted_data[0xB6], sizeof(app_id))) {
+        result = ResultCode(0xC8A17638); // app id mismatch
+    } else if (!(nfc->decrypted_data[0x2C] & 0x20)) {
+        result = ResultCode(0xC8A17628); // uninitialised
     }
+    nfc->mutex.unlock();
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(result);
@@ -304,18 +277,11 @@ void Module::Interface::ReadAppData(Kernel::HLERequestContext& ctx) {
     u32 size{rp.Pop<u32>()};
     ASSERT(size >= 0xD8);
 
-    FileUtil::IOFile nfc_file{nfc->nfc_filename, "rb"};
-    u8 e_data[AMIIBO_MAX_SIZE];
-    u8 d_data[AMIIBO_MAX_SIZE];
-    nfc_file.ReadBytes(e_data, AMIIBO_MAX_SIZE);
-
     std::vector<u8> buffer(size);
 
-    if (!amitool_unpack(e_data, AMIIBO_MAX_SIZE, d_data, AMIIBO_MAX_SIZE)) {
-        LOG_ERROR(Service_NFC, "Failed to decrypt");
-    } else {
-        std::memcpy(buffer.data(), &d_data[0xDC], size);
-    }
+    nfc->mutex.lock();
+    std::memcpy(buffer.data(), &nfc->decrypted_data[0xDC], size);
+    nfc->mutex.unlock();
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
@@ -323,20 +289,30 @@ void Module::Interface::ReadAppData(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::Unknown0x1A(Kernel::HLERequestContext& ctx) {
-    nfc->nfc_tag_state = TagState::Unknown6;
+    ResultCode result{RESULT_SUCCESS};
+    if (nfc->nfc_tag_state != TagState::TagInRange) {
+        result = ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                            ErrorSummary::InvalidState, ErrorLevel::Status);
+    } else {
+        nfc->nfc_tag_state = TagState::Unknown6;
+    }
 
     IPC::ResponseBuilder rb{ctx, 0x1A, 1, 0};
-    rb.Push(RESULT_SUCCESS);
-    LOG_DEBUG(Service_NFC, "called");
+    rb.Push(result);
 }
 
 void Module::Interface::GetIdentificationBlock(Kernel::HLERequestContext& ctx) {
-    IdentificationBlockRaw identification_block_raw{};
-    FileUtil::IOFile nfc_file{nfc->nfc_filename, "rb"};
-    // go to offset of the Amiibo identification block
-    nfc_file.Seek(0x54, SEEK_SET);
-    nfc_file.ReadBytes(&identification_block_raw, 0x7);
+    if (nfc->nfc_tag_state != TagState::TagDataLoaded && nfc->nfc_tag_state != TagState::Unknown6) {
+        IPC::ResponseBuilder rb{ctx, 0x1B, 1, 0};
+        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
 
+    IdentificationBlockRaw identification_block_raw{};
+    nfc->mutex.lock();
+    std::memcpy(&identification_block_raw, &nfc->encrypted_data[0x54], 0x7);
+    nfc->mutex.unlock();
     IdentificationBlockReply identification_block_reply{};
     identification_block_reply.char_id = identification_block_raw.char_id;
     identification_block_reply.char_variant = identification_block_raw.char_variant;
@@ -347,8 +323,6 @@ void Module::Interface::GetIdentificationBlock(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x1B, 0x1F, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw<IdentificationBlockReply>(identification_block_reply);
-
-    LOG_DEBUG(Service_NFC, "called");
 }
 
 Module::Interface::Interface(std::shared_ptr<Module> nfc, const char* name)
@@ -356,8 +330,32 @@ Module::Interface::Interface(std::shared_ptr<Module> nfc, const char* name)
 
 Module::Interface::~Interface() = default;
 
-std::shared_ptr<Module> Module::Interface::GetModule() const {
-    return nfc;
+void Module::Interface::LoadAmiibo(const std::string& path) {
+    LOG_INFO(Service_NFC, "Loading amiibo {}", path);
+
+    FileUtil::IOFile file{path, "rb"};
+    nfc->mutex.lock();
+    nfc->encrypted_data.fill(0);
+    nfc->decrypted_data.fill(0);
+    file.ReadBytes(nfc->encrypted_data.data(), nfc->encrypted_data.size());
+    if (!amitool_unpack(nfc->encrypted_data.data(), nfc->encrypted_data.size(),
+                        nfc->decrypted_data.data(), nfc->decrypted_data.size())) {
+        LOG_ERROR(Service_NFC, "Failed to decrypt amiibo {}", path);
+    }
+    nfc->mutex.unlock();
+    nfc->nfc_tag_state = Service::NFC::TagState::TagInRange;
+    nfc->tag_in_range_event->Signal();
+}
+
+void Module::Interface::RemoveAmiibo() {
+    LOG_INFO(Service_NFC, "Removing amiibo");
+
+    nfc->mutex.lock();
+    nfc->encrypted_data.fill(0);
+    nfc->decrypted_data.fill(0);
+    nfc->mutex.unlock();
+    nfc->nfc_tag_state = Service::NFC::TagState::TagOutOfRange;
+    nfc->tag_out_of_range_event->Signal();
 }
 
 Module::Module() {
@@ -371,8 +369,8 @@ Module::Module() {
     if (!keys_file.IsOpen() || keys_file.GetSize() != 160) {
         LOG_ERROR(Service_NFC, "amiibo_keys.bin file not found or invalid.");
     } else {
-        keys_file.ReadBytes(keys_data, 160);
-        amitool_setKeys(keys_data, 160);
+        keys_file.ReadBytes(keys.data(), 160);
+        amitool_setKeys(keys.data(), 160);
     }
 }
 
