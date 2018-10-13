@@ -60,7 +60,7 @@ inline static u32 const NewThreadId() {
     return next_thread_id++;
 }
 
-Thread::Thread(KernelSystem&) : context{Core::CPU().NewContext()} {}
+Thread::Thread(KernelSystem& kernel) : WaitObject{kernel}, context{Core::CPU().NewContext()} {}
 Thread::~Thread() {}
 
 Thread* GetCurrentThread() {
@@ -183,9 +183,8 @@ static Thread* PopNextReadyThread() {
             // Otherwise just keep going with the current thread
             next = thread;
         }
-    } else {
+    } else
         next = ready_queue.pop_first();
-    }
 
     return next;
 }
