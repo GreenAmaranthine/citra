@@ -595,11 +595,10 @@ void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x1C, 1, 0};
     u8 state{rp.Pop<u8>()};
     if (!Settings::values.disable_mh_3d) {
-        if (state == 1) {
+        if (state == 1)
             Settings::values.factor_3d = 0;
-        } else {
+        else
             Settings::values.factor_3d = 100;
-        }
         Core::System::GetInstance().GetSharedPageHandler()->Update3DSettings();
     }
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
@@ -654,9 +653,9 @@ GSP_GPU::GSP_GPU() : ServiceFramework{"gsp::Gpu", 2} {
     };
     RegisterHandlers(functions);
     using Kernel::MemoryPermission;
-    shared_memory = Kernel::SharedMemory::Create(nullptr, 0x1000, MemoryPermission::ReadWrite,
-                                                 MemoryPermission::ReadWrite, 0,
-                                                 Kernel::MemoryRegion::BASE, "GSP:SharedMemory");
+    shared_memory = system.Kernel().CreateSharedMemory(
+        nullptr, 0x1000, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite, 0,
+        Kernel::MemoryRegion::BASE, "GSP:SharedMemory");
     first_initialization = true;
 };
 

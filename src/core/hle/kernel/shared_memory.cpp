@@ -11,14 +11,15 @@
 
 namespace Kernel {
 
-SharedMemory::SharedMemory() {}
+SharedMemory::SharedMemory(KernelSystem& system) {}
 SharedMemory::~SharedMemory() {}
 
-SharedPtr<SharedMemory> SharedMemory::Create(SharedPtr<Process> owner_process, u32 size,
-                                             MemoryPermission permissions,
-                                             MemoryPermission other_permissions, VAddr address,
-                                             MemoryRegion region, std::string name) {
-    SharedPtr<SharedMemory> shared_memory{new SharedMemory};
+SharedPtr<SharedMemory> KernelSystem::CreateSharedMemory(SharedPtr<Process> owner_process, u32 size,
+                                                         MemoryPermission permissions,
+                                                         MemoryPermission other_permissions,
+                                                         VAddr address, MemoryRegion region,
+                                                         std::string name) {
+    SharedPtr<SharedMemory> shared_memory{new SharedMemory(*this)};
 
     shared_memory->owner_process = owner_process;
     shared_memory->name = std::move(name);
@@ -74,12 +75,10 @@ SharedPtr<SharedMemory> SharedMemory::Create(SharedPtr<Process> owner_process, u
     return shared_memory;
 }
 
-SharedPtr<SharedMemory> SharedMemory::CreateForApplet(std::shared_ptr<std::vector<u8>> heap_block,
-                                                      u32 offset, u32 size,
-                                                      MemoryPermission permissions,
-                                                      MemoryPermission other_permissions,
-                                                      std::string name) {
-    SharedPtr<SharedMemory> shared_memory{new SharedMemory};
+SharedPtr<SharedMemory> KernelSystem::CreateSharedMemoryForApplet(
+    std::shared_ptr<std::vector<u8>> heap_block, u32 offset, u32 size, MemoryPermission permissions,
+    MemoryPermission other_permissions, std::string name) {
+    SharedPtr<SharedMemory> shared_memory{new SharedMemory(*this)};
 
     shared_memory->owner_process = nullptr;
     shared_memory->name = std::move(name);
@@ -100,9 +99,8 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
         target_process == owner_process ? this->permissions : this->other_permissions};
 
     // Automatically allocated memory blocks can only be mapped with other_permissions = DontCare
-    if (base_address == 0 && other_permissions != MemoryPermission::DontCare) {
+    if (base_address == 0 && other_permissions != MemoryPermission::DontCare)
         return ERR_INVALID_COMBINATION;
-    }
 
     // Error out if the requested permissions don't match what the creator process allows.
     if (static_cast<u32>(permissions) & ~static_cast<u32>(own_other_permissions)) {
@@ -135,13 +133,12 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
     // TODO: The same process that created a SharedMemory object
     // can not map it in its own address space unless it was created with addr=0, result 0xD900182C.
 
-    if (address != 0) {
+    if (address != 0)
         if (address < Memory::HEAP_VADDR || address + size >= Memory::SHARED_MEMORY_VADDR_END) {
             LOG_ERROR(Kernel, "cannot map id={}, address=0x{:08X}, name={}, invalid address",
                       GetObjectId(), address, name);
             return ERR_INVALID_ADDRESS;
         }
-    }
 
     VAddr target_address{address};
 
@@ -174,8 +171,8 @@ ResultCode SharedMemory::Unmap(Process* target_process, VAddr address) {
 }
 
 VMAPermission SharedMemory::ConvertPermissions(MemoryPermission permission) {
-    u32 masked_permissions =
-        static_cast<u32>(permission) & static_cast<u32>(MemoryPermission::ReadWriteExecute);
+    u32 masked_permissions{static_cast<u32>(permission) &
+                           static_cast<u32>(MemoryPermission::ReadWriteExecute)};
     return static_cast<VMAPermission>(masked_permissions);
 };
 

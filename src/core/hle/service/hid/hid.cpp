@@ -314,16 +314,18 @@ std::shared_ptr<Module> Module::Interface::GetModule() {
 }
 
 Module::Module(Core::System& system) : system{system} {
-    using namespace Kernel;
-    shared_mem =
-        SharedMemory::Create(nullptr, 0x1000, MemoryPermission::ReadWrite, MemoryPermission::Read,
-                             0, MemoryRegion::BASE, "HID:SharedMemory");
+    shared_mem = system.Kernel().CreateSharedMemory(nullptr, 0x1000, MemoryPermission::ReadWrite,
+                                                    MemoryPermission::Read, 0, MemoryRegion::BASE,
+                                                    "HID:SharedMemory");
     // Create event handles
-    event_pad_or_touch_1 = Event::Create(ResetType::OneShot, "HID:EventPadOrTouch1");
-    event_pad_or_touch_2 = Event::Create(ResetType::OneShot, "HID:EventPadOrTouch2");
-    event_accelerometer = Event::Create(ResetType::OneShot, "HID:EventAccelerometer");
-    event_gyroscope = Event::Create(ResetType::OneShot, "HID:EventGyroscope");
-    event_debug_pad = Event::Create(ResetType::OneShot, "HID:EventDebugPad");
+    event_pad_or_touch_1 =
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "HID:EventPadOrTouch1");
+    event_pad_or_touch_2 =
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "HID:EventPadOrTouch2");
+    event_accelerometer =
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "HID:EventAccelerometer");
+    event_gyroscope = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "HID:EventGyroscope");
+    event_debug_pad = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "HID:EventDebugPad");
     // Register update callbacks
     pad_update_event =
         CoreTiming::RegisterEvent("HID::UpdatePadCallback", [this](u64 userdata, s64 cycles_late) {
