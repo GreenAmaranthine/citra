@@ -210,8 +210,12 @@ static constexpr int REGION_VALUE_AUTO_SELECT{-1};
 
 void Apply();
 void LogSettings();
+
+// Controller profiles
 void LoadProfile(int index);
 void SaveProfile(int index);
 void CreateProfile(std::string name);
 void DeleteProfile(int index);
+void RenameCurrentProfile(std::string new_name);
+
 } // namespace Settings

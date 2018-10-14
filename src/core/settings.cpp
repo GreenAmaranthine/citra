@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <utility>
 #include "audio_core/hle/hle.h"
 #include "core/core.h"
 #include "core/hle/service/hid/hid.h"
@@ -122,7 +123,7 @@ void SaveProfile(int index) {
 
 void CreateProfile(std::string name) {
     ControllerProfile profile{};
-    profile.name = name;
+    profile.name = std::move(name);
     profile.analogs = values.analogs;
     profile.buttons = values.buttons;
     profile.motion_device = values.motion_device;
@@ -137,6 +138,10 @@ void CreateProfile(std::string name) {
 void DeleteProfile(int index) {
     values.profiles.erase(values.profiles.begin() + index);
     LoadProfile(0);
+}
+
+void RenameCurrentProfile(std::string new_name) {
+    values.profiles.at(values.profile).name = std::move(new_name);
 }
 
 } // namespace Settings

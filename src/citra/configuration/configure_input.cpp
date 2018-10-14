@@ -233,6 +233,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
     connect(ui->buttonRestoreDefaults, &QPushButton::released, [this] { restoreDefaults(); });
     connect(ui->buttonNew, &QPushButton::released, [this] { newProfile(); });
     connect(ui->buttonDelete, &QPushButton::released, [this] { deleteProfile(); });
+    connect(ui->buttonRename, &QPushButton::released, [this] { renameProfile(); });
     connect(ui->profile, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             [this](int i) {
                 applyConfiguration();
@@ -407,7 +408,16 @@ void ConfigureInput::deleteProfile() {
     }
     int index{ui->profile->currentIndex()};
     ui->profile->removeItem(index);
-    Settings::DeleteProfile(index);
     ui->profile->setCurrentIndex(0);
+    Settings::DeleteProfile(index);
     loadConfiguration();
+}
+
+void ConfigureInput::renameProfile() {
+    QString new_name{QInputDialog::getText(this, "Rename Profile", "New name:")};
+    if (new_name.isEmpty()) {
+        return;
+    }
+    ui->profile->setItemText(ui->profile->currentIndex(), new_name);
+    Settings::RenameCurrentProfile(new_name.toStdString());
 }

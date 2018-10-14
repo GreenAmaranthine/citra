@@ -94,4 +94,5 @@ private:
 
     void newProfile();
     void deleteProfile();
+    void renameProfile();
 };
