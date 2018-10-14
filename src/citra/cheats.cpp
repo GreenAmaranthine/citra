@@ -550,26 +550,30 @@ ModifyAddressDialog::ModifyAddressDialog(QWidget* parent, const QString& address
 
     QVBoxLayout* main_layout{new QVBoxLayout(this)};
 
-    QHBoxLayout* edit_panel{new QHBoxLayout()};
     address_block = new QLineEdit();
     value_block = new QLineEdit();
     type_select = new QComboBox();
 
+    QHBoxLayout* address_layout{new QHBoxLayout()};
     address_block->setReadOnly(true);
     address_block->setText(address);
+    address_layout->addWidget(new QLabel("Address: ", this));
+    address_layout->addWidget(address_block);
 
+    QHBoxLayout* value_layout{new QHBoxLayout()};
+    value_block->setText(value);
+    value_layout->addWidget(new QLabel("Value: ", this));
+    value_layout->addWidget(value_block);
+
+    QHBoxLayout* type_layout{new QHBoxLayout()};
     type_select->addItem("u32");
     type_select->addItem("u16");
     type_select->addItem("u8");
     type_select->addItem("float");
     type_select->addItem("double");
     type_select->setCurrentIndex(type);
-
-    value_block->setText(value);
-
-    edit_panel->addWidget(address_block);
-    edit_panel->addWidget(type_select);
-    edit_panel->addWidget(value_block);
+    type_layout->addWidget(new QLabel("Type: ", this));
+    type_layout->addWidget(type_select);
 
     auto button_box{new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel)};
     connect(button_box, &QDialogButtonBox::accepted, this, [&] { OnOkClicked(); });
@@ -577,23 +581,24 @@ ModifyAddressDialog::ModifyAddressDialog(QWidget* parent, const QString& address
         return_value = value;
         close();
     });
-    QHBoxLayout* confirmation_panel{new QHBoxLayout()};
-    confirmation_panel->addWidget(button_box);
-    main_layout->addLayout(edit_panel);
-    main_layout->addLayout(confirmation_panel);
+
+    main_layout->addLayout(address_layout);
+    main_layout->addLayout(value_layout);
+    main_layout->addLayout(type_layout);
+    main_layout->addWidget(button_box);
 }
 
 ModifyAddressDialog::~ModifyAddressDialog() {}
 
 void ModifyAddressDialog::OnOkClicked() {
-    int value_type{};
-    QString new_value{};
-    int address{};
+    int value_type;
+    QString new_value;
+    u32 address;
 
     try {
         value_type = type_select->currentIndex();
         new_value = value_block->text();
-        address = address_block->text().toInt(nullptr, 16);
+        address = address_block->text().toUInt(nullptr, 16);
     } catch (const std::exception&) {
         close();
     }
