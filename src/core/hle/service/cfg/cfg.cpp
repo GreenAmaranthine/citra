@@ -106,18 +106,18 @@ constexpr ConsoleCountryInfo COUNTRY_INFO{{0, 0, 0}, UNITED_STATES_COUNTRY_ID};
  * for example Nintendo Zone
  * Thanks Normmatt for providing this information
  */
-constexpr std::array<float, 8> STEREO_CAMERA_SETTINGS = {
+constexpr std::array<float, 8> STEREO_CAMERA_SETTINGS{
     62.0f, 289.0f, 76.80000305175781f, 46.08000183105469f,
     10.0f, 5.0f,   55.58000183105469f, 21.56999969482422f,
 };
 static_assert(sizeof(STEREO_CAMERA_SETTINGS) == 0x20,
               "STEREO_CAMERA_SETTINGS must be exactly 0x20 bytes");
 
-static const std::vector<u8> cfg_system_savedata_id = {
+static const std::vector<u8> cfg_system_savedata_id{
     0x00, 0x00, 0x00, 0x00, 0x17, 0x00, 0x01, 0x00,
 };
 
-static bool new_mode_enabled{};
+static bool new_mode_enabled;
 static std::weak_ptr<Module> current_cfg;
 
 std::shared_ptr<Module> GetCurrentModule() {
@@ -179,16 +179,15 @@ void Module::Interface::GetCountryCodeID(Kernel::HLERequestContext& ctx) {
 }
 
 u32 Module::GetRegionValue() {
-    if (Settings::values.region_value == Settings::REGION_VALUE_AUTO_SELECT)
+    if (Settings::values.region_value == Settings::REGION_VALUE_AUTO_SELECT) {
         return preferred_region_code;
+    }
 
     return Settings::values.region_value;
 }
 
 void Module::Interface::SecureInfoGetRegion(Kernel::HLERequestContext& ctx, u16 id) {
-    IPC::RequestParser rp{ctx, id, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, id, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(static_cast<u8>(cfg->GetRegionValue()));
 }
@@ -220,7 +219,7 @@ void Module::Interface::GenHashConsoleUnique(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetRegionCanadaUSA(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x04, 0, 0};
+    IPC::RequestParser rp{ctx, 0x04, 2, 0};
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
 
     rb.Push(RESULT_SUCCESS);
@@ -239,10 +238,8 @@ void Module::SetSystemModel(SystemModel model) {
 }
 
 void Module::Interface::GetSystemModel(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x05, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x05, 2, 0};
     u32 data;
-
     // TODO: Find out the correct error codes
     rb.Push(cfg->GetConfigInfoBlock(ConsoleModelBlockID, 4, 0x8, reinterpret_cast<u8*>(&data)));
     rb.Push<u8>(data & 0xFF);
@@ -255,8 +252,7 @@ SystemModel Module::GetSystemModel() {
 }
 
 void Module::Interface::GetModelNintendo2DS(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x06, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x06, 2, 0};
     u32 data;
 
     // TODO: Find out the correct error codes
@@ -306,14 +302,12 @@ void Module::Interface::SetConfigInfoBlk4(Kernel::HLERequestContext& ctx, u16 id
 }
 
 void Module::Interface::UpdateConfigNANDSavegame(Kernel::HLERequestContext& ctx, u16 id) {
-    IPC::RequestParser rp{ctx, id, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, id, 1, 0};
     rb.Push(cfg->UpdateConfigNANDSavegame());
 }
 
 void Module::Interface::FormatConfig(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x0806, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x0806, 1, 0};
     rb.Push(cfg->FormatConfig());
 }
 

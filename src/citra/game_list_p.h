@@ -32,131 +32,146 @@ enum class GameListItemType {
     AddDir = QStandardItem::UserType + 5
 };
 
-enum class Compatibility {
-    Perfect = 0,
-    Great = 1,
-    Okay = 2,
-    Bad = 3,
-    IntroMenu = 4,
-    WontBoot = 5,
-    NotTested = 99,
-};
+static QString GitHubIssue(const QString& repo, int number) {
+    return QString(
+               "<a href=\"https://github.com/repo/issues/number\"><span style=\"text-decoration: "
+               "underline; color:#039be5;\">repo#number</span></a>")
+        .replace("repo", repo)
+        .replace("number", QString::number(number));
+}
 
-static const std::unordered_map<u64, Compatibility> compatibility_database{{
+static const std::unordered_map<u64, QStringList> compatibility_database{{
     // Homebrew
-    {0x000400000F800100, Compatibility::Okay},      // FBI
-    {0x0004000004395500, Compatibility::IntroMenu}, // DSiMenuPlusPlus
-    {0x000400000D5CDB00, Compatibility::IntroMenu}, // White Haired Cat Girl
-    {0x000400000EB00000, Compatibility::IntroMenu}, // Boot NTR Selector
+    {0x000400000F800100, {GitHubIssue("citra-valentin/citra", 451)}},   // FBI
+    {0x0004000004395500, {"Citra crashes with Unknown result status"}}, // DSiMenuPlusPlus
+    {0x000400000D5CDB00, {"Needs SOC:GetAddrInfo"}},                    // White Haired Cat Girl
+    {0x000400000EB00000, {"Load fails (NTR is already running)"}},      // Boot NTR Selector
 
     // ALL
-    {0x00040000001C1E00, Compatibility::Great},     // Detective Pikachu™
-    {0x0004000000164800, Compatibility::Great},     // Pokémon™ Sun
-    {0x0004000000175E00, Compatibility::Great},     // Pokémon™ Moon
-    {0x000400000011C400, Compatibility::Great},     // Pokémon™ Omega Ruby
-    {0x000400000011C500, Compatibility::Great},     // Pokémon™ Alpha Sapphire
-    {0x00040000001B5000, Compatibility::Great},     // Pokémon™ Ultra Sun
-    {0x00040000001B5100, Compatibility::Great},     // Pokémon™ Ultra Moon
-    {0x0004000000055D00, Compatibility::IntroMenu}, // Pokémon™ X
-    {0x0004000000055E00, Compatibility::IntroMenu}, // Pokémon™ Y
-    {0x000400000F700E00, Compatibility::Okay},      // Super Mario World™
-    {0x000400000F980000, Compatibility::WontBoot},  // Test Program (CTRAging)
+    {0x00040000001C1E00, {GitHubIssue("citra-emu/citra", 3612)}}, // Detective Pikachu
+    {0x0004000000164800, {"Needs Nintendo Network support"}},     // Pokémon Sun
+    {0x0004000000175E00, {"Needs Nintendo Network support"}},     // Pokémon Moon
+    {0x000400000011C400, {"Needs Nintendo Network support"}},     // Pokémon Omega Ruby
+    {0x000400000011C500, {"Needs Nintendo Network support"}},     // Pokémon Alpha Sapphire
+    {0x00040000001B5000, {"Needs Nintendo Network support"}},     // Pokémon Ultra Sun
+    {0x00040000001B5100, {"Needs Nintendo Network support"}},     // Pokémon Ultra Moon
+    {0x0004000000055D00, {GitHubIssue("citra-emu/citra", 3009)}}, // Pokémon X
+    {0x0004000000055E00, {GitHubIssue("citra-emu/citra", 3009)}}, // Pokémon Y
+    {0x000400000F700E00, {}},                                     // Super Mario World
+    {0x000400000F980000, {}},                                     // Test Program (CTRAging)
 
     // EUR
-    {0x00040000001A4900, Compatibility::Great},   // Ever Oasis™
-    {0x000400000F70CD00, Compatibility::Great},   // Fire Emblem Warriors
-    {0x000400000014F200, Compatibility::Great},   // Animal Crossing™: Happy Home Designer
-    {0x000400000017EB00, Compatibility::Great},   // Hyrule Warriors™ Legends
-    {0x0004000000076500, Compatibility::Bad},     // Luigi’s Mansion™ 2
-    {0x00040000001BC600, Compatibility::Okay},    // Monster Hunter Stories™
-    {0x0004000000198F00, Compatibility::Great},   // Animal Crossing™: New Leaf - Welcome amiibo
-    {0x00040000001A0500, Compatibility::Great},   // Super Mario Maker™ for Nintendo 3DS
-    {0x0004000000086400, Compatibility::Great},   // Animal Crossing™: New Leaf
-    {0x0004000000030C00, Compatibility::Okay},    // Golden Retriever & New Friends
-    {0x0004000000033600, Compatibility::Perfect}, // The Legend of Zelda™: Ocarina of Time 3D
-    {0x00040000001A4200, Compatibility::Great},   // Poochy & Yoshi's™ Woolly World
-    {0x0004000000053F00, Compatibility::Great},   // Super Mario 3D Land™
-    {0x000400000008C400, Compatibility::Great},   // Tomodachi Life™
-    {0x0004000000177000, Compatibility::Great},   // The Legend of Zelda™: Tri Force Heroes
-    {0x000400000007AF00, Compatibility::Perfect}, // New Super Mario Bros.™ 2
-    {0x0004000000137F00, Compatibility::Perfect}, // New SUPER MARIO BROS. 2: Special Edition
-    {0x00040000001B4F00, Compatibility::Great},   // Miitopia™
-    {0x00040000000A9200, Compatibility::Perfect}, // PICROSS e
-    {0x00040000000CBC00, Compatibility::Perfect}, // PICROSS e2
-    {0x0004000000102900, Compatibility::Perfect}, // PICROSS e3
-    {0x0004000000128400, Compatibility::Perfect}, // PICROSS e4
-    {0x000400000014D200, Compatibility::Perfect}, // PICROSS e5
-    {0x000400000016E800, Compatibility::Perfect}, // PICROSS e6
-    {0x00040000001AD600, Compatibility::Perfect}, // PICROSS e7
-    {0x00040000001CE000, Compatibility::Perfect}, // PICROSS e8
-    {0x0004000000130600, Compatibility::Bad},     // Photos with Mario™
-    {0x0004000000030700, Compatibility::Great},   // Mario Kart™ 7
-    {0x0004000000143D00, Compatibility::Perfect}, // 2048
-    {0x0004000000187E00, Compatibility::Perfect}, // Picross 3D™: Round 2
-    {0x00040000000EE000, Compatibility::Great},   // Super Smash Bros.™ for Nintendo 3DS
-    {0x0004000000125600, Compatibility::Perfect}, // The Legend of Zelda™: Majora's Mask 3D
-    {0x000400000010C000, Compatibility::Great},   // Kirby™: Triple Deluxe
-    {0x00040000001B2900, Compatibility::Great},   // YO-KAI WATCH™ 2: Psychic Specters
-    {0x00040000001CB200, Compatibility::Great},   // Captain Toad™: Treasure Tracker
-    {0x0004000000116700, Compatibility::Great},   // Cut the Rope: Triple Treat
-    {0x0004000000030200, Compatibility::Great},   // Kid Icarus Uprising
-    {0x00040000000A5F00, Compatibility::Great},   // Paper Mario Sticker Star
-    {0x0004000000031600, Compatibility::Bad},     // nintendogs + cats (Toy Poodle & New Friends)
-    {0x0004000000170B00,
-     Compatibility::IntroMenu}, // Teenage Mutant Ninja Turtles: Master Splinter's Training Pack
+    {0x00040000001A4900, {}}, // Ever Oasis
+    {0x000400000F70CD00, {}}, // Fire Emblem Warriors
+    {0x000400000014F200,
+     {"Needs Nintendo Network support"}}, // Animal Crossing: Happy Home Designer
+    {0x000400000017EB00, {}},             // Hyrule Warriors Legends
+    {0x0004000000076500, {}},             // Luigi’s Mansion 2
+    {0x00040000001BC600, {}},             // Monster Hunter Stories
+    {0x0004000000198F00,
+     {"Needs Nintendo Network support"}}, // Animal Crossing: New Leaf - Welcome amiibo
+    {0x00040000001A0500, {"Needs Nintendo Network support"}}, // Super Mario Maker for Nintendo 3DS
+    {0x0004000000086400, {"Needs Nintendo Network support"}}, // Animal Crossing: New Leaf
+    {0x0004000000030C00,
+     {"Needs Microphone", "Uses Pedometer"}}, // nintendogs + cats (Golden Retriever & New Friends)
+    {0x0004000000033600, {}},                 // The Legend of Zelda: Ocarina of Time 3D
+    {0x00040000001A4200, {}},                 // Poochy & Yoshi's Woolly World
+    {0x0004000000053F00, {}},                 // Super Mario 3D Land
+    {0x000400000008C400,
+     {GitHubIssue("citra-valentin/citra", 277), GitHubIssue("citra-emu/citra", 4320),
+      "Exchange Miis or Other Items - The name of the island flashes",
+      "Scan QR Code - Preparing camera never ends"}}, // Tomodachi Life
+    {0x0004000000177000,
+     {"Needs DLP", "Needs Nintendo Network support"}}, // The Legend of Zelda: Tri Force Heroes
+    {0x000400000007AF00, {}},                          // New Super Mario Bros. 2
+    {0x0004000000137F00, {}},                          // New Super Mario Bros. 2: Special Edition
+    {0x00040000001B4F00, {}},                          // Miitopia
+    {0x00040000000A9200, {}},                          // PICROSS e
+    {0x00040000000CBC00, {}},                          // PICROSS e2
+    {0x0004000000102900, {}},                          // PICROSS e3
+    {0x0004000000128400, {}},                          // PICROSS e4
+    {0x000400000014D200, {}},                          // PICROSS e5
+    {0x000400000016E800, {}},                          // PICROSS e6
+    {0x00040000001AD600, {}},                          // PICROSS e7
+    {0x00040000001CE000, {}},                          // PICROSS e8
+    {0x0004000000130600, {GitHubIssue("citra-emu/citra", 3347)}}, // Photos with Mario
+    {0x0004000000030700,
+     {"Local multiplayer needs DLP", "Needs Nintendo Network support"}}, // Mario Kart 7
+    {0x0004000000143D00, {}},                                            // 2048
+    {0x0004000000187E00, {}},                                            // Picross 3D: Round 2
+    {0x00040000000EE000, {}}, // Super Smash Bros. for Nintendo 3DS
+    {0x0004000000125600, {}}, // The Legend of Zelda: Majora's Mask 3D
+    {0x000400000010C000, {}}, // Kirby: Triple Deluxe
+    {0x00040000001B2900, {}}, // YO-KAI WATCH 2: Psychic Specters
+    {0x00040000001CB200, {}}, // Captain Toad: Treasure Tracker
+    {0x0004000000116700, {}}, // Cut the Rope: Triple Treat
+    {0x0004000000030200, {}}, // Kid Icarus Uprising
+    {0x00040000000A5F00, {}}, // Paper Mario Sticker Star
+    {0x0004000000031600,
+     {"Needs Microphone", "Uses Pedometer"}}, // nintendogs + cats (Toy Poodle & New Friends)
+    {0x0004000000170B00, {"Softlocks when selecting a game"}}, // Teenage Mutant Ninja Turtles:
+                                                               // Master Splinter's Training Pack
 
     // EUR (System)
-    {0x0004001000022A00, Compatibility::WontBoot},  // ???
-    {0x0004001000022700, Compatibility::Great},     // Mii Maker
-    {0x0004001000022100, Compatibility::IntroMenu}, // Download Play
-    {0x0004001000022300, Compatibility::Perfect},   // Health and Safety Information
+    {0x0004001000022A00, {}},                                     // ???
+    {0x0004001000022700, {GitHubIssue("citra-emu/citra", 3897), GitHubIssue("citra-emu/citra", 3903)}}, // Mii Maker
+    {0x0004001000022100, {"Needs DLP"}},                          // Download Play
+    {0x0004001000022300, {}},                                     // Health and Safety Information
 
     // EUR (Demos)
-    {0x00040002001CB201, Compatibility::Perfect}, // Captain Toad Demo
+    {0x00040002001CB201, {}}, // Captain Toad Demo
 
     // USA
-    {0x00040000000E5D00, Compatibility::Perfect},   // PICROSS e
-    {0x00040000000CD400, Compatibility::Perfect},   // PICROSS e2
-    {0x0004000000101D00, Compatibility::Perfect},   // PICROSS e3
-    {0x0004000000127300, Compatibility::Perfect},   // PICROSS e4
-    {0x0004000000149800, Compatibility::Perfect},   // PICROSS e5
-    {0x000400000016EF00, Compatibility::Perfect},   // PICROSS e6
-    {0x00040000001ADB00, Compatibility::Perfect},   // PICROSS e7
-    {0x00040000001CF700, Compatibility::Perfect},   // PICROSS e8
-    {0x00040000001A0400, Compatibility::Great},     // Super Mario Maker™ for Nintendo 3DS
-    {0x000400000014F100, Compatibility::Great},     // Animal Crossing™: Happy Home Designer
-    {0x000400000017F200, Compatibility::Perfect},   // Moco Moco Friends
-    {0x00040000001B4E00, Compatibility::Great},     // Miitopia™
-    {0x0004000000130500, Compatibility::Bad},       // Photos with Mario™
-    {0x0004000000086300, Compatibility::Great},     // Animal Crossing™: New Leaf
-    {0x000400000008C300, Compatibility::Great},     // Tomodachi Life™
-    {0x0004000000030800, Compatibility::Great},     // Mario Kart™ 7
-    {0x0004000000139000, Compatibility::Perfect},   // 2048
-    {0x00040000001B2700, Compatibility::Great},     // YO-KAI WATCH™ 2: Psychic Specters
-    {0x0004000000112600, Compatibility::Great},     // Cut the Rope: Triple Treat
-    {0x00040000001B8700, Compatibility::IntroMenu}, // Minecraft
-    {0x0004000000062300, Compatibility::Great},     // Sonic Generations
-    {0x0004000000126300, Compatibility::Great},     // MONSTER HUNTER 4 ULTIMATE
+    {0x00040000000E5D00, {}},                                 // PICROSS e
+    {0x00040000000CD400, {}},                                 // PICROSS e2
+    {0x0004000000101D00, {}},                                 // PICROSS e3
+    {0x0004000000127300, {}},                                 // PICROSS e4
+    {0x0004000000149800, {}},                                 // PICROSS e5
+    {0x000400000016EF00, {}},                                 // PICROSS e6
+    {0x00040000001ADB00, {}},                                 // PICROSS e7
+    {0x00040000001CF700, {}},                                 // PICROSS e8
+    {0x00040000001A0400, {"Needs Nintendo Network support"}}, // Super Mario Maker for Nintendo 3DS
+    {0x000400000014F100,
+     {"Needs Nintendo Network support"}}, // Animal Crossing: Happy Home Designer
+    {0x000400000017F200, {}},             // Moco Moco Friends
+    {0x00040000001B4E00, {}},             // Miitopia
+    {0x0004000000130500, {GitHubIssue("citra-emu/citra", 3348)}}, // Photos with Mario
+    {0x0004000000086300, {"Needs Nintendo Network support"}},     // Animal Crossing: New Leaf
+    {0x000400000008C300,
+     {GitHubIssue("citra-valentin/citra", 277), GitHubIssue("citra-emu/citra", 4320),
+      "Exchange Miis or Other Items - The name of the island flashes",
+      "Scan QR Code - Preparing camera never ends"}}, // Tomodachi Life
+    {0x0004000000030800,
+     {"Local multiplayer needs DLP", "Needs Nintendo Network support"}}, // Mario Kart 7
+    {0x0004000000139000, {}},                                            // 2048
+    {0x00040000001B2700, {}},                                  // YO-KAI WATCH 2: Psychic Specters
+    {0x0004000000112600, {}},                                  // Cut the Rope: Triple Treat
+    {0x00040000001B8700, {}},                                  // Minecraft
+    {0x0004000000062300, {"Multiplayer uses deprecated UDS"}}, // Sonic Generations
+    {0x0004000000126300, {}},                                  // MONSTER HUNTER 4 ULTIMATE
+    {0x00040000001D1900, {GitHubIssue("citra-emu/citra", 4330)}}, // Luigi's Mansion
 
     // USA (Demos)
-    {0x00040002001CB101, Compatibility::Perfect}, // Captain Toad Demo
+    {0x00040002001CB101, {}}, // Captain Toad Demo
 
     // JPN
-    {0x0004000000178800, Compatibility::Great},   // Miitopia(ミートピア)
-    {0x0004000000181000, Compatibility::Perfect}, // My Melody Negai ga Kanau Fushigi na Hako
-    {0x0004000000086200, Compatibility::Great},   // とびだせ どうぶつの森
-    {0x0004000000198D00, Compatibility::Great},   // とびだせ どうぶつの森 amiibo+
-    {0x00040000001A0300, Compatibility::Great}, // スーパーマリオメーカー for ニンテンドー3DS
-    {0x0004000000030600, Compatibility::Great},   // マリオカート7
-    {0x000400000014AF00, Compatibility::Perfect}, // 2048
+    {0x0004000000178800, {}}, // Miitopia(ミートピア)
+    {0x0004000000181000, {}}, // My Melody Negai ga Kanau Fushigi na Hako
+    {0x0004000000086200, {}}, // とびだせ どうぶつの森
+    {0x0004000000198D00, {"Needs Nintendo Network support"}}, // とびだせ どうぶつの森 amiibo+
+    {0x00040000001A0300,
+     {"Needs Nintendo Network support"}}, // スーパーマリオメーカー for ニンテンドー3DS
+    {0x0004000000030600, {}},             // マリオカート7
+    {0x000400000014AF00, {}},             // 2048
 
     // JPN (Demos)
-    {0x00040002001CB001, Compatibility::Perfect}, // Captain Toad Demo
+    {0x00040002001CB001, {}}, // Captain Toad Demo
 
     // KOR
-    {0x0004000000086500, Compatibility::Great}, // 튀어나와요 동물의 숲
-    {0x0004000000199000, Compatibility::Great}, // Animal Crossing™: New Leaf - Welcome amiibo
-    {0x00040000001BB800, Compatibility::Great}, // Super Mario Maker for Nintendo 3DS
+    {0x0004000000086500, {"Needs Nintendo Network support"}}, // 튀어나와요 동물의 숲
+    {0x0004000000199000,
+     {"Needs Nintendo Network support"}}, // Animal Crossing: New Leaf - Welcome amiibo
+    {0x00040000001BB800, {"Needs Nintendo Network support"}}, // Super Mario Maker for Nintendo 3DS
 }};
 
 /**
@@ -229,35 +244,8 @@ static QString GetRegionFromSMDH(const Loader::SMDH& smdh) {
 }
 
 struct CompatStatus {
-    QString color;
-    const char* text;
-    const char* tooltip;
-};
-
-const static inline std::map<Compatibility, CompatStatus> status_data{
-    {Compatibility::Perfect,
-     {"#5c93ed", "Perfect",
-      "Game functions flawless with no audio or graphical glitches, all tested functionality works "
-      "as intended without\nany workarounds needed."}},
-    {Compatibility::Great,
-     {"#47d35c", "Great",
-      "Game functions with minor graphical or audio glitches and is playable from start to finish. "
-      "May require some\nworkarounds."}},
-    {Compatibility::Okay,
-     {"#94b242", "Okay",
-      "Game functions with major graphical or audio glitches, but game is playable from start to "
-      "finish with\nworkarounds."}},
-    {Compatibility::Bad,
-     {"#f2d624", "Bad",
-      "Game functions, but with major graphical or audio glitches. Unable to progress in specific "
-      "areas due to glitches\neven with workarounds."}},
-    {Compatibility::IntroMenu,
-     {"#FF0000", "Intro/Menu",
-      "Game is completely unplayable due to major graphical or audio glitches. Unable to progress "
-      "past the Start\nScreen."}},
-    {Compatibility::WontBoot,
-     {"#828282", "Won't Boot", "The game crashes when attempting to startup."}},
-    {Compatibility::NotTested, {"#000000", "Not Tested", "The game has not yet been tested."}},
+    QString text;
+    QString tooltip;
 };
 
 class GameListItem : public QStandardItem {
@@ -270,9 +258,9 @@ public:
 
 /**
  * A specialization of GameListItem for path values.
- * This class ensures that for every full path value it holds, a correct string representation
- * of just the filename (with no extension) will be displayed to the user.
- * If this class receives valid SMDH data, it will also display game icons and titles.
+ * This class ensures that for every full path value it holds, a correct string
+ * representation of just the filename (with no extension) will be displayed to the user. If
+ * this class receives valid SMDH data, it will also display game icons and titles.
  */
 class GameListItemPath : public GameListItem {
 public:
@@ -290,7 +278,7 @@ public:
             setData(QPixmap(), Qt::DecorationRole);
         }
 
-        bool large = UISettings::values.game_list_icon_size == 2;
+        bool large{UISettings::values.game_list_icon_size == 2};
 
         if (!Loader::IsValidSMDH(smdh_data)) {
             // SMDH is not valid, set a default icon
@@ -354,30 +342,20 @@ class GameListItemCompat : public GameListItem {
 public:
     GameListItemCompat() : GameListItem{} {}
 
-    explicit GameListItemCompat(Compatibility compatibility) {
-        auto it{status_data.find(compatibility)};
-        if (it == status_data.end()) {
-            LOG_WARNING(Frontend, "Invalid compatibility number {}",
-                        static_cast<int>(compatibility));
-            return;
+    explicit GameListItemCompat(u64 program_id) {
+        auto it{compatibility_database.find(program_id)};
+        if (it == compatibility_database.end() || it->second.empty()) {
+            setText("0 Issues");
+        } else {
+            setText(QString("%1 Issue%2")
+                        .arg(QString::number(it->second.size()),
+                             it->second.size() == 1 ? QString() : "s"));
         }
-        CompatStatus status{it->second};
-        setData(QString::number(static_cast<int>(compatibility)), CompatNumberRole);
-        setText(status.text);
-        setToolTip(status.tooltip);
-        setData(CreateCirclePixmapFromColor(status.color), Qt::DecorationRole);
     }
 
     int type() const override {
         return static_cast<int>(GameListItemType::Game);
     }
-
-    bool operator<(const QStandardItem& other) const override {
-        return data(CompatNumberRole) < other.data(CompatNumberRole);
-    }
-
-private:
-    static const int CompatNumberRole{Qt::UserRole + 1};
 };
 
 class GameListItemRegion : public GameListItem {

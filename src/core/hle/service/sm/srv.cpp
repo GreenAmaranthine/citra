@@ -42,12 +42,10 @@ void SRV::RegisterClient(Kernel::HLERequestContext& ctx) {
 }
 
 void SRV::EnableNotification(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x2, 0, 0};
-
     notification_semaphore =
         Kernel::Semaphore::Create(0, MAX_PENDING_NOTIFICATIONS, "SRV:Notification").Unwrap();
 
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    IPC::ResponseBuilder rb{ctx, 0x2, 1, 2};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(notification_semaphore);
     LOG_WARNING(Service_SRV, "(STUBBED) called");

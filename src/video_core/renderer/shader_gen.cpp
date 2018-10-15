@@ -127,10 +127,10 @@ PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs) {
     // Copy relevant tev stages fields.
     // We don't sync const_color here because of the high variance, it is a
     // shader uniform instead.
-    const auto& tev_stages = regs.texturing.GetTevStages();
+    const auto& tev_stages{regs.texturing.GetTevStages()};
     DEBUG_ASSERT(state.tev_stages.size() == tev_stages.size());
     for (std::size_t i{}; i < tev_stages.size(); i++) {
-        const auto& tev_stage = tev_stages[i];
+        const auto& tev_stage{tev_stages[i]};
         state.tev_stages[i].sources_raw = tev_stage.sources_raw;
         state.tev_stages[i].modifiers_raw = tev_stage.modifiers_raw;
         state.tev_stages[i].ops_raw = tev_stage.ops_raw;
@@ -150,8 +150,8 @@ PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs) {
     state.lighting.src_num = regs.lighting.max_light_index + 1;
 
     for (unsigned light_index{}; light_index < state.lighting.src_num; ++light_index) {
-        unsigned num = regs.lighting.light_enable.GetNum(light_index);
-        const auto& light = regs.lighting.light[num];
+        unsigned num{regs.lighting.light_enable.GetNum(light_index)};
+        const auto& light{regs.lighting.light[num]};
         state.lighting.light[light_index].num = num;
         state.lighting.light[light_index].directional = light.config.directional != 0;
         state.lighting.light[light_index].two_sided_diffuse = light.config.two_sided_diffuse != 0;
@@ -309,7 +309,7 @@ static bool IsPassThroughTevStage(const TevStageConfig& stage) {
 }
 
 static std::string SampleTexture(const PicaFSConfig& config, unsigned texture_unit) {
-    const auto& state = config.state;
+    const auto& state{config.state};
     switch (texture_unit) {
     case 0:
         // Only unit 0 respects the texturing type
@@ -355,7 +355,7 @@ static std::string SampleTexture(const PicaFSConfig& config, unsigned texture_un
 /// Writes the specified TEV stage source component(s)
 static void AppendSource(std::string& out, const PicaFSConfig& config,
                          TevStageConfig::Source source, const std::string& index_name) {
-    const auto& state = config.state;
+    const auto& state{config.state};
     using Source = TevStageConfig::Source;
     switch (source) {
     case Source::PrimaryColor:
@@ -1243,7 +1243,7 @@ float ProcTexNoiseCoef(vec2 x) {
 }
 
 std::string GenerateFragmentShader(const PicaFSConfig& config, bool separable_shader) {
-    const auto& state = config.state;
+    const auto& state{config.state};
 
     std::string out{R"(
 #version 330 core

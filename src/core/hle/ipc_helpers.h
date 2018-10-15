@@ -37,8 +37,9 @@ public:
     }
 
     void Skip(unsigned size_in_words, bool set_to_null) {
-        if (set_to_null)
+        if (set_to_null) {
             memset(cmdbuf + index, 0, size_in_words * sizeof(u32));
+        }
         index += size_in_words;
     }
 };

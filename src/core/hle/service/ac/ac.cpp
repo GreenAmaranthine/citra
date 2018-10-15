@@ -136,9 +136,7 @@ void Module::Interface::RegisterDisconnectEvent(Kernel::HLERequestContext& ctx) 
 }
 
 void Module::Interface::GetConnectingSsidLength(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x35, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x35, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(static_cast<u32>(ac->connected_network_name.length()));
 

@@ -214,9 +214,7 @@ void DSP_DSP::LoadComponent(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::UnloadComponent(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x12, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x12, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
     LOG_WARNING(Service_DSP, "(STUBBED) called");
@@ -284,11 +282,10 @@ void DSP_DSP::RegisterInterruptEvents(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::GetSemaphoreEventHandle(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x16, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    IPC::ResponseBuilder rb{ctx, 0x16, 1, 2};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(semaphore_event);
+    semaphore_event->Signal();
 
     LOG_WARNING(Service_DSP, "(STUBBED) called");
 }
@@ -304,9 +301,7 @@ void DSP_DSP::SetSemaphoreMask(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::GetHeadphoneStatus(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x1F, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x1F, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(static_cast<u8>(Settings::values.headphones_connected));
 
@@ -317,6 +312,8 @@ void DSP_DSP::ForceHeadphoneOut(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x20, 1, 0};
     const u8 force{rp.Pop<u8>()};
 
+    Settings::values.headphones_connected = true;
+
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
@@ -324,7 +321,7 @@ void DSP_DSP::ForceHeadphoneOut(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::GetIsDspOccupied(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x21, 0, 0};
+    IPC::RequestParser rp{ctx, 0x21, 2, 0};
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
@@ -341,8 +338,9 @@ void DSP_DSP::SignalInterrupt(InterruptType type, DspPipe pipe) {
     LOG_DEBUG(Service_DSP, "called, type={}, pipe={}", static_cast<u32>(type),
               static_cast<u32>(pipe));
     const auto& event{GetInterruptEvent(type, pipe)};
-    if (event)
+    if (event) {
         event->Signal();
+    }
 }
 
 Kernel::SharedPtr<Kernel::Event>& DSP_DSP::GetInterruptEvent(InterruptType type, DspPipe pipe) {

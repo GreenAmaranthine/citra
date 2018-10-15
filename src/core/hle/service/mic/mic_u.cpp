@@ -49,8 +49,7 @@ struct MIC_U::Impl {
     }
 
     void UnmapSharedMem(Kernel::HLERequestContext& ctx) {
-        IPC::RequestParser rp{ctx, 0x02, 0, 0};
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        IPC::ResponseBuilder rb{ctx, 0x02, 1, 0};
         rb.Push(RESULT_SUCCESS);
 
         LOG_DEBUG(Service_MIC, "called");
@@ -166,17 +165,16 @@ struct MIC_U::Impl {
     }
 
     void StopSampling(Kernel::HLERequestContext& ctx) {
-        IPC::RequestParser rp{ctx, 0x05, 0, 0};
         StopSampling();
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+
+        IPC::ResponseBuilder rb{ctx, 0x05, 1, 0};
         rb.Push(RESULT_SUCCESS);
 
         LOG_DEBUG(Service_MIC, "called");
     }
 
     void IsSampling(Kernel::HLERequestContext& ctx) {
-        IPC::RequestParser rp{ctx, 0x06, 0, 0};
-        IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+        IPC::ResponseBuilder rb{ctx, 0x06, 2, 0};
         rb.Push(RESULT_SUCCESS);
         rb.Push<bool>(is_sampling);
 
@@ -184,8 +182,7 @@ struct MIC_U::Impl {
     }
 
     void GetBufferFullEvent(Kernel::HLERequestContext& ctx) {
-        IPC::RequestParser rp{ctx, 0x07, 0, 0};
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+        IPC::ResponseBuilder rb{ctx, 0x07, 1, 2};
         rb.Push(RESULT_SUCCESS);
         rb.PushCopyObjects(buffer_full_event);
 
@@ -203,9 +200,7 @@ struct MIC_U::Impl {
     }
 
     void GetGain(Kernel::HLERequestContext& ctx) {
-        IPC::RequestParser rp{ctx, 0x09, 0, 0};
-
-        IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+        IPC::ResponseBuilder rb{ctx, 0x09, 2, 0};
         rb.Push(RESULT_SUCCESS);
         rb.Push<u8>(mic_gain);
 
@@ -223,8 +218,7 @@ struct MIC_U::Impl {
     }
 
     void GetPower(Kernel::HLERequestContext& ctx) {
-        IPC::RequestParser rp{ctx, 0x0B, 0, 0};
-        IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+        IPC::ResponseBuilder rb{ctx, 0x0B, 2, 0};
         rb.Push(RESULT_SUCCESS);
         rb.Push<u8>(mic_power);
 
@@ -254,8 +248,7 @@ struct MIC_U::Impl {
     }
 
     void GetClamp(Kernel::HLERequestContext& ctx) {
-        IPC::RequestParser rp{ctx, 0x0E, 0, 0};
-        IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+        IPC::ResponseBuilder rb{ctx, 0x0E, 2, 0};
         rb.Push(RESULT_SUCCESS);
         rb.Push<bool>(clamp);
 

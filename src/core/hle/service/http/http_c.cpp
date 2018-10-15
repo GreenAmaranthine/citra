@@ -1339,13 +1339,11 @@ void HTTP_C::SetSocketBufferSize(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::Finalize(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x39, 0, 0};
-
     auto* session_data{GetSessionData(ctx.Session())};
     session_data->initialized = false;
     session_data->current_http_context.reset();
 
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x39, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_HTTP, "called");

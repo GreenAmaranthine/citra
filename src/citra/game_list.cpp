@@ -13,6 +13,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMenu>
+#include <QMessageBox>
 #include <QModelIndex>
 #include <QStandardItem>
 #include <QStandardItemModel>
@@ -371,7 +372,7 @@ void GameList::ValidateEntry(const QModelIndex& item) {
     switch (static_cast<GameListItemType>(child->type())) {
     case GameListItemType::Game: {
         QString file_path{child->data(GameListItemPath::FullPathRole).toString()};
-        if (file_path.isEmpty()){
+        if (file_path.isEmpty()) {
             return;
         }
         QFileInfo file_info{file_path};
@@ -520,6 +521,14 @@ void GameList::AddGamePopup(QMenu& context_menu, QStandardItem* child) {
         QClipboard* clipboard{QApplication::clipboard()};
         clipboard->setText(QString::fromStdString(fmt::format("{:016X}", program_id)));
     });
+
+    auto it{compatibility_database.find(program_id)};
+    if (it != compatibility_database.end() && it->second.size() != 0) {
+        QAction* issues{context_menu.addAction("Issues")};
+        connect(issues, &QAction::triggered, [&, list = it->second]() {
+            QMessageBox::information(this, "Issues", list.join("<br>"));
+        });
+    }
 };
 
 void GameList::AddCustomDirPopup(QMenu& context_menu, QStandardItem* child) {
@@ -655,9 +664,9 @@ QString GameList::FindGameByProgramID(QStandardItem* current_item, u64 program_i
     } else if (current_item->hasChildren()) {
         for (int child_id{}; child_id < current_item->rowCount(); child_id++) {
             QString path{FindGameByProgramID(current_item->child(child_id, 0), program_id)};
-            if (!path.isEmpty()){
+            if (!path.isEmpty()) {
                 return path;
-        }
+            }
         }
     }
     return "";
@@ -670,8 +679,9 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
                                                       const std::string& virtual_name) -> bool {
         std::string physical_name{fmt::format("{}/{}", directory, virtual_name)};
 
-        if (stop_processing)
+        if (stop_processing) {
             return false; // Breaks the callback loop.
+        }
 
         bool is_dir{FileUtil::IsDirectory(physical_name)};
         if (!is_dir && HasSupportedFileExtension(physical_name)) {
@@ -713,17 +723,11 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
                 return true;
             }
 
-            auto it{compatibility_database.find(program_id)};
-
-            Compatibility compatibility{Compatibility::NotTested};
-            if (it != compatibility_database.end())
-                compatibility = it->second;
-
             emit EntryReady(
                 {
                     new GameListItemPath(QString::fromStdString(physical_name), smdh, program_id,
                                          extdata_id),
-                    new GameListItemCompat(compatibility),
+                    new GameListItemCompat(program_id),
                     new GameListItemRegion(smdh),
                     new GameListItem(
                         QString::fromStdString(Loader::GetFileTypeString(loader->GetFileType()))),

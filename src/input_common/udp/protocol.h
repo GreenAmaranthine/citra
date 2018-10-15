@@ -40,7 +40,7 @@ static_assert(sizeof(Header) == 20, "UDP Message Header struct has wrong size");
 static_assert(std::is_trivially_copyable_v<Header>, "UDP Message Header is not trivially copyable");
 
 using MacAddress = std::array<u8, 6>;
-constexpr MacAddress EMPTY_MAC_ADDRESS = {0, 0, 0, 0, 0, 0};
+constexpr MacAddress EMPTY_MAC_ADDRESS{0, 0, 0, 0, 0, 0};
 
 #pragma pack(push, 1)
 template <typename T>

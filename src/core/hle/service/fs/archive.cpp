@@ -148,11 +148,9 @@ void File::Write(Kernel::HLERequestContext& ctx) {
 }
 
 void File::GetSize(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x0804, 0, 0};
-
     const FileSessionSlot* file{GetSessionData(ctx.Session())};
 
-    IPC::ResponseBuilder rb{rp.MakeBuilder(3, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x0804, 3, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u64>(file->size);
 }
@@ -177,24 +175,22 @@ void File::SetSize(Kernel::HLERequestContext& ctx) {
 }
 
 void File::Close(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x0808, 0, 0};
-
     // TODO: Only close the backend if this client is the only one left.
-    if (connected_sessions.size() > 1)
+    if (connected_sessions.size() > 1) {
         LOG_WARNING(Service_FS, "Closing File backend but {} clients still connected",
                     connected_sessions.size());
+    }
 
     backend->Close();
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+
+    IPC::ResponseBuilder rb{ctx, 0x0808, 1, 0};
     rb.Push(RESULT_SUCCESS);
 }
 
 void File::Flush(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x0809, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-
     const FileSessionSlot* file{GetSessionData(ctx.Session())};
+
+    IPC::ResponseBuilder rb{ctx, 0x0809, 1, 0};
 
     // Subfiles can not be flushed.
     if (file->subfile) {
@@ -217,10 +213,9 @@ void File::SetPriority(Kernel::HLERequestContext& ctx) {
 }
 
 void File::GetPriority(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x080B, 0, 0};
     const FileSessionSlot* file{GetSessionData(ctx.Session())};
 
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x080B, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push(file->priority);
 }
@@ -229,8 +224,7 @@ void File::OpenLinkFile(Kernel::HLERequestContext& ctx) {
     using Kernel::ClientSession;
     using Kernel::ServerSession;
     using Kernel::SharedPtr;
-    IPC::RequestParser rp{ctx, 0x080C, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+
     auto sessions{ServerSession::CreateSessionPair(GetName())};
     auto server{std::get<SharedPtr<ServerSession>>(sessions)};
     ClientConnected(server);
@@ -243,6 +237,7 @@ void File::OpenLinkFile(Kernel::HLERequestContext& ctx) {
     slot->size = backend->GetSize();
     slot->subfile = false;
 
+    IPC::ResponseBuilder rb{ctx, 0x080C, 1, 2};
     rb.Push(RESULT_SUCCESS);
     rb.PushMoveObjects(std::get<SharedPtr<ClientSession>>(sessions));
 
@@ -352,11 +347,10 @@ void Directory::Read(Kernel::HLERequestContext& ctx) {
 }
 
 void Directory::Close(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x0802, 0, 0};
     LOG_TRACE(Service_FS, "Close {}", GetName());
     backend->Close();
 
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x0802, 1, 0};
     rb.Push(RESULT_SUCCESS);
 }
 

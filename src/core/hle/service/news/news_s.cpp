@@ -8,9 +8,7 @@
 namespace Service::NEWS {
 
 void NEWS_S::GetTotalNotifications(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x5, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
-
+    IPC::ResponseBuilder rb{ctx, 0x5, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
 

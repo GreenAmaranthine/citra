@@ -2,13 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#ifdef _WIN32
-#ifdef _WIN32_WINNT
-#undef _WIN32_WINNT
-#endif
-#define _WIN32_WINNT 0x4000
-#include <windows.h>
-#endif
+#include <SDL.h>
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/hle/ipc.h"
@@ -29,28 +23,21 @@
 namespace Service::MCU {
 
 void Module::Interface::GetBatteryLevel(Kernel::HLERequestContext& ctx, u16 id) {
-    IPC::RequestParser rp{ctx, id, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, id, 2, 0};
     rb.Push(RESULT_SUCCESS);
-#ifdef _WIN32
-    SYSTEM_POWER_STATUS status;
-    rb.Push<u8>(GetSystemPowerStatus(&status) ? status.BatteryLifePercent : 0);
-#else
-    rb.Push<u8>(0x64);
-#endif
+    int pct{};
+    SDL_PowerState state{SDL_GetPowerInfo(nullptr, &pct)};
+    rb.Push<u8>(static_cast<u8>(pct == -1 ? 0x64 : pct));
 }
 
 void Module::Interface::GetBatteryChargeState(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x2C, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
-
+    IPC::ResponseBuilder rb{ctx, 0x2C, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push(Settings::values.p_battery_charging);
 }
 
 void Module::Interface::Set3DLEDState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0009, 1, 0};
-
     u8 state{rp.Pop<u8>()};
 
     if (!Settings::values.disable_mh_3d) {
@@ -77,9 +64,6 @@ Module::Interface::Interface(std::shared_ptr<Module> mcu, const char* name)
     : ServiceFramework{name, 1}, mcu{std::move(mcu)} {}
 
 void InstallInterfaces(SM::ServiceManager& service_manager) {
-#ifndef _WIN32
-    LOG_WARNING(Service_MCU, "OS not supported");
-#endif
     auto mcu{std::make_shared<Module>()};
     std::make_shared<CAM>(mcu)->InstallAsService(service_manager);
     std::make_shared<CDC>(mcu)->InstallAsService(service_manager);

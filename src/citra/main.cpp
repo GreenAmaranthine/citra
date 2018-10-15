@@ -1291,13 +1291,15 @@ void GMainWindow::OnSetPlayCoins() {
     u16 play_coins{static_cast<u16>(
         QInputDialog::getInt(this, "Set Play Coins", "Play Coins:", 0, 0, 300, 1, &ok,
                              Qt::WindowSystemMenuHint | Qt::WindowTitleHint))};
-    if (ok)
+    if (ok) {
         Service::PTM::SetPlayCoins(play_coins);
+    }
 }
 
 void GMainWindow::OnOpenUserDirectory() {
     QString path{QString::fromStdString(FileUtil::GetUserPath(D_USER_IDX))};
-    QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+    QDesktopServices::openUrl(
+        QUrl::fromLocalFile(path.replace("./user", QDir::currentPath() + "/user")));
 }
 
 void GMainWindow::OnSelectSDMCDirectory() {

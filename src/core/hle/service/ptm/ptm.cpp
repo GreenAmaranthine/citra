@@ -22,20 +22,16 @@
 namespace Service::PTM {
 
 /// Values for the default gamecoin.dat file
-static const GameCoin default_game_coin = {0x4F00, 42, 0, 0, 0, 2014, 12, 29};
+constexpr GameCoin default_game_coin{0x4F00, 42, 0, 0, 0, 2014, 12, 29};
 
 void Module::Interface::GetAdapterState(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x5, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x5, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push(Settings::values.p_adapter_connected);
 }
 
 void Module::Interface::GetShellState(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x6, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x6, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push(!Core::System::GetInstance().IsSleepModeEnabled());
 }
@@ -68,7 +64,6 @@ void Module::Interface::GetPedometerState(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetStepHistory(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0xB, 3, 2};
-
     u32 hours{rp.Pop<u32>()};
     u64 start_time{rp.Pop<u64>()};
     auto& buffer{rp.PopMappedBuffer()};

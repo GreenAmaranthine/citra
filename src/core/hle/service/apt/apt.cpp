@@ -167,9 +167,7 @@ bool Module::LoadSharedFont() {
 }
 
 void Module::Interface::GetSharedFont(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x44, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
-
+    IPC::ResponseBuilder rb{ctx, 0x44, 2, 2};
     if (!apt->shared_font_loaded) {
         rb.Push<u32>(-1); // TODO: Find the right error code
         rb.Push<u32>(0);
@@ -467,13 +465,11 @@ void Module::Interface::PrepareToStartLibraryApplet(Kernel::HLERequestContext& c
 }
 
 void Module::Interface::PrepareToStartNewestHomeMenu(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x1A, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-
     // TODO: This command can only be called by a System Applet (return 0xC8A0CC04 otherwise).
 
     // This command must return an error when called, otherwise the Home Menu will try to reboot the
     // system.
+    IPC::ResponseBuilder rb{ctx, 0x1A, 1, 0};
     rb.Push(ResultCode(ErrorDescription::AlreadyExists, ErrorModule::Applet,
                        ErrorSummary::InvalidState, ErrorLevel::Status));
 
@@ -660,11 +656,10 @@ void Module::Interface::SetScreenCapPostPermission(Kernel::HLERequestContext& ct
 }
 
 void Module::Interface::GetScreenCapPostPermission(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x56, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x56, 2, 0};
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(static_cast<u32>(apt->screen_capture_post_permission));
+
     LOG_WARNING(Service_APT, "(STUBBED) called, screen_capture_post_permission={}",
                 static_cast<u32>(apt->screen_capture_post_permission));
 }
@@ -831,8 +826,7 @@ void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::IsStandardMemoryLayout(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x104, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x104, 2, 0};
     rb.Push(RESULT_SUCCESS);
 
     if (CFG::IsNewModeEnabled()) {

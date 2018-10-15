@@ -108,8 +108,7 @@ void IR_RST::UpdateCallback(u64 userdata, s64 cycles_late) {
 }
 
 void IR_RST::GetHandles(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x01, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 3)};
+    IPC::ResponseBuilder rb{ctx, 0x01, 1, 3};
     rb.Push(RESULT_SUCCESS);
     rb.PushMoveObjects(shared_memory, update_event);
 }
@@ -133,12 +132,10 @@ void IR_RST::Initialize(Kernel::HLERequestContext& ctx) {
 }
 
 void IR_RST::Shutdown(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x03, 0, 0};
-
     CoreTiming::UnscheduleEvent(update_callback_id, 0);
     UnloadInputDevices();
 
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x03, 1, 0};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_IR, "called");
 }

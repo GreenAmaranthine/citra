@@ -953,8 +953,7 @@ void Module::Interface::SetPackageParameterWithContextDetail(Kernel::HLERequestC
 }
 
 void Module::Interface::GetSuitableY2rStandardCoefficient(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x36, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x36, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
 
@@ -972,9 +971,6 @@ void Module::Interface::PlayShutterSound(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::DriverInitialize(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x39, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-
     for (int camera_id{}; camera_id < NumCameras; ++camera_id) {
         CameraConfig& camera{cam->cameras[camera_id]};
         camera.current_context = 0;
@@ -994,15 +990,13 @@ void Module::Interface::DriverInitialize(Kernel::HLERequestContext& ctx) {
         port.Clear();
     }
 
+    IPC::ResponseBuilder rb{ctx, 0x39, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_CAM, "called");
 }
 
 void Module::Interface::DriverFinalize(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x3A, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-
     cam->CancelReceiving(0);
     cam->CancelReceiving(1);
 
@@ -1010,6 +1004,7 @@ void Module::Interface::DriverFinalize(Kernel::HLERequestContext& ctx) {
         camera.impl = nullptr;
     }
 
+    IPC::ResponseBuilder rb{ctx, 0x3A, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_CAM, "called");

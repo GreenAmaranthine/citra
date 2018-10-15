@@ -21,12 +21,10 @@ Module::Interface::Interface(std::shared_ptr<Module> frd, const char* name)
 Module::Interface::~Interface() = default;
 
 void Module::Interface::GetMyPresence(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x08, 0, 0};
-
     std::vector<u8> buffer(sizeof(MyPresence));
     std::memcpy(buffer.data(), &frd->my_presence, buffer.size());
 
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    IPC::ResponseBuilder rb{ctx, 0x08, 1, 2};
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(buffer, 0);
 
@@ -79,8 +77,7 @@ void Module::Interface::GetFriendAttributeFlags(Kernel::HLERequestContext& ctx) 
 }
 
 void Module::Interface::GetMyFriendKey(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x5, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(5, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x5, 5, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(frd->my_friend_key);
 
@@ -88,9 +85,6 @@ void Module::Interface::GetMyFriendKey(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetMyScreenName(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x9, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(7, 0)};
-
     struct ScreenName {
         std::array<char16_t, 12> name;
     };
@@ -98,6 +92,7 @@ void Module::Interface::GetMyScreenName(Kernel::HLERequestContext& ctx) {
     // TODO: (mailwl) get the name from config
     ScreenName screen_name{u"Citra"};
 
+    IPC::ResponseBuilder rb{ctx, 0x9, 7, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(screen_name);
 
@@ -105,8 +100,8 @@ void Module::Interface::GetMyScreenName(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::UnscrambleLocalFriendCode(Kernel::HLERequestContext& ctx) {
-    const std::size_t scrambled_friend_code_size = 12;
-    const std::size_t friend_code_size = 8;
+    constexpr std::size_t scrambled_friend_code_size{12};
+    constexpr std::size_t friend_code_size{8};
 
     IPC::RequestParser rp{ctx, 0x1C, 1, 2};
     const u32 friend_code_count{rp.Pop<u32>()};

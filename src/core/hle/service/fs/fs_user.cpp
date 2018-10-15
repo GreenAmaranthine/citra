@@ -340,15 +340,13 @@ void FS_USER::CloseArchive(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::IsSdmcDetected(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x817, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x817, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push(Settings::values.use_virtual_sd);
 }
 
 void FS_USER::IsSdmcWriteable(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x818, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x818, 2, 0};
     rb.Push(RESULT_SUCCESS);
 
     // If the SD isn't enabled, it can't be writeable
@@ -496,11 +494,11 @@ void FS_USER::DeleteExtSaveData(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::CardSlotIsInserted(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x821, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x821, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push(false);
-    LOG_WARNING(Service_FS, "(STUBBED) called");
+
+    UNIMPLEMENTED();
 }
 
 void FS_USER::DeleteSystemSaveData(Kernel::HLERequestContext& ctx) {
@@ -581,13 +579,11 @@ void FS_USER::SetPriority(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::GetPriority(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x863, 0, 0};
-
     if (priority == -1) {
         LOG_INFO(Service_FS, "priority was not set, priority=0x{:X}", priority);
     }
 
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x863, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push(priority);
 

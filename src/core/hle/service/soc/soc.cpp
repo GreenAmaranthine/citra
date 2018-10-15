@@ -508,8 +508,6 @@ void Module::Interface::Accept(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetHostId(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x16, 0, 0};
-
     char name[128];
     gethostname(name, sizeof(name));
     addrinfo hints{};
@@ -520,7 +518,7 @@ void Module::Interface::GetHostId(Kernel::HLERequestContext& ctx) {
     sockaddr_in* sock_addr{reinterpret_cast<sockaddr_in*>(res->ai_addr)};
     in_addr* addr{&sock_addr->sin_addr};
 
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x16, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push(static_cast<u32>(addr->s_addr));
     freeaddrinfo(res);
@@ -791,10 +789,9 @@ void Module::Interface::InitializeSockets(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::ShutdownSockets(Kernel::HLERequestContext& ctx) {
     // TODO: Implement
-    IPC::RequestParser rp{ctx, 0x19, 0, 0};
     CleanupSockets();
 
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x19, 1, 0};
     rb.Push(RESULT_SUCCESS);
 }
 

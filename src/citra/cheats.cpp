@@ -464,34 +464,19 @@ void CheatDialog::LoadTable(const std::vector<FoundItem>& items) {
 template <typename T>
 std::vector<FoundItem> CheatDialog::FirstSearch(const T value,
                                                 std::function<bool(int, int, int)> comparer) {
-    std::vector<VAddr> address_in_use{};
-    std::vector<FoundItem> results{};
+    std::vector<VAddr> address_in_use;
+    std::vector<FoundItem> results;
     int base{ui->chkHex->isChecked() ? 16 : 10};
     T search_to_value{static_cast<T>(ui->txtSearchTo->text().toInt(nullptr, base))};
 
-    for (VAddr i{Memory::HEAP_VADDR}; i < Memory::HEAP_VADDR_END; i += 4096) {
+    for (VAddr i{Memory::PROCESS_IMAGE_VADDR}; i < Memory::NEW_LINEAR_HEAP_VADDR_END; i += 4096) {
         if (Memory::IsValidVirtualAddress(i)) {
             address_in_use.push_back(i);
         }
     }
 
-    for (VAddr i{Memory::LINEAR_HEAP_VADDR}; i < Memory::LINEAR_HEAP_VADDR_END; i += 4096) {
-        if (Memory::IsValidVirtualAddress(i)) {
-            address_in_use.push_back(i);
-        }
-    }
-
-    if (Service::CFG::IsNewModeEnabled()) {
-        for (VAddr i{Memory::NEW_LINEAR_HEAP_VADDR}; i < Memory::NEW_LINEAR_HEAP_VADDR_END;
-             i += 4096) {
-            if (Memory::IsValidVirtualAddress(i)) {
-                address_in_use.push_back(i);
-            }
-        }
-    }
-
-    for (auto& range : address_in_use) {
-        for (VAddr i{range}; i < (range + 4096); i++) {
+    for (auto& address : address_in_use) {
+        for (VAddr i{address}; i < (address + 4096); i++) {
             T result{Read<T>(i)};
             if (comparer(result, value, search_to_value)) {
                 FoundItem item{};

@@ -209,7 +209,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
                     Shader::OutputVertex::ValidateSemantics(regs.rasterizer);
 
-                    auto* shader_engine = Shader::GetEngine();
+                    auto* shader_engine{Shader::GetEngine()};
                     shader_engine->SetupBatch(g_state.vs, regs.vs.main_offset);
 
                     // Send to vertex shader

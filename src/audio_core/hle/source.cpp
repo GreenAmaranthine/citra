@@ -196,7 +196,7 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
         config.buffer_queue_dirty.Assign(0);
         for (std::size_t i{}; i < 4; i++) {
             if (config.buffers_dirty & (1 << i)) {
-                const auto& b = config.buffers[i];
+                const auto& b{config.buffers[i]};
                 state.input_queue.emplace(Buffer{
                     b.physical_address,
                     b.length,

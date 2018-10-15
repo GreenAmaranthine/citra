@@ -34,14 +34,15 @@ void CSND_SND::Initialize(Kernel::HLERequestContext& ctx) {
 }
 
 void CSND_SND::Shutdown(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x02, 0, 0};
-
-    if (mutex)
+    if (mutex) {
         mutex = nullptr;
-    if (shared_memory)
-        shared_memory = nullptr;
+    }
 
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    if (shared_memory) {
+        shared_memory = nullptr;
+    }
+
+    IPC::ResponseBuilder rb{ctx, 0x02, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
     LOG_WARNING(Service_CSND, "(STUBBED) called");
@@ -70,9 +71,7 @@ void CSND_SND::ExecuteCommands(Kernel::HLERequestContext& ctx) {
 }
 
 void CSND_SND::AcquireSoundChannels(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x05, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x05, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0xFFFFFF00);
 
@@ -80,18 +79,14 @@ void CSND_SND::AcquireSoundChannels(Kernel::HLERequestContext& ctx) {
 }
 
 void CSND_SND::ReleaseSoundChannels(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x06, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x06, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
     LOG_WARNING(Service_CSND, "(STUBBED) called");
 }
 
 void CSND_SND::AcquireCapUnit(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x7, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x7, 2, 0};
     if (capture_units[0] && capture_units[1]) {
         LOG_WARNING(Service_CSND, "No more capture units available");
         rb.Push(ResultCode(ErrorDescription::InvalidResultValue, ErrorModule::CSND,
@@ -164,9 +159,7 @@ void CSND_SND::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
 }
 
 void CSND_SND::Reset(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0xC, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, 0xC, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
     LOG_WARNING(Service_CSND, "(STUBBED) called");
