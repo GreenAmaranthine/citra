@@ -631,8 +631,8 @@ static std::optional<Network::MacAddress> GetNodeMacAddress(u16 dest_node_id, u8
 void NWM_UDS::Shutdown(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x03, 0, 0};
 
-    if (auto room_member{Network::GetRoomMember().lock()})
-        room_member->Unbind(wifi_packet_received);
+    if (auto member{Network::GetRoomMember().lock()})
+        member->Unbind(wifi_packet_received);
 
     for (auto bind_node : channel_data) {
         bind_node.second.event->Signal();
@@ -729,8 +729,8 @@ void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
 
     ASSERT_MSG(recv_buffer_memory->size == sharedmem_size, "Invalid shared memory size.");
 
-    if (auto room_member{Network::GetRoomMember().lock()}) {
-        wifi_packet_received = room_member->BindOnWifiPacketReceived(OnWifiPacketReceived);
+    if (auto member{Network::GetRoomMember().lock()}) {
+        wifi_packet_received = member->BindOnWifiPacketReceived(OnWifiPacketReceived);
     } else {
         LOG_ERROR(Service_NWM, "Network isn't initalized");
     }
@@ -934,9 +934,9 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
         // Notify the application that the first node was set.
         connection_status.changed_nodes |= 1;
 
-        if (auto room_member{Network::GetRoomMember().lock()}) {
-            if (room_member->IsConnected()) {
-                network_info.host_mac_address = room_member->GetMacAddress();
+        if (auto member{Network::GetRoomMember().lock()}) {
+            if (member->IsConnected()) {
+                network_info.host_mac_address = member->GetMacAddress();
             } else {
                 network_info.host_mac_address = {{0x0, 0x0, 0x0, 0x0, 0x0, 0x0}};
             }
@@ -1398,9 +1398,9 @@ NWM_UDS::NWM_UDS() : ServiceFramework{"nwm::UDS"} {
     auto mac{SharedPage::DefaultMac};
     // Keep the Nintendo 3DS MAC header and randomly generate the last 3 bytes
     rng.GenerateBlock(static_cast<CryptoPP::byte*>(mac.data() + 3), 3);
-    if (auto room_member{Network::GetRoomMember().lock()}) {
-        if (room_member->IsConnected()) {
-            mac = room_member->GetMacAddress();
+    if (auto member{Network::GetRoomMember().lock()}) {
+        if (member->IsConnected()) {
+            mac = member->GetMacAddress();
         }
     }
     Core::System::GetInstance().GetSharedPageHandler()->SetMacAddress(mac);
@@ -1419,8 +1419,8 @@ NWM_UDS::~NWM_UDS() {
         connection_status.status = static_cast<u32>(NetworkStatus::NotConnected);
     }
 
-    if (auto room_member{Network::GetRoomMember().lock()})
-        room_member->Unbind(wifi_packet_received);
+    if (auto member{Network::GetRoomMember().lock()})
+        member->Unbind(wifi_packet_received);
 
     CoreTiming::UnscheduleEvent(beacon_broadcast_event, 0);
 }

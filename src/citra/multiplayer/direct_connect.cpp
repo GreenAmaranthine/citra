@@ -89,11 +89,10 @@ void DirectConnectWindow::Connect() {
 
     // attempt to connect in a different thread
     QFuture<void> f{QtConcurrent::run([&] {
-        if (auto room_member{Network::GetRoomMember().lock()}) {
+        if (auto member{Network::GetRoomMember().lock()}) {
             auto port{UISettings::values.port.toUInt()};
-            room_member->Join(ui->nickname->text().toStdString(),
-                              ui->ip->text().toStdString().c_str(), port, Network::NoPreferredMac,
-                              ui->password->text().toStdString().c_str());
+            member->Join(ui->nickname->text().toStdString(), ui->ip->text().toStdString().c_str(),
+                         port, Network::NoPreferredMac, ui->password->text().toStdString().c_str());
         }
     })};
 
@@ -116,8 +115,8 @@ void DirectConnectWindow::EndConnecting() {
 void DirectConnectWindow::OnConnection() {
     EndConnecting();
 
-    if (auto room_member{Network::GetRoomMember().lock()}) {
-        if (room_member->GetState() == Network::RoomMember::State::Joined) {
+    if (auto member{Network::GetRoomMember().lock()}) {
+        if (member->GetState() == Network::RoomMember::State::Joined) {
             close();
         }
     }

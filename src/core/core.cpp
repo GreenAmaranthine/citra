@@ -216,9 +216,9 @@ void System::Shutdown() {
     app_loader.reset();
     Memory::InvalidateAreaCache();
 
-    if (auto room_member{Network::GetRoomMember().lock()}) {
+    if (auto member{Network::GetRoomMember().lock()}) {
         Network::GameInfo game_info{};
-        room_member->SendGameInfo(game_info);
+        member->SendGameInfo(game_info);
     }
 
     LOG_DEBUG(Core, "Shutdown OK");

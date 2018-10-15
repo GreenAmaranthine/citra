@@ -165,8 +165,8 @@ bool ChatRoom::ValidateMessage(const std::string& msg) {
 
 void ChatRoom::OnRoomUpdate(const Network::RoomInformation& info) {
     // TODO: change title
-    if (auto room_member{Network::GetRoomMember().lock()}) {
-        SetPlayerList(room_member->GetMemberInformation());
+    if (auto member{Network::GetRoomMember().lock()}) {
+        SetPlayerList(member->GetMemberInformation());
     }
 }
 
@@ -249,9 +249,9 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
         return;
 
     std::string nickname = player_list->item(item.row())->text().toStdString();
-    if (auto room_member{Network::GetRoomMember().lock()}) {
+    if (auto member{Network::GetRoomMember().lock()}) {
         // You can't block yourself
-        if (nickname == room_member->GetNickname())
+        if (nickname == member->GetNickname())
             return;
     }
 

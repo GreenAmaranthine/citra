@@ -134,8 +134,8 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
 
     // attempt to connect in a different thread
     QFuture<void> f{QtConcurrent::run([nickname, ip, port, password] {
-        if (auto room_member{Network::GetRoomMember().lock()}) {
-            room_member->Join(nickname, ip.c_str(), port, Network::NoPreferredMac, password);
+        if (auto member{Network::GetRoomMember().lock()}) {
+            member->Join(nickname, ip.c_str(), port, Network::NoPreferredMac, password);
         }
     })};
     watcher->setFuture(f);
