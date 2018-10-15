@@ -260,14 +260,14 @@ T Read(const VAddr addr) {
 }
 
 QString IntToHex(int value) {
-    std::stringstream ss{};
+    std::stringstream ss;
     ss << std::setfill('0') << std::setw(sizeof(int) * 2) << std::hex << value;
     return QString::fromStdString(ss.str());
 }
 
 int HexToInt(const QString& hex) {
     int dec{};
-    std::stringstream ss{};
+    std::stringstream ss;
     ss << hex.toStdString();
     ss >> std::hex >> dec;
     return dec;
@@ -292,7 +292,7 @@ QString DoubleToHexString(double value) {
 
     d = value;
 
-    std::ostringstream oss{};
+    std::ostringstream oss;
     oss << std::hex << std::setfill('0') << std::setw(16) << i;
 
     return QString::fromStdString(oss.str());
@@ -306,7 +306,7 @@ QString IeeeFloatToHex(float value) {
 
     f = value;
 
-    std::ostringstream oss{};
+    std::ostringstream oss;
     oss << std::hex << std::uppercase << i;
 
     return QString::fromStdString(oss.str());
