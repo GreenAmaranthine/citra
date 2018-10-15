@@ -5,6 +5,7 @@
 #pragma once
 
 #include "common/common_types.h"
+#include "common/logging/log.h"
 
 namespace FileSys {
 
@@ -22,16 +23,14 @@ inline u32 GetSignatureSize(u32 signature_type) {
     case Rsa4096Sha1:
     case Rsa4096Sha256:
         return 0x200;
-
     case Rsa2048Sha1:
     case Rsa2048Sha256:
         return 0x100;
-
     case EllipticSha1:
     case EcdsaSha256:
         return 0x3C;
     }
-
+    LOG_ERROR(Service_FS, "Tried to read ticket with bad signature {}", signature_type);
     return 0;
 }
 
