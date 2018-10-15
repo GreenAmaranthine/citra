@@ -156,7 +156,9 @@ void HostRoomWindow::AddReply() {
 }
 
 void HostRoomWindow::RemoveReply() {
-    ui->tableReplies->removeRow(ui->tableReplies->rowCount() - 1);
+    for (const auto& item : ui->tableReplies->selectedItems()) {
+        ui->tableReplies->removeRow(item->row());
+    }
 
     UpdateReplies();
 
