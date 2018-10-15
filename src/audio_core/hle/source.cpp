@@ -276,7 +276,11 @@ bool Source::DequeueBuffer() {
         return false;
 
     Buffer buf{state.input_queue.top()};
-    state.input_queue.pop();
+
+    // if we're in a loop, the current sound keeps playing afterwards, so leave the queue alone
+    if (!buf.is_looping) {
+        state.input_queue.pop();
+    }
 
     if (buf.adpcm_dirty) {
         state.adpcm_state.yn1 = buf.adpcm_yn[0];
