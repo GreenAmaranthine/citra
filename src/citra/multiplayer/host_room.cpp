@@ -5,6 +5,7 @@
 #include <future>
 #include <QColor>
 #include <QImage>
+#include <QInputDialog>
 #include <QList>
 #include <QLocale>
 #include <QMetaType>
@@ -48,9 +49,12 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
     proxy->setSourceModel(game_list);
     proxy->sort(0, Qt::AscendingOrder);
     ui->game_list->setModel(proxy);
+    ui->tableReplies->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     // Connect all the widgets to the appropriate events
-    connect(ui->host, &QPushButton::pressed, this, &HostRoomWindow::Host);
+    connect(ui->buttonAddReply, &QPushButton::released, this, &HostRoomWindow::AddReply);
+    connect(ui->buttonRemoveReply, &QPushButton::released, this, &HostRoomWindow::RemoveReply);
+    connect(ui->host, &QPushButton::released, this, &HostRoomWindow::Host);
 
     // Restore the settings:
     ui->username->setText(UISettings::values.room_nickname);
@@ -131,6 +135,51 @@ void HostRoomWindow::Host() {
     }
 }
 
+void HostRoomWindow::AddReply() {
+    QString message{QInputDialog::getText(this, "Add Reply", "Message:")};
+    if (message.isEmpty()) {
+        return;
+    }
+
+    QString reply{QInputDialog::getText(this, "Add Reply", "Reply:")};
+    if (reply.isEmpty()) {
+        return;
+    }
+
+    int row{ui->tableReplies->rowCount()};
+    ui->tableReplies->insertRow(row);
+    ui->tableReplies->setItem(row, 0 /* Message */, new QTableWidgetItem(message));
+    ui->tableReplies->setItem(row, 1 /* Reply */, new QTableWidgetItem(reply));
+    ui->buttonRemoveReply->setEnabled(true);
+
+    UpdateReplies();
+}
+
+void HostRoomWindow::RemoveReply() {
+    ui->tableReplies->removeRow(ui->tableReplies->rowCount() - 1);
+
+    UpdateReplies();
+
+    if (ui->tableReplies->rowCount() == 0) {
+        ui->buttonRemoveReply->setEnabled(false);
+    }
+}
+
+void HostRoomWindow::UpdateReplies() {
+    // Only update replies if the user is hosting a room.
+    if (auto room{Network::GetRoom().lock()}) {
+        if (room->IsOpen()) {
+            auto parent{static_cast<MultiplayerState*>(parentWidget())};
+            MultiplayerState::Replies replies;
+            for (int i{}; i < ui->tableReplies->rowCount(); ++i) {
+                replies.emplace(ui->tableReplies->item(i, /* Message */ 0)->text().toStdString(),
+                                ui->tableReplies->item(i, /* Reply */ 1)->text().toStdString());
+            }
+            parent->SetReplies(replies);
+        }
+    }
+}
+
 void HostRoomWindow::OnConnection() {
     ui->host->setEnabled(true);
     if (auto member{Network::GetRoomMember().lock()}) {
@@ -143,6 +192,8 @@ void HostRoomWindow::OnConnection() {
                     LOG_ERROR(Network, "Starting announce session failed");
                 }
             }
+
+            UpdateReplies();
             close();
         }
     }

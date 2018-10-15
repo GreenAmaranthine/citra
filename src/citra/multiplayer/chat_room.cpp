@@ -16,6 +16,7 @@
 #include "citra/game_list_p.h"
 #include "citra/multiplayer/chat_room.h"
 #include "citra/multiplayer/message.h"
+#include "citra/multiplayer/state.h"
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
 #include "ui_chat_room.h"
@@ -117,6 +118,43 @@ void ChatRoom::AppendStatusMessage(const QString& msg) {
     ui->chat_history->append(StatusMessage(msg).GetSystemChatMessage());
 }
 
+bool ChatRoom::Send(const QString& msg) {
+    if (auto member{Network::GetRoomMember().lock()}) {
+        if (member->GetState() != Network::RoomMember::State::Joined) {
+            return false;
+        }
+        auto message{msg.toStdString()};
+        if (!ValidateMessage(message)) {
+            return false;
+        }
+        auto nick{member->GetNickname()};
+        Network::ChatEntry chat{nick, message};
+
+        auto members{member->GetMemberInformation()};
+        auto it{std::find_if(members.begin(), members.end(),
+                             [&chat](const Network::RoomMember::MemberInformation& member) {
+                                 return member.nickname == chat.nickname;
+                             })};
+        if (it == members.end()) {
+            LOG_INFO(Network, "Cannot find self in the player list when sending a message.");
+        }
+        auto player{std::distance(members.begin(), it)};
+        ChatMessage m{chat};
+        member->SendChatMessage(message);
+        AppendChatMessage(m.GetPlayerChatMessage(player));
+        return true;
+    }
+    return false;
+}
+
+void ChatRoom::HandleNewMessage(const QString& msg) {
+    const auto& replies{static_cast<MultiplayerState*>(parentWidget()->parent())->GetReplies()};
+    auto itr{replies.find(msg.toStdString())};
+    if (itr != replies.end()) {
+        Send(QString::fromStdString(itr->second));
+    }
+}
+
 void ChatRoom::AppendChatMessage(const QString& msg) {
     ui->chat_history->append(msg);
 }
@@ -165,43 +203,28 @@ void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
         auto player{std::distance(members.begin(), it)};
         ChatMessage m{chat};
         AppendChatMessage(m.GetPlayerChatMessage(player));
+        HandleNewMessage(QString::fromStdString(chat.message).remove('\0'));
     }
 }
 
 void ChatRoom::OnSendChat() {
-    if (auto member{Network::GetRoomMember().lock()}) {
-        if (member->GetState() != Network::RoomMember::State::Joined) {
-            return;
-        }
-        auto message{ui->chat_message->text().toStdString()};
-        if (!ValidateMessage(message)) {
-            return;
-        }
-        auto nick{member->GetNickname()};
-        Network::ChatEntry chat{nick, message};
-
-        auto members{member->GetMemberInformation()};
-        auto it{std::find_if(members.begin(), members.end(),
-                             [&chat](const Network::RoomMember::MemberInformation& member) {
-                                 return member.nickname == chat.nickname;
-                             })};
-        if (it == members.end()) {
-            LOG_INFO(Network, "Cannot find self in the player list when sending a message.");
-        }
-        auto player{std::distance(members.begin(), it)};
-        ChatMessage m{chat};
-        member->SendChatMessage(message);
-        AppendChatMessage(m.GetPlayerChatMessage(player));
-        ui->chat_message->clear();
+    QString message{ui->chat_message->text()};
+    if (!Send(message)) {
+        return;
     }
+
+    ui->chat_message->clear();
+
+    HandleNewMessage(message);
 }
 
 void ChatRoom::SetPlayerList(const Network::RoomMember::MemberList& member_list) {
     // TODO: Remember which row is selected
     player_list->removeRows(0, player_list->rowCount());
     for (const auto& member : member_list) {
-        if (member.nickname.empty())
+        if (member.nickname.empty()) {
             continue;
+        }
         QList<QStandardItem*> l;
         std::vector<std::string> elements{member.nickname, member.game_info.name};
         for (const auto& item : elements) {
@@ -215,8 +238,9 @@ void ChatRoom::SetPlayerList(const Network::RoomMember::MemberList& member_list)
 }
 
 void ChatRoom::OnChatTextChanged() {
-    if (ui->chat_message->text().length() > Network::MaxMessageSize)
+    if (ui->chat_message->text().length() > Network::MaxMessageSize) {
         ui->chat_message->setText(ui->chat_message->text().left(Network::MaxMessageSize));
+    }
 }
 
 void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
@@ -225,9 +249,9 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
         return;
 
     std::string nickname = player_list->item(item.row())->text().toStdString();
-    if (auto room{Network::GetRoomMember().lock()}) {
+    if (auto room_member{Network::GetRoomMember().lock()}) {
         // You can't block yourself
-        if (nickname == room->GetNickname())
+        if (nickname == room_member->GetNickname())
             return;
     }
 

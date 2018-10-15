@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <string>
 #include <QWidget>
 #include "core/announce_multiplayer_session.h"
 #include "network/network.h"
@@ -19,6 +20,8 @@ class MultiplayerState : public QWidget {
     Q_OBJECT;
 
 public:
+    using Replies = std::unordered_map<std::string, std::string>;
+
     explicit MultiplayerState(QWidget* parent, QStandardItemModel* game_list, QAction* leave_room,
                               QAction* show_room);
     ~MultiplayerState();
@@ -30,6 +33,14 @@ public:
 
     ClickableLabel* GetStatusIcon() const {
         return status_icon;
+    }
+
+    void SetReplies(Replies replies) {
+        this->replies = std::move(replies);
+    }
+
+    const Replies& GetReplies() {
+        return replies;
     }
 
 public slots:
@@ -58,6 +69,7 @@ private:
     std::shared_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
     Network::RoomMember::State current_state{Network::RoomMember::State::Uninitialized};
     Network::RoomMember::CallbackHandle<Network::RoomMember::State> state_callback_handle;
+    Replies replies;
 };
 
 Q_DECLARE_METATYPE(Common::WebResult);

@@ -164,6 +164,7 @@ bool MultiplayerState::OnCloseRoom() {
         room->Destroy();
         announce_multiplayer_session->Stop();
         LOG_DEBUG(Frontend, "Closed the room (as a server)");
+        replies.clear();
     }
     return true;
 }

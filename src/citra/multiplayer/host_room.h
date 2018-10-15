@@ -43,6 +43,9 @@ private slots:
 
 private:
     void Host();
+    void AddReply();
+    void RemoveReply();
+    void UpdateReplies();
 
     std::weak_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
     QStandardItemModel* game_list;

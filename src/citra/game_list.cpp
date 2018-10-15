@@ -371,8 +371,9 @@ void GameList::ValidateEntry(const QModelIndex& item) {
     switch (static_cast<GameListItemType>(child->type())) {
     case GameListItemType::Game: {
         QString file_path{child->data(GameListItemPath::FullPathRole).toString()};
-        if (file_path.isEmpty())
+        if (file_path.isEmpty()){
             return;
+        }
         QFileInfo file_info{file_path};
         if (!file_info.exists() || file_info.isDir())
             return;
@@ -654,8 +655,9 @@ QString GameList::FindGameByProgramID(QStandardItem* current_item, u64 program_i
     } else if (current_item->hasChildren()) {
         for (int child_id{}; child_id < current_item->rowCount(); child_id++) {
             QString path{FindGameByProgramID(current_item->child(child_id, 0), program_id)};
-            if (!path.isEmpty())
+            if (!path.isEmpty()){
                 return path;
+        }
         }
     }
     return "";

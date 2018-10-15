@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <unordered_set>
+#include <unordered_map>
 #include <QDialog>
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
@@ -33,6 +34,8 @@ public:
     void SetPlayerList(const Network::RoomMember::MemberList& member_list);
     void Clear();
     void AppendStatusMessage(const QString& msg);
+    bool Send(const QString& msg);
+    void HandleNewMessage(const QString& msg);
     ~ChatRoom();
 
 public slots:
