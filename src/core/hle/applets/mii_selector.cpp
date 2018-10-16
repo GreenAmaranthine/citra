@@ -55,7 +55,7 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
     memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
 
     MiiResult result{};
-    if (config.magic_value != 0x13DE28CF) {
+    if (config.magic_value != MiiSelectorMagic) {
         result.return_code = 1;
     } else {
         cb(config, result);
