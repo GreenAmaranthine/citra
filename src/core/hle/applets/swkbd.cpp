@@ -205,7 +205,7 @@ ResultCode SoftwareKeyboard::StartImpl(const Service::APT::AppletStartupParamete
 void SoftwareKeyboard::Update() {
     switch (Settings::values.keyboard_mode) {
     case Settings::KeyboardMode::StdIn: {
-        std::string input{};
+        std::string input;
         std::cout << "Software Keyboard" << std::endl;
         // Display hint text
         std::u16string hint{reinterpret_cast<char16_t*>(config.hint_text.data())};
@@ -213,7 +213,7 @@ void SoftwareKeyboard::Update() {
             std::cout << "Hint text: " << Common::UTF16ToUTF8(hint) << std::endl;
         }
         ValidationError error{ValidationError::ButtonOutOfRange};
-        auto ValidateInputString = [&]() -> bool {
+        auto ValidateInputString{[&]() -> bool {
             ValidationError error{ValidateInput(config, input)};
             if (error != ValidationError::None) {
                 switch (error) {
@@ -256,18 +256,20 @@ void SoftwareKeyboard::Update() {
                 }
             }
             return error == ValidationError::None;
-        };
+        }};
         do {
             std::cout << "Enter the text you will send to the application:" << std::endl;
             std::getline(std::cin, input);
         } while (!ValidateInputString());
 
-        std::string option_text{};
+        std::string option_text;
+
         // Convert all of the button texts into something we can output
         // num_buttons is in the range of 0-2 so use <= instead of <
         u32 num_buttons{static_cast<u32>(config.num_buttons_m1)};
         for (u32 i{}; i <= num_buttons; ++i) {
             std::string button_text;
+
             // Apps are allowed to set custom text to display on the button
             std::u16string custom_button_text{
                 reinterpret_cast<char16_t*>(config.buttons_text[i].data())};
@@ -277,10 +279,11 @@ void SoftwareKeyboard::Update() {
             } else {
                 button_text = Common::UTF16ToUTF8(custom_button_text);
             }
+
             option_text += "\t(" + std::to_string(i) + ") " + button_text + "\t";
         }
-        std::string option{};
-        error = ValidationError::ButtonOutOfRange;
+
+        std::string option;
         auto ValidateButtonString{[&]() -> bool {
             bool valid{};
             try {
@@ -310,20 +313,18 @@ void SoftwareKeyboard::Update() {
             config.return_code = SoftwareKeyboardResult::D0Click;
             break;
         case SoftwareKeyboardButtonConfig::DualButton:
-            if (button == 0) {
+            if (button == 0)
                 config.return_code = SoftwareKeyboardResult::D1Click0;
-            } else {
+            else
                 config.return_code = SoftwareKeyboardResult::D1Click1;
-            }
             break;
         case SoftwareKeyboardButtonConfig::TripleButton:
-            if (button == 0) {
+            if (button == 0)
                 config.return_code = SoftwareKeyboardResult::D2Click0;
-            } else if (button == 1) {
+            else if (button == 1)
                 config.return_code = SoftwareKeyboardResult::D2Click1;
-            } else {
+            else
                 config.return_code = SoftwareKeyboardResult::D2Click2;
-            }
             break;
         default:
             // TODO: what does the hardware do
@@ -344,7 +345,7 @@ void SoftwareKeyboard::Update() {
     case Settings::KeyboardMode::Qt: {
         if (!cb)
             UNREACHABLE_MSG("Qt keyboard callback is nullptr");
-        std::u16string text{};
+        std::u16string text;
         cb(config, text);
         memcpy(text_memory->GetPointer(), text.c_str(), text.length() * sizeof(char16_t));
         Finalize();
