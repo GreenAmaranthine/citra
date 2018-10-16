@@ -18,12 +18,6 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
       ui{std::make_unique<Ui::MiiSelectorDialog>()} {
     ui->setupUi(this);
 
-    if (config.magic_value != 0x13DE28CF) {
-        result.return_code = 1;
-        QMetaObject::invokeMethod(this, "close", Qt::QueuedConnection);
-        return;
-    }
-
     ui->cancel->setEnabled(config.enable_cancel_button == 1);
     std::u16string title{reinterpret_cast<const char16_t*>(config.title.data())};
     setWindowTitle(title.empty() ? "Mii Selector" : QString::fromStdU16String(title));

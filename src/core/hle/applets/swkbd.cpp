@@ -24,9 +24,17 @@ namespace HLE::Applets {
 
 ValidationError ValidateFilters(const SoftwareKeyboardConfig& config, const std::string& input) {
     if ((config.filter_flags & SoftwareKeyboardFilter_Digits) == SoftwareKeyboardFilter_Digits) {
-        if (std::any_of(input.begin(), input.end(),
-                        [](unsigned char c) { return std::isdigit(c); })) {
+        int digits_count{};
+        for (const char c : input) {
+            if (std::isdigit(static_cast<int>(c))) {
+                ++digits_count;
+            }
+        }
+        if (digits_count > 0 && config.max_digits == 0) {
             return ValidationError::DigitNotAllowed;
+        }
+        if (digits_count > config.max_digits) {
+            return ValidationError::MaxLengthExceeded;
         }
     }
     if ((config.filter_flags & SoftwareKeyboardFilter_At) == SoftwareKeyboardFilter_At) {
@@ -48,12 +56,12 @@ ValidationError ValidateFilters(const SoftwareKeyboardConfig& config, const std:
     if ((config.filter_flags & SoftwareKeyboardFilter_Profanity) ==
         SoftwareKeyboardFilter_Profanity) {
         // TODO: check the profanity filter
-        LOG_INFO(Applet_Swkbd, "App requested swkbd profanity filter, but its not implemented.");
+        LOG_INFO(Applet_Swkbd, "App requested swkbd profanity filter, but it's not implemented.");
     }
     if ((config.filter_flags & SoftwareKeyboardFilter_Callback) ==
         SoftwareKeyboardFilter_Callback) {
         // TODO: check the callback
-        LOG_INFO(Applet_Swkbd, "App requested a swkbd callback, but its not implemented.");
+        LOG_INFO(Applet_Swkbd, "App requested a swkbd callback, but it's not implemented.");
     }
     return ValidationError::None;
 }
@@ -63,20 +71,14 @@ ValidationError ValidateInput(const SoftwareKeyboardConfig& config, const std::s
     if ((error = ValidateFilters(config, input)) != ValidationError::None) {
         return error;
     }
-
-    // TODO: Is max_text_length inclusive or exclusive?
     if (input.size() > config.max_text_length) {
         return ValidationError::MaxLengthExceeded;
     }
-
     if (!config.multiline && (input.find('\n') != std::string::npos)) {
         return ValidationError::NewLineNotAllowed;
     }
-    auto is_blank{[&] {
-        return std::all_of(input.begin(), input.end(),
-                           [](unsigned char c) { return std::isspace(c); });
-    }};
-    auto is_empty{[&] { return input.empty(); }};
+    bool is_blank{
+        std::all_of(input.begin(), input.end(), [](unsigned char c) { return std::isspace(c); })};
     switch (config.valid_input) {
     case SoftwareKeyboardValidInput::FixedLen:
         if (input.size() != config.max_text_length) {
@@ -84,20 +86,20 @@ ValidationError ValidateInput(const SoftwareKeyboardConfig& config, const std::s
         }
         break;
     case SoftwareKeyboardValidInput::NotEmptyNotBlank:
-        if (is_blank()) {
+        if (is_blank) {
             return ValidationError::BlankInputNotAllowed;
         }
-        if (is_empty()) {
+        if (input.empty()) {
             return ValidationError::EmptyInputNotAllowed;
         }
         break;
     case SoftwareKeyboardValidInput::NotBlank:
-        if (is_blank()) {
+        if (is_blank) {
             return ValidationError::BlankInputNotAllowed;
         }
         break;
     case SoftwareKeyboardValidInput::NotEmpty:
-        if (is_empty()) {
+        if (input.empty()) {
             return ValidationError::EmptyInputNotAllowed;
         }
         break;
@@ -105,11 +107,9 @@ ValidationError ValidateInput(const SoftwareKeyboardConfig& config, const std::s
         break;
     default:
         // TODO: What does hardware do in this case?
-        LOG_CRITICAL(Frontend, "Application requested unknown validation method. Method: {}",
-                     static_cast<u32>(config.valid_input));
-        UNREACHABLE();
+        UNREACHABLE_MSG("Application requested unknown validation method {}",
+                        static_cast<u32>(config.valid_input));
     }
-
     switch (config.type) {
     case SoftwareKeyboardType::QWERTY:
     case SoftwareKeyboardType::Western:
@@ -263,14 +263,14 @@ void SoftwareKeyboard::Update() {
         } while (!ValidateInputString());
 
         std::string option_text{};
-        // convert all of the button texts into something we can output
+        // Convert all of the button texts into something we can output
         // num_buttons is in the range of 0-2 so use <= instead of <
         u32 num_buttons{static_cast<u32>(config.num_buttons_m1)};
         for (u32 i{}; i <= num_buttons; ++i) {
-            std::string button_text{};
-            // apps are allowed to set custom text to display on the button
+            std::string button_text;
+            // Apps are allowed to set custom text to display on the button
             std::u16string custom_button_text{
-                reinterpret_cast<char16_t*>(config.button_text[i].data())};
+                reinterpret_cast<char16_t*>(config.buttons_text[i].data())};
             if (custom_button_text.empty()) {
                 // Use the system default text for that button
                 button_text = default_button_text[num_buttons][i];

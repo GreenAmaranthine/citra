@@ -122,8 +122,10 @@ enum class SoftwareKeyboardResult : s32 {
 
 enum class ValidationError {
     None,
+
     // Button Selection
     ButtonOutOfRange,
+
     // Configured Filters
     DigitNotAllowed,
     AtSignNotAllowed,
@@ -131,6 +133,7 @@ enum class ValidationError {
     BackslashNotAllowed,
     ProfanityNotAllowed,
     CallbackFailed,
+
     // Allowed Input Type
     FixedLengthRequired,
     MaxLengthExceeded,
@@ -152,7 +155,7 @@ struct SoftwareKeyboardConfig {
     u16_le max_text_length;
     u16_le dict_word_count;
     u16_le max_digits;
-    std::array<std::array<u16_le, SWKBD_MAX_BUTTON_TEXT_LEN + 1>, SWKBD_MAX_BUTTON> button_text;
+    std::array<std::array<u16_le, SWKBD_MAX_BUTTON_TEXT_LEN + 1>, SWKBD_MAX_BUTTON> buttons_text;
     std::array<u16_le, 2> numpad_keys;
     std::array<u16_le, SWKBD_MAX_HINT_TEXT_LEN + 1>
         hint_text; ///< Text to display when asking the user for input

@@ -19,7 +19,7 @@ ResultCode Mint::ReceiveParameter(const Service::APT::MessageParameter& paramete
     // The Request message contains a buffer with the size of the framebuffer shared
     // memory.
     // Create the SharedMemory that will hold the framebuffer data
-    Service::APT::CaptureBufferInfo capture_info{};
+    Service::APT::CaptureBufferInfo capture_info;
     ASSERT(sizeof(capture_info) == parameter.buffer.size());
     memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
 

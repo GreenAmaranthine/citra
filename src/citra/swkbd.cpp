@@ -32,9 +32,9 @@ SoftwareKeyboardDialog::SoftwareKeyboardDialog(QWidget* parent,
         UNREACHABLE();
         break;
     }
-    std::u16string button0_text{reinterpret_cast<char16_t*>(config.button_text[0].data())};
-    std::u16string button1_text{reinterpret_cast<char16_t*>(config.button_text[1].data())};
-    std::u16string button2_text{reinterpret_cast<char16_t*>(config.button_text[2].data())};
+    std::u16string button0_text{reinterpret_cast<char16_t*>(config.buttons_text[0].data())};
+    std::u16string button1_text{reinterpret_cast<char16_t*>(config.buttons_text[1].data())};
+    std::u16string button2_text{reinterpret_cast<char16_t*>(config.buttons_text[2].data())};
     std::u16string hint_text{reinterpret_cast<char16_t*>(config.hint_text.data())};
     ui->text->setPlaceholderText(QString::fromStdU16String(hint_text));
     ui->button1->setVisible(config.num_buttons_m1 >=

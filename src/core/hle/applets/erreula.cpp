@@ -56,34 +56,7 @@ ResultCode ErrEula::StartImpl(const Service::APT::AppletStartupParameter& parame
 }
 
 void ErrEula::Update() {
-    if (cb) {
-        cb(config);
-        Finalize();
-        return;
-    }
-
-    switch (config.error_type) {
-    case ErrEulaErrorType::ErrorCode: {
-        LOG_INFO(Applet_ErrEula, "Error Code: {:#010X}", config.error_code);
-        break;
-    }
-    case ErrEulaErrorType::LocalizedErrorText:
-    case ErrEulaErrorType::ErrorText: {
-        LOG_INFO(Applet_ErrEula, "Error Code: {:#010X}", config.error_code);
-        LOG_INFO(Applet_ErrEula, "Error Text: {}", Common::UTF16ToUTF8(config.error_text));
-        break;
-    }
-    case ErrEulaErrorType::Agree:
-    case ErrEulaErrorType::Eula:
-    case ErrEulaErrorType::EulaDrawOnly:
-    case ErrEulaErrorType::EulaFirstBoot: {
-        LOG_INFO(Applet_ErrEula, "EULA agree");
-        Service::CFG::GetCurrentModule()->AgreeEula();
-        break;
-    }
-    }
-
-    config.return_code = ErrEulaResult::Success;
+    cb(config);
     Finalize();
 }
 

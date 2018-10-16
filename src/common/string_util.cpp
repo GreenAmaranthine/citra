@@ -19,11 +19,6 @@
 
 namespace Common {
 
-/// Returns if a string contains digits
-bool ContainsDigits(std::string str) {
-    return std::any_of(str.begin(), str.end(), [](auto c) { return std::isdigit(c); });
-}
-
 /// Make a string lowercase
 std::string ToLower(std::string str) {
     std::transform(str.begin(), str.end(), str.begin(),
