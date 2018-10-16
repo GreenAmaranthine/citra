@@ -138,7 +138,7 @@ Packet& Packet::operator>>(double& out_data) {
 
 Packet& Packet::operator>>(char* out_data) {
     // First extract string length
-    u32 length = 0;
+    u32 length;
     *this >> length;
 
     if ((length > 0) && CheckSize(length)) {
@@ -155,7 +155,7 @@ Packet& Packet::operator>>(char* out_data) {
 
 Packet& Packet::operator>>(std::string& out_data) {
     // First extract string length
-    u32 length{};
+    u32 length;
     *this >> length;
 
     out_data.clear();

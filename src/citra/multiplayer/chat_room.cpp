@@ -203,7 +203,8 @@ void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
         auto player{std::distance(members.begin(), it)};
         ChatMessage m{chat};
         AppendChatMessage(m.GetPlayerChatMessage(player));
-        HandleNewMessage(QString::fromStdString(chat.message).remove('\0'));
+        QString message{QString::fromStdString(chat.message)};
+        HandleNewMessage(message.remove(QChar('\0')));
     }
 }
 
