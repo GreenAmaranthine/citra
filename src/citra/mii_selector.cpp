@@ -75,7 +75,7 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
         std::memcpy(result.selected_mii_data.data(), mii.data(), mii.size());
         result.mii_data_checksum = boost::crc<16, 0x1021, 0, 0, false, false>(
             result.selected_mii_data.data(),
-            result.selected_mii_data.size() + sizeof(result.pad50));
+            result.selected_mii_data.size() + sizeof(result.pad52));
         result.selected_guest_mii_index = 0xFFFFFFFF;
         close();
     });
