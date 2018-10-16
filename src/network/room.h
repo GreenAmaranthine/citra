@@ -33,8 +33,8 @@ struct RoomInformation {
 };
 
 struct GameInfo {
-    std::string name{""};
-    u64 id{0};
+    std::string name{};
+    u64 id{};
 };
 
 using MacAddress = std::array<u8, 6>;

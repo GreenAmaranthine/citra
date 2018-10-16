@@ -138,7 +138,7 @@ public:
      * Extracts the game name from a received ENet packet and broadcasts it.
      * @param event The ENet event that was received.
      */
-    void HandleGameNamePacket(const ENetEvent* event);
+    void HandleGameInfoPacket(const ENetEvent* event);
 
     /**
      * Removes the client from the members list if it was in it and announces the change
@@ -164,7 +164,7 @@ void Room::RoomImpl::ServerLoop() {
                     HandleJoinRequest(&event);
                     break;
                 case IdSetGameInfo:
-                    HandleGameNamePacket(&event);
+                    HandleGameInfoPacket(&event);
                     break;
                 case IdWifiPacket:
                     HandleWifiPacket(&event);
@@ -460,7 +460,7 @@ void Room::RoomImpl::HandleChatPacket(const ENetEvent* event) {
     enet_host_flush(server);
 }
 
-void Room::RoomImpl::HandleGameNamePacket(const ENetEvent* event) {
+void Room::RoomImpl::HandleGameInfoPacket(const ENetEvent* event) {
     Packet in_packet;
     in_packet.Append(event->packet->data, event->packet->dataLength);
 
