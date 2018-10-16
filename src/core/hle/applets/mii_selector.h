@@ -13,7 +13,7 @@
 #include "core/hle/result.h"
 #include "core/hle/service/apt/apt.h"
 
-constexpr std::size_t MiiSize{0x5C};
+using MiiData = std::array<u8, 0x5C>;
 
 namespace HLE::Applets {
 
@@ -27,7 +27,7 @@ struct MiiConfig {
     u8 show_guest_miis;
     INSERT_PADDING_BYTES(3);
     u32_le initially_selected_mii_index;
-    u8 guest_mii_whitelist[6];
+    std::array<u8, 6> guest_mii_whitelist;
     std::array<u8, 0x64> user_mii_whitelist;
     INSERT_PADDING_BYTES(2);
     u32_le magic_value;
@@ -46,11 +46,10 @@ struct MiiResult {
     u32_le return_code;
     u32_le is_guest_mii_selected;
     u32_le selected_guest_mii_index;
-    // TODO: expand to Mii Format structure: https://www.3dbrew.org/wiki/Mii
-    std::array<u8, MiiSize> selected_mii_data;
+    MiiData selected_mii_data;
     INSERT_PADDING_BYTES(2);
     u16_be mii_data_checksum;
-    u16_le guest_mii_name[0xC];
+    std::array<u16_le, 0xC> guest_mii_name;
 };
 static_assert(sizeof(MiiResult) == 0x84, "MiiResult structure has incorrect size");
 #define ASSERT_REG_POSITION(field_name, position)                                                  \

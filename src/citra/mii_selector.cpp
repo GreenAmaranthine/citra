@@ -47,10 +47,10 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
 
     u32 id;
     u32 offset{0x8};
-    std::array<u8, MiiSize> mii;
+    MiiData mii;
 
     for (int i{}; i < 100; ++i) {
-        file->Read(offset, MiiSize, mii.data());
+        file->Read(offset, mii.size(), mii.data());
         std::memcpy(&id, mii.data(), sizeof(u32));
         if (id != 0) {
             std::u16string name(10, '\0');
@@ -58,7 +58,7 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
             miis.emplace(ui->mii->count(), mii);
             ui->mii->addItem(QString::fromStdU16String(name));
         }
-        offset += MiiSize;
+        offset += mii.size();
     }
 
     if (miis.empty()) {
@@ -71,10 +71,11 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
     }
 
     connect(ui->ok, &QPushButton::released, this, [&] {
-        std::memcpy(result.selected_mii_data.data(), miis.at(ui->mii->currentIndex()).data(),
-                    MiiSize);
+        auto mii{miis.at(ui->mii->currentIndex())};
+        std::memcpy(result.selected_mii_data.data(), mii.data(), mii.size());
         result.mii_data_checksum = boost::crc<16, 0x1021, 0, 0, false, false>(
-            result.selected_mii_data.data(), MiiSize + sizeof(result.pad51));
+            result.selected_mii_data.data(),
+            result.selected_mii_data.size() + sizeof(result.pad50));
         result.selected_guest_mii_index = 0xFFFFFFFF;
         close();
     });

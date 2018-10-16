@@ -25,5 +25,5 @@ public:
 
 private:
     std::unique_ptr<Ui::MiiSelectorDialog> ui;
-    std::unordered_map<int, std::array<u8, MiiSize>> miis;
+    std::unordered_map<int, MiiData> miis;
 };
