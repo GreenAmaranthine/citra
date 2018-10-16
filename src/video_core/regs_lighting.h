@@ -310,8 +310,8 @@ struct LightingRegs {
         BitField<28, 3, u32> slot_7;
 
         unsigned GetNum(unsigned index) const {
-            const unsigned enable_slots[] = {slot_0, slot_1, slot_2, slot_3,
-                                             slot_4, slot_5, slot_6, slot_7};
+            const unsigned enable_slots[]{slot_0, slot_1, slot_2, slot_3,
+                                          slot_4, slot_5, slot_6, slot_7};
             return enable_slots[index];
         }
     } light_enable;

@@ -29,7 +29,7 @@ namespace Pica::Shader {
 
 typedef void (JitShader::*JitFunction)(Instruction instr);
 
-const JitFunction instr_table[64] = {
+const JitFunction instr_table[64]{
     &JitShader::Compile_ADD,    // add
     &JitShader::Compile_DP3,    // dp3
     &JitShader::Compile_DP4,    // dp4
@@ -211,7 +211,7 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
     }
 
     // If the source register should be negated, flip the negative bit using XOR
-    const bool negate[] = {swiz.negate_src1, swiz.negate_src2, swiz.negate_src3};
+    const bool negate[]{swiz.negate_src1, swiz.negate_src2, swiz.negate_src3};
     if (negate[src_num - 1]) {
         xorps(dest, xmm15);
     }
@@ -582,7 +582,7 @@ void JitShader::Compile_CMP(Instruction instr) {
     // SSE doesn't have greater-than (GT) or greater-equal (GE) comparison operators. You need to
     // emulate them by swapping the lhs and rhs and using LT and LE. NLT and NLE can't be used here
     // because they don't match when used with NaNs.
-    static const u8 cmp[] = {CMP_EQ, CMP_NEQ, CMP_LT, CMP_LE, CMP_LT, CMP_LE};
+    static const u8 cmp[]{CMP_EQ, CMP_NEQ, CMP_LT, CMP_LE, CMP_LT, CMP_LE};
 
     bool invert_op_x{(op_x == Op::GreaterThan || op_x == Op::GreaterEqual)};
     Xmm lhs_x = invert_op_x ? xmm2 : xmm1;

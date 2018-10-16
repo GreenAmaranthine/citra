@@ -64,15 +64,14 @@ struct PipelineRegs {
         };
 
         VertexAttributeFormat GetFormat(std::size_t n) const {
-            VertexAttributeFormat formats[] = {format0, format1, format2,  format3,
-                                               format4, format5, format6,  format7,
-                                               format8, format9, format10, format11};
+            VertexAttributeFormat formats[]{format0, format1, format2, format3, format4,  format5,
+                                            format6, format7, format8, format9, format10, format11};
             return formats[n];
         }
 
         u32 GetNumElements(std::size_t n) const {
-            u32 sizes[] = {size0, size1, size2, size3, size4,  size5,
-                           size6, size7, size8, size9, size10, size11};
+            u32 sizes[]{size0, size1, size2, size3, size4,  size5,
+                        size6, size7, size8, size9, size10, size11};
             return sizes[n] + 1;
         }
 
@@ -124,8 +123,8 @@ struct PipelineRegs {
             };
 
             u32 GetComponent(std::size_t n) const {
-                u32 components[] = {comp0, comp1, comp2, comp3, comp4,  comp5,
-                                    comp6, comp7, comp8, comp9, comp10, comp11};
+                u32 components[]{comp0, comp1, comp2, comp3, comp4,  comp5,
+                                 comp6, comp7, comp8, comp9, comp10, comp11};
                 return components[n];
             }
         } attribute_loaders[12];

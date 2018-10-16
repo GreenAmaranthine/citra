@@ -392,7 +392,7 @@ void GSP_GPU::SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id) 
     int screen_id{
         (interrupt_id == InterruptId::PDC0) ? 0 : (interrupt_id == InterruptId::PDC1) ? 1 : -1};
     if (screen_id != -1) {
-        FrameBufferUpdate* info = GetFrameBufferInfo(thread_id, screen_id);
+        FrameBufferUpdate* info{GetFrameBufferInfo(thread_id, screen_id)};
         if (info->is_dirty) {
             GSP::SetBufferSwap(screen_id, info->framebuffer_info[info->index]);
             info->is_dirty.Assign(false);
@@ -437,7 +437,6 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         [](u32 id, u32 data) { GPU::Write<u32>(0x1EF00000 + 4 * id, data); }};
 
     switch (command.id) {
-
     // GX request DMA - typically used for copying memory from GSP heap to VRAM
     case CommandId::REQUEST_DMA: {
         // TODO: Consider attempting rasterizer-accelerated surface blit if that usage is ever

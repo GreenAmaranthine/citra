@@ -18,6 +18,7 @@ struct State {
     /// Two historical samples.
     std::array<s16, 2> xn1{}; ///< x[n-1]
     std::array<s16, 2> xn2{}; ///< x[n-2]
+
     /// Current fractional position.
     u64 fposition{};
 };
@@ -31,7 +32,8 @@ struct State {
  * @param output The resampled audio buffer.
  * @param outputi The index of output to start writing to.
  */
-void None(State& state, StereoBuffer16& input, float rate, StereoFrame16& output, std::size_t& outputi);
+void None(State& state, StereoBuffer16& input, float rate, StereoFrame16& output,
+          std::size_t& outputi);
 
 /**
  * Linear interpolation. This is equivalent to a first-order hold. There is a two-sample predelay.

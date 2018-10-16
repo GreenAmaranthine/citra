@@ -141,8 +141,8 @@ bool Module::LoadSharedFont() {
     romfs->Read(0, romfs_buffer.size(), romfs_buffer.data());
     romfs->Close();
 
-    const char16_t* file_name[4] = {u"cbf_std.bcfnt.lz", u"cbf_zh-Hans-CN.bcfnt.lz",
-                                    u"cbf_ko-Hang-KR.bcfnt.lz", u"cbf_zh-Hant-TW.bcfnt.lz"};
+    const char16_t* file_name[4]{u"cbf_std.bcfnt.lz", u"cbf_zh-Hans-CN.bcfnt.lz",
+                                 u"cbf_ko-Hang-KR.bcfnt.lz", u"cbf_zh-Hant-TW.bcfnt.lz"};
     const RomFS::RomFSFile font_file{
         RomFS::GetFile(romfs_buffer.data(), {file_name[font_region_code - 1]})};
     if (font_file.Data() == nullptr)

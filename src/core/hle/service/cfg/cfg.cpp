@@ -165,7 +165,7 @@ void Module::Interface::GetCountryCodeID(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
-    if (0 == country_code_id) {
+    if (country_code_id == 0) {
         LOG_ERROR(Service_CFG, "requested country code name={}{} is invalid", country_code & 0xff,
                   country_code >> 8);
         rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Config,

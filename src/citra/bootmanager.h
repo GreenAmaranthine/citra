@@ -133,7 +133,7 @@ private:
 
     QByteArray geometry;
 
-    EmuThread* emu_thread{};
+    EmuThread* emu_thread;
 
     /// Temporary storage of the screenshot taken
     QImage screenshot_image;

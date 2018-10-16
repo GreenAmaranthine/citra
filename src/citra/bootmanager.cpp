@@ -95,7 +95,6 @@ private:
 };
 
 Screens::Screens(QWidget* parent, EmuThread* emu_thread) : QWidget{parent}, emu_thread{emu_thread} {
-
     touch_state = std::make_shared<TouchState>();
     Input::RegisterFactory<Input::TouchDevice>("emu_window", touch_state);
 

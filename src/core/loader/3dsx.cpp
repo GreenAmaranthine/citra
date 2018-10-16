@@ -102,16 +102,16 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
     // Reset read pointer in case this file has been read before.
     file.Seek(0, SEEK_SET);
 
-    THREEDSX_Header hdr{};
+    THREEDSX_Header hdr;
     if (file.ReadBytes(&hdr, sizeof(hdr)) != sizeof(hdr))
         return ERROR_READ;
 
-    THREEloadinfo loadinfo{};
+    THREEloadinfo loadinfo;
     // loadinfo segments must be a multiple of 0x1000
     loadinfo.seg_sizes[0] = (hdr.code_seg_size + 0xFFF) & ~0xFFF;
     loadinfo.seg_sizes[1] = (hdr.rodata_seg_size + 0xFFF) & ~0xFFF;
     loadinfo.seg_sizes[2] = (hdr.data_seg_size + 0xFFF) & ~0xFFF;
-    u32 offsets[2] = {loadinfo.seg_sizes[0], loadinfo.seg_sizes[0] + loadinfo.seg_sizes[1]};
+    u32 offsets[2]{loadinfo.seg_sizes[0], loadinfo.seg_sizes[0] + loadinfo.seg_sizes[1]};
     u32 n_reloc_tables{static_cast<u32>(hdr.reloc_hdr_size / sizeof(u32))};
     std::vector<u8> program_image(loadinfo.seg_sizes[0] + loadinfo.seg_sizes[1] +
                                   loadinfo.seg_sizes[2]);
@@ -129,7 +129,7 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
     // Read the relocation headers
     std::vector<u32> relocs{n_reloc_tables * NUM_SEGMENTS};
     for (unsigned int current_segment{}; current_segment < NUM_SEGMENTS; ++current_segment) {
-        std::size_t size = n_reloc_tables * sizeof(u32);
+        std::size_t size{n_reloc_tables * sizeof(u32)};
         if (file.ReadBytes(&relocs[current_segment * n_reloc_tables], size) != size)
             return ERROR_READ;
     }
@@ -150,7 +150,7 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
     for (unsigned int current_segment{}; current_segment < NUM_SEGMENTS; ++current_segment) {
         for (unsigned current_segment_reloc_table = 0; current_segment_reloc_table < n_reloc_tables;
              current_segment_reloc_table++) {
-            u32 n_relocs = relocs[current_segment * n_reloc_tables + current_segment_reloc_table];
+            u32 n_relocs{relocs[current_segment * n_reloc_tables + current_segment_reloc_table]};
             if (current_segment_reloc_table >= 2) {
                 // We are not using this table - ignore it because we don't know what it dose
                 file.Seek(n_relocs * sizeof(THREEDSX_Reloc), SEEK_CUR);

@@ -105,7 +105,7 @@ void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
     ResultVal<ArchiveHandle> archive_handle{Service::FS::OpenArchive(archive_id, archive_path)};
     if (archive_handle.Failed()) {
         LOG_ERROR(Service_FS,
-                  "Failed to get a handle for archive archive_id=0x{:08X} archive_path={}",
+                  "Failed to get a handle for archive (archive_id=0x{:08X}, archive_path={})",
                   static_cast<u32>(archive_id), archive_path.DebugStr());
         rb.Push(archive_handle.Code());
         rb.PushMoveObjects<Kernel::Object>(nullptr);
@@ -121,7 +121,7 @@ void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
         rb.PushMoveObjects(file->Connect());
     } else {
         rb.PushMoveObjects<Kernel::Object>(nullptr);
-        LOG_ERROR(Service_FS, "failed to get a handle for file {} mode={} attributes={}",
+        LOG_ERROR(Service_FS, "failed to get a handle for file {} (mode={}, attributes={})",
                   file_path.DebugStr(), mode.hex, attributes);
     }
 }
@@ -300,7 +300,7 @@ void FS_USER::OpenDirectory(Kernel::HLERequestContext& ctx) {
         directory->ClientConnected(std::get<SharedPtr<ServerSession>>(sessions));
         rb.PushMoveObjects(std::get<SharedPtr<ClientSession>>(sessions));
     } else {
-        LOG_ERROR(Service_FS, "failed to get a handle for directory type={} size={} data={}",
+        LOG_ERROR(Service_FS, "failed to get a handle for directory (type={}, size={} data={})",
                   static_cast<u32>(dirname_type), dirname_size, dir_path.DebugStr());
         rb.PushMoveObjects<Kernel::Object>(nullptr);
     }
@@ -326,7 +326,7 @@ void FS_USER::OpenArchive(Kernel::HLERequestContext& ctx) {
     } else {
         rb.Push<u64>(0);
         LOG_ERROR(Service_FS,
-                  "failed to get a handle for archive archive_id=0x{:08X} archive_path={}",
+                  "failed to get a handle for archive (archive_id=0x{:08X}, archive_path={})",
                   static_cast<u32>(archive_id), archive_path.DebugStr());
     }
 }

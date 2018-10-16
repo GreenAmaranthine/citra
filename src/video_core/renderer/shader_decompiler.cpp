@@ -57,10 +57,10 @@ struct Subroutine {
 class ControlFlowAnalyzer {
 public:
     ControlFlowAnalyzer(const ProgramCode& program_code, u32 main_offset)
-        : program_code(program_code) {
+        : program_code{program_code} {
 
         // Recursively finds all subroutines.
-        const Subroutine& program_main = AddSubroutine(main_offset, PROGRAM_END);
+        const Subroutine& program_main{AddSubroutine(main_offset, PROGRAM_END)};
         if (program_main.exit_method != ExitMethod::AlwaysEnd)
             throw DecompileFail("Program does not always end");
     }
@@ -76,7 +76,7 @@ private:
 
     /// Adds and analyzes a new subroutine if it is not added yet.
     const Subroutine& AddSubroutine(u32 begin, u32 end) {
-        auto iter = subroutines.find(Subroutine{begin, end});
+        auto iter{subroutines.find(Subroutine{begin, end})};
         if (iter != subroutines.end())
             return *iter;
 
@@ -123,14 +123,14 @@ private:
 
     /// Scans a range of code for labels and determines the exit method.
     ExitMethod Scan(u32 begin, u32 end, std::set<u32>& labels) {
-        auto [iter, inserted] =
-            exit_method_map.emplace(std::make_pair(begin, end), ExitMethod::Undetermined);
-        ExitMethod& exit_method = iter->second;
+        auto [iter, inserted]{
+            exit_method_map.emplace(std::make_pair(begin, end), ExitMethod::Undetermined)};
+        ExitMethod& exit_method{iter->second};
         if (!inserted)
             return exit_method;
 
-        for (u32 offset = begin; offset != end && offset != PROGRAM_END; ++offset) {
-            const Instruction instr = {program_code[offset]};
+        for (u32 offset{begin}; offset != end && offset != PROGRAM_END; ++offset) {
+            const Instruction instr{program_code[offset]};
             switch (instr.opcode.Value()) {
             case OpCode::Id::END: {
                 return exit_method = ExitMethod::AlwaysEnd;
@@ -138,54 +138,57 @@ private:
             case OpCode::Id::JMPC:
             case OpCode::Id::JMPU: {
                 labels.insert(instr.flow_control.dest_offset);
-                ExitMethod no_jmp = Scan(offset + 1, end, labels);
-                ExitMethod jmp = Scan(instr.flow_control.dest_offset, end, labels);
+                ExitMethod no_jmp{Scan(offset + 1, end, labels)};
+                ExitMethod jmp{Scan(instr.flow_control.dest_offset, end, labels)};
                 return exit_method = ParallelExit(no_jmp, jmp);
             }
             case OpCode::Id::CALL: {
-                auto& call = AddSubroutine(instr.flow_control.dest_offset,
-                                           instr.flow_control.dest_offset +
-                                               instr.flow_control.num_instructions);
-                if (call.exit_method == ExitMethod::AlwaysEnd)
+                auto& call{AddSubroutine(instr.flow_control.dest_offset,
+                                         instr.flow_control.dest_offset +
+                                             instr.flow_control.num_instructions)};
+                if (call.exit_method == ExitMethod::AlwaysEnd) {
                     return exit_method = ExitMethod::AlwaysEnd;
-                ExitMethod after_call = Scan(offset + 1, end, labels);
+                }
+                ExitMethod after_call{Scan(offset + 1, end, labels)};
                 return exit_method = SeriesExit(call.exit_method, after_call);
             }
             case OpCode::Id::LOOP: {
-                auto& loop = AddSubroutine(offset + 1, instr.flow_control.dest_offset + 1);
-                if (loop.exit_method == ExitMethod::AlwaysEnd)
+                auto& loop{AddSubroutine(offset + 1, instr.flow_control.dest_offset + 1)};
+                if (loop.exit_method == ExitMethod::AlwaysEnd) {
                     return exit_method = ExitMethod::AlwaysEnd;
-                ExitMethod after_loop = Scan(instr.flow_control.dest_offset + 1, end, labels);
+                }
+                ExitMethod after_loop{Scan(instr.flow_control.dest_offset + 1, end, labels)};
                 return exit_method = SeriesExit(loop.exit_method, after_loop);
             }
             case OpCode::Id::CALLC:
             case OpCode::Id::CALLU: {
-                auto& call = AddSubroutine(instr.flow_control.dest_offset,
-                                           instr.flow_control.dest_offset +
-                                               instr.flow_control.num_instructions);
-                ExitMethod after_call = Scan(offset + 1, end, labels);
+                auto& call{AddSubroutine(instr.flow_control.dest_offset,
+                                         instr.flow_control.dest_offset +
+                                             instr.flow_control.num_instructions)};
+                ExitMethod after_call{Scan(offset + 1, end, labels)};
                 return exit_method = SeriesExit(
                            ParallelExit(call.exit_method, ExitMethod::AlwaysReturn), after_call);
             }
             case OpCode::Id::IFU:
             case OpCode::Id::IFC: {
-                auto& if_sub = AddSubroutine(offset + 1, instr.flow_control.dest_offset);
+                auto& if_sub{AddSubroutine(offset + 1, instr.flow_control.dest_offset)};
                 ExitMethod else_method;
                 if (instr.flow_control.num_instructions != 0) {
-                    auto& else_sub = AddSubroutine(instr.flow_control.dest_offset,
-                                                   instr.flow_control.dest_offset +
-                                                       instr.flow_control.num_instructions);
+                    auto& else_sub{AddSubroutine(instr.flow_control.dest_offset,
+                                                 instr.flow_control.dest_offset +
+                                                     instr.flow_control.num_instructions)};
                     else_method = else_sub.exit_method;
                 } else {
                     else_method = ExitMethod::AlwaysReturn;
                 }
 
-                ExitMethod both = ParallelExit(if_sub.exit_method, else_method);
-                if (both == ExitMethod::AlwaysEnd)
+                ExitMethod both{ParallelExit(if_sub.exit_method, else_method)};
+                if (both == ExitMethod::AlwaysEnd) {
                     return exit_method = ExitMethod::AlwaysEnd;
-                ExitMethod after_call =
+                }
+                ExitMethod after_call{
                     Scan(instr.flow_control.dest_offset + instr.flow_control.num_instructions, end,
-                         labels);
+                         labels)};
                 return exit_method = SeriesExit(both, after_call);
             }
             }
@@ -217,7 +220,7 @@ private:
 /// An adaptor for getting swizzle pattern string from nihstro interfaces.
 template <SwizzlePattern::Selector (SwizzlePattern::*getter)(int) const>
 std::string GetSelectorSrc(const SwizzlePattern& pattern) {
-    std::string out{};
+    std::string out;
     for (std::size_t i{}; i < 4; ++i) {
         switch ((pattern.*getter)(i)) {
         case SwizzlePattern::Selector::x:
@@ -790,7 +793,7 @@ private:
      * terminates.
      */
     u32 CompileRange(u32 begin, u32 end) {
-        u32 program_counter{};
+        u32 program_counter;
         for (program_counter = begin; program_counter < (begin > end ? PROGRAM_END : end);) {
             program_counter = CompileInstr(program_counter);
         }

@@ -363,7 +363,7 @@ void Module::Interface::Socket(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    u32 ret = static_cast<u32>(::socket(domain, type, protocol));
+    u32 ret{static_cast<u32>(::socket(domain, type, protocol))};
 
     if ((s32)ret != SOCKET_ERROR_VALUE)
         soc->open_sockets[ret] = {ret, true};
