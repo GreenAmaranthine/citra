@@ -208,7 +208,7 @@ void LoadNativeFirmKeysOld3DS() {
     // and thus we can use fixed offsets
     constexpr u64 save_mode_native_firm_id{0x00040138'00000003};
 
-    // TODO(B3N30): Add the 0x25 KeyX that gets initalized by native_firm
+    // TODO: Add the 0x25 KeyX that gets initalized by native_firm
 
     FileSys::NCCHArchive archive{save_mode_native_firm_id, Service::FS::MediaType::NAND};
     std::array<char, 8> exefs_filepath{'.', 'f', 'i', 'r', 'm', 0, 0, 0};
@@ -268,9 +268,9 @@ void LoadNativeFirmKeysNew3DS() {
     // and thus we can use fixed offsets
     constexpr u64 save_mode_native_firm_id{0x00040138'20000003};
 
-    // TODO(B3N30): Add the 0x25 KeyX that gets initalized by native_firm
+    // TODO: Add the 0x25 KeyX that gets initalized by native_firm
 
-    // TODO(B3N30): Add the 0x18 - 0x1F KeyX that gets initalized by native_firm. This probably
+    // TODO: Add the 0x18 - 0x1F KeyX that gets initalized by native_firm. This probably
     // requires the normal native firm with version > 9.6.0-X
 
     FileSys::NCCHArchive archive(save_mode_native_firm_id, Service::FS::MediaType::NAND);

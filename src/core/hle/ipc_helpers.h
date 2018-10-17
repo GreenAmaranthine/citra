@@ -87,7 +87,7 @@ public:
     template <typename T>
     void PushRaw(const T& value);
 
-    // TODO : ensure that translate params are added after all regular params
+    // TODO: ensure that translate params are added after all regular params
     template <typename... O>
     void PushCopyObjects(Kernel::SharedPtr<O>... pointers);
 
