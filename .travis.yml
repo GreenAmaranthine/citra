@@ -54,6 +54,12 @@ matrix:
       after_success: "./.travis/linux-mingw/upload.sh"
       cache: ccache
 
+before_deploy:
+    # Set up git user name and tag this commit
+    - git config --local user.name "Valentin Vanelslande"
+    - git config --local user.email "valentinvanelslandeacnl@gmail.com"
+    - git tag "$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)"
+
 deploy:
   provider: releases
   api_key:
@@ -62,4 +68,4 @@ deploy:
   file: "artifacts/*"
   skip_cleanup: true
   on:
-    tags: true
+    branch: master
