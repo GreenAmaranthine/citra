@@ -323,7 +323,7 @@ endfunction()
 add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY
     -DBOOST_SYSTEM_NO_LIB
     -DBOOST_DATE_TIME_NO_LIB
-    -DBOOST_REGEX_NO_LIB 
+    -DBOOST_REGEX_NO_LIB
 )
 
 # generate git/build information
