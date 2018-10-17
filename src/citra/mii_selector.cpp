@@ -66,7 +66,7 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
         return;
     }
 
-    if (static_cast<int>(config.initially_selected_mii_index) != 0xFFFF) {
+    if (ui->mii->count() >= static_cast<int>(config.initially_selected_mii_index)) {
         ui->mii->setCurrentIndex(static_cast<int>(config.initially_selected_mii_index));
     }
 

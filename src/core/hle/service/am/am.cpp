@@ -353,7 +353,7 @@ InstallStatus InstallCIA(const std::string& path,
         if (!file.IsOpen())
             return InstallStatus::ErrorFailedToOpenFile;
 
-        std::array<u8, 0x10000> buffer{};
+        std::array<u8, 0x10000> buffer;
         std::size_t total_bytes_read{};
         while (total_bytes_read != file.GetSize()) {
             std::size_t bytes_read{file.ReadBytes(buffer.data(), buffer.size())};
