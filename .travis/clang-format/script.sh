@@ -1,7 +1,6 @@
 #!/bin/bash -ex
 
-if grep -nrI '\s$' src *.yml *.txt *.md Doxyfile .gitignore .gitmodules .travis* dist/*.desktop \
-                 dist/*.svg dist/*.xml; then
+if grep -nrI '\s$' src *.yml *.txt *.md .gitignore .gitmodules .travis*; then
     echo Trailing whitespace found, aborting
     exit 1
 fi
