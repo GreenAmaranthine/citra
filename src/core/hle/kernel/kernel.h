@@ -182,7 +182,8 @@ public:
 
 private:
     std::unique_ptr<ResourceLimitList> resource_limits;
-    std::atomic<u32> next_object_id{0};
+    std::atomic<u32> next_object_id{};
+    u32 next_process_id{};
 };
 
 } // namespace Kernel

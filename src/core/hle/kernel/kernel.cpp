@@ -24,7 +24,6 @@ KernelSystem::KernelSystem(u32 system_mode) {
     resource_limits = std::make_unique<ResourceLimitList>(*this);
     Kernel::ThreadingInit();
     Kernel::TimersInit();
-    Process::next_process_id = 0;
 }
 
 /// Shutdown the kernel
