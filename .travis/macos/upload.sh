@@ -25,7 +25,7 @@ $(brew --prefix)/opt/qt5/bin/macdeployqt "${REV_NAME}/citra.app"
 brew install coreutils || brew upgrade coreutils || true
 
 REV_NAME_ALT=$REV_NAME/
-# grealpath is located in coreutils, there is no "realpath" for OS X :(
+# grealpath is located in coreutils, there is no "realpath" for macOS :(
 QT_BREWS_PATH=$(grealpath "$(brew --prefix qt5)")
 BREW_PATH=$(brew --prefix)
 QT_VERSION_NUM=5

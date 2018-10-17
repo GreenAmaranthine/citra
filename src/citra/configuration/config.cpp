@@ -184,7 +184,7 @@ void Config::ReadValues() {
 
     qt_config->beginGroup("Renderer");
 #ifdef __APPLE__
-    // Hardware shader is broken on macos thanks to poor drivers.
+    // Hardware shader is broken on macOS thanks to poor drivers.
     // We still want to provide this option for test/development purposes, but disable it by
     // default.
     Settings::values.use_hw_shader = qt_config->value("use_hw_shader", false).toBool();
