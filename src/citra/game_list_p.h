@@ -49,10 +49,16 @@ static const std::unordered_map<u64, QStringList> compatibility_database{{
 
     // ALL
     {0x00040000001C1E00, {GitHubIssue("citra-emu/citra", 3612)}}, // Detective Pikachu
-    {0x0004000000164800, {"Needs Nintendo Network support"}},     // Pokémon Sun
-    {0x0004000000175E00, {"Needs Nintendo Network support"}},     // Pokémon Moon
-    {0x000400000011C400, {"Needs Nintendo Network support"}},     // Pokémon Omega Ruby
-    {0x000400000011C500, {"Needs Nintendo Network support"}},     // Pokémon Alpha Sapphire
+    {0x0004000000164800,
+     {GitHubIssue("citra-emu/citra", 2311), "Needs Nintendo Network support"}}, // Pokémon Sun
+    {0x0004000000175E00,
+     {GitHubIssue("citra-emu/citra", 2311), "Needs Nintendo Network support"}}, // Pokémon Moon
+    {0x000400000011C400,
+     {GitHubIssue("citra-emu/citra", 4092),
+      "Needs Nintendo Network support"}}, // Pokémon Omega Ruby
+    {0x000400000011C500,
+     {GitHubIssue("citra-emu/citra", 4092),
+      "Needs Nintendo Network support"}},                         // Pokémon Alpha Sapphire
     {0x00040000001B5000, {"Needs Nintendo Network support"}},     // Pokémon Ultra Sun
     {0x00040000001B5100, {"Needs Nintendo Network support"}},     // Pokémon Ultra Moon
     {0x0004000000055D00, {GitHubIssue("citra-emu/citra", 3009)}}, // Pokémon X
@@ -113,10 +119,11 @@ static const std::unordered_map<u64, QStringList> compatibility_database{{
                                                                // Master Splinter's Training Pack
 
     // EUR (System)
-    {0x0004001000022A00, {}},                                     // ???
-    {0x0004001000022700, {GitHubIssue("citra-emu/citra", 3897), GitHubIssue("citra-emu/citra", 3903)}}, // Mii Maker
-    {0x0004001000022100, {"Needs DLP"}},                          // Download Play
-    {0x0004001000022300, {}},                                     // Health and Safety Information
+    {0x0004001000022A00, {}}, // ???
+    {0x0004001000022700,
+     {GitHubIssue("citra-emu/citra", 3897), GitHubIssue("citra-emu/citra", 3903)}}, // Mii Maker
+    {0x0004001000022100, {"Needs DLP"}},                                            // Download Play
+    {0x0004001000022300, {}}, // Health and Safety Information
 
     // EUR (Demos)
     {0x00040002001CB201, {}}, // Captain Toad Demo
