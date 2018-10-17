@@ -5,8 +5,8 @@
 #pragma once
 
 #include <memory>
-#include <unordered_set>
 #include <unordered_map>
+#include <unordered_set>
 #include <QDialog>
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>

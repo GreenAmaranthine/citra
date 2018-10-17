@@ -28,7 +28,8 @@ void TimeStretcher::SetOutputSampleRate(std::size_t sample_rate) {
     sample_rate = native_sample_rate;
 }
 
-std::size_t TimeStretcher::Process(const s16* in, std::size_t num_in, s16* out, std::size_t num_out) {
+std::size_t TimeStretcher::Process(const s16* in, std::size_t num_in, s16* out,
+                                   std::size_t num_out) {
     const double time_delta{static_cast<double>(num_out) / sample_rate}; // seconds
     double current_ratio{static_cast<double>(num_in) / static_cast<double>(num_out)};
 

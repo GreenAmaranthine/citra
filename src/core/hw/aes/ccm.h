@@ -23,7 +23,8 @@ using CCMNonce = std::array<u8, CCM_NONCE_SIZE>;
  * @param slot_id The slot ID of the key to use for encryption
  * @returns a vector of u8 containing the encrypted data with MAC at the end
  */
-std::vector<u8> EncryptSignCCM(const std::vector<u8>& pdata, const CCMNonce& nonce, std::size_t slot_id);
+std::vector<u8> EncryptSignCCM(const std::vector<u8>& pdata, const CCMNonce& nonce,
+                               std::size_t slot_id);
 
 /**
  * Decrypts and verify the MAC of the given data using AES-CCM algorithm.
