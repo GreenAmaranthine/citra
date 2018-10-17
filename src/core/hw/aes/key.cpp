@@ -294,7 +294,7 @@ void LoadNativeFirmKeysNew3DS() {
     auto MakeMagic{
         [](char a, char b, char c, char d) -> u32 { return a | b << 8 | c << 16 | d << 24; }};
     if (MakeMagic('F', 'I', 'R', 'M') != header.magic) {
-        LOG_ERROR(HW_AES, "N3DS safe MODE Native Firm has wrong header {}", header.magic);
+        LOG_ERROR(HW_AES, "N3DS safe mode native firm has wrong header {}", header.magic);
         return;
     }
 
