@@ -23,7 +23,7 @@ namespace SharedPage {
 /**
  * The shared page stores various runtime configuration settings. This memory page is
  * read-only for user processes (there is a bit in the header that grants the process
- * write access, according to 3dbrew; this is not emulated)
+ * write access, according to 3dbrew; this isn't emulated)
  */
 
 // See http://3dbrew.org/wiki/Configuration_Memory#Shared_Memory_Page_For_ARM11_Processes

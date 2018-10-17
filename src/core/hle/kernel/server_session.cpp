@@ -87,7 +87,7 @@ ResultCode ServerSession::HandleSyncRequest(SharedPtr<Thread> thread) {
         }
     }
 
-    // If this ServerSession does not have an HLE implementation, just wake up the threads waiting
+    // If this ServerSession doesn't have an HLE implementation, just wake up the threads waiting
     // on it.
     WakeupAllWaitingThreads();
     return RESULT_SUCCESS;

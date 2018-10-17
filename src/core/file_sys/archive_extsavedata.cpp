@@ -98,7 +98,7 @@ public:
             return ERROR_UNSUPPORTED_OPEN_FLAGS;
         }
         if (mode.create_flag) {
-            LOG_ERROR(Service_FS, "Create flag is not supported");
+            LOG_ERROR(Service_FS, "Create flag isn't supported");
             return ERROR_UNSUPPORTED_OPEN_FLAGS;
         }
         const auto full_path{path_parser.BuildHostPath(mount_point)};
@@ -136,7 +136,7 @@ public:
 
     ResultCode CreateFile(const Path& path, u64 size) const override {
         if (size == 0) {
-            LOG_ERROR(Service_FS, "Zero-size file is not supported");
+            LOG_ERROR(Service_FS, "Zero-size file isn't supported");
             return ERROR_UNSUPPORTED_OPEN_FLAGS;
         }
         return SaveDataArchive::CreateFile(path, size);

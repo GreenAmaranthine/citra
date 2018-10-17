@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Co 'tdoesn' tdoesn 'tdoesn' tator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -135,7 +135,7 @@ GMainWindow::GMainWindow() : config{new Config()} /*, emu_thread{nullptr}*/ {
     int cpu_id[4];
     __cpuid(cpu_id, 1);
     if (!((cpu_id[2] >> 19) & 1)) {
-        QMessageBox::critical(this, "Citra", "Your CPU does not support SSE4.1");
+        QMessageBox::critical(this, "Citra", "Your CPU doesn't support SSE4.1");
         closeEvent(nullptr);
     }
 #endif
@@ -507,7 +507,7 @@ bool GMainWindow::LoadROM(const std::string& filename) {
     screens->MakeCurrent();
     if (!gladLoadGL()) {
         QMessageBox::critical(this, "OpenGL 3.3 Unsupported",
-                              "Your GPU may not support OpenGL 3.3, or you do not "
+                              "Your GPU may not support OpenGL 3.3, or you don't "
                               "have the latest graphics driver.");
         return false;
     }
@@ -518,7 +518,7 @@ bool GMainWindow::LoadROM(const std::string& filename) {
             LOG_CRITICAL(Frontend, "Failed to obtain loader for {}!", filename);
             QMessageBox::critical(
                 this, "Invalid ROM Format",
-                "Your ROM format is not supported.<br/>Please follow the guides to redump your "
+                "Your ROM format isn't supported.<br/>Please follow the guides to redump your "
                 "<a "
                 "href='https://github.com/citra-valentin/citra/wiki/"
                 "Dumping-Game-Cartridges/'>game "
@@ -558,7 +558,7 @@ bool GMainWindow::LoadROM(const std::string& filename) {
         case Core::System::ResultStatus::ErrorLoader_ErrorInvalidFormat:
             QMessageBox::critical(
                 this, "Invalid ROM Format",
-                "Your ROM format is not supported.<br/>Please follow the guides to redump your "
+                "Your ROM format isn't supported.<br/>Please follow the guides to redump your "
                 "<a "
                 "href='https://github.com/citra-valentin/citra/wiki/"
                 "Dumping-Game-Cartridges/'>game "
@@ -583,7 +583,7 @@ bool GMainWindow::LoadROM(const std::string& filename) {
             break;
         case Core::System::ResultStatus::ErrorVideoCore_ErrorBelowGL33:
             QMessageBox::critical(this, "OpenGL 3.3 Unsupported",
-                                  "Your GPU may not support OpenGL 3.3, or you do not "
+                                  "Your GPU may not support OpenGL 3.3, or you don't "
                                   "have the latest graphics driver.");
             break;
         default:
@@ -683,7 +683,7 @@ void GMainWindow::ShutdownGame() {
 
     Camera::QtMultimediaCameraHandler::ReleaseHandlers();
 
-    // The emulation is stopped, so closing the window or not does not matter anymore
+    // The emulation is stopped, so closing the window or not doesn't matter anymore
     disconnect(screens, &Screens::Closed, this, &GMainWindow::OnStopGame);
 
     // Update the GUI
@@ -883,7 +883,7 @@ void GMainWindow::OnGameListOpenFolder(u64 data_id, GameListOpenTarget target) {
     if (!dir.exists()) {
         QMessageBox::critical(
             this, QString("Error Opening %1 Folder").arg(QString::fromStdString(open_target)),
-            "Folder does not exist!");
+            "Folder doesn't exist!");
         return;
     }
 
@@ -907,8 +907,7 @@ void GMainWindow::OnGameListOpenDirectory(const QString& directory) {
     else
         path = directory;
     if (!QFileInfo::exists(path)) {
-        QMessageBox::critical(this, QString("Error Opening %1").arg(path),
-                              "Folder does not exist!");
+        QMessageBox::critical(this, QString("Error Opening %1").arg(path), "Folder doesn't exist!");
         return;
     }
     QDesktopServices::openUrl(QUrl::fromLocalFile(path));
@@ -1010,7 +1009,7 @@ void GMainWindow::OnCIAInstallReport(Service::AM::InstallStatus status, const QS
                 .arg(filename));
         break;
     case Service::AM::InstallStatus::ErrorInvalid:
-        QMessageBox::critical(this, "Invalid File", QString("%1 is not a valid CIA").arg(filename));
+        QMessageBox::critical(this, "Invalid File", QString("%1 isn't a valid CIA").arg(filename));
         break;
     case Service::AM::InstallStatus::ErrorEncrypted:
         QMessageBox::critical(this, "Encrypted File",
@@ -1372,8 +1371,8 @@ void GMainWindow::OnPlayMovie() {
             if (path.isEmpty()) {
                 QMessageBox::warning(
                     this, "Application Not Found",
-                    "The movie you are trying to play is from a application that is not "
-                    "in the game list and is not in the recent files. If you own "
+                    "The movie you are trying to play is from a application that isn't "
+                    "in the game list and isn't in the recent files. If you own "
                     "the game, add the game folder to the game list or open the "
                     "application and try to play the movie again.");
                 return;

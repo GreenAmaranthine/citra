@@ -98,7 +98,7 @@ def main():
     print('Scanning dependencies...')
     deploy(to_deploy, tgt_dir)
     if missing:
-        print('Following DLLs are not found: %s' % ('\n'.join(missing)))
+        print('Following DLLs aren\'t found: %s' % ('\n'.join(missing)))
     return 0
 
 

@@ -46,7 +46,7 @@
 #endif
 
 #if defined(__APPLE__)
-// CFURL contains __attribute__ directives that gcc does not know how to parse, so we need to just
+// CFURL contains __attribute__ directives that gcc doesn't know how to parse, so we need to just
 // ignore them if we're not using clang. The macro is only used to prevent linking against
 // functions that don't exist on older versions of macOS, and the worst case scenario is a linker
 // error, so this is perfectly safe, just inconvenient.
@@ -139,7 +139,7 @@ bool Delete(const std::string& filename) {
     // Return true because we care about the file no
     // being there, not the actual delete.
     if (!Exists(filename)) {
-        LOG_DEBUG(Common_Filesystem, "{} does not exist", filename);
+        LOG_DEBUG(Common_Filesystem, "{} doesn't exist", filename);
         return true;
     }
 
@@ -501,7 +501,7 @@ bool DeleteDirRecursively(const std::string& directory, unsigned int recursion) 
     return true;
 }
 
-// Create directory and copy contents (does not overwrite existing files)
+// Create directory and copy contents (doesn't overwrite existing files)
 void CopyDir(const std::string& source_path, const std::string& dest_path) {
 #ifndef _WIN32
     if (source_path == dest_path)

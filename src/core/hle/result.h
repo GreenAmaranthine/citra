@@ -165,7 +165,7 @@ enum class ErrorSummary : u32 {
                        ///< execute the operation.
     NotFound = 4,      ///< A file or resource was not found.
     InvalidState = 5,
-    NotSupported = 6,    ///< The operation is not supported or not implemented.
+    NotSupported = 6,    ///< The operation isn't supported or not implemented.
     InvalidArgument = 7, ///< Returned when a passed argument is invalid in the current runtime
                          ///< context. (Invalid handle, out-of-bounds pointer or size, etc.)
     WrongArgument = 8,   ///< Returned when a passed argument is in an incorrect format for use

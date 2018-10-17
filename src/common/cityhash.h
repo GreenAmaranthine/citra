@@ -44,7 +44,7 @@
 // is of comparable quality.  We believe our nearest competitor is Murmur3A.
 // (On 64-bit CPUs, it is typically faster to use the other CityHash variants.)
 //
-// Functions in the CityHash family are not suitable for cryptography.
+// Functions in the CityHash family aren't suitable for cryptography.
 //
 // Please see CityHash's README file for more details on our performance
 // measurements and so on.

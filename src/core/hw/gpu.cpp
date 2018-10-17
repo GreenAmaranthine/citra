@@ -503,7 +503,7 @@ void Init() {
     // Setup default framebuffer addresses (located in VRAM)
     // .. or at least these are the ones used by system applets.
     // There's probably a smarter way to come up with addresses
-    // like this which does not require hardcoding.
+    // like this which doesn't require hardcoding.
     framebuffer_top.address_left1 = 0x181E6000;
     framebuffer_top.address_left2 = 0x1822C800;
     framebuffer_top.address_right1 = 0x18273000;

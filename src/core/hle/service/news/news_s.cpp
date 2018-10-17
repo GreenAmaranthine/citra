@@ -22,7 +22,7 @@ void NEWS_S::SetInfoLEDPattern(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_NEWS, "LEDs are not implemented!");
+    LOG_WARNING(Service_NEWS, "LEDs aren't implemented!");
 }
 
 NEWS_S::NEWS_S() : ServiceFramework{"news:s", 2} {

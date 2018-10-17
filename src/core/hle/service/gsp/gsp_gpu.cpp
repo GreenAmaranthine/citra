@@ -299,7 +299,7 @@ void GSP_GPU::RegisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
     u32 flags{rp.Pop<u32>()};
     auto interrupt_event{rp.PopObject<Kernel::Event>()};
     // TODO: return right error code instead of asserting
-    ASSERT_MSG((interrupt_event != nullptr), "handle is not valid!");
+    ASSERT_MSG((interrupt_event != nullptr), "handle isn't valid!");
     interrupt_event->SetName("GSP_GSP_GPU::interrupt_event");
     SessionData* session_data{GetSessionData(ctx.Session())};
     session_data->interrupt_event = std::move(interrupt_event);
@@ -362,7 +362,7 @@ void GSP_GPU::SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id) 
  * Signals that the specified interrupt type has occurred to userland code
  * @param interrupt_id ID of interrupt that is being signalled
  * @todo This should probably take a thread_id parameter and only signal this thread?
- * @todo This probably does not belong in the GSP module, instead move to video_core
+ * @todo This probably doesn't belong in the GSP module, instead move to video_core
  */
 void GSP_GPU::SignalInterrupt(InterruptId interrupt_id) {
     if (!shared_memory) {

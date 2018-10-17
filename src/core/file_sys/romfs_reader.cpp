@@ -7,7 +7,7 @@ namespace FileSys {
 
 std::size_t RomFSReader::ReadFile(std::size_t offset, std::size_t length, u8* buffer) {
     if (length == 0)
-        return 0; // Crypto++ does not like zero size buffer
+        return 0; // Crypto++ doesn't like zero size buffer
     file.Seek(file_offset + offset, SEEK_SET);
     std::size_t read_length{std::min(length, data_size - offset)};
     read_length = file.ReadBytes(buffer, read_length);

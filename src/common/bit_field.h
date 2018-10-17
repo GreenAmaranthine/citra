@@ -100,7 +100,7 @@
  *
  * 2)
  * Not really a caveat, but potentially irritating: This class is used in some
- * packed structures that do not guarantee proper alignment. Therefore we have
+ * packed structures that don't guarantee proper alignment. Therefore we have
  * to use #pragma pack here not to pack the members of the class, but instead
  * to break GCC's assumption that the members of the class are aligned on
  * sizeof(StorageType).

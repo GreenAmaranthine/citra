@@ -78,8 +78,8 @@ public:
      * Run the core CPU loop
      * This function runs the core for the specified number of CPU instructions before trying to
      * update hardware. This is much faster than SingleStep (and should be equivalent), as the CPU
-     * is not required to do a full dispatch with each instruction. NOTE: the number of instructions
-     * requested is not guaranteed to run, as this will be interrupted preemptively if a hardware
+     * isn't required to do a full dispatch with each instruction. NOTE: the number of instructions
+     * requested isn't guaranteed to run, as this will be interrupted preemptively if a hardware
      * update is requested (e.g. on a thread switch).
      * @param tight_loop If false, the CPU single-steps.
      * @return Result status, indicating whethor or not the operation succeeded.
@@ -248,8 +248,11 @@ private:
 
     std::unique_ptr<Service::FS::ArchiveManager> archive_manager;
 
+public: // HACK: this is temporary exposed for tests,
+        // due to WIP kernel refactor causing desync state in memory
     std::unique_ptr<Kernel::KernelSystem> kernel;
 
+private:
     static System s_instance;
 
     ResultStatus status;

@@ -39,7 +39,7 @@ static const u32 DefaultMaxSessions{10};
 
 /**
  * This is an non-templated base of ServiceFramework to reduce code bloat and compilation times, it
- * is not meant to be used directly.
+ * isn't meant to be used directly.
  *
  * @see ServiceFramework
  */

@@ -23,7 +23,7 @@
 namespace Pica {
 
 // Returns index corresponding to the Regs member labeled by field_name
-// TODO: Due to Visual studio bug 209229, offsetof does not return constant expressions
+// TODO: Due to Visual studio bug 209229, offsetof doesn't return constant expressions
 //       when used with array elements (e.g. PICA_REG_INDEX(vs_uniform_setup.set_value[1])).
 //       For details cf.
 //       https://connect.microsoft.com/VisualStudio/feedback/details/209229/offsetof-does-not-produce-a-constant-expression-for-array-members
@@ -67,7 +67,7 @@ struct Regs {
 
 static_assert(sizeof(Regs) == Regs::NUM_REGS * sizeof(u32), "Regs struct has wrong size");
 
-// TODO: MSVC does not support using offsetof() on non-static data members even though this
+// TODO: MSVC doesn't support using offsetof() on non-static data members even though this
 //       is technically allowed since C++11. This macro should be enabled once MSVC adds
 //       support for that.
 #ifndef _MSC_VER

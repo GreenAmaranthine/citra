@@ -705,7 +705,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
             out += "surface_normal.z = sqrt(max(" + val + ", 0.0));\n";
         }
 
-        // The tangent vector is not perturbed by the normal map and is just a unit vector.
+        // The tangent vector isn't perturbed by the normal map and is just a unit vector.
         out += "vec3 surface_tangent = vec3(1.0, 0.0, 0.0);\n";
     } else if (lighting.bump_mode == LightingRegs::LightingBumpMode::TangentMap) {
         // Bump mapping is enabled using a tangent map
@@ -714,7 +714,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
         // computation below, which is also confirmed on 3DS. So we don't bother recomputing here
         // even if 'renorm' is enabled.
 
-        // The normal vector is not perturbed by the tangent map and is just a unit vector.
+        // The normal vector isn't perturbed by the tangent map and is just a unit vector.
         out += "vec3 surface_normal = vec3(0.0, 0.0, 1.0);\n";
     } else {
         // No bump mapping - surface local normal and tangent are just unit vectors
@@ -767,7 +767,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
         case LightingRegs::LightingLutInput::CP:
             // CP input is only available with configuration 7
             if (lighting.config == LightingRegs::LightingConfig::Config7) {
-                // Note: even if the normal vector is modified by normal map, which is not the
+                // Note: even if the normal vector is modified by normal map, which isn't the
                 // normal of the tangent plane anymore, the half angle vector is still projected
                 // using the modified normal vector.
                 std::string half_angle_proj =

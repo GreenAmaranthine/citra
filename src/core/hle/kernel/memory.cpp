@@ -61,7 +61,7 @@ void MemoryInit(u32 mem_type) {
         memory_regions[i].used = 0;
         memory_regions[i].linear_heap_memory = std::make_shared<std::vector<u8>>();
         // Reserve enough space for this region of FCRAM.
-        // We do not want this block of memory to be relocated when allocating from it.
+        // We don't want this block of memory to be relocated when allocating from it.
         memory_regions[i].linear_heap_memory->reserve(memory_regions[i].size);
 
         base += memory_regions[i].size;
@@ -76,7 +76,7 @@ void MemoryInit(u32 mem_type) {
 
     using ConfigMem::config_mem;
     config_mem.app_mem_type = mem_type;
-    // app_mem_alloc does not always match the configured size for memory_region[0]: in case the
+    // app_mem_alloc doesn't always match the configured size for memory_region[0]: in case the
     // n3DS type override is in effect it reports the size the game expects, not the real one.
     config_mem.app_mem_alloc = memory_region_sizes[mem_type][0];
     config_mem.sys_mem_alloc = memory_regions[1].size;
@@ -143,7 +143,7 @@ void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mappin
 
     u32 offset_into_region{mapping.address - area->vaddr_base};
     if (area->paddr_base == IO_AREA_PADDR) {
-        LOG_ERROR(Loader, "MMIO mappings are not supported yet. phys_addr=0x{:08X}",
+        LOG_ERROR(Loader, "MMIO mappings aren't supported yet. phys_addr=0x{:08X}",
                   area->paddr_base + offset_into_region);
         return;
     }

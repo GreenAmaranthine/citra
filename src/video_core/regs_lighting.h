@@ -55,7 +55,7 @@ struct LightingRegs {
         Config6 = 6, ///< Reflect Red, Distribution 0/1, Fresnel, Spotlight
 
         Config7 = 8, ///< Reflect Red/Green/Blue, Distribution 0/1, Fresnel, Spotlight
-                     ///< NOTE: '8' is intentional, '7' does not appear to be a valid configuration
+                     ///< NOTE: '8' is intentional, '7' doesn't appear to be a valid configuration
     };
 
     /// Factor used to scale the output of a lighting LUT
@@ -237,7 +237,7 @@ struct LightingRegs {
 
     // When data is written to any of these registers, it gets written to the lookup table of the
     // selected type at the selected index, specified above in the `lut_config` register.  With each
-    // write, `lut_config.index` is incremented.  It does not matter which of these registers is
+    // write, `lut_config.index` is incremented.  It doesn't matter which of these registers is
     // written to, the behavior will be the same.
     u32 lut_data[8];
 

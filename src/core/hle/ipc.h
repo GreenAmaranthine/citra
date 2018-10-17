@@ -16,7 +16,7 @@ static const int kCommandHeaderOffset = 0x80;
 
 /**
  * Returns a pointer to the command buffer in the current thread's TLS
- * TODO: This is not entirely correct, the command buffer should be copied from
+ * TODO: This isn't entirely correct, the command buffer should be copied from
  * the thread's TLS to an intermediate buffer in kernel memory, and then copied again to
  * the service handler process' memory.
  * @param offset Optional offset into command buffer

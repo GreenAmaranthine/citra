@@ -251,7 +251,7 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
 }
 
 bool Room::RoomImpl::IsValidNickname(const std::string& nickname) const {
-    // A nickname is valid if it is not already taken by anybody else in the room.
+    // A nickname is valid if it isn't already taken by anybody else in the room.
     // TODO: Check for empty names, spaces, etc.
     std::lock_guard<std::mutex> lock{member_mutex};
     return std::all_of(members.begin(), members.end(),
@@ -259,7 +259,7 @@ bool Room::RoomImpl::IsValidNickname(const std::string& nickname) const {
 }
 
 bool Room::RoomImpl::IsValidMacAddress(const MacAddress& address) const {
-    // A MAC address is valid if it is not already taken by anybody else in the room.
+    // A MAC address is valid if it isn't already taken by anybody else in the room.
     std::lock_guard<std::mutex> lock{member_mutex};
     return std::all_of(members.begin(), members.end(),
                        [&address](const auto& member) { return member.mac_address != address; });

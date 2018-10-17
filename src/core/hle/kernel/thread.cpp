@@ -75,18 +75,16 @@ void Thread::Stop() {
 
     // Clean up thread from ready queue
     // This is only needed when the thread is termintated forcefully (SVC TerminateProcess)
-    if (status == ThreadStatus::Ready) {
+    if (status == ThreadStatus::Ready)
         ready_queue.remove(current_priority, this);
-    }
 
     status = ThreadStatus::Dead;
 
     WakeupAllWaitingThreads();
 
     // Clean up any dangling references in objects that this thread was waiting for
-    for (auto& wait_object : wait_objects) {
+    for (auto& wait_object : wait_objects)
         wait_object->RemoveWaitingThread(this);
-    }
     wait_objects.clear();
 
     // Release all the mutexes that this thread holds
@@ -96,7 +94,7 @@ void Thread::Stop() {
     u32 tls_page{(tls_address - Memory::TLS_AREA_VADDR) / Memory::PAGE_SIZE};
     u32 tls_slot{((tls_address - Memory::TLS_AREA_VADDR) % Memory::PAGE_SIZE) /
                  Memory::TLS_ENTRY_SIZE};
-    Kernel::g_current_process->tls_slots[tls_page].reset(tls_slot);
+    owner_process->tls_slots[tls_page].reset(tls_slot);
 }
 
 /// Boost low priority threads (temporarily) that have been starved
@@ -143,7 +141,7 @@ static void SwitchContext(Thread* new_thread) {
         // Cancel any outstanding wakeup events for this thread
         CoreTiming::UnscheduleEvent(ThreadWakeupEventType, new_thread->callback_handle);
 
-        auto previous_process{Kernel::g_current_process};
+        auto previous_process{Core::System::GetInstance().Kernel().GetCurrentProcess()};
 
         current_thread = new_thread;
 
@@ -154,15 +152,15 @@ static void SwitchContext(Thread* new_thread) {
             new_thread->current_priority = new_thread->nominal_priority;
 
         if (previous_process != current_thread->owner_process) {
-            Kernel::g_current_process = current_thread->owner_process;
-            SetCurrentPageTable(&Kernel::g_current_process->vm_manager.page_table);
+            Core::System::GetInstance().Kernel().SetCurrentProcess(current_thread->owner_process);
+            SetCurrentPageTable(&current_thread->owner_process->vm_manager.page_table);
         }
 
         Core::CPU().LoadContext(new_thread->context);
         Core::CPU().SetCP15Register(CP15_THREAD_URO, new_thread->GetTLSAddress());
     } else {
         current_thread = nullptr;
-        // Note: We do not reset the current process and current page table when idling because
+        // Note: We don't reset the current process and current page table when idling because
         // technically we haven't changed processes, our threads are just paused.
     }
 }
@@ -179,10 +177,9 @@ static Thread* PopNextReadyThread() {
         // We have to do better than the current thread.
         // This call returns null when that's not possible.
         next = ready_queue.pop_first_better(thread->current_priority);
-        if (!next) {
+        if (!next)
             // Otherwise just keep going with the current thread
             next = thread;
-        }
     } else
         next = ready_queue.pop_first();
 
@@ -289,14 +286,11 @@ static std::tuple<std::size_t, std::size_t, bool> GetFreeThreadLocalSlot(
     // Iterate over all the allocated pages, and try to find one where not all slots are used.
     for (std::size_t page{}; page < tls_slots.size(); ++page) {
         const auto& page_tls_slots{tls_slots[page]};
-        if (!page_tls_slots.all()) {
+        if (!page_tls_slots.all())
             // We found a page with at least one free slot, find which slot it is
-            for (std::size_t slot{}; slot < page_tls_slots.size(); ++slot) {
-                if (!page_tls_slots.test(slot)) {
+            for (std::size_t slot{}; slot < page_tls_slots.size(); ++slot)
+                if (!page_tls_slots.test(slot))
                     return std::make_tuple(page, slot, false);
-                }
-            }
-        }
     }
 
     return std::make_tuple(0, 0, true);
@@ -489,7 +483,7 @@ void Thread::SetWaitSynchronizationOutput(s32 output) {
 }
 
 s32 Thread::GetWaitObjectIndex(WaitObject* object) const {
-    ASSERT_MSG(!wait_objects.empty(), "Thread is not waiting for anything");
+    ASSERT_MSG(!wait_objects.empty(), "Thread isn't waiting for anything");
     auto match{std::find(wait_objects.rbegin(), wait_objects.rend(), object)};
     return static_cast<s32>(std::distance(match, wait_objects.rend()) - 1);
 }

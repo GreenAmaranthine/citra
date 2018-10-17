@@ -72,14 +72,13 @@ static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 add
         return ERR_MISALIGNED_SIZE;
     u32 region{operation & MEMOP_REGION_MASK};
     operation &= ~MEMOP_REGION_MASK;
-    if (region != 0) {
+    if (region != 0)
         LOG_WARNING(Kernel_SVC, "ControlMemory with specified region not supported, region={:X}",
                     region);
-    }
     if ((permissions & (u32)MemoryPermission::ReadWrite) != permissions)
         return ERR_INVALID_COMBINATION;
     VMAPermission vma_permissions{(VMAPermission)permissions};
-    auto& process{*g_current_process};
+    auto& process{*Core::System::GetInstance().Kernel().GetCurrentProcess()};
     switch (operation & MEMOP_OPERATION_MASK) {
     case MEMOP_FREE: {
         // TODO: What happens if an application tries to FREE a block of memory that has a
@@ -190,9 +189,8 @@ static ResultCode MapProcessMemory(Handle process, u32 start_addr, u32 size) {
 static ResultCode UnmapProcessMemory(Handle process, u32 start_addr, u32 size) {
     LOG_INFO(Kernel, "process={}, start_addr={}, size={}", static_cast<u32>(process), start_addr,
              size);
-    if ((size & Memory::PAGE_MASK) != 0) {
+    if ((size & Memory::PAGE_MASK) != 0)
         return ERR_MISALIGNED_SIZE;
-    }
     auto& p{*GetProcessById(process)};
     ResultCode result{p.HeapFree(start_addr, size)};
     if (result.IsError())
@@ -202,13 +200,14 @@ static ResultCode UnmapProcessMemory(Handle process, u32 start_addr, u32 size) {
 }
 
 static void ExitProcess() {
-    LOG_INFO(Kernel_SVC, "Process {} exiting", g_current_process->process_id);
-    ASSERT_MSG(g_current_process->status == ProcessStatus::Running, "Process has already exited");
-    g_current_process->status = ProcessStatus::Exited;
+    SharedPtr<Process> current_process{Core::System::GetInstance().Kernel().GetCurrentProcess()};
+    LOG_INFO(Kernel_SVC, "Process {} exiting", current_process->process_id);
+    ASSERT_MSG(current_process->status == ProcessStatus::Running, "Process has already exited");
+    current_process->status = ProcessStatus::Exited;
     // Stop all the process threads that are currently waiting for objects.
     auto& thread_list{GetThreadList()};
     for (auto& thread : thread_list) {
-        if (thread->owner_process != g_current_process)
+        if (thread->owner_process != current_process)
             continue;
         if (thread == GetCurrentThread())
             continue;
@@ -241,7 +240,8 @@ static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 o
     case MemoryPermission::WriteExecute:
     case MemoryPermission::ReadWriteExecute:
     case MemoryPermission::DontCare:
-        return shared_memory->Map(g_current_process.get(), addr, permissions_type,
+        return shared_memory->Map(Core::System::GetInstance().Kernel().GetCurrentProcess().get(),
+                                  addr, permissions_type,
                                   static_cast<MemoryPermission>(other_permissions));
     default:
         LOG_ERROR(Kernel_SVC, "unknown permissions=0x{:08X}", permissions);
@@ -251,11 +251,13 @@ static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 o
 
 static ResultCode UnmapMemoryBlock(Handle handle, u32 addr) {
     LOG_TRACE(Kernel_SVC, "memblock=0x{:08X}, addr=0x{:08X}", handle, addr);
-    // TODO: Return E0A01BF5 if the address is not in the application's heap
+    // TODO: Return E0A01BF5 if the address isn't in the application's heap
     SharedPtr<SharedMemory> shared_memory{g_handle_table.Get<SharedMemory>(handle)};
     if (!shared_memory)
         return ERR_INVALID_HANDLE;
-    return shared_memory->Unmap(g_current_process.get(), addr);
+
+    return shared_memory->Unmap(Core::System::GetInstance().Kernel().GetCurrentProcess().get(),
+                                addr);
 }
 
 /// Connect to an OS service given the port name, returns the handle to the port to out
@@ -387,7 +389,7 @@ static ResultCode WaitSynchronizationN(s32* out, VAddr handles_address, s32 hand
             // We can acquire all objects right now, do so.
             for (auto& object : objects)
                 object->Acquire(thread);
-            // Note: In this case, the `out` parameter is not set,
+            // Note: In this case, the `out` parameter isn't set,
             // and retains whatever value it had before.
             return RESULT_SUCCESS;
         }
@@ -414,10 +416,10 @@ static ResultCode WaitSynchronizationN(s32* out, VAddr handles_address, s32 hand
             }
             ASSERT(reason == ThreadWakeupReason::Signal);
             thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
-            // The wait_all case does not update the output index.
+            // The wait_all case doesn't update the output index.
         };
         Core::System::GetInstance().PrepareReschedule();
-        // This value gets set to -1 by default in this case, it is not modified after this.
+        // This value gets set to -1 by default in this case, it isn't modified after this.
         *out = -1;
         // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to
         // a signal in one of its wait objects.
@@ -534,13 +536,13 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
         // Note: The real kernel seems to always panic if the Server->Client buffer translation
         // fails for whatever reason.
         ASSERT(translation_result.IsSuccess());
-        // Note: The scheduler is not invoked here.
+        // Note: The scheduler isn't invoked here.
         request_thread->ResumeFromWait();
     }
     if (handle_count == 0) {
         *index = 0;
         // The kernel uses this value as a placeholder for the real error, and returns it when we
-        // pass no handles and do not perform any reply.
+        // pass no handles and don't perform any reply.
         if (reply_target == 0 || header.command_id == 0xFFFF)
             return ResultCode(0xE7E3FFFF);
         return RESULT_SUCCESS;
@@ -636,11 +638,10 @@ static void Break(u8 break_reason) {
     LOG_CRITICAL(Debug_Emulated, "Break reason: {}", reason_str);
 }
 
-/// Used to output a message on a debug hardware unit - does nothing on a retail unit
+/// Used to output a message on a debug hardware unit - doesn'thing on a retail unit
 static void OutputDebugString(VAddr address, int len) {
-    if (len <= 0) {
+    if (len <= 0)
         return;
-    }
     std::string string(len, '\0');
     Memory::ReadBlock(address, string.data(), len);
     LOG_DEBUG(Debug_Emulated, "{}", string);
@@ -696,12 +697,13 @@ static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point
     std::string name{fmt::format("thread-{:08X}", entry_point)};
     if (priority > ThreadPrioLowest)
         return ERR_OUT_OF_RANGE;
-    SharedPtr<ResourceLimit>& resource_limit{g_current_process->resource_limit};
+    SharedPtr<Process> current_process{Core::System::GetInstance().Kernel().GetCurrentProcess()};
+    SharedPtr<ResourceLimit>& resource_limit{current_process->resource_limit};
     if (resource_limit->GetMaxResourceValue(ResourceTypes::PRIORITY) > priority)
         return ERR_NOT_AUTHORIZED;
     if (processor_id == ThreadProcessorIdDefault) {
         // Set the target CPU to the one specified in the process' exheader.
-        processor_id = g_current_process->ideal_processor;
+        processor_id = current_process->ideal_processor;
         ASSERT(processor_id != ThreadProcessorIdDefault);
     }
     switch (processor_id) {
@@ -725,9 +727,9 @@ static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point
         break;
     }
 
-    CASCADE_RESULT(SharedPtr<Thread> thread, Core::System::GetInstance().Kernel().CreateThread(
-                                                 name, entry_point, priority, arg, processor_id,
-                                                 stack_top, g_current_process));
+    CASCADE_RESULT(SharedPtr<Thread> thread,
+                   Core::System::GetInstance().Kernel().CreateThread(
+                       name, entry_point, priority, arg, processor_id, stack_top, current_process));
 
     thread->context->SetFpscr(FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO |
                               FPSCR_ROUND_TOZERO); // 0x03C00000
@@ -754,7 +756,6 @@ static ResultCode GetThreadPriority(u32* priority, Handle handle) {
     const SharedPtr<Thread> thread{g_handle_table.Get<Thread>(handle)};
     if (!thread)
         return ERR_INVALID_HANDLE;
-
     *priority = thread->GetPriority();
     return RESULT_SUCCESS;
 }
@@ -769,10 +770,10 @@ static ResultCode SetThreadPriority(Handle handle, u32 priority) {
         return ERR_INVALID_HANDLE;
     // Note: The kernel uses the current process's resource limit instead of
     // the one from the thread owner's resource limit.
-    SharedPtr<ResourceLimit>& resource_limit{g_current_process->resource_limit};
-    if (resource_limit->GetMaxResourceValue(ResourceTypes::PRIORITY) > priority) {
+    SharedPtr<ResourceLimit>& resource_limit{
+        Core::System::GetInstance().Kernel().GetCurrentProcess()->resource_limit};
+    if (resource_limit->GetMaxResourceValue(ResourceTypes::PRIORITY) > priority)
         return ERR_NOT_AUTHORIZED;
-    }
     thread->SetPriority(priority);
     thread->UpdatePriority();
     // Update the mutexes that this thread is waiting for
@@ -1002,22 +1003,22 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
     if (!VerifyPermissions(static_cast<MemoryPermission>(my_permission)) ||
         !VerifyPermissions(static_cast<MemoryPermission>(other_permission)))
         return ERR_INVALID_COMBINATION;
-    // TODO: Processes with memory type APPLICATION are not allowed
+    // TODO: Processes with memory type APPLICATION aren't allowed
     // to create memory blocks with addr = 0, any attempts to do so
     // should return error 0xD92007EA.
     if ((addr < Memory::PROCESS_IMAGE_VADDR || addr + size > Memory::SHARED_MEMORY_VADDR_END) &&
         addr != 0)
         return ERR_INVALID_ADDRESS;
+    SharedPtr<Process> current_process{Core::System::GetInstance().Kernel().GetCurrentProcess()};
     // When trying to create a memory block with address = 0,
     // if the process has the Shared Device Memory flag in the exheader,
     // then we have to allocate from the same region as the caller process instead of the BASE
     // region.
     MemoryRegion region{MemoryRegion::BASE};
-    if (addr == 0 && g_current_process->flags.shared_device_mem)
-        region = g_current_process->flags.memory_region;
-
+    if (addr == 0 && current_process->flags.shared_device_mem)
+        region = current_process->flags.memory_region;
     shared_memory = Core::System::GetInstance().Kernel().CreateSharedMemory(
-        g_current_process, size, static_cast<MemoryPermission>(my_permission),
+        current_process, size, static_cast<MemoryPermission>(my_permission),
         static_cast<MemoryPermission>(other_permission), addr, region);
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(shared_memory)));
 
@@ -1334,15 +1335,15 @@ static const FunctionDef* GetSVCInfo(u32 func_num) {
 void CallSVC(u32 immediate) {
     // Lock the global kernel mutex when we enter the kernel HLE.
     std::lock_guard<std::recursive_mutex> lock{HLE::g_hle_lock};
-    ASSERT_MSG(g_current_process->status == ProcessStatus::Running,
-               "Running threads from exiting processes is unimplemented");
+    DEBUG_ASSERT_MSG(Core::System::GetInstance().Kernel().GetCurrentProcess()->status ==
+                         ProcessStatus::Running,
+                     "Running threads from exiting processes is unimplemented");
     const FunctionDef* info{GetSVCInfo(immediate)};
-    if (info) {
+    if (info)
         if (info->func)
             info->func();
         else
             LOG_ERROR(Kernel_SVC, "unimplemented SVC function {}", info->name);
-    }
 }
 
 } // namespace Kernel

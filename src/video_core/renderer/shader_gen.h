@@ -126,7 +126,7 @@ struct PicaFSConfigState {
  * current Pica register configuration. This struct is used as a cache key for generated GLSL shader
  * programs. The functions in gl_shader_gen.cpp should retrieve state from this struct only, not by
  * directly accessing Pica registers. This should reduce the risk of bugs in shader generation where
- * Pica state is not being captured in the shader cache key, thereby resulting in (what should be)
+ * Pica state isn't being captured in the shader cache key, thereby resulting in (what should be)
  * two separate shaders sharing the same key.
  */
 struct PicaFSConfig : Common::HashableStruct<PicaFSConfigState> {

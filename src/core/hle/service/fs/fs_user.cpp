@@ -563,7 +563,7 @@ void FS_USER::GetProgramLaunchInfo(Kernel::HLERequestContext& ctx) {
     // that were registered with the 'fs:REG' service.
     auto process{system.Kernel().GetProcessById(process_id)};
     if (!process) {
-        // Note: In this case, the rest of the parameters are not changed but the command header
+        // Note: In this case, the rest of the parameters aren't changed but the command header
         // remains the same.
         rb.Push(ResultCode(FileSys::ErrCodes::ArchiveNotMounted, ErrorModule::FS,
                            ErrorSummary::NotFound, ErrorLevel::Status));

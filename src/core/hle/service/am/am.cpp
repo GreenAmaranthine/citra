@@ -139,7 +139,7 @@ ResultCode CIAFile::WriteTitleMetadata() {
 }
 
 ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length, const u8* buffer) {
-    // Data is not being buffered, so we have to keep track of how much of each <ID>.app
+    // Data isn't being buffered, so we have to keep track of how much of each <ID>.app
     // has been written since we might get a written buffer which contains multiple .app
     // contents or only part of a larger .app's contents.
     u64 offset_max{offset + length};
@@ -295,7 +295,7 @@ InstallStatus InstallCIA(const std::string& path,
                          std::function<ProgressCallback>&& update_callback) {
     LOG_INFO(Service_AM, "Installing {}...", path);
     if (!FileUtil::Exists(path)) {
-        LOG_ERROR(Service_AM, "File {} does not exist!", path);
+        LOG_ERROR(Service_AM, "File {} doesn't exist!", path);
         return InstallStatus::ErrorFileNotFound;
     }
     FileSys::CIAContainer container;
@@ -1017,7 +1017,7 @@ ResultVal<std::unique_ptr<AMFileWrapper>> GetFileFromSession(
     }
     // Probably the best bet if someone is LLEing the fs service is to just have them LLE AM
     // while they're at it, so not implemented.
-    LOG_ERROR(Service_AM, "Given file handle does not have an HLE handler!");
+    LOG_ERROR(Service_AM, "Given file handle doesn't have an HLE handler!");
     return Kernel::ERR_NOT_IMPLEMENTED;
 }
 

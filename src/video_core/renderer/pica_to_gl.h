@@ -64,7 +64,7 @@ inline GLenum WrapMode(Pica::TexturingRegs::TextureConfig::WrapMode mode) {
         GL_CLAMP_TO_BORDER, // WrapMode::ClampToBorder
         GL_REPEAT,          // WrapMode::Repeat
         GL_MIRRORED_REPEAT, // WrapMode::MirroredRepeat
-        // TODO: ClampToEdge2 and ClampToBorder2 are not properly implemented here. See the
+        // TODO: ClampToEdge2 and ClampToBorder2 aren't properly implemented here. See the
         // comments in enum WrapMode.
         GL_CLAMP_TO_EDGE,   // WrapMode::ClampToEdge2
         GL_CLAMP_TO_BORDER, // WrapMode::ClampToBorder2

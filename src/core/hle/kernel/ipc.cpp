@@ -27,7 +27,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
     std::size_t untranslated_size{1u + header.normal_params_size};
     std::size_t command_size{untranslated_size + header.translate_params_size};
 
-    // Note: The real kernel does not check that the command length fits into the IPC buffer area.
+    // Note: The real kernel doesn't check that the command length fits into the IPC buffer area.
     ASSERT(command_size <= IPC::COMMAND_BUFFER_LENGTH);
 
     std::array<u32, IPC::COMMAND_BUFFER_LENGTH> cmd_buf;
@@ -55,7 +55,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
         case IPC::DescriptorType::MoveHandle: {
             u32 num_handles{IPC::HandleNumberFromDesc(descriptor)};
 
-            // Note: The real kernel does not check that the number of handles fits into the command
+            // Note: The real kernel doesn't check that the number of handles fits into the command
             // buffer before writing them, only after finishing.
             if (i + num_handles > command_size) {
                 return ResultCode(ErrCodes::CommandTooLarge, ErrorModule::OS,
@@ -156,7 +156,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
                         IPC::MappedBufferPermissions dest_permissions = dest_descInfo.perms;
 
                         ASSERT(permissions == dest_permissions && size == dest_size);
-                        // Readonly buffers do not need to be copied over to the target
+                        // Readonly buffers don't need to be copied over to the target
                         // process again because they were (presumably) not modified. This
                         // behavior is consistent with the real kernel.
                         if (permissions != IPC::MappedBufferPermissions::R) {

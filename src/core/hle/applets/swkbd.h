@@ -48,10 +48,10 @@ enum class SoftwareKeyboardButtonConfig : u32 {
 /// Accepted input types.
 enum class SoftwareKeyboardValidInput : u32 {
     Anything,         ///< All inputs are accepted.
-    NotEmpty,         ///< Empty inputs are not accepted.
-    NotEmptyNotBlank, ///< Empty or blank inputs (consisting solely of whitespace) are not
+    NotEmpty,         ///< Empty inputs aren't accepted.
+    NotEmptyNotBlank, ///< Empty or blank inputs (consisting solely of whitespace) aren't
                       /// accepted.
-    NotBlank, ///< Blank inputs (consisting solely of whitespace) are not accepted, but empty
+    NotBlank, ///< Blank inputs (consisting solely of whitespace) aren't accepted, but empty
               /// inputs are.
     FixedLen, ///< The input must have a fixed length (specified by maxTextLength in
               /// swkbdInit).
@@ -59,7 +59,7 @@ enum class SoftwareKeyboardValidInput : u32 {
 
 /// Keyboard password modes.
 enum class SoftwareKeyboardPasswordMode : u32 {
-    None = 0,  ///< Characters are not concealed.
+    None = 0,  ///< Characters aren't concealed.
     Hide,      ///< Characters are concealed immediately.
     HideDelay, ///< Characters are concealed a second after they've been typed.
 };

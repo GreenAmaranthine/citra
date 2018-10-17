@@ -66,9 +66,8 @@ System::ResultStatus System::RunLoop() {
     }
     HW::Update();
     Reschedule();
-    if (shutdown_requested.exchange(false)) {
+    if (shutdown_requested.exchange(false))
         return ResultStatus::ShutdownRequested;
-    }
     return status;
 }
 
@@ -100,8 +99,10 @@ System::ResultStatus System::Load(Frontend& frontend, const std::string& filepat
         Shutdown();
         return init_result;
     }
-    const Loader::ResultStatus load_result{app_loader->Load(Kernel::g_current_process)};
-    if (load_result != Loader::ResultStatus::Success) {
+    Kernel::SharedPtr<Kernel::Process> process;
+    const Loader::ResultStatus load_result{app_loader->Load(process)};
+    kernel->SetCurrentProcess(process);
+    if (Loader::ResultStatus::Success != load_result) {
         LOG_CRITICAL(Core, "Failed to load ROM (Error {})!", static_cast<u32>(load_result));
         Shutdown();
         switch (load_result) {
@@ -113,7 +114,7 @@ System::ResultStatus System::Load(Frontend& frontend, const std::string& filepat
             return ResultStatus::ErrorLoader;
         }
     }
-    Memory::SetCurrentPageTable(&Kernel::g_current_process->vm_manager.page_table);
+    Memory::SetCurrentPageTable(&kernel->GetCurrentProcess()->vm_manager.page_table);
     status = ResultStatus::Success;
     m_filepath = filepath;
     return status;

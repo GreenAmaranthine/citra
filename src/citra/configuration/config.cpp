@@ -415,7 +415,7 @@ void Config::SaveValues() {
     qt_config->setValue("frame_limit", Settings::values.frame_limit);
     qt_config->setValue("enable_clear_cache", Settings::values.enable_clear_cache);
     qt_config->setValue("clear_cache_secs", Settings::values.clear_cache_secs);
-    // Cast to double because Qt's written float values are not human-readable
+    // Cast to double because Qt's written float values aren't human-readable
     qt_config->setValue("bg_red", (double)Settings::values.bg_red);
     qt_config->setValue("bg_green", (double)Settings::values.bg_green);
     qt_config->setValue("bg_blue", (double)Settings::values.bg_blue);

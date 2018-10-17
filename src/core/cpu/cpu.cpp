@@ -230,7 +230,7 @@ u32 Cpu::GetVFPSystemReg(VFPSystemRegister reg) const {
         return jit->Fpscr();
     }
 
-    // Dynarmic does not implement and/or expose other VFP registers
+    // Dynarmic doesn't implement and/or expose other VFP registers
     return state->vfp[reg];
 }
 
@@ -239,7 +239,7 @@ void Cpu::SetVFPSystemReg(VFPSystemRegister reg, u32 value) {
         jit->SetFpscr(value);
     }
 
-    // Dynarmic does not implement and/or expose other VFP registers
+    // Dynarmic doesn't implement and/or expose other VFP registers
     state->vfp[reg] = value;
 }
 

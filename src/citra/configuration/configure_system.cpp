@@ -254,7 +254,7 @@ void ConfigureSystem::setConfiguration() {
         ReadSystemSettings();
         ui->group_system_settings->setEnabled(false);
     } else {
-        // This tab is enabled only when game is not running (i.e. all services are not
+        // This tab is enabled only when game isn't running (i.e. all services aren't
         // initialized).
         cfg = std::make_shared<Service::CFG::Module>();
 
@@ -273,7 +273,7 @@ void ConfigureSystem::ReadSystemSettings() {
     ui->combo_birthmonth->setCurrentIndex(birthmonth - 1);
     updateBirthdayComboBox(
         birthmonth -
-        1); // explicitly update it because the signal from setCurrentIndex is not reliable
+        1); // explicitly update it because the signal from setCurrentIndex isn't reliable
     ui->combo_birthday->setCurrentIndex(birthday - 1);
 
     // set system language

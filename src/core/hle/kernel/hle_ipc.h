@@ -75,7 +75,7 @@ protected:
     template <typename T>
     T* GetSessionData(SharedPtr<ServerSession> session) {
         static_assert(std::is_base_of<SessionDataBase, T>(),
-                      "T is not a subclass of SessionDataBase");
+                      "T isn't a subclass of SessionDataBase");
         auto itr{std::find_if(connected_sessions.begin(), connected_sessions.end(),
                               [&](const SessionInfo& info) { return info.session == session; })};
         ASSERT(itr != connected_sessions.end());
@@ -205,7 +205,7 @@ public:
     /**
      * Discards all Objects from the context, invalidating all ids. This may be called after reading
      * out all incoming objects, so that the buffer memory can be re-used for outgoing handles, but
-     * this is not required.
+     * this isn't required.
      */
     void ClearIncomingObjects();
 

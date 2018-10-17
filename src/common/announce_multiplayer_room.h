@@ -111,7 +111,7 @@ public:
 
 /**
  * Empty implementation of AnnounceMultiplayerRoom interface that drops all data. Used when a
- * functional backend implementation is not available.
+ * functional backend implementation isn't available.
  */
 class NullBackend : public Backend {
 public:

@@ -70,13 +70,13 @@ public:
 
     /**
      * Looks up a handle.
-     * @return Pointer to the looked-up object, or `nullptr` if the handle is not valid.
+     * @return Pointer to the looked-up object, or `nullptr` if the handle isn't valid.
      */
     SharedPtr<Object> GetGeneric(Handle handle) const;
 
     /**
      * Looks up a handle while verifying its type.
-     * @return Pointer to the looked-up object, or `nullptr` if the handle is not valid or its
+     * @return Pointer to the looked-up object, or `nullptr` if the handle isn't valid or its
      *         type differs from the requested one.
      */
     template <class T>

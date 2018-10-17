@@ -71,7 +71,7 @@ ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFileBase(const Path& pa
         LOG_ERROR(Service_FS, "Path not found {}", full_path);
         return ERROR_NOT_FOUND;
     case PathParser::DirectoryFound:
-        LOG_ERROR(Service_FS, "{} is not a file", full_path);
+        LOG_ERROR(Service_FS, "{} isn't a file", full_path);
         return ERROR_UNEXPECTED_FILE_OR_DIRECTORY_SDMC;
     case PathParser::NotFound:
         if (!mode.create_flag) {
@@ -118,7 +118,7 @@ ResultCode SDMCArchive::DeleteFile(const Path& path) const {
         LOG_ERROR(Service_FS, "{} not found", full_path);
         return ERROR_NOT_FOUND;
     case PathParser::DirectoryFound:
-        LOG_ERROR(Service_FS, "{} is not a file", full_path);
+        LOG_ERROR(Service_FS, "{} isn't a file", full_path);
         return ERROR_UNEXPECTED_FILE_OR_DIRECTORY_SDMC;
     case PathParser::FileFound:
         break; // Expected 'success' case

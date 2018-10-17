@@ -51,9 +51,9 @@ struct Regs {
         return content[index];
     }
 };
-static_assert(std::is_standard_layout<Regs>::value, "Structure does not use standard layout");
+static_assert(std::is_standard_layout<Regs>::value, "Structure doesn't use standard layout");
 
-// TODO: MSVC does not support using offsetof() on non-static data members even though this
+// TODO: MSVC doesn't support using offsetof() on non-static data members even though this
 //       is technically allowed since C++11. This macro should be enabled once MSVC adds
 //       support for that.
 #ifndef _MSC_VER

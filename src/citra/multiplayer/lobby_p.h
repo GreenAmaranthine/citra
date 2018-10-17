@@ -203,7 +203,7 @@ public:
                 out += '\n';
             const auto& m{member.value<LobbyMember>()};
             if (m.GetGameName().isEmpty()) {
-                out += QString("%1 is not playing a game").arg(m.GetUsername());
+                out += QString("%1 isn't playing a game").arg(m.GetUsername());
             } else {
                 out += QString("%1 is playing %2").arg(m.GetUsername(), m.GetGameName());
             }

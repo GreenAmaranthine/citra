@@ -31,7 +31,7 @@ struct SharedMemoryHeader {
     u8 initialized;
     u8 unknown;
 
-    // This is not the end of the shared memory. It is followed by a receive buffer and a send
+    // This isn't the end of the shared memory. It is followed by a receive buffer and a send
     // buffer. We handle receive buffer in the BufferManager class. For the send buffer, because
     // games usually don't access it, we don't emulate it.
 };

@@ -227,7 +227,7 @@ static void WriteTileToOutput(u32* output, const ImageTile& tile, int height, in
  * - The YUV tuple is converted, using fixed point calculations, to RGB. This step can be configured
  *   using a set of coefficients to support different colorspace standards. See `CoefficientSet`.
  * - The strip can be optionally rotated 90, 180 or 270 degrees. Since each strip is processed
- *   independently, this notably rotates each *strip*, not the entire image. This means that for 90
+ *   independently, thisn'tably rotates each *strip*, not the entire image. This means that for 90
  *   or 270 degree rotations, the output will be in terms of several 8 x height images, and for any
  *   non-zero rotation the strips will have to be re-arranged so that the parts of the image will
  *   not be shuffled together. This limitation makes this a feature of somewhat dubious utility. 90

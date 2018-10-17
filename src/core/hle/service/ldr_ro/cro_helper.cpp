@@ -258,7 +258,7 @@ ResultCode CROHelper::RebaseHeader(u32 cro_size) {
             SetField(header_field, offset + module_address);
     }
 
-    // verifies everything is not beyond the buffer
+    // verifies everything isn't beyond the buffer
     u32 file_end{static_cast<u32>(module_address + cro_size)};
     for (int field{CodeOffset}, i{}; field < Fix0Barrier; field += 2, ++i) {
         HeaderField offset_field{static_cast<HeaderField>(field)};
@@ -1098,9 +1098,9 @@ ResultCode CROHelper::ApplyExitRelocations(VAddr crs_address) {
 
 /**
  * Verifies a string or a string table matching a predicted size (i.e. terminated by 0)
- * if it is not empty. There can be many other nulls in the string table because
+ * if it isn't empty. There can be many other nulls in the string table because
  * they are composed by many sub strings. This function is to check whether the
- * whole string (table) is terminated properly, despite that it is not actually one string.
+ * whole string (table) is terminated properly, despite that it isn't actually one string.
  * @param address the virtual address of the string (table)
  * @param size the size of the string (table), including the terminating 0
  * @returns ResultCode RESULT_SUCCESS if the size matches, otherwise error code.

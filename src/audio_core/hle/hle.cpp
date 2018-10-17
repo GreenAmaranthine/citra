@@ -219,14 +219,13 @@ void DspHle::Impl::SetServiceToInterrupt(std::weak_ptr<DSP_DSP> dsp) {
 }
 
 void DspHle::Impl::ResetPipes() {
-    for (auto& data : pipe_data) {
+    for (auto& data : pipe_data)
         data.clear();
-    }
     dsp_state = DspState::Off;
 }
 
 void DspHle::Impl::WriteU16(DspPipe pipe_number, u16 value) {
-    const std::size_t pipe_index = static_cast<std::size_t>(pipe_number);
+    const std::size_t pipe_index{static_cast<std::size_t>(pipe_number)};
 
     std::vector<u8>& data{pipe_data.at(pipe_index)};
     // Little endian
@@ -259,14 +258,12 @@ void DspHle::Impl::AudioPipeWriteStructAddresses() {
     WriteU16(DspPipe::Audio, static_cast<u16>(struct_addresses.size()));
 
     // Then write the struct addresses.
-    for (u16 addr : struct_addresses) {
+    for (u16 addr : struct_addresses)
         WriteU16(DspPipe::Audio, addr);
-    }
 
     // Signal that we have data on this pipe.
-    if (auto service{dsp_dsp.lock()}) {
+    if (auto service{dsp_dsp.lock()})
         service->SignalInterrupt(InterruptType::Pipe, DspPipe::Audio);
-    }
 }
 
 std::size_t DspHle::Impl::CurrentRegionIndex() const {
@@ -304,9 +301,8 @@ StereoFrame16 DspHle::Impl::GenerateCurrentFrame() {
     for (std::size_t i{}; i < HLE::num_sources; i++) {
         write.source_statuses.status[i] =
             sources[i].Tick(read.source_configurations.config[i], read.adpcm_coefficients.coeff[i]);
-        for (std::size_t mix{}; mix < 3; mix++) {
+        for (std::size_t mix{}; mix < 3; mix++)
             sources[i].MixInto(intermediate_mixes[mix], mix);
-        }
     }
 
     // Generate final mix
@@ -316,11 +312,9 @@ StereoFrame16 DspHle::Impl::GenerateCurrentFrame() {
     StereoFrame16 output_frame{mixers.GetOutput()};
 
     // Write current output frame to the shared memory region
-    for (std::size_t samplei{}; samplei < output_frame.size(); samplei++) {
-        for (std::size_t channeli{}; channeli < output_frame[0].size(); channeli++) {
+    for (std::size_t samplei{}; samplei < output_frame.size(); samplei++)
+        for (std::size_t channeli{}; channeli < output_frame[0].size(); channeli++)
             write.final_samples.pcm16[samplei][channeli] = s16_le(output_frame[samplei][channeli]);
-        }
-    }
 
     return output_frame;
 }
@@ -337,24 +331,22 @@ bool DspHle::Impl::Tick() {
 }
 
 bool DspHle::Impl::IsOutputAllowed() {
-    if (!Core::System::GetInstance().IsSleepModeEnabled()) {
+    if (!Core::System::GetInstance().IsSleepModeEnabled())
         return true;
-    } else {
+    else
         return titles_output_allowed_shell_closed.count(
                    Kernel::g_current_process->codeset->program_id) == 1 &&
                Settings::values.headphones_connected;
-    }
 }
 
 void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
-    if (Tick()) {
+    if (Tick())
         // TODO: Signal all the other interrupts as appropriate.
         if (auto service{dsp_dsp.lock()}) {
             service->SignalInterrupt(InterruptType::Pipe, DspPipe::Audio);
             // HACK: Added to prevent regressions. Will remove soon.
             service->SignalInterrupt(InterruptType::Pipe, DspPipe::Binary);
         }
-    }
 
     // Reschedule recurrent event
     CoreTiming::ScheduleEvent(audio_frame_ticks - cycles_late, tick_event);

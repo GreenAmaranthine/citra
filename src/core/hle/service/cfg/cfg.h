@@ -162,7 +162,7 @@ private:
 
     /**
      * Creates a block with the specified id and writes the input data to the cfg savegame buffer in
-     * memory. The config savegame file in the filesystem is not updated.
+     * memory. The config savegame file in the filesystem isn't updated.
      *
      * @param block_id The id of the block we want to create
      * @param size The size of the block we want to create
@@ -173,7 +173,7 @@ private:
     ResultCode CreateConfigInfoBlk(u32 block_id, u16 size, u16 flags, const void* data);
 
     /**
-     * Deletes the config savegame file from the filesystem, the buffer in memory is not affected
+     * Deletes the config savegame file from the filesystem, the buffer in memory isn't affected
      * @returns ResultCode indicating the result of the operation, 0 on success
      */
     ResultCode DeleteConfigNANDSaveFile();

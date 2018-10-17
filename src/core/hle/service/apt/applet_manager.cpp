@@ -251,16 +251,18 @@ ResultVal<AppletManager::InitializeResult> AppletManager::Initialize(AppletId ap
                                                                      AppletAttributes attributes) {
     auto* const slot_data{GetAppletSlotData(attributes)};
 
-    // Note: The real NS service does not check if the attributes value is valid before accessing
+    // Note: The real NS service doesn't check if the attributes value is valid before accessing
     // the data in the array
     ASSERT_MSG(slot_data, "Invalid application attributes");
 
-    if (slot_data->registered) {
+    if (slot_data->registered)
         return ResultCode(ErrorDescription::AlreadyExists, ErrorModule::Applet,
                           ErrorSummary::InvalidState, ErrorLevel::Status);
-    }
 
     slot_data->applet_id = static_cast<AppletId>(app_id);
+    // Note: In the real console the title id of a given applet slot is set by the APT module when
+    // calling StartApplication.
+    slot_data->title_id = system.Kernel().GetCurrentProcess()->codeset->program_id;
     slot_data->attributes.raw = attributes.raw;
 
     if (slot_data->applet_id == AppletId::Application ||

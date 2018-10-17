@@ -17,7 +17,7 @@ ClientPort::ClientPort(KernelSystem& kernel) : kernel{kernel}, Object{kernel} {}
 ClientPort::~ClientPort() = default;
 
 ResultVal<SharedPtr<ClientSession>> ClientPort::Connect() {
-    // Note: Threads do not wait for the server endpoint to call
+    // Note: Threads don't wait for the server endpoint to call
     // AcceptSession before returning from this call.
 
     if (active_sessions >= max_sessions)

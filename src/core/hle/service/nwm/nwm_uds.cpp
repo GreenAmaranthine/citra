@@ -42,7 +42,7 @@ enum {
 static Kernel::SharedPtr<Kernel::Event> connection_status_event;
 
 // Shared memory provided by the application to store the receive buffer.
-// This is not currently used.
+// This isn't currently used.
 static Kernel::SharedPtr<Kernel::SharedMemory> recv_buffer_memory;
 
 // Connection status of this 3DS.
@@ -158,7 +158,7 @@ static u16 GetNextAvailableNodeId() {
 }
 
 static void BroadcastNodeMap() {
-    // Note: This is not how UDS on a 3ds does it but it shouldn't be
+    // Note: This isn't how UDS on a 3ds does it but it shouldn't be
     // necessary for citra
     Network::WifiPacket packet;
     packet.channel = network_channel;
@@ -484,7 +484,7 @@ void HandleDeauthenticationFrame(const Network::WifiPacket& packet) {
     std::unique_lock<std::mutex> lock{connection_status_mutex, std::defer_lock};
     std::lock(hle_lock, lock);
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
-        LOG_ERROR(Service_NWM, "Got deauthentication frame but we are not the host");
+        LOG_ERROR(Service_NWM, "Got deauthentication frame but we aren't the host");
         return;
     }
     if (node_map.find(packet.transmitter_address) == node_map.end()) {

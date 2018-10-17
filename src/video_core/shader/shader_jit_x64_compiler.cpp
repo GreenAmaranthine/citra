@@ -728,7 +728,7 @@ void JitShader::CompilePrelude() {
 }
 Xbyak::Label JitShader::CompilePrelude_Log2() {
     Xbyak::Label subroutine;
-    // SSE does not have a log instruction, thus we must approximate.
+    // SSE doesn't have a log instruction, thus we must approximate.
     // We perform this approximation first performaing a range reduction into the range [1.0, 2.0).
     // A minimax polynomial which was fit for the function log2(x) / (x - 1) is then evaluated.
     // We multiply the result by (x - 1) then restore the result into the appropriate range.
@@ -810,7 +810,7 @@ Xbyak::Label JitShader::CompilePrelude_Log2() {
 
 Xbyak::Label JitShader::CompilePrelude_Exp2() {
     Xbyak::Label subroutine;
-    // SSE does not have a exp instruction, thus we must approximate.
+    // SSE doesn't have a exp instruction, thus we must approximate.
     // We perform this approximation first performaing a range reduction into the range [-0.5, 0.5).
     // A minimax polynomial which was fit for the function exp2(x) is then evaluated.
     // We then restore the result into the appropriate range.

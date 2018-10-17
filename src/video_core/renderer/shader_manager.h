@@ -24,7 +24,7 @@ struct LightSrc {
 };
 
 /// Uniform structure for the Uniform Buffer Object, all vectors must be 16-byte aligned
-// NOTE: Always keep a vec4 at the end. The GL spec is not clear wether the alignment at
+// NOTE: Always keep a vec4 at the end. The GL spec isn't clear wether the alignment at
 //       the end of a uniform block is included in UNIFORM_BLOCK_DATA_SIZE or not.
 //       Not following that rule will cause problems on some AMD drivers.
 struct UniformData {

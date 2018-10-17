@@ -62,7 +62,7 @@ public:
         // Recursively finds all subroutines.
         const Subroutine& program_main{AddSubroutine(main_offset, PROGRAM_END)};
         if (program_main.exit_method != ExitMethod::AlwaysEnd)
-            throw DecompileFail("Program does not always end");
+            throw DecompileFail("Program doesn't always end");
     }
 
     std::set<Subroutine> MoveSubroutines() {
@@ -74,7 +74,7 @@ private:
     std::set<Subroutine> subroutines;
     std::map<std::pair<u32, u32>, ExitMethod> exit_method_map;
 
-    /// Adds and analyzes a new subroutine if it is not added yet.
+    /// Adds and analyzes a new subroutine if it isn't added yet.
     const Subroutine& AddSubroutine(u32 begin, u32 end) {
         auto iter{subroutines.find(Subroutine{begin, end})};
         if (iter != subroutines.end())

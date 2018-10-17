@@ -40,7 +40,7 @@ ArchiveSource_SDSaveData::ArchiveSource_SDSaveData(const std::string& sdmc_direc
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveSource_SDSaveData::Open(u64 program_id) {
     std::string concrete_mount_point{GetSaveDataPath(mount_point, program_id)};
     if (!FileUtil::Exists(concrete_mount_point)) {
-        // When a SaveData archive is created for the first time, it is not yet formatted and the
+        // When a SaveData archive is created for the first time, it isn't yet formatted and the
         // save file/directory structure expected by the game has not yet been initialized.
         // Returning the NotFormatted error code will signal the game to provision the SaveData
         // archive with the files and folders that it expects.

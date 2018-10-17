@@ -272,7 +272,7 @@ void SoftwareKeyboard::Update() {
             } catch (const std::invalid_argument&) {
                 std::cout << "Unable to parse input as a number." << std::endl;
             } catch (const std::out_of_range&) {
-                std::cout << "Input number is not valid." << std::endl;
+                std::cout << "Input number isn't valid." << std::endl;
             }
             return valid;
         }};

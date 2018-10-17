@@ -104,7 +104,7 @@ void IR_RST::Initialize(Kernel::HLERequestContext& ctx) {
     update_period = static_cast<int>(rp.Pop<u32>());
     raw_c_stick = rp.Pop<bool>();
     if (raw_c_stick)
-        LOG_ERROR(Service_IR, "raw C-stick data is not implemented!");
+        LOG_ERROR(Service_IR, "raw C-stick data isn't implemented!");
     next_pad_index = 0;
     is_device_reload_pending.store(true);
     CoreTiming::ScheduleEvent(msToCycles(update_period), update_callback_id);

@@ -21,7 +21,7 @@ struct FileSessionSlot : public Kernel::SessionRequestHandler::SessionDataBase {
     bool subfile; ///< Whether this file was opened via OpenSubFile or not.
 };
 
-// TODO: File is not a real service, but it can still utilize ServiceFramework::RegisterHandlers.
+// TODO: File isn't a real service, but it can still utilize ServiceFramework::RegisterHandlers.
 // Consider splitting ServiceFramework interface.
 class File final : public ServiceFramework<File, FileSessionSlot> {
 public:

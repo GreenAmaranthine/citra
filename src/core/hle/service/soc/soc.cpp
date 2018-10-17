@@ -22,7 +22,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
-// MinGW does not define several errno constants
+// MinGW doesn't define several errno constants
 #ifndef _MSC_VER
 #define EBADMSG 104
 #define ENODATA 120

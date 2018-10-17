@@ -31,7 +31,7 @@ public:
      * Write data to the file
      * @param offset Offset in bytes to start writing data to
      * @param length Length in bytes of data to write to file
-     * @param flush The flush parameters (0 == do not flush)
+     * @param flush The flush parameters (0 == don't flush)
      * @param buffer Buffer to read data from
      * @return Number of bytes written, or error code
      */

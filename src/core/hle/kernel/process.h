@@ -120,7 +120,7 @@ public:
         return codeset->name;
     }
 
-    static const HandleType HANDLE_TYPE = HandleType::Process;
+    static const HandleType HANDLE_TYPE{HandleType::Process};
     HandleType GetHandleType() const override {
         return HANDLE_TYPE;
     }
@@ -205,7 +205,5 @@ private:
     friend class KernelSystem;
     KernelSystem& kernel;
 };
-
-extern SharedPtr<Process> g_current_process;
 
 } // namespace Kernel

@@ -176,7 +176,7 @@ struct GyroscopeCalibrateParam {
     } x, y, z;
 };
 
-// TODO: MSVC does not support using offsetof() on non-static data members even though this
+// TODO: MSVC doesn't support using offsetof() on non-static data members even though this
 //       is technically allowed since C++11. This macro should be enabled once MSVC adds
 //       support for that.
 #ifndef _MSC_VER

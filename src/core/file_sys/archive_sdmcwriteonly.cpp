@@ -15,7 +15,7 @@ namespace FileSys {
 ResultVal<std::unique_ptr<FileBackend>> SDMCWriteOnlyArchive::OpenFile(const Path& path,
                                                                        const Mode& mode) const {
     if (mode.read_flag) {
-        LOG_ERROR(Service_FS, "Read flag is not supported");
+        LOG_ERROR(Service_FS, "Read flag isn't supported");
         return ERROR_INVALID_READ_FLAG;
     }
     return SDMCArchive::OpenFileBase(path, mode);

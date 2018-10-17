@@ -507,20 +507,19 @@ SurfaceInterval SurfaceParams::GetCopyableInterval(const Surface& src_surface) c
             addr + Common::AlignUp(boost::icl::first(aligned_interval) - addr, stride_bytes),
             addr + Common::AlignDown(boost::icl::last_next(aligned_interval) - addr, stride_bytes),
         };
-        if (boost::icl::first(rect_interval) > boost::icl::last_next(rect_interval)) {
+        if (boost::icl::first(rect_interval) > boost::icl::last_next(rect_interval))
             // 1 row
             rect_interval = aligned_interval;
-        } else if (boost::icl::length(rect_interval) == 0) {
-            // 2 rows that do not make a rectangle, return the larger one
+        else if (boost::icl::length(rect_interval) == 0) {
+            // 2 rows that don't make a rectangle, return the larger one
             const SurfaceInterval row1{boost::icl::first(aligned_interval),
                                        boost::icl::first(rect_interval)};
             const SurfaceInterval row2{boost::icl::first(rect_interval),
                                        boost::icl::last_next(aligned_interval)};
             rect_interval = (boost::icl::length(row1) > boost::icl::length(row2)) ? row1 : row2;
         }
-        if (boost::icl::length(rect_interval) > boost::icl::length(result)) {
+        if (boost::icl::length(rect_interval) > boost::icl::length(result))
             result = rect_interval;
-        }
     }
     return result;
 }
@@ -1113,7 +1112,7 @@ const CachedTextureCube& RasterizerCache::GetTextureCube(const TextureCubeConfig
             else
                 // Can occur when texture address is invalid. We mark the watcher with nullptr in
                 // this case and the content of the face wouldn't get updated. These are usually
-                // leftover setup in the texture unit and games are not supposed to draw using them.
+                // leftover setup in the texture unit and games aren't supposed to draw using them.
                 face.watcher = nullptr;
         }
     }

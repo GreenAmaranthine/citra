@@ -45,7 +45,7 @@ enum class ResponseID : u8 {
      *     byte 1-3: Right circle pad position. This three bytes are two little-endian 12-bit
      *         fields. The first one is for x-axis and the second one is for y-axis.
      *     byte 4: bit[0:4] battery level; bit[5] ZL button; bit[6] ZR button; bit[7] R button
-     *         Note that for the three button fields, the bit is set when the button is NOT pressed.
+     *         Note that for the three button fields, the bit is set when the button isn't pressed.
      *     byte 5: unknown
      */
     PollHID = 0x10,
@@ -232,7 +232,7 @@ void ExtraHID::SendHIDStatus() {
 
     constexpr int C_STICK_CENTER{0x800};
 
-    // TODO: this value is not accurately measured. We currently assume that the axis can
+    // TODO: this value isn't accurately measured. We currently assume that the axis can
     // take values in the whole range of a 12-bit integer.
     constexpr int C_STICK_RADIUS{0x7FF};
 

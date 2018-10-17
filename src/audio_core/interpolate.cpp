@@ -9,7 +9,7 @@
 namespace AudioCore::AudioInterp {
 
 // Calculations are done in fixed point with 24 fractional bits.
-// (This is not verified. This was chosen for minimal error.)
+// (This isn't verified. This was chosen for minimal error.)
 constexpr u64 scale_factor{1 << 24};
 constexpr u64 scale_mask{scale_factor - 1};
 

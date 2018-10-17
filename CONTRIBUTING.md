@@ -1,6 +1,6 @@
 # Reporting Issues
 
-**The issue tracker is not a support forum.** Unless you can provide precise *technical information* regarding an issue, you *should not post in it*. If you need support, first read the [FAQ](https://github.com/citra-valentin/citra/wiki/FAQ) and then visit our [Discord server](https://discord.gg/YtUcETb) or ask in a general emulation forum such as [/r/emulation](https://www.reddit.com/r/emulation/). If you post support questions, generic messages to the developers or vague reports without technical details, they will be closed and locked.
+**The issue tracker isn't a support forum.** Unless you can provide precise *technical information* regarding an issue, you *should not post in it*. If you need support, first read the [FAQ](https://github.com/citra-valentin/citra/wiki/FAQ) and then visit our [Discord server](https://discord.gg/YtUcETb) or ask in a general emulation forum such as [/r/emulation](https://www.reddit.com/r/emulation/). If you post support questions, generic messages to the developers or vague reports without technical details, they will be closed and locked.
 
 If you believe you have a valid issue report, please post the log and build version (number in title bar/hex string visible in the filename), as well as your hardware and software information if applicable.
 
@@ -56,7 +56,7 @@ Follow the indentation/whitespace style shown below. Do not use tabs, use 4-spac
 
 namespace Example {
 
-// Namespace contents are not indented
+// Namespace contents aren't indented
 
 // Declare globals at the top
 int g_foo{}; // {} can be used to initialize types as 0, false, or nullptr

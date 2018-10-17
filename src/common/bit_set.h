@@ -238,7 +238,7 @@ public:
     }
 
     // Warning: Even though on modern CPUs this is a single fast instruction,
-    // Dolphin's official builds do not currently assume POPCNT support on x86,
+    // Dolphin's official builds don't currently assume POPCNT support on x86,
     // so slower explicit bit twiddling is generated.  Still should generally
     // be faster than a loop.
     unsigned int Count() const {

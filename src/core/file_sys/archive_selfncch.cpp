@@ -7,6 +7,7 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/swap.h"
+#include "core/core.h"
 #include "core/file_sys/archive_selfncch.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/ivfc_archive.h"
@@ -16,7 +17,7 @@ namespace FileSys {
 
 enum class SelfNCCHFilePathType : u32 {
     RomFS = 0,
-    Code = 1, // This is not supported by SelfNCCHArchive but by archive 0x2345678E
+    Code = 1, // This isn't supported by SelfNCCHArchive but by archive 0x2345678E
     ExeFS = 2,
     UpdateRomFS = 5, // This is presumably for accessing the RomFS of the update patch.
 };
@@ -105,7 +106,7 @@ public:
             return OpenRomFS();
 
         case SelfNCCHFilePathType::Code:
-            LOG_ERROR(Service_FS, "Reading the code section is not supported!");
+            LOG_ERROR(Service_FS, "Reading the code section isn't supported!");
             return ERROR_COMMAND_NOT_ALLOWED;
 
         case SelfNCCHFilePathType::ExeFS: {
@@ -270,7 +271,7 @@ void ArchiveFactory_SelfNCCH::Register(Loader::AppLoader& app_loader) {
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SelfNCCH::Open(const Path& path) {
     auto archive{std::make_unique<SelfNCCHArchive>(
-        ncch_data[Kernel::g_current_process->codeset->program_id])};
+        ncch_data[Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id])};
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 

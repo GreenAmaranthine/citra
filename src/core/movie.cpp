@@ -353,7 +353,7 @@ u64 Movie::GetOverrideInitTime() const {
 
 Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header, u64 program_id) const {
     if (header_magic_bytes != header.filetype) {
-        LOG_ERROR(Movie, "Playback file does not have valid header");
+        LOG_ERROR(Movie, "Playback file doesn't have valid header");
         return ValidationResult::Invalid;
     }
 

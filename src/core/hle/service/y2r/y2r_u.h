@@ -86,7 +86,7 @@ using CoefficientSet = std::array<s16, 8>;
 struct ConversionBuffer {
     /// Current reading/writing address of this buffer.
     VAddr address;
-    /// Remaining amount of bytes to be DMAed, does not include the inter-trasfer gap.
+    /// Remaining amount of bytes to be DMAed, doesn't include the inter-trasfer gap.
     u32 image_size;
     /// Size of a single DMA transfer.
     u16 transfer_unit;

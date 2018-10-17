@@ -170,7 +170,7 @@ void MultiplayerState::OnOpenNetworkRoom() {
             BringWidgetToFront(client_room);
             return;
         }
-    // If the user is not a member of a room, show the lobby instead.
+    // If the user isn't a member of a room, show the lobby instead.
     // This is currently only used on the clickable label in the status bar
     OnViewLobby();
 }

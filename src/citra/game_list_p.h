@@ -167,7 +167,7 @@ public:
                    UISettings::GameListIconSize::LargeIcon};
 
         if (!Loader::IsValidSMDH(smdh_data)) {
-            // SMDH is not valid, set a default icon
+            // SMDH isn't valid, set a default icon
             if (UISettings::values.game_list_icon_size != UISettings::GameListIconSize::NoIcon)
                 setData(GetDefaultIcon(large), Qt::DecorationRole);
             return;

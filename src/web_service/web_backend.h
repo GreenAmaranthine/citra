@@ -63,8 +63,8 @@ private:
 
     /**
      * A generic function with explicit authentication method specified
-     * JWT is used if the jwt parameter is not empty
-     * username + token is used if jwt is empty but username and token are not empty
+     * JWT is used if the jwt parameter isn't empty
+     * username + token is used if jwt is empty but username and token aren't empty
      * anonymous if all of jwt, username and token are empty
      */
     Common::WebResult GenericJson(const std::string& method, const std::string& path,

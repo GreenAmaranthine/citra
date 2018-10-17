@@ -113,7 +113,7 @@ bool DeleteDirRecursively(const std::string& directory, unsigned int recursion =
 // Returns the current directory
 std::string GetCurrentDir();
 
-// Create directory and copy contents (does not overwrite existing files)
+// Create directory and copy contents (doesn't overwrite existing files)
 void CopyDir(const std::string& source_path, const std::string& dest_path);
 
 // Set the current directory to given directory
@@ -169,10 +169,10 @@ public:
     template <typename T>
     std::size_t ReadArray(T* data, std::size_t length) {
         static_assert(std::is_standard_layout<T>(),
-                      "Given array does not consist of standard layout objects");
+                      "Given array doesn't consist of standard layout objects");
 #if (__GNUC__ >= 5) || defined(__clang__) || defined(_MSC_VER)
         static_assert(std::is_trivially_copyable<T>(),
-                      "Given array does not consist of trivially copyable objects");
+                      "Given array doesn't consist of trivially copyable objects");
 #endif
 
         if (!IsOpen()) {
@@ -190,10 +190,10 @@ public:
     template <typename T>
     std::size_t WriteArray(const T* data, std::size_t length) {
         static_assert(std::is_standard_layout<T>(),
-                      "Given array does not consist of standard layout objects");
+                      "Given array doesn't consist of standard layout objects");
 #if (__GNUC__ >= 5) || defined(__clang__) || defined(_MSC_VER)
         static_assert(std::is_trivially_copyable<T>(),
-                      "Given array does not consist of trivially copyable objects");
+                      "Given array doesn't consist of trivially copyable objects");
 #endif
 
         if (!IsOpen()) {

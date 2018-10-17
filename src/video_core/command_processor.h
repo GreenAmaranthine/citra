@@ -29,7 +29,7 @@ union CommandHeader {
     BitField<31, 1, u32> group_commands;
 };
 static_assert(std::is_standard_layout<CommandHeader>::value,
-              "CommandHeader does not use standard layout");
+              "CommandHeader doesn't use standard layout");
 static_assert(sizeof(CommandHeader) == sizeof(u32), "CommandHeader has incorrect size!");
 
 void ProcessCommandList(const u32* list, u32 size);

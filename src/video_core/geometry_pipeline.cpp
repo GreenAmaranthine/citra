@@ -37,7 +37,7 @@ public:
 // invoked upon inputs buffer filled up by vertex shader outputs. For example, if we have a geometry
 // shader that takes 6 inputs, and the vertex shader outputs 2 attributes, it would take 3 vertices
 // for one geometry shader invocation.
-// TODO: what happens when the input size is not divisible by the output size?
+// TODO: what happens when the input size isn't divisible by the output size?
 class GeometryPipeline_Point : public GeometryPipelineBackend {
 public:
     GeometryPipeline_Point(const Regs& regs, Shader::GSUnitState& unit) : regs(regs), unit(unit) {
@@ -219,7 +219,7 @@ void GeometryPipeline::Reconfigure() {
 
     // The following assumes that when geometry shader is in use, the shader unit 3 is configured as
     // a geometry shader unit.
-    // TODO: what happens if this is not true?
+    // TODO: what happens if this isn't true?
     ASSERT(state.regs.pipeline.gs_unit_exclusive_configuration == 1);
     ASSERT(state.regs.gs.shader_mode == ShaderRegs::ShaderMode::GS);
 

@@ -112,7 +112,7 @@ static std::vector<u8> GenerateCCMPAAD(const MacAddress& sender, const MacAddres
     // Reference: IEEE 802.11-2007
 
     // 8.3.3.3.2 Construct AAD (22-30 bytes)
-    // The AAD is constructed from the MPDU header. The AAD does not include the header Duration
+    // The AAD is constructed from the MPDU header. The AAD doesn't include the header Duration
     // field, because the Duration field value can change due to normal IEEE 802.11 operation (e.g.,
     // a rate change during retransmission). For similar reasons, several subfields in the Frame
     // Control field are masked to 0.

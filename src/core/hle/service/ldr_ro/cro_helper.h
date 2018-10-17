@@ -13,7 +13,7 @@
 
 namespace Service::LDR {
 
-// GCC versions < 5.0 do not implement std::is_trivially_copyable.
+// GCC versions < 5.0 don't implement std::is_trivially_copyable.
 // Excluding MSVC because it has weird behaviour for std::is_trivially_copyable.
 #if (__GNUC__ >= 5) || defined(__clang__)
 #define ASSERT_CRO_STRUCT(name, size)                                                              \

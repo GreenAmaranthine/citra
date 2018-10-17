@@ -106,7 +106,7 @@ void Screens::DoneCurrent() {
 // On Qt 5.0+, this correctly gets the size of the framebuffer (pixels).
 //
 // Older versions get the window size (density independent pixels),
-// and hence, do not support DPI scaling ("retina" displays).
+// and hence, don't support DPI scaling ("retina" displays).
 // The result will be a viewport that is smaller than the extent of the window.
 void Screens::OnFramebufferSizeChanged() {
     // Screen changes potentially incur a change in screen DPI, hence we should update the
@@ -289,7 +289,7 @@ void Screens::OnEmulationStopping() {
 void Screens::showEvent(QShowEvent* event) {
     QWidget::showEvent(event);
 
-    // windowHandle() is not initialized until the Window is shown, so we connect it here.
+    // windowHandle() isn't initialized until the Window is shown, so we connect it here.
     connect(windowHandle(), &QWindow::screenChanged, this, &Screens::OnFramebufferSizeChanged,
             Qt::UniqueConnection);
 }

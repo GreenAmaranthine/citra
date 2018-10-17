@@ -52,8 +52,8 @@ SharedPtr<SharedMemory> KernelSystem::CreateSharedMemory(SharedPtr<Process> owne
         }
 
         // Refresh the address mappings for the current process.
-        if (Kernel::g_current_process != nullptr) {
-            Kernel::g_current_process->vm_manager.RefreshMemoryBlockMappings(linheap_memory.get());
+        if (current_process != nullptr) {
+            current_process->vm_manager.RefreshMemoryBlockMappings(linheap_memory.get());
         }
     } else {
         auto& vm_manager{shared_memory->owner_process->vm_manager};
@@ -116,7 +116,7 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
         return ERR_INVALID_COMBINATION;
     }
 
-    // Error out if the provided permissions are not compatible with what the creator process needs.
+    // Error out if the provided permissions aren't compatible with what the creator process needs.
     if (other_permissions != MemoryPermission::DontCare &&
         static_cast<u32>(this->permissions) & ~static_cast<u32>(other_permissions)) {
         LOG_ERROR(Kernel, "cannot map id={}, address=0x{:08X}, name={}, permissions don't match",
@@ -165,7 +165,7 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
 }
 
 ResultCode SharedMemory::Unmap(Process* target_process, VAddr address) {
-    // TODO: Verify what happens if the application tries to unmap an address that is not
+    // TODO: Verify what happens if the application tries to unmap an address that isn't
     // mapped to a SharedMemory.
     return target_process->vm_manager.UnmapRange(address, size);
 }

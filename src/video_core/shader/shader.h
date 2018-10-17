@@ -65,7 +65,7 @@ ASSERT_POS(tc0_w, RasterizerRegs::VSOutputAttributes::TEXCOORD0_W);
 ASSERT_POS(view, RasterizerRegs::VSOutputAttributes::VIEW_X);
 ASSERT_POS(tc2, RasterizerRegs::VSOutputAttributes::TEXCOORD2_U);
 #undef ASSERT_POS
-static_assert(std::is_pod<OutputVertex>::value, "Structure is not POD");
+static_assert(std::is_pod<OutputVertex>::value, "Structure isn't POD");
 static_assert(sizeof(OutputVertex) == 24 * sizeof(float), "OutputVertex has invalid size");
 
 /**
@@ -89,7 +89,7 @@ struct GSEmitter {
     ~GSEmitter();
     void Emit(Math::Vec4<float24> (&output_regs)[16]);
 };
-static_assert(std::is_standard_layout<GSEmitter>::value, "GSEmitter is not standard layout type");
+static_assert(std::is_standard_layout<GSEmitter>::value, "GSEmitter isn't standard layout type");
 
 /**
  * This structure contains the state information that needs to be unique for a shader unit. The 3DS
@@ -106,7 +106,7 @@ struct UnitState {
         alignas(16) Math::Vec4<float24> temporary[16];
         alignas(16) Math::Vec4<float24> output[16];
     } registers;
-    static_assert(std::is_pod<Registers>::value, "Structure is not POD");
+    static_assert(std::is_pod<Registers>::value, "Structure isn't POD");
 
     bool conditional_code[2];
 

@@ -142,7 +142,7 @@ void Module::StartReceiving(int port_id) {
         return camera.impl->ReceiveFrame();
     });
     // Schedules a completion event according to the frame rate. The event will block on the
-    // capture task if it is not finished within the expected time
+    // capture task if it isn't finished within the expected time
     CoreTiming::ScheduleEvent(
         msToCycles(LATENCY_BY_FRAME_RATE[static_cast<int>(camera.frame_rate)]),
         completion_event_callback, port_id);

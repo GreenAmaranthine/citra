@@ -654,7 +654,7 @@ static std::tuple<u32, SystemLanguage> AdjustLanguageInfoBlock(const std::vector
             return {region, language};
         }
     }
-    // The language is not available in any available region, so default to the first region and
+    // The language isn't available in any available region, so default to the first region and
     // language
     u32 default_region{region_codes[0]};
     return {default_region, region_languages[default_region][0]};
@@ -667,7 +667,7 @@ void Module::SetPreferredRegionCodes(const std::vector<u32>& region_codes) {
     LOG_INFO(Service_CFG, "Preferred region code set to {}", preferred_region_code);
     if (Settings::values.region_value == Settings::REGION_VALUE_AUTO_SELECT) {
         if (current_language != adjusted_language) {
-            LOG_WARNING(Service_CFG, "System language {} does not fit the region. Adjusted to {}",
+            LOG_WARNING(Service_CFG, "System language {} doesn't fit the region. Adjusted to {}",
                         static_cast<int>(current_language), static_cast<int>(adjusted_language));
             SetSystemLanguage(adjusted_language);
         }

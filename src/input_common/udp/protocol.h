@@ -31,13 +31,13 @@ struct Header {
     u16_le payload_length;
     u32_le crc;
     u32_le id;
-    ///> In the protocol, the type of the packet is not part of the header, but its convenient to
+    ///> In the protocol, the type of the packet isn't part of the header, but its convenient to
     ///> include in the header so the callee doesn't have to duplicate the type twice when building
     ///> the data
     Type type;
 };
 static_assert(sizeof(Header) == 20, "UDP Message Header struct has wrong size");
-static_assert(std::is_trivially_copyable_v<Header>, "UDP Message Header is not trivially copyable");
+static_assert(std::is_trivially_copyable_v<Header>, "UDP Message Header isn't trivially copyable");
 
 using MacAddress = std::array<u8, 6>;
 constexpr MacAddress EMPTY_MAC_ADDRESS{0, 0, 0, 0, 0, 0};
@@ -68,7 +68,7 @@ struct PortInfo {
     std::array<u8, MAX_PORTS> port;
 };
 static_assert(std::is_trivially_copyable_v<PortInfo>,
-              "UDP Request PortInfo is not trivially copyable");
+              "UDP Request PortInfo isn't trivially copyable");
 
 /**
  * Request the latest pad information from the server. If the server hasn't received this message
@@ -90,7 +90,7 @@ struct PadData {
 };
 static_assert(sizeof(PadData) == 8, "UDP Request PadData struct has wrong size");
 static_assert(std::is_trivially_copyable_v<PadData>,
-              "UDP Request PadData is not trivially copyable");
+              "UDP Request PadData isn't trivially copyable");
 
 /**
  * Creates a message with the proper header data that can be sent to the server.
@@ -117,7 +117,7 @@ struct Version {
 };
 static_assert(sizeof(Version) == 2, "UDP Response Version struct has wrong size");
 static_assert(std::is_trivially_copyable_v<Version>,
-              "UDP Response Version is not trivially copyable");
+              "UDP Response Version isn't trivially copyable");
 
 struct PortInfo {
     u8 id;
@@ -130,7 +130,7 @@ struct PortInfo {
 };
 static_assert(sizeof(PortInfo) == 12, "UDP Response PortInfo struct has wrong size");
 static_assert(std::is_trivially_copyable_v<PortInfo>,
-              "UDP Response PortInfo is not trivially copyable");
+              "UDP Response PortInfo isn't trivially copyable");
 
 #pragma pack(push, 1)
 struct PadData {
@@ -207,7 +207,7 @@ struct PadData {
 
 static_assert(sizeof(PadData) == 80, "UDP Response PadData struct has wrong size ");
 static_assert(std::is_trivially_copyable_v<PadData>,
-              "UDP Response PadData is not trivially copyable");
+              "UDP Response PadData isn't trivially copyable");
 
 static_assert(sizeof(Message<PadData>) == MAX_PACKET_SIZE,
               "UDP MAX_PACKET_SIZE is no longer larger than Message<PadData>");

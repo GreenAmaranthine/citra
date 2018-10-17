@@ -36,7 +36,7 @@ constexpr u32 region1_offset{0x70000};
  * layout of the ARM11. Hence from the ARM11's point of view the memory space appears to be
  * middle-endian.
  *
- * Unusually this does not appear to be an issue for floating point numbers. The DSP makes the more
+ * Unusually this doesn't appear to be an issue for floating point numbers. The DSP makes the more
  * sensible choice of keeping that little-endian. There are also some exceptions such as the
  * IntermediateMixSamples structure, which is little-endian.
  *
@@ -88,7 +88,7 @@ static_assert(std::is_trivially_copyable<u32_dsp>::value, "u32_dsp isn't trivial
 //    See also: HLE::PipeRead.
 //
 // Note that the above addresses do vary slightly between audio firmwares observed; the addresses
-// are not fixed in stone. The addresses above are only an examplar; they're what this
+// aren't fixed in stone. The addresses above are only an examplar; they're what this
 // implementation does and provides to applications.
 //
 // Application requests the DSP service to convert DSP addresses into ARM11 virtual addresses using
@@ -105,7 +105,7 @@ static_assert(std::is_trivially_copyable<u32_dsp>::value, "u32_dsp isn't trivial
 
 #define INSERT_PADDING_DSPWORDS(num_words) INSERT_PADDING_BYTES(2 * (num_words))
 
-// GCC versions < 5.0 do not implement std::is_trivially_copyable.
+// GCC versions < 5.0 don't implement std::is_trivially_copyable.
 // Excluding MSVC because it has weird behaviour for std::is_trivially_copyable.
 #if (__GNUC__ >= 5) || defined(__clang__)
 #define ASSERT_DSP_STRUCT(name, size)                                                              \

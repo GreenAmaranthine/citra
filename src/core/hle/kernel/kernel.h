@@ -184,6 +184,9 @@ public:
     /// Retrieves a process from the current list of processes.
     SharedPtr<Process> GetProcessById(u32 process_id) const;
 
+    SharedPtr<Process> GetCurrentProcess() const;
+    void SetCurrentProcess(SharedPtr<Process> process);
+
 private:
     std::unique_ptr<ResourceLimitList> resource_limits;
     std::atomic<u32> next_object_id{};
@@ -191,6 +194,8 @@ private:
 
     // Lists all processes that exist in the current session.
     std::vector<SharedPtr<Process>> process_list;
+
+    SharedPtr<Process> current_process;
 };
 
 } // namespace Kernel

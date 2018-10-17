@@ -37,7 +37,7 @@ SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
     u32 candidate_priority{ThreadPrioLowest + 1};
 
     for (const auto& thread : waiting_threads) {
-        // The list of waiting threads must not contain threads that are not waiting to be awakened.
+        // The list of waiting threads must not contain threads that aren't waiting to be awakened.
         ASSERT_MSG(thread->status == ThreadStatus::WaitSynchAny ||
                        thread->status == ThreadStatus::WaitSynchAll ||
                        thread->status == ThreadStatus::WaitHleEvent,

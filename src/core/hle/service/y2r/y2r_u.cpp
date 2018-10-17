@@ -36,7 +36,7 @@ ResultCode ConversionConfiguration::SetInputLines(u16 lines) {
     if (lines == 0 || lines > 1024)
         return ResultCode(ErrorDescription::OutOfRange, ErrorModule::CAM,
                           ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E053FD
-    // Note: In what appears to be a bug, the `camera` module does not set the hardware register at
+    // Note: In what appears to be a bug, the `camera` module doesn't set the hardware register at
     // all if `lines` is 1024, so the conversion uses the last value that was set. The intention
     // was probably to set it to 0 like in SetInputLineWidth.
     if (lines != 1024)

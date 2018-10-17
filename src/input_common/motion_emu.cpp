@@ -150,7 +150,7 @@ std::unique_ptr<Input::MotionDevice> MotionEmu::Create(const Common::ParamPackag
     float tilt_clamp{params.Get("tilt_clamp", 90.0f)};
     auto device_wrapper{
         std::make_unique<MotionEmuDeviceWrapper>(update_period, sensitivity, tilt_clamp)};
-    // Previously created device is disconnected here. Having two motion devices for 3DS is not
+    // Previously created device is disconnected here. Having two motion devices for 3DS isn't
     // expected.
     current_device = device_wrapper->device;
     return std::move(device_wrapper);

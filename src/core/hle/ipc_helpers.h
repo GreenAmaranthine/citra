@@ -32,7 +32,7 @@ public:
     }
 
     void ValidateHeader() {
-        DEBUG_ASSERT_MSG(index == TotalSize(), "Operations do not match the header (cmd {:#x})",
+        DEBUG_ASSERT_MSG(index == TotalSize(), "Operations don't match the header (cmd {:#x})",
                          header.raw);
     }
 
@@ -242,7 +242,7 @@ public:
     /**
      * Pop a descriptor containing `N` handles and resolves them to Kernel::Object pointers. If a
      * handle is invalid, null is returned for that object instead. The descriptor must contain
-     * exactly `N` handles, it is not permitted to, for example, call PopGenericObjects<1>() twice
+     * exactly `N` handles, it isn't permitted to, for example, call PopGenericObjects<1>() twice
      * to read a multi-handle descriptor with 2 handles, or to make a single PopGenericObjects<2>()
      * call to read 2 single-handle descriptors.
      */
@@ -271,7 +271,7 @@ public:
      *
      * In real services, static buffers must be set up before any IPC request using those is sent.
      * It is the duty of the process (usually services) to allocate and set up the receiving static
-     * buffer information. Our HLE services do not need to set up the buffers beforehand.
+     * buffer information. Our HLE services don't need to set up the buffers beforehand.
      */
     const std::vector<u8>& PopStaticBuffer();
 
@@ -366,7 +366,7 @@ template <unsigned int N>
 std::array<u32, N> RequestParser::PopHLEHandles() {
     u32 handle_descriptor{Pop<u32>()};
     ASSERT_MSG(IsHandleDescriptor(handle_descriptor),
-               "Tried to pop handle(s) but the descriptor is not a handle descriptor");
+               "Tried to pop handle(s) but the descriptor isn't a handle descriptor");
     ASSERT_MSG(N == HandleNumberFromDesc(handle_descriptor),
                "Number of handles doesn't match the descriptor");
 
@@ -429,7 +429,7 @@ inline const std::vector<u8>& RequestParser::PopStaticBuffer() {
 inline Kernel::MappedBuffer& RequestParser::PopMappedBuffer() {
     u32 mapped_buffer_descriptor{Pop<u32>()};
     ASSERT_MSG(GetDescriptorType(mapped_buffer_descriptor) == MappedBuffer,
-               "Tried to pop mapped buffer but the descriptor is not a mapped buffer descriptor");
+               "Tried to pop mapped buffer but the descriptor isn't a mapped buffer descriptor");
     return context->GetMappedBuffer(Pop<u32>());
 }
 

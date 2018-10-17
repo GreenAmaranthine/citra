@@ -14,7 +14,7 @@
 namespace GPU {
 
 // Returns index corresponding to the Regs member labeled by field_name
-// TODO: Due to Visual studio bug 209229, offsetof does not return constant expressions
+// TODO: Due to Visual studio bug 209229, offsetof doesn't return constant expressions
 //       when used with array elements (e.g. GPU_REG_INDEX(memory_fill_config[0])).
 //       For details cf.
 //       https://connect.microsoft.com/VisualStudio/feedback/details/209229/offsetof-does-not-produce-a-constant-expression-for-array-members
@@ -40,7 +40,7 @@ struct Regs {
 
 // helper macro to make sure the defined structures are of the expected size.
 #if defined(_MSC_VER)
-// TODO: MSVC does not support using sizeof() on non-static data members even though this
+// TODO: MSVC doesn't support using sizeof() on non-static data members even though this
 //       is technically allowed since C++11. This macro should be enabled once MSVC adds
 //       support for that.
 #define ASSERT_MEMBER_SIZE(name, size_in_bytes)
@@ -291,9 +291,9 @@ private:
         return register_value * 8;
     }
 };
-static_assert(std::is_standard_layout<Regs>::value, "Structure does not use standard layout");
+static_assert(std::is_standard_layout<Regs>::value, "Structure doesn't use standard layout");
 
-// TODO: MSVC does not support using offsetof() on non-static data members even though this
+// TODO: MSVC doesn't support using offsetof() on non-static data members even though this
 //       is technically allowed since C++11. This macro should be enabled once MSVC adds
 //       support for that.
 #ifndef _MSC_VER
