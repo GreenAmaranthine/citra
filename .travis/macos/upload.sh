@@ -14,16 +14,6 @@ cp build/bin/citra-room "$REV_NAME"
 # move qt libs into app bundle for deployment
 $(brew --prefix)/opt/qt5/bin/macdeployqt "${REV_NAME}/citra.app"
 
-# move SDL2 libs into folder for deployment
-cd ${REV_NAME}/citra.app/Contents/MacOS/
-dylibbundler -b -x "./citra" -cd -d "./libs" -p "@executable_path/libs/"
-cd ..
-cd ..
-cd ..
-mkdir libs
-mv ${REV_NAME}/citra.app/Contents/MacOS/libs/* ./libs
-cd ..
-
 # Make the changes to make the citra app standalone (i.e. not dependent on the current brew installation).
 # To do this, the absolute references to each and every QT framework must be re-written to point to the local frameworks
 # (in the Contents/Frameworks folder).
