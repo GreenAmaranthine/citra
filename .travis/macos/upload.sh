@@ -97,10 +97,11 @@ done
 # Make the citra.app application launch a debugging terminal.
 # Store away the actual binary
 mv ${REV_NAME_ALT}citra.app/Contents/MacOS/citra ${REV_NAME_ALT}citra.app/Contents/MacOS/citra-bin
-
+ls .
 cat > ${REV_NAME_ALT}citra.app/Contents/MacOS/citra <<EOL
 #!/usr/bin/env bash
 cd "\`dirname "\$0"\`"
+ls .
 chmod +x citra-bin
 open citra-bin --args "\$@"
 EOL
