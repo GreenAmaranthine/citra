@@ -8,11 +8,16 @@ COMPRESSION_FLAGS="-czvf"
 
 mkdir "$REV_NAME"
 
+ls ./build/bin
+
 cp -r build/bin/citra.app "$REV_NAME"
 cp build/bin/citra-room "$REV_NAME"
 
 # move qt libs into app bundle for deployment
 $(brew --prefix)/opt/qt5/bin/macdeployqt "${REV_NAME}/citra.app"
+
+# move SDL2 libs into folder for deployment
+dylibbundler -b -x "${REV_NAME}/citra" -cd -d "${REV_NAME}/libs" -p "@executable_path/libs/"
 
 # Make the changes to make the citra app standalone (i.e. not dependent on the current brew installation).
 # To do this, the absolute references to each and every QT framework must be re-written to point to the local frameworks
@@ -96,6 +101,7 @@ ls .
 cat > ${REV_NAME_ALT}citra.app/Contents/MacOS/citra <<EOL
 #!/usr/bin/env bash
 cd "\`dirname "\$0"\`"
+ls .
 chmod +x citra-bin
 open citra-bin --args "\$@"
 EOL
