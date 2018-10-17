@@ -515,7 +515,6 @@ void ThreadingShutdown() {
     }
     thread_list.clear();
     ready_queue.clear();
-    ClearProcessList();
 }
 
 const std::vector<SharedPtr<Thread>>& GetThreadList() {

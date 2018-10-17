@@ -206,14 +206,6 @@ private:
     KernelSystem& kernel;
 };
 
-void ClearProcessList();
-
-/// Retrieves a process from the current list of processes.
-SharedPtr<Process> GetProcessById(u32 process_id);
-
-/// Gets the process list size. Called by svcGetSystemInfo
-s64 GetProcessListSize();
-
 extern SharedPtr<Process> g_current_process;
 
 } // namespace Kernel

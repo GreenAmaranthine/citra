@@ -557,11 +557,11 @@ void FS_USER::GetFormatInfo(Kernel::HLERequestContext& ctx) {
 void FS_USER::GetProgramLaunchInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x82F, 1, 0};
     u32 process_id{rp.Pop<u32>()};
+    IPC::RequestBuilder rb{rp.MakeBuilder(5, 0)};
     LOG_DEBUG(Service_FS, "process_id={}", process_id);
     // TODO: The real FS service manages its own process list and only checks the processes
     // that were registered with the 'fs:REG' service.
-    auto process{Kernel::GetProcessById(process_id)};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(5, 0)};
+    auto process{system.Kernel().GetProcessById(process_id)};
     if (!process) {
         // Note: In this case, the rest of the parameters are not changed but the command header
         // remains the same.

@@ -7,6 +7,7 @@
 #include <atomic>
 #include <memory>
 #include <string>
+#include <vector>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include "common/common_types.h"
 #include "core/hle/result.h"
@@ -180,10 +181,16 @@ public:
 
     u32 GenerateObjectID();
 
+    /// Retrieves a process from the current list of processes.
+    SharedPtr<Process> GetProcessById(u32 process_id) const;
+
 private:
     std::unique_ptr<ResourceLimitList> resource_limits;
     std::atomic<u32> next_object_id{};
     u32 next_process_id{};
+
+    // Lists all processes that exist in the current session.
+    std::vector<SharedPtr<Process>> process_list;
 };
 
 } // namespace Kernel
