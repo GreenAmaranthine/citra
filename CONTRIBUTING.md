@@ -6,7 +6,7 @@ If you believe you have a valid issue report, please post the log and build vers
 
 # Contributing
 
-Citra is a brand new project, so we have a great opportunity to keep things clean and well organized early on. As such, coding style is very important when making commits.
+Citra is a brand new project, so we have a great opportunity to keep things clean and well organized early on. As such, coding style is very important when making commits. We run clang-format on our CI to check the code. Please use it to format your code when contributing. However, it doesn't cover all the rules below. Some of them aren't very strict rules since we want to be flexible and we understand that under certain circumstances some of them can be counterproductive. Just try to follow as many of them as possible.
 
 # Using clang format (version 6.0)
 When generating the native build script for your toolset, cmake will try to find the correct version of clang format (or will download it on windows). Before running cmake, please install clang format version 6.0 for your platform as follows:
