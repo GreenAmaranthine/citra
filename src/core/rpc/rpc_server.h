@@ -12,6 +12,8 @@
 
 namespace RPC {
 
+class PacketHeader;
+
 class RPCServer {
 public:
     RPCServer();

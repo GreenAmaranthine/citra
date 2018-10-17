@@ -4,11 +4,11 @@
 
 #pragma once
 
-#include "core/rpc/packet.h"
-#include "core/rpc/zmq_server.h"
+#include <memory>
 
 namespace RPC {
 
+class Packet;
 class RPCServer;
 
 class Server {
@@ -19,8 +19,10 @@ public:
     void NewRequestCallback(std::unique_ptr<RPC::Packet> new_request);
 
 private:
+    struct Impl;
+    std::shared_ptr<Impl> impl;
+
     RPCServer& rpc_server;
-    std::unique_ptr<ZMQServer> zmq_server;
 };
 
 } // namespace RPC

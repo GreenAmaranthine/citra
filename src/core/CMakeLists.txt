@@ -505,8 +505,6 @@ if (ENABLE_SCRIPTING)
         rpc/rpc_server.h
         rpc/server.cpp
         rpc/server.h
-        rpc/zmq_server.cpp
-        rpc/zmq_server.h
     )
 endif()
 
