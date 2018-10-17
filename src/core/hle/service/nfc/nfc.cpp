@@ -5,6 +5,7 @@
 #include "common/file_util.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/lock.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/hle/service/nfc/nfc_m.h"
 #include "core/hle/service/nfc/nfc_u.h"
@@ -129,8 +130,6 @@ void Module::Interface::StartTagScanning(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetTagInfo(Kernel::HLERequestContext& ctx) {
     TagInfo tag_info{};
-
-    nfc->mutex.lock();
     tag_info.id_offset_size = 0x7;
     tag_info.unk_x3 = 0x02;
     tag_info.id[0] = nfc->encrypted_data[0];
@@ -140,7 +139,6 @@ void Module::Interface::GetTagInfo(Kernel::HLERequestContext& ctx) {
     tag_info.id[4] = nfc->encrypted_data[5];
     tag_info.id[5] = nfc->encrypted_data[6];
     tag_info.id[6] = nfc->encrypted_data[7];
-    nfc->mutex.unlock();
 
     IPC::ResponseBuilder rb{ctx, 0x11, (sizeof(TagInfo) / sizeof(u32)) + 1, 0};
     rb.Push(RESULT_SUCCESS);
@@ -149,12 +147,9 @@ void Module::Interface::GetTagInfo(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetAmiiboConfig(Kernel::HLERequestContext& ctx) {
     AmiiboConfig amiibo_config{};
-
-    nfc->mutex.lock();
     amiibo_config.lastwritedate_year = AMIIBO_YEAR_FROM_DATE(nfc->decrypted_data[0x32]);
     amiibo_config.lastwritedate_month = AMIIBO_MONTH_FROM_DATE(nfc->decrypted_data[0x32]);
     amiibo_config.lastwritedate_day = AMIIBO_DAY_FROM_DATE(nfc->decrypted_data[0x32]);
-
     amiibo_config.write_counter = (nfc->decrypted_data[0xB4] << 8) | nfc->decrypted_data[0xB5];
     amiibo_config.characterID[0] = nfc->decrypted_data[0x1DC];
     amiibo_config.characterID[1] = nfc->decrypted_data[0x1DD];
@@ -164,7 +159,6 @@ void Module::Interface::GetAmiiboConfig(Kernel::HLERequestContext& ctx) {
     amiibo_config.type = nfc->decrypted_data[0x1DF];
     amiibo_config.pagex4_byte3 = nfc->decrypted_data[0x2B]; // raw page 0x4 byte 0x3, dec byte
     amiibo_config.appdata_size = 0xD8;
-    nfc->mutex.unlock();
 
     IPC::ResponseBuilder rb{ctx, 0x18, 17, 0};
     rb.Push(RESULT_SUCCESS);
@@ -174,8 +168,6 @@ void Module::Interface::GetAmiiboConfig(Kernel::HLERequestContext& ctx) {
 void Module::Interface::GetAmiiboSettings(Kernel::HLERequestContext& ctx) {
     AmiiboSettings amsettings{};
     ResultCode result{RESULT_SUCCESS};
-
-    nfc->mutex.lock();
     if (!(nfc->decrypted_data[0x2C] & 0x10)) {
         result = ResultCode(0xC8A17628); // uninitialised
     } else {
@@ -187,12 +179,10 @@ void Module::Interface::GetAmiiboSettings(Kernel::HLERequestContext& ctx) {
                            0xF; // todo: we should only load some of these values if the unused
                                 // flag bits are set correctly https://3dbrew.org/wiki/Amiibo
         amsettings.countrycodeid = nfc->decrypted_data[0x2D];
-
         amsettings.setupdate_year = AMIIBO_YEAR_FROM_DATE(nfc->decrypted_data[0x30]);
         amsettings.setupdate_month = AMIIBO_MONTH_FROM_DATE(nfc->decrypted_data[0x30]);
         amsettings.setupdate_day = AMIIBO_DAY_FROM_DATE(nfc->decrypted_data[0x30]);
     }
-    nfc->mutex.unlock();
 
     IPC::ResponseBuilder rb{ctx, 0x17, (sizeof(AmiiboSettings) / sizeof(u32)) + 1, 0};
     rb.Push(RESULT_SUCCESS);
@@ -200,22 +190,18 @@ void Module::Interface::GetAmiiboSettings(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::StopTagScanning(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x06, 0, 0};
-
     nfc->nfc_tag_state = TagState::NotScanning;
 
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x06, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
     LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
 void Module::Interface::LoadAmiiboData(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x07, 0, 0};
-
     nfc->nfc_tag_state = TagState::TagDataLoaded;
 
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x07, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
     LOG_WARNING(Service_NFC, "(STUBBED) called");
@@ -235,9 +221,7 @@ void Module::Interface::GetTagInRangeEvent(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetTagOutOfRangeEvent(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x0C, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    IPC::ResponseBuilder rb{ctx, 0x0C, 1, 2};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(nfc->tag_out_of_range_event);
 }
@@ -259,14 +243,11 @@ void Module::Interface::OpenAppData(Kernel::HLERequestContext& ctx) {
     u32 app_id{rp.Pop<u32>()};
 
     ResultCode result{RESULT_SUCCESS};
-
-    nfc->mutex.lock();
     if (memcmp(&app_id, &nfc->decrypted_data[0xB6], sizeof(app_id))) {
         result = ResultCode(0xC8A17638); // app id mismatch
     } else if (!(nfc->decrypted_data[0x2C] & 0x20)) {
         result = ResultCode(0xC8A17628); // uninitialised
     }
-    nfc->mutex.unlock();
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(result);
@@ -278,10 +259,7 @@ void Module::Interface::ReadAppData(Kernel::HLERequestContext& ctx) {
     ASSERT(size >= 0xD8);
 
     std::vector<u8> buffer(size);
-
-    nfc->mutex.lock();
     std::memcpy(buffer.data(), &nfc->decrypted_data[0xDC], size);
-    nfc->mutex.unlock();
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
@@ -310,9 +288,8 @@ void Module::Interface::GetIdentificationBlock(Kernel::HLERequestContext& ctx) {
     }
 
     IdentificationBlockRaw identification_block_raw{};
-    nfc->mutex.lock();
     std::memcpy(&identification_block_raw, &nfc->encrypted_data[0x54], 0x7);
-    nfc->mutex.unlock();
+
     IdentificationBlockReply identification_block_reply{};
     identification_block_reply.char_id = identification_block_raw.char_id;
     identification_block_reply.char_variant = identification_block_raw.char_variant;
@@ -331,10 +308,9 @@ Module::Interface::Interface(std::shared_ptr<Module> nfc, const char* name)
 Module::Interface::~Interface() = default;
 
 void Module::Interface::LoadAmiibo(const std::string& path) {
+    std::lock_guard lock{HLE::g_hle_lock};
     LOG_INFO(Service_NFC, "Loading amiibo {}", path);
-
     FileUtil::IOFile file{path, "rb"};
-    nfc->mutex.lock();
     nfc->encrypted_data.fill(0);
     nfc->decrypted_data.fill(0);
     file.ReadBytes(nfc->encrypted_data.data(), nfc->encrypted_data.size());
@@ -342,18 +318,15 @@ void Module::Interface::LoadAmiibo(const std::string& path) {
                         nfc->decrypted_data.data(), nfc->decrypted_data.size())) {
         LOG_ERROR(Service_NFC, "Failed to decrypt amiibo {}", path);
     }
-    nfc->mutex.unlock();
     nfc->nfc_tag_state = Service::NFC::TagState::TagInRange;
     nfc->tag_in_range_event->Signal();
 }
 
 void Module::Interface::RemoveAmiibo() {
+    std::lock_guard lock{HLE::g_hle_lock};
     LOG_INFO(Service_NFC, "Removing amiibo");
-
-    nfc->mutex.lock();
     nfc->encrypted_data.fill(0);
     nfc->decrypted_data.fill(0);
-    nfc->mutex.unlock();
     nfc->nfc_tag_state = Service::NFC::TagState::TagOutOfRange;
     nfc->tag_out_of_range_event->Signal();
 }

@@ -257,7 +257,7 @@ static bool BlitTextures(GLuint src_tex, const MathUtil::Rectangle<u32>& src_rec
     OpenGLState prev_state{OpenGLState::GetCurState()};
     SCOPE_EXIT({ prev_state.Apply(); });
 
-    OpenGLState state{};
+    OpenGLState state;
     state.draw.read_framebuffer = read_fb_handle;
     state.draw.draw_framebuffer = draw_fb_handle;
     state.Apply();
@@ -315,7 +315,7 @@ static bool FillSurface(const Surface& surface, const u8* fill_data,
     OpenGLState prev_state{OpenGLState::GetCurState()};
     SCOPE_EXIT({ prev_state.Apply(); });
 
-    OpenGLState state{};
+    OpenGLState state;
     state.scissor.enabled = true;
     state.scissor.x = static_cast<GLint>(fill_rect.left);
     state.scissor.y = static_cast<GLint>(fill_rect.bottom);
@@ -1037,7 +1037,7 @@ void RasterizerCache::ConvertD24S8toABGR(GLuint src_tex, const MathUtil::Rectang
     OpenGLState prev_state{OpenGLState::GetCurState()};
     SCOPE_EXIT({ prev_state.Apply(); });
 
-    OpenGLState state{};
+    OpenGLState state;
     state.draw.read_framebuffer = read_framebuffer.handle;
     state.draw.draw_framebuffer = draw_framebuffer.handle;
     state.Apply();
@@ -1306,7 +1306,7 @@ const CachedTextureCube& RasterizerCache::GetTextureCube(const TextureCubeConfig
     OpenGLState prev_state{OpenGLState::GetCurState()};
     SCOPE_EXIT({ prev_state.Apply(); });
 
-    OpenGLState state{};
+    OpenGLState state;
     state.draw.read_framebuffer = read_framebuffer.handle;
     state.draw.draw_framebuffer = draw_framebuffer.handle;
     state.ResetTexture(cube.texture.handle);

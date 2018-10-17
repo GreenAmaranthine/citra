@@ -25,8 +25,8 @@ namespace Service::MCU {
 void Module::Interface::GetBatteryLevel(Kernel::HLERequestContext& ctx, u16 id) {
     IPC::ResponseBuilder rb{ctx, id, 2, 0};
     rb.Push(RESULT_SUCCESS);
-    int pct{};
-    SDL_PowerState state{SDL_GetPowerInfo(nullptr, &pct)};
+    int pct;
+    SDL_GetPowerInfo(nullptr, &pct);
     rb.Push<u8>(static_cast<u8>(pct == -1 ? 0x64 : pct));
 }
 

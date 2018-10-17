@@ -82,8 +82,8 @@ private:
     std::unique_ptr<UserCallbacks> cb;
     std::unique_ptr<Dynarmic::A32::Jit> MakeJit();
 
-    Dynarmic::A32::Jit* jit{};
-    Memory::PageTable* current_page_table{};
+    Dynarmic::A32::Jit* jit;
+    Memory::PageTable* current_page_table;
     std::map<Memory::PageTable*, std::unique_ptr<Dynarmic::A32::Jit>> jits;
     std::shared_ptr<State> state;
 };
