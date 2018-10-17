@@ -1,71 +1,69 @@
 language: cpp
 matrix:
   include:
-    - os: linux
-      env: NAME="clang-format"
-      dist: trusty
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-6.0
-            - ubuntu-toolchain-r-test
-          packages:
-            - clang-format-6.0
-      script: "./.travis/clang-format/script.sh"
-    - os: linux
-      env: NAME="linux build"
-      sudo: required
-      dist: trusty
-      services: docker
-      addons:
-        apt:
-          packages:
-            - p7zip-full
-      install: "./.travis/linux/deps.sh"
-      script: "./.travis/linux/build.sh"
-      after_success: "./.travis/linux/upload.sh"
-      cache: ccache
-    - os: osx
-      env: NAME="macos build"
-      sudo: false
-      osx_image: xcode10
-      install: "./.travis/macos/deps.sh"
-      script: "./.travis/macos/build.sh"
-      after_success: "./.travis/macos/upload.sh"
-      cache: ccache
-    - os: linux
-      env: NAME="linux build (frozen versions of dependencies)"
-      sudo: required
-      dist: trusty
-      services: docker
-      cache: ccache
-      script: "./.travis/linux-frozen/build.sh"
-    - os: linux
-      env: NAME="MinGW build"
-      sudo: required
-      dist: trusty
-      services: docker
-      addons:
-        apt:
-          packages:
-            - p7zip-full
-      install: "./.travis/linux-mingw/deps.sh"
-      script: "./.travis/linux-mingw/build.sh"
-      after_success: "./.travis/linux-mingw/upload.sh"
-      cache: ccache
-
+  - os: linux
+    env: NAME="clang-format"
+    dist: trusty
+    addons:
+      apt:
+        sources:
+        - llvm-toolchain-trusty-6.0
+        - ubuntu-toolchain-r-test
+        packages:
+        - clang-format-6.0
+    script: "./.travis/clang-format/script.sh"
+  - os: linux
+    env: NAME="linux build"
+    sudo: required
+    dist: trusty
+    services: docker
+    addons:
+      apt:
+        packages:
+        - p7zip-full
+    install: "./.travis/linux/deps.sh"
+    script: "./.travis/linux/build.sh"
+    after_success: "./.travis/linux/upload.sh"
+    cache: ccache
+  - os: osx
+    env: NAME="macos build"
+    sudo: false
+    osx_image: xcode10
+    install: "./.travis/macos/deps.sh"
+    script: "./.travis/macos/build.sh"
+    after_success: "./.travis/macos/upload.sh"
+    cache: ccache
+  - os: linux
+    env: NAME="linux build (frozen versions of dependencies)"
+    sudo: required
+    dist: trusty
+    services: docker
+    cache: ccache
+    script: "./.travis/linux-frozen/build.sh"
+  - os: linux
+    env: NAME="MinGW build"
+    sudo: required
+    dist: trusty
+    services: docker
+    addons:
+      apt:
+        packages:
+        - p7zip-full
+    install: "./.travis/linux-mingw/deps.sh"
+    script: "./.travis/linux-mingw/build.sh"
+    after_success: "./.travis/linux-mingw/upload.sh"
+    cache: ccache
 before_deploy:
-    # Set up git user name and tag this commit
-    - git config --local user.name "Valentin Vanelslande"
-    - git config --local user.email "valentinvanelslandeacnl@gmail.com"
-    - git tag "$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)"
-
+- git config --local user.name "Valentin Vanelslande"
+- git config --local user.email "valentinvanelslandeacnl@gmail.com"
+- git tag "$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)"
 deploy:
   provider: releases
   api_key:
-    secure: sQT0tCANBgcfFF7DSiqrwiFwxqp/ZExwguBcrOYjBNaB/0YmOkTFAa7kzvbMeRoQTcwyxhiHwf3EoYjEiCkQP0wwfsymCNrW+F7QWbCiY2aNR5y5nlZZLbRmVqyDSjoV3PaYvN7S/D187e9YGLNjMS73lFp71qLJbrp5JtGZewasCNsUT80ZnCOkZ1lL7uFzT1HfMEz+ULdRY7HRTAbH5qkHInkiX4JYAoTs8dUJnFw4s53sEs9ky0eBh93Z8ELW8AeXyxrbbMbA8qICvfyXaKqGcCjGFzEJ5NbyjIcU8ISvKbvRuZ135+QP0FbH+w/yFaNo/3BnS5ZsGmvXUKgHdXUY+1hE6Efi83MPhjsf3adpD5uW0z6Ob00JQ1hOnbLPqR/kBLLhsVsEUhk8yyWyNYbBBRc9DR5uqrTqYvkjfzUUa/oU5fmtJhjA1l4645D1VYQgLhukDqQ1V+2tSxM8et1pKE6/D1TcggznghgSy9iARfNFpRvghdw7R9koU6FkTaAh9Fft5kB6pUqW/ru7G8nG/cpX/gn1c+2ghe/6ZEV9RF+RxndF4lzLe0QhRUAhow7MP3FuYyW1gvlTAy6K5SjeyXQBGFCKkSrZDzfy2ZylgT2W/AObfkhrjCnyfaOyDEnfeFKFQGPnngR0fId4zc0inIOyppKCVPynjIFEgLg=
+    secure: ThTJQu1qfg3R1BzePc6pIkQsXO1LbhHPGxpkMAlvF0Dle3bka7c8Wqka1QLQ7XOdzVhLeSycyZKEaIZhwrzqd03EwaWa7/TC0QbmNbEHfe+I5XOdZNpFlfOl4kZvUVRKuU/INhD6ffRWTdDDV2lKZ9ZgsuB24jOrNpQt3JFzeSKQIKNSU+aaeBumhmlmFHUJ8D7rHMEZAI4SQIxhgjq/DSz/PxP6rAuRMKlvO6Mr9flOAzsuQlcmIcj/VtJePv2+0dPl8ZcaSuEvdKK0xVwUYC0aEdDikN1qq8wRVUnZ6vXAI2EhaVwcPYxOGJZkxgR2F4NnN5WpzAw39nhn3YguvB6XNobzFehhllwXhLAH9xGOadcZkF2J7gHekMg4K0tM19UsVc4m3pr3AQq320XDMqm3n+3tRCPAUQKT2/FJVNpfLcnYOymlxQ/xXtQtWBZsnm5nG+lIvi1x9Hru9A3zOQe02miPmZ6SpVhBgkXtwamoN4EtrZke3ahLErjWyQ+TWxaXBEYraw1IEhlFMRLVPtqU/2s4b7fRcVqzs5g5K3pcU8eGyLu/42hoMtYm9xI44M46vWZBXLIg2TsuUQDCQFzro9YK20P/GBj4A4kMRwBvTP+7RPQyQyBtoXzt9xKpfxWA1YVbQW6mgt0KGRRCCIZv6GW7vexn2ShLT+aK/s0=
   file_glob: true
   file: "artifacts/*"
   skip_cleanup: true
   on:
+    repo: citra-valentin/citra
     branch: master
