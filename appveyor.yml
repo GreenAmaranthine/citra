@@ -155,4 +155,3 @@ artifacts:
     type: zip
   - path: $(BUILD_UPDATE)
     name: update
-
