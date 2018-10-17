@@ -26,7 +26,7 @@ namespace {
 // normal key dumped from a Wii U solving the equation:
 // NormalKey = (((KeyX ROL 2) XOR KeyY) + constant) ROL 87
 // On a real 3DS the generation for the normal key is hardware based, and thus the constant can't
-// get dumped . generated normal keys are also not accesible on a 3DS. The used formula for
+// get dumped. generated normal keys are also not accesible on a 3DS. The used formula for
 // calculating the constant is a software implementation of what the hardware generator does.
 constexpr AESKey generator_constant{{0x1F, 0xF9, 0xE9, 0xAA, 0xC5, 0xFE, 0x04, 0x08, 0x02, 0x45,
                                      0x91, 0xDC, 0x5D, 0x52, 0x76, 0x8A}};
@@ -75,7 +75,7 @@ struct KeySlot {
         if (x && y) {
             normal = Lrot128(Add128(Xor128(Lrot128(*x, 2), *y), generator_constant), 87);
         } else {
-            normal = {};
+            normal.reset();
         }
     }
 
@@ -204,13 +204,13 @@ void LoadBootromKeys() {
 }
 
 void LoadNativeFirmKeysOld3DS() {
-    // Use the save mode native firm instead of the normal mode since there are only 2 version of it
+    // Use the safe mode native firm instead of the normal mode since there are only 2 version of it
     // and thus we can use fixed offsets
-    constexpr u64 save_mode_native_firm_id{0x00040138'00000003};
+    constexpr u64 safe_mode_native_firm_id{0x00040138'00000003};
 
     // TODO: Add the 0x25 KeyX that gets initalized by native_firm
 
-    FileSys::NCCHArchive archive{save_mode_native_firm_id, Service::FS::MediaType::NAND};
+    FileSys::NCCHArchive archive{safe_mode_native_firm_id, Service::FS::MediaType::NAND};
     std::array<char, 8> exefs_filepath{'.', 'f', 'i', 'r', 'm', 0, 0, 0};
     FileSys::Path file_path{FileSys::MakeNCCHFilePath(
         FileSys::NCCHFileOpenType::NCCHData, 0, FileSys::NCCHFilePathType::ExeFS, exefs_filepath)};
@@ -223,7 +223,7 @@ void LoadNativeFirmKeysOld3DS() {
     auto firm{std::move(file_result).Unwrap()};
     const std::size_t size{firm->GetSize()};
     if (size != 843776) {
-        LOG_ERROR(HW_AES, "save mode native firm has wrong size {}", size);
+        LOG_ERROR(HW_AES, "safe mode native firm has wrong size {}", size);
         return;
     }
     std::vector<u8> firm_buffer(size);
@@ -244,7 +244,7 @@ void LoadNativeFirmKeysOld3DS() {
         return key;
     }};
 
-    for (std::size_t key_slot{0}; key_slot < 6; ++key_slot) {
+    for (std::size_t key_slot{}; key_slot < 6; ++key_slot) {
         AESKey key{LoadCommonKey(key_slot)};
         common_key_y_slots[key_slot] = key;
         LOG_DEBUG(HW_AES, "Loaded common key{}: {}", key_slot, KeyToString(key));
@@ -254,8 +254,8 @@ void LoadNativeFirmKeysOld3DS() {
 void LoadNativeFirmKeysNew3DS() {
     // The first 0x10 bytes of the secret_sector are used as a key to decrypt a KeyX from the
     // native_firm
-    const std::string filepath = FileUtil::GetUserPath(D_SYSDATA_IDX) + SECRET_SECTOR;
-    auto secret{FileUtil::IOFile(filepath, "rb")};
+    const std::string filepath{FileUtil::GetUserPath(D_SYSDATA_IDX) + SECRET_SECTOR};
+    FileUtil::IOFile secret{filepath, "rb"};
     if (!secret) {
         return;
     }
@@ -264,16 +264,16 @@ void LoadNativeFirmKeysNew3DS() {
     AESKey secret_key;
     secret.ReadArray(secret_key.data(), secret_key.size());
 
-    // Use the save mode native firm instead of the normal mode since there are only 1 version of it
+    // Use the safe mode native firm instead of the normal mode since there are only 1 version of it
     // and thus we can use fixed offsets
-    constexpr u64 save_mode_native_firm_id{0x00040138'20000003};
+    constexpr u64 safe_mode_native_firm_id{0x00040138'20000003};
 
     // TODO: Add the 0x25 KeyX that gets initalized by native_firm
 
     // TODO: Add the 0x18 - 0x1F KeyX that gets initalized by native_firm. This probably
     // requires the normal native firm with version > 9.6.0-X
 
-    FileSys::NCCHArchive archive(save_mode_native_firm_id, Service::FS::MediaType::NAND);
+    FileSys::NCCHArchive archive{safe_mode_native_firm_id, Service::FS::MediaType::NAND};
     std::array<char, 8> exefs_filepath{'.', 'f', 'i', 'r', 'm', 0, 0, 0};
     FileSys::Path file_path{FileSys::MakeNCCHFilePath(
         FileSys::NCCHFileOpenType::NCCHData, 0, FileSys::NCCHFilePathType::ExeFS, exefs_filepath)};
@@ -294,7 +294,7 @@ void LoadNativeFirmKeysNew3DS() {
     auto MakeMagic{
         [](char a, char b, char c, char d) -> u32 { return a | b << 8 | c << 16 | d << 24; }};
     if (MakeMagic('F', 'I', 'R', 'M') != header.magic) {
-        LOG_ERROR(HW_AES, "N3DS SAVE MODE Native Firm has wrong header {}", header.magic);
+        LOG_ERROR(HW_AES, "N3DS safe MODE Native Firm has wrong header {}", header.magic);
         return;
     }
 
@@ -442,8 +442,8 @@ void InitKeys() {
     if (initialized)
         return;
     LoadBootromKeys();
-    LoadNativeFirmKeysOld3DS();
-    LoadNativeFirmKeysNew3DS();
+    // LoadNativeFirmKeysOld3DS();
+    // LoadNativeFirmKeysNew3DS();
     LoadPresetKeys();
     initialized = true;
 }
