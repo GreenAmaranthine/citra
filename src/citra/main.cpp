@@ -1713,7 +1713,7 @@ void GMainWindow::SetupUIStrings() {
         setWindowTitle(
             QString("Citra Valentin %1-%2").arg(Common::g_scm_branch, Common::g_scm_desc));
     } else {
-        setWindowTitle(QString("Citra Valentin %1-%2| %3")
+        setWindowTitle(QString("Citra Valentin %1-%2 | %3")
                            .arg(Common::g_scm_branch, Common::g_scm_desc, game_title));
     }
 }
