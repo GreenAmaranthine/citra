@@ -15,7 +15,6 @@ const char g_scm_rev[]{GIT_REV};
 const char g_scm_branch[]{GIT_BRANCH};
 const char g_scm_desc[]{GIT_DESC};
 const char g_build_date[]{BUILD_DATE};
-const int g_build_version{BUILD_VERSION};
 
 } // namespace Common
 
