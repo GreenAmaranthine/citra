@@ -2,6 +2,7 @@
 
 Citra
 ==============
+[![Travis CI Build Status](https://travis-ci.org/citra-valentin/citra.svg?branch=master)](https://travis-ci.org/citra-valentin/citra)
 [![AppVeyor CI Build Status](https://ci.appveyor.com/api/projects/status/k213m9mio0bhwo6a?svg=true)](https://ci.appveyor.com/project/valentinvanelslande/citra)
 
 Citra is an open-source Nintendo 3DS emulator written in C++. It is written with portability in mind, with builds for Windows.
