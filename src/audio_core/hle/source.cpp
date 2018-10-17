@@ -157,7 +157,7 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
                   static_cast<std::size_t>(state.mono_or_stereo));
     }
 
-    u32_dsp play_position = {};
+    u32_dsp play_position{};
     if (config.play_position_dirty && config.play_position != 0) {
         config.play_position_dirty.Assign(0);
         play_position = config.play_position;

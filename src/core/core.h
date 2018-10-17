@@ -223,7 +223,7 @@ private:
     std::shared_ptr<SharedPage::Handler> shared_page_handler;
 
 #ifdef ENABLE_SCRIPTING
-    /// RPC Server for scripting support
+    /// RPC server for scripting support
     std::unique_ptr<RPC::RPCServer> rpc_server;
 #endif
 
