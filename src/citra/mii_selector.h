@@ -21,7 +21,7 @@ public:
     explicit MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiConfig& config,
                                HLE::Applets::MiiResult& result);
     ~MiiSelectorDialog();
-    void ShowNoMiis(HLE::Applets::MiiResult& result);
+    void ShowNoSelectableMiiCharacters(HLE::Applets::MiiResult& result);
 
 private:
     std::unique_ptr<Ui::MiiSelectorDialog> ui;

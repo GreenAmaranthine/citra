@@ -27,7 +27,7 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
 
     auto archive_result{extdata_archive_factory.Open(Service::PTM::ptm_shared_extdata_id)};
     if (!archive_result.Succeeded()) {
-        ShowNoMiis(result);
+        ShowNoSelectableMiiCharacters(result);
         return;
     }
 
@@ -39,7 +39,7 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
 
     auto file_result{archive->OpenFile(file_path, mode)};
     if (!file_result.Succeeded()) {
-        ShowNoMiis(result);
+        ShowNoSelectableMiiCharacters(result);
         return;
     }
 
@@ -52,7 +52,7 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
     for (int i{}; i < 100; ++i) {
         file->Read(offset, mii.size(), mii.data());
         std::memcpy(&id, mii.data(), sizeof(u32));
-        if (id != 0) {
+        if (id != 0 && config.user_mii_whitelist[i] != 0) {
             std::u16string name(10, '\0');
             std::memcpy(&name[0], mii.data() + 0x1A, 0x14);
             miis.emplace(ui->mii->count(), mii);
@@ -62,7 +62,7 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
     }
 
     if (miis.empty()) {
-        ShowNoMiis(result);
+        ShowNoSelectableMiiCharacters(result);
         return;
     }
 
@@ -70,7 +70,12 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
         ui->mii->setCurrentIndex(static_cast<int>(config.initially_selected_mii_index));
     }
 
-    connect(ui->ok, &QPushButton::released, this, [&] {
+    connect(ui->cancel, &QPushButton::released, this, [&] {
+        result.return_code = 1;
+        close();
+    });
+
+    connect(ui->confirm, &QPushButton::released, this, [&] {
         auto mii{miis.at(ui->mii->currentIndex())};
         std::memcpy(result.selected_mii_data.data(), mii.data(), mii.size());
         result.mii_data_checksum = boost::crc<16, 0x1021, 0, 0, false, false>(
@@ -79,18 +84,16 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
         result.selected_guest_mii_index = 0xFFFFFFFF;
         close();
     });
-
-    connect(ui->cancel, &QPushButton::released, this, [&] {
-        result.return_code = 1;
-        close();
-    });
 }
 
 MiiSelectorDialog::~MiiSelectorDialog() {}
 
-void MiiSelectorDialog::ShowNoMiis(HLE::Applets::MiiResult& result) {
-    QMessageBox::critical(nullptr, "Mii Selector",
-                          "You don't have Miis.\nCreate a Mii with Mii Maker.");
-    result.return_code = 1;
+void MiiSelectorDialog::ShowNoSelectableMiiCharacters(HLE::Applets::MiiResult& result) {
+    QMessageBox message_box;
+    message_box.setWindowTitle("Mii Selector");
+    message_box.setText("There are no selectable<br>Mii characters.");
+    message_box.addButton("Back", QMessageBox::ButtonRole::AcceptRole);
+    message_box.exec();
+    result.return_code = 0xFFFFFFFF;
     QMetaObject::invokeMethod(this, "close", Qt::QueuedConnection);
 }

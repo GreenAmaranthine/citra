@@ -1573,7 +1573,7 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, const std::stri
         break;
     }
 
-    QMessageBox message_box{};
+    QMessageBox message_box;
     message_box.setWindowTitle(title);
     message_box.setText(message);
     message_box.setIcon(QMessageBox::Icon::Critical);
