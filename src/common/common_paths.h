@@ -18,7 +18,7 @@
 #define DATA_DIR "citra-emu"
 #endif
 
-// Subdirs in the user directory returned by GetUserPath(FileUtil::UserPath::UserDir)
+// Subdirs in the user directory returned by GetUserPath(UserPath::UserDir)
 #define CONFIG_DIR "config"
 #define SDMC_DIR "sdmc"
 #define NAND_DIR "nand"
