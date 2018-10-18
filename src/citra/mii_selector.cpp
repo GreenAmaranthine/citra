@@ -22,7 +22,7 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
     std::u16string title{reinterpret_cast<const char16_t*>(config.title.data())};
     setWindowTitle(title.empty() ? "Mii Selector" : QString::fromStdU16String(title));
 
-    std::string nand_directory{FileUtil::GetUserPath(D_NAND_IDX)};
+    std::string nand_directory{FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)};
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory{nand_directory, true};
 
     auto archive_result{extdata_archive_factory.Open(Service::PTM::ptm_shared_extdata_id)};

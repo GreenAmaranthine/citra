@@ -126,7 +126,7 @@ void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
 }
 
 Module::Module() {
-    std::string nand_directory{FileUtil::GetUserPath(D_NAND_IDX)};
+    std::string nand_directory{FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)};
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory{nand_directory, true};
 
     // Open the SharedExtSaveData archive 0xF000000B and create the gamecoin.dat file if it doesn't
@@ -159,7 +159,7 @@ Module::Module() {
 }
 
 void SetPlayCoins(u16 play_coins) {
-    std::string nand_directory{FileUtil::GetUserPath(D_NAND_IDX)};
+    std::string nand_directory{FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)};
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory{nand_directory, true};
 
     FileSys::Path archive_path{ptm_shared_extdata_id};

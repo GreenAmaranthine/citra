@@ -25,7 +25,7 @@ static void CheatTickCallback(u64, int cycles_late) {
 }
 
 void Init() {
-    std::string cheats_dir{FileUtil::GetUserPath(D_USER_IDX) + "cheats"};
+    std::string cheats_dir{FileUtil::GetUserPath(FileUtil::UserPath::UserDir) + "cheats"};
     if (!FileUtil::Exists(cheats_dir)) {
         FileUtil::CreateDir(cheats_dir);
     }
@@ -44,7 +44,7 @@ void RefreshCheats() {
 }
 
 static std::string GetFilePath() {
-    return fmt::format("{}cheats/{:016X}.txt", FileUtil::GetUserPath(D_USER_IDX),
+    return fmt::format("{}cheats/{:016X}.txt", FileUtil::GetUserPath(FileUtil::UserPath::UserDir),
                        Kernel::g_current_process->codeset->program_id);
 }
 

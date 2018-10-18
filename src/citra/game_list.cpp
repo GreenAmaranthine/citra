@@ -484,7 +484,8 @@ void GameList::AddGamePopup(QMenu& context_menu, QStandardItem* child) {
     open_save_location->setVisible(0x0004000000000000 <= program_id &&
                                    program_id <= 0x00040000FFFFFFFF);
 
-    std::string sdmc_dir{FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/")};
+    std::string sdmc_dir{
+        FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir, Settings::values.sdmc_dir + "/")};
     open_save_location->setEnabled(FileUtil::Exists(
         FileSys::ArchiveSource_SDSaveData::GetSaveDataPathFor(sdmc_dir, program_id)));
 
@@ -752,11 +753,12 @@ void GameListWorker::run() {
         if (game_dir.path == "INSTALLED") {
             // Add normal titles
             {
-                QString path{QString::fromStdString(
-                    FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/") +
-                    "Nintendo "
-                    "3DS/00000000000000000000000000000000/"
-                    "00000000000000000000000000000000/title/00040000")};
+                QString path{
+                    QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir,
+                                                                 Settings::values.sdmc_dir + "/") +
+                                           "Nintendo "
+                                           "3DS/00000000000000000000000000000000/"
+                                           "00000000000000000000000000000000/title/00040000")};
                 watch_list.append(path);
                 GameListDir* game_list_dir{
                     new GameListDir(game_dir, GameListItemType::InstalledDir)};
@@ -765,11 +767,12 @@ void GameListWorker::run() {
             }
             // Add demos
             {
-                QString path{QString::fromStdString(
-                    FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/") +
-                    "Nintendo "
-                    "3DS/00000000000000000000000000000000/"
-                    "00000000000000000000000000000000/title/00040002")};
+                QString path{
+                    QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir,
+                                                                 Settings::values.sdmc_dir + "/") +
+                                           "Nintendo "
+                                           "3DS/00000000000000000000000000000000/"
+                                           "00000000000000000000000000000000/title/00040002")};
                 watch_list.append(path);
                 GameListDir* game_list_dir{
                     new GameListDir(game_dir, GameListItemType::InstalledDir)};
@@ -777,8 +780,9 @@ void GameListWorker::run() {
                 AddFstEntriesToGameList(path.toStdString(), 2, game_list_dir);
             }
         } else if (game_dir.path == "SYSTEM") {
-            QString path{QString::fromStdString(FileUtil::GetUserPath(D_NAND_IDX)) +
-                         "00000000000000000000000000000000/title/00040010"};
+            QString path{
+                QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)) +
+                "00000000000000000000000000000000/title/00040010"};
             watch_list.append(path);
             GameListDir* game_list_dir{new GameListDir(game_dir, GameListItemType::SystemDir)};
             emit DirEntryReady({game_list_dir});

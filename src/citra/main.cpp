@@ -92,12 +92,16 @@ static void HandleDiscordError(int error_code, const char* message) {
 
 const int GMainWindow::max_recent_files_item;
 
-GMainWindow::GMainWindow() : config{new Config()}, emu_thread{nullptr} {
+static void InitializeLogging() {
     Log::Filter log_filter;
     log_filter.ParseFilterString(Settings::values.log_filter);
     Log::SetGlobalFilter(log_filter);
-    Log::AddBackend(
-        std::make_unique<Log::FileBackend>(FileUtil::GetUserPath(D_USER_IDX) + LOG_FILE));
+    Log::AddBackend(std::make_unique<Log::FileBackend>(
+        FileUtil::GetUserPath(FileUtil::UserPath::UserDir) + LOG_FILE));
+}
+
+GMainWindow::GMainWindow() : config{new Config()} /*, emu_thread{nullptr}*/ {
+    InitializeLogging();
     Util::ToggleConsole();
     Settings::LogSettings();
 
@@ -924,13 +928,15 @@ void GMainWindow::OnGameListOpenFolder(u64 data_id, GameListOpenTarget target) {
     switch (target) {
     case GameListOpenTarget::SAVE_DATA: {
         open_target = "Save Data";
-        std::string sdmc_dir{FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/")};
+        std::string sdmc_dir{
+            FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir, Settings::values.sdmc_dir + "/")};
         path = FileSys::ArchiveSource_SDSaveData::GetSaveDataPathFor(sdmc_dir, data_id);
         break;
     }
     case GameListOpenTarget::EXT_DATA: {
         open_target = "Extra Data";
-        std::string sdmc_dir{FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/")};
+        std::string sdmc_dir{
+            FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir, Settings::values.sdmc_dir + "/")};
         path = FileSys::GetExtDataPathFromId(sdmc_dir, data_id);
         break;
     }
@@ -969,12 +975,12 @@ void GMainWindow::OnGameListOpenDirectory(QString directory) {
     QString path{};
     if (directory == "INSTALLED") {
         path = QString::fromStdString(
-            FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/") +
+            FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir, Settings::values.sdmc_dir + "/") +
             "Nintendo "
             "3DS/00000000000000000000000000000000/00000000000000000000000000000000/title/00040000");
     } else if (directory == "SYSTEM") {
         path =
-            QString::fromStdString(FileUtil::GetUserPath(D_NAND_IDX).c_str() +
+            QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir).c_str() +
                                    std::string("00000000000000000000000000000000/title/00040010"));
     } else {
         path = directory;
@@ -1297,7 +1303,7 @@ void GMainWindow::OnSetPlayCoins() {
 }
 
 void GMainWindow::OnOpenUserDirectory() {
-    QString path{QString::fromStdString(FileUtil::GetUserPath(D_USER_IDX))};
+    QString path{QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::UserDir))};
     QDesktopServices::openUrl(
         QUrl::fromLocalFile(path.replace("./user", QDir::currentPath() + "/user")));
 }

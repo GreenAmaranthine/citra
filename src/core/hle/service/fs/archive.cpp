@@ -577,9 +577,10 @@ ResultCode DeleteExtSaveData(MediaType media_type, u32 high, u32 low) {
 
     std::string media_type_directory;
     if (media_type == MediaType::NAND) {
-        media_type_directory = FileUtil::GetUserPath(D_NAND_IDX);
+        media_type_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
     } else if (media_type == MediaType::SDMC) {
-        media_type_directory = FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/");
+        media_type_directory =
+            FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir, Settings::values.sdmc_dir + "/");
     } else {
         LOG_ERROR(Service_FS, "Unsupported media type {}", static_cast<u32>(media_type));
         return ResultCode(-1); // TODO: Find the right error code
@@ -598,7 +599,7 @@ ResultCode DeleteSystemSaveData(u32 high, u32 low) {
     // Construct the binary path to the archive first
     FileSys::Path path{FileSys::ConstructSystemSaveDataBinaryPath(high, low)};
 
-    std::string nand_directory{FileUtil::GetUserPath(D_NAND_IDX)};
+    std::string nand_directory{FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)};
     std::string base_path{FileSys::GetSystemSaveDataContainerPath(nand_directory)};
     std::string systemsavedata_path{FileSys::GetSystemSaveDataPath(base_path, path)};
     if (!FileUtil::DeleteDirRecursively(systemsavedata_path))
@@ -610,7 +611,7 @@ ResultCode CreateSystemSaveData(u32 high, u32 low) {
     // Construct the binary path to the archive first
     FileSys::Path path{FileSys::ConstructSystemSaveDataBinaryPath(high, low)};
 
-    std::string nand_directory{FileUtil::GetUserPath(D_NAND_IDX)};
+    std::string nand_directory{FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)};
     std::string base_path{FileSys::GetSystemSaveDataContainerPath(nand_directory)};
     std::string systemsavedata_path{FileSys::GetSystemSaveDataPath(base_path, path)};
     if (!FileUtil::CreateFullPath(systemsavedata_path))
@@ -622,8 +623,9 @@ void RegisterArchiveTypes() {
     // TODO: Add the other archive types (see here for the known types:
     // http://3dbrew.org/wiki/FS:OpenArchive#Archive_idcodes).
 
-    std::string sdmc_directory{FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/")};
-    std::string nand_directory{FileUtil::GetUserPath(D_NAND_IDX)};
+    std::string sdmc_directory{
+        FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir, Settings::values.sdmc_dir + "/")};
+    std::string nand_directory{FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)};
     auto sdmc_factory{std::make_unique<FileSys::ArchiveFactory_SDMC>(sdmc_directory)};
     if (sdmc_factory->Initialize())
         RegisterArchiveType(std::move(sdmc_factory), ArchiveIdCode::SDMC);

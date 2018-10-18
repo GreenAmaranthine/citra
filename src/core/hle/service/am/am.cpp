@@ -488,12 +488,14 @@ std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid) {
 
 std::string GetMediaTitlePath(Service::FS::MediaType media_type) {
     if (media_type == Service::FS::MediaType::NAND)
-        return fmt::format("{}{}/title/", FileUtil::GetUserPath(D_NAND_IDX), SYSTEM_CID);
+        return fmt::format("{}{}/title/", FileUtil::GetUserPath(FileUtil::UserPath::NANDDir),
+                           SYSTEM_CID);
 
     if (media_type == Service::FS::MediaType::SDMC)
-        return fmt::format("{}Nintendo 3DS/{}/{}/title/",
-                           FileUtil::GetUserPath(D_SDMC_IDX, Settings::values.sdmc_dir + "/"),
-                           SYSTEM_CID, SDCARD_CID);
+        return fmt::format(
+            "{}Nintendo 3DS/{}/{}/title/",
+            FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir, Settings::values.sdmc_dir + "/"),
+            SYSTEM_CID, SDCARD_CID);
 
     if (media_type == Service::FS::MediaType::GameCard) {
         // TODO: get current app parent folder if TID matches?

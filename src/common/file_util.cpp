@@ -622,36 +622,37 @@ static const std::string GetDataDirectory() {
 
 // Returns a string with a Citra data dir or file in the user's home
 // directory.
-const std::string& GetUserPath(const unsigned int DirIDX, const std::string& settings_sdmc_dir) {
-    if (DirIDX == D_SDMC_IDX && settings_sdmc_dir.length() > 1) {
+const std::string& GetUserPath(UserPath path, const std::string& settings_sdmc_dir) {
+    if (path == UserPath::SDMCDir && settings_sdmc_dir.length() > 1) {
         return settings_sdmc_dir;
     }
 
-    static std::string paths[NUM_PATH_INDICES];
+    static std::unordered_map<UserPath, std::string> paths;
+    auto& user_path{paths[UserPath::UserDir]};
 
     // Set up all paths and files on the first run
-    if (paths[D_USER_IDX].empty()) {
+    if (user_path.empty()) {
 #ifdef _WIN32
         if (IsDirectory(GetExeDirectory() + DIR_SEP USER_DIR DIR_SEP)) {
-            paths[D_USER_IDX] = GetExeDirectory() + DIR_SEP USER_DIR DIR_SEP;
+            user_path = GetExeDirectory() + DIR_SEP USER_DIR DIR_SEP;
         } else {
-            paths[D_USER_IDX] = AppDataRoamingDirectory() + DIR_SEP DATA_DIR DIR_SEP;
+            user_path = AppDataRoamingDirectory() + DIR_SEP DATA_DIR DIR_SEP;
         }
 #else
         if (Exists(ROOT_DIR DIR_SEP USER_DIR)) {
-            paths[D_USER_IDX] = ROOT_DIR DIR_SEP USER_DIR DIR_SEP;
+            user_path = ROOT_DIR DIR_SEP USER_DIR DIR_SEP;
         } else {
-            paths[D_USER_IDX] = GetDataDirectory() + DIR_SEP DATA_DIR DIR_SEP;
+            user_path = GetDataDirectory() + DIR_SEP DATA_DIR DIR_SEP;
         }
 #endif
 
-        paths[D_CONFIG_IDX] = paths[D_USER_IDX] + CONFIG_DIR DIR_SEP;
-        paths[D_SDMC_IDX] = paths[D_USER_IDX] + SDMC_DIR DIR_SEP;
-        paths[D_NAND_IDX] = paths[D_USER_IDX] + NAND_DIR DIR_SEP;
-        paths[D_SYSDATA_IDX] = paths[D_USER_IDX] + SYSDATA_DIR DIR_SEP;
+        paths.emplace(UserPath::ConfigDir, user_path + CONFIG_DIR DIR_SEP);
+        paths.emplace(UserPath::SDMCDir, user_path + SDMC_DIR DIR_SEP);
+        paths.emplace(UserPath::NANDDir, user_path + NAND_DIR DIR_SEP);
+        paths.emplace(UserPath::SysDataDir, user_path + SYSDATA_DIR DIR_SEP);
     }
 
-    return paths[DirIDX];
+    return paths[path];
 }
 
 size_t WriteStringToFile(bool text_file, const std::string& str, const char* filename) {

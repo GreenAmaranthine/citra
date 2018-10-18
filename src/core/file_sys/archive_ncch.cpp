@@ -70,13 +70,13 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         return ERROR_INVALID_PATH;
     }
 
-    std::vector<u8> binary = path.AsBinary();
+    std::vector<u8> binary{path.AsBinary()};
     if (binary.size() != sizeof(NCCHFilePath)) {
         LOG_ERROR(Service_FS, "Wrong path size {}", binary.size());
         return ERROR_INVALID_PATH;
     }
 
-    NCCHFilePath openfile_path{};
+    NCCHFilePath openfile_path;
     std::memcpy(&openfile_path, binary.data(), sizeof(NCCHFilePath));
 
     std::string file_path{
@@ -123,7 +123,7 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         LOG_DEBUG(Service_FS, "Full Path: {}. Category: 0x{:X}. Path: 0x{:X}.", path.DebugStr(),
                   high, low);
 
-        std::vector<u8> archive_data{};
+        std::vector<u8> archive_data;
         if (high == shared_data_archive) {
             if (low == mii_data) {
                 LOG_ERROR(Service_FS, "Failed to get a handle for shared data archive: Mii Data.");
