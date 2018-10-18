@@ -90,7 +90,8 @@ static std::array<GLfloat, 6> MakeOrthographicMatrix(const float width, const fl
     return matrix;
 }
 
-Renderer::Renderer() : rasterizer{std::make_unique<Rasterizer>()} {
+Renderer::Renderer(Frontend& frontend)
+    : frontend{frontend}, rasterizer{std::make_unique<Rasterizer>()} {
     VideoCore::g_renderer_bg_color_update_requested = true;
 }
 
@@ -169,12 +170,12 @@ void Renderer::SwapBuffers() {
         VideoCore::g_renderer_screenshot_requested = false;
     }
 
-    DrawScreens(Frontend::GetFramebufferLayout());
+    DrawScreens(frontend.GetFramebufferLayout());
 
     Core::System::GetInstance().perf_stats.EndSystemFrame();
 
     // Swap buffers
-    Frontend::SwapBuffers();
+    frontend.SwapBuffers();
 
     Core::System::GetInstance().frame_limiter.DoFrameLimiting(CoreTiming::GetGlobalTimeUs());
     Core::System::GetInstance().perf_stats.BeginSystemFrame();
@@ -515,7 +516,7 @@ static void APIENTRY DebugHandler(GLenum source, GLenum type, GLuint id, GLenum 
 
 /// Initialize the renderer
 Core::System::ResultStatus Renderer::Init() {
-    Frontend::MakeCurrent();
+    frontend.MakeCurrent();
 
     if (GLAD_GL_KHR_debug) {
         glEnable(GL_DEBUG_OUTPUT);
@@ -544,8 +545,8 @@ Core::System::ResultStatus Renderer::Init() {
 }
 
 void Renderer::UpdateCurrentFramebufferLayout() {
-    const Layout::FramebufferLayout& layout{Frontend::GetFramebufferLayout()};
-    Frontend::UpdateCurrentFramebufferLayout(layout.width, layout.height);
+    const Layout::FramebufferLayout& layout{frontend.GetFramebufferLayout()};
+    frontend.UpdateCurrentFramebufferLayout(layout.width, layout.height);
 }
 
 Rasterizer* Renderer::GetRasterizer() {

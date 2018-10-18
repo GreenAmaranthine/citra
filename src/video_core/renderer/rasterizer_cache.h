@@ -319,7 +319,7 @@ struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface
     }
 
     std::unique_ptr<u8[]> gl_buffer;
-    std::size_t gl_buffer_size{};
+    std::size_t gl_buffer_size;
 
     // Read/Write data in 3DS memory to/from gl_buffer
     void LoadGLBuffer(PAddr load_start, PAddr load_end);
@@ -332,16 +332,15 @@ struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface
                            GLuint draw_fb_handle);
 
     std::shared_ptr<SurfaceWatcher> CreateWatcher() {
-        auto watcher = std::make_shared<SurfaceWatcher>(weak_from_this());
+        auto watcher{std::make_shared<SurfaceWatcher>(weak_from_this())};
         watchers.push_front(watcher);
         return watcher;
     }
 
     void InvalidateAllWatcher() {
         for (const auto& watcher : watchers) {
-            if (auto locked{watcher.lock()}) {
+            if (auto locked{watcher.lock()})
                 locked->valid = false;
-            }
         }
     }
 

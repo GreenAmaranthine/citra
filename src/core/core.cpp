@@ -74,7 +74,7 @@ System::ResultStatus System::RunLoop() {
     return status;
 }
 
-System::ResultStatus System::Load(const std::string& filepath) {
+System::ResultStatus System::Load(Frontend& frontend, const std::string& filepath) {
     app_loader = Loader::GetLoader(filepath);
 
     if (!app_loader) {
@@ -99,7 +99,7 @@ System::ResultStatus System::Load(const std::string& filepath) {
     }
 
     ASSERT(system_mode.first);
-    ResultStatus init_result{Init(*system_mode.first)};
+    ResultStatus init_result{Init(frontend, *system_mode.first)};
     if (init_result != ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to initialize system (Error {})!",
                      static_cast<u32>(init_result));
@@ -127,6 +127,10 @@ System::ResultStatus System::Load(const std::string& filepath) {
     return status;
 }
 
+System::ResultStatus System::Load(const std::string& filepath) {
+    return Load(*m_frontend, filepath);
+}
+
 void System::PrepareReschedule() {
     cpu_core->PrepareReschedule();
     reschedule_pending = true;
@@ -145,7 +149,7 @@ void System::Reschedule() {
     Kernel::Reschedule();
 }
 
-System::ResultStatus System::Init(u32 system_mode) {
+System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     LOG_DEBUG(HW_Memory, "initialized OK");
 
     CoreTiming::Init();
@@ -175,7 +179,7 @@ System::ResultStatus System::Init(u32 system_mode) {
     Service::Init(service_manager);
     CheatCore::Init();
 
-    ResultStatus result{VideoCore::Init()};
+    ResultStatus result{VideoCore::Init(frontend)};
     if (result != ResultStatus::Success) {
         return result;
     }
@@ -197,6 +201,14 @@ Service::SM::ServiceManager& System::ServiceManager() {
 
 const Service::SM::ServiceManager& System::ServiceManager() const {
     return *service_manager;
+}
+
+Frontend& System::GetFrontend() {
+    return *m_frontend;
+}
+
+const Frontend& System::GetFrontend() const {
+    return *m_frontend;
 }
 
 void System::Shutdown() {

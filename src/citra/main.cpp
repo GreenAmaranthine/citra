@@ -522,7 +522,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
 
     auto& system{Core::System::GetInstance()};
 
-    const Core::System::ResultStatus result{system.Load(filename.toStdString())};
+    const Core::System::ResultStatus result{system.Load(*screens, filename.toStdString())};
 
     if (result != Core::System::ResultStatus::Success) {
         switch (result) {
@@ -1581,9 +1581,9 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, const std::stri
         if (emu_thread) {
             ShutdownGame();
             auto& system{Core::System::GetInstance()};
-            if (!system.file_path.empty()) {
-                BootGame(QString::fromStdString(system.file_path));
-                system.file_path.clear();
+            if (!system.set_game_file_path.empty()) {
+                BootGame(QString::fromStdString(system.set_game_file_path));
+                system.set_game_file_path.clear();
             }
         }
     } else {

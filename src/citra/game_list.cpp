@@ -64,7 +64,7 @@ bool GameListSearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* eve
         case Qt::Key_Return:
         case Qt::Key_Enter: {
             if (gamelist->search_field->visible == 1) {
-                QString file_path = gamelist->getLastFilterResultItem();
+                QString file_path{gamelist->getLastFilterResultItem()};
 
                 // To avoid loading error dialog loops while confirming them using enter
                 // Also users usually want to run a diffrent game after closing one

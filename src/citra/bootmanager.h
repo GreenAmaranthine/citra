@@ -10,7 +10,7 @@
 #include <QThread>
 #include "common/common_types.h"
 #include "core/core.h"
-#include "core/framebuffer_layout.h"
+#include "core/frontend.h"
 
 class QKeyEvent;
 class QScreen;
@@ -50,39 +50,16 @@ signals:
     void ErrorThrown(Core::System::ResultStatus, const std::string&);
 };
 
-class Screens : public QWidget {
+class Screens : public QWidget, public Frontend {
     Q_OBJECT
 
 public:
     Screens(QWidget* parent, EmuThread* emu_thread);
     ~Screens();
 
-    /**
-     * Clip the provided coordinates to be inside the touchscreen area.
-     */
-    std::tuple<unsigned, unsigned> ClipToTouchScreen(unsigned new_x, unsigned new_y);
-
-    /**
-     * Signal that a touch pressed event has occurred (e.g. mouse click pressed)
-     * @param framebuffer_x Framebuffer x-coordinate that was pressed
-     * @param framebuffer_y Framebuffer y-coordinate that was pressed
-     */
-    void TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y);
-
-    /// Signal that a touch released event has occurred (e.g. mouse click released)
-    void TouchReleased();
-
-    /**
-     * Signal that a touch movement event has occurred (e.g. mouse was moved over the emu window)
-     * @param framebuffer_x Framebuffer x-coordinate
-     * @param framebuffer_y Framebuffer y-coordinate
-     */
-    void TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y);
-
-    void SwapBuffers();
-    void MakeCurrent();
-    void DoneCurrent();
-    void UpdateCurrentFramebufferLayout(unsigned int, unsigned int);
+    void SwapBuffers() override;
+    void MakeCurrent() override;
+    void DoneCurrent() override;
 
     void BackupGeometry();
     void RestoreGeometry();
@@ -125,10 +102,6 @@ private:
     void TouchUpdateEvent(const QTouchEvent* event);
     void TouchEndEvent();
 
-    const Layout::FramebufferLayout& GetFramebufferLayout() {
-        return framebuffer_layout;
-    }
-
     GGLWidgetInternal* child{};
 
     QByteArray geometry;
@@ -137,11 +110,6 @@ private:
 
     /// Temporary storage of the screenshot taken
     QImage screenshot_image;
-
-    Layout::FramebufferLayout framebuffer_layout; ///< Current framebuffer layout
-
-    class TouchState;
-    std::shared_ptr<TouchState> touch_state;
 
 protected:
     void showEvent(QShowEvent* event) override;

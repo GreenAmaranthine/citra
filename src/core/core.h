@@ -20,6 +20,7 @@
 #include "core/perf_stats.h"
 
 class CPU;
+class Frontend;
 
 namespace AudioCore {
 class DspHle;
@@ -99,14 +100,16 @@ public:
 
     void SetGame(const std::string& path) {
         shutdown_requested = true;
-        file_path = path;
+        set_game_file_path = path;
     }
 
     /**
      * Load an executable application.
+     * @param frontend Reference to the host-system window used for video output and keyboard input.
      * @param filepath String path to the executable application to load on the host file system.
      * @returns ResultStatus code, indicating if the operation succeeded.
      */
+    ResultStatus Load(Frontend& frontend, const std::string& filepath);
     ResultStatus Load(const std::string& filepath);
 
     /**
@@ -151,6 +154,18 @@ public:
      */
     const Service::SM::ServiceManager& ServiceManager() const;
 
+    /**
+     * Gets a reference to the frontend.
+     * @returns A reference to the frontend.
+     */
+    Frontend& GetFrontend();
+
+    /**
+     * Gets a const reference to the frontend.
+     * @returns A const reference to the frontend.
+     */
+    const Frontend& GetFrontend() const;
+
     PerfStats perf_stats;
     FrameLimiter frame_limiter;
 
@@ -191,15 +206,16 @@ public:
         return running.load(std::memory_order::memory_order_relaxed);
     }
 
-    std::string file_path;
+    std::string set_game_file_path;
 
 private:
     /**
      * Initialize the emulated system.
+     * @param frontend Reference to the host-system window used for video output and keyboard input.
      * @param system_mode The system mode.
      * @return ResultStatus code, indicating if the operation succeeded.
      */
-    ResultStatus Init(u32 system_mode);
+    ResultStatus Init(Frontend& frontend, u32 system_mode);
 
     /// Reschedule the core emulation
     void Reschedule();
@@ -232,6 +248,7 @@ private:
     ResultStatus status;
     std::string status_details;
 
+    Frontend* m_frontend;
     std::string m_filepath;
     u64 jump_tid;
     Service::FS::MediaType jump_media;

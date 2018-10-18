@@ -13,6 +13,8 @@
 #include "video_core/renderer/resource_manager.h"
 #include "video_core/renderer/state.h"
 
+class Frontend;
+
 namespace Layout {
 struct FramebufferLayout;
 } // namespace Layout
@@ -36,7 +38,7 @@ struct ScreenInfo {
 
 class Renderer {
 public:
-    explicit Renderer();
+    explicit Renderer(Frontend& frontend);
     ~Renderer();
 
     /// Swap buffers (render frame)
@@ -81,5 +83,6 @@ private:
     GLuint attrib_position;
     GLuint attrib_tex_coord;
 
+    Frontend& frontend;
     std::unique_ptr<Rasterizer> rasterizer;
 };

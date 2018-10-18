@@ -4,25 +4,33 @@
 
 #pragma once
 
-#include <functional>
+#include <memory>
+#include <tuple>
 #include "core/framebuffer_layout.h"
 
-namespace Frontend {
+class Frontend {
+public:
+    Frontend();
+    virtual ~Frontend();
 
-using GetFramebufferLayoutFunction = std::function<const Layout::FramebufferLayout&()>;
-using NoReturnNoParametersFunction = std::function<void()>;
-using UpdateCurrentFramebufferLayoutFunction = std::function<void(unsigned int, unsigned int)>;
+    void UpdateCurrentFramebufferLayout(unsigned width, unsigned height);
+    void TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y);
+    void TouchReleased();
+    void TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y);
 
-const Layout::FramebufferLayout& GetFramebufferLayout();
-void Set_GetFramebufferLayout(GetFramebufferLayoutFunction function);
+    std::tuple<unsigned, unsigned> ClipToTouchScreen(unsigned new_x, unsigned new_y);
 
-void SwapBuffers();
-void Set_SwapBuffers(NoReturnNoParametersFunction function);
+    const Layout::FramebufferLayout& GetFramebufferLayout() {
+        return framebuffer_layout;
+    }
 
-void MakeCurrent();
-void Set_MakeCurrent(NoReturnNoParametersFunction function);
+    virtual void SwapBuffers() = 0;
+    virtual void MakeCurrent() = 0;
+    virtual void DoneCurrent() = 0;
 
-void UpdateCurrentFramebufferLayout(unsigned int width, unsigned int height);
-void Set_UpdateCurrentFramebufferLayout(UpdateCurrentFramebufferLayoutFunction function);
+private:
+    Layout::FramebufferLayout framebuffer_layout; ///< Current framebuffer layout
 
-} // namespace Frontend
+    class TouchState;
+    std::shared_ptr<TouchState> touch_state;
+};
