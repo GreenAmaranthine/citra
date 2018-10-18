@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <sstream>
 #include "common/common_paths.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
@@ -35,7 +36,7 @@ std::string ToUpper(std::string str) {
 
 // For Debugging. Read out an u8 array.
 std::string ArrayToString(const u8* data, std::size_t size, int line_len, bool spaces) {
-    std::ostringstream oss{};
+    std::ostringstream oss;
     oss << std::setfill('0') << std::hex;
 
     for (int line{}; size; ++data, --size) {
@@ -49,40 +50,6 @@ std::string ArrayToString(const u8* data, std::size_t size, int line_len, bool s
     }
 
     return oss.str();
-}
-
-bool TryParse(const std::string& str, u32* const output) {
-    char* endptr{};
-
-    // Reset errno to a value other than ERANGE
-    errno = 0;
-
-    unsigned long value{strtoul(str.c_str(), &endptr, 0)};
-
-    if (!endptr || *endptr)
-        return false;
-
-    if (errno == ERANGE)
-        return false;
-
-#if ULONG_MAX > UINT_MAX
-    if (value >= 0x100000000ull && value <= 0xFFFFFFFF00000000ull)
-        return false;
-#endif
-
-    *output = static_cast<u32>(value);
-    return true;
-}
-
-bool TryParse(const std::string& str, bool* const output) {
-    if ("1" == str || "true" == ToLower(str))
-        *output = true;
-    else if ("0" == str || "false" == ToLower(str))
-        *output = false;
-    else
-        return false;
-
-    return true;
 }
 
 bool SplitPath(const std::string& full_path, std::string* _pPath, std::string* _pFilename,
@@ -266,7 +233,7 @@ std::string Join(const std::vector<std::string>& elements, const char* const sep
     case 1:
         return elements[0];
     default:
-        std::ostringstream os{};
+        std::ostringstream os;
         std::copy(elements.begin(), elements.end(),
                   std::ostream_iterator<std::string>(os, separator));
 

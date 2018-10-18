@@ -10,7 +10,6 @@
 #include <cstddef>
 #include <functional>
 #include <iomanip>
-#include <sstream>
 #include <string>
 #include <vector>
 #include "common/common_types.h"
@@ -25,21 +24,6 @@ std::string ToUpper(std::string str);
 
 // Good
 std::string ArrayToString(const u8* data, std::size_t size, int line_len = 20, bool spaces = true);
-
-bool TryParse(const std::string& str, bool* output);
-bool TryParse(const std::string& str, u32* output);
-
-template <typename N>
-static bool TryParse(const std::string& str, N* const output) {
-    std::istringstream iss(str);
-
-    N tmp{};
-    if (iss >> tmp) {
-        *output = tmp;
-        return true;
-    } else
-        return false;
-}
 
 void SplitString(const std::string& str, char delim, std::vector<std::string>& output);
 
