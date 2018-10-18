@@ -4,6 +4,7 @@
 
 #include <array>
 #include <memory>
+#include <unordered_map>
 #include "common/assert.h"
 #include "common/common_funcs.h"
 #include "common/common_paths.h"
