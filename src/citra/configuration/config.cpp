@@ -202,7 +202,7 @@ void Config::ReadValues() {
     Settings::values.bg_green = qt_config->value("bg_green", 0.0).toFloat();
     Settings::values.bg_blue = qt_config->value("bg_blue", 0.0).toFloat();
     Settings::values.enable_shadows = qt_config->value("enable_shadows", true).toBool();
-    Settings::values.enable_clear_cache = qt_config->value("enable_clear_cache", true).toBool();
+    Settings::values.enable_clear_cache = qt_config->value("enable_clear_cache", false).toBool();
     Settings::values.clear_cache_secs = qt_config->value("clear_cache_secs", 30).toInt();
     Settings::values.screen_refresh_rate = qt_config->value("screen_refresh_rate", 60).toInt();
     Settings::values.min_vertices_per_thread =
