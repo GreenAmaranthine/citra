@@ -40,10 +40,18 @@ enum class CommunicationStatus : u8 {
     NfcInitialized = 2,
 };
 
+enum class Type : u8 {
+    Invalid = 0, /// Invalid type.
+    Unknown = 1, /// Unknown.
+    NFCTag = 2,  /// This is the default.
+    RawNFC = 3   /// Use Raw NFC tag commands. Only available with >=10.0.0-X.
+};
+
 class Module final {
 public:
     Module();
     ~Module();
+    void UpdateAmiiboData();
 
     class Interface : public ServiceFramework<Interface> {
     public:
@@ -70,9 +78,14 @@ public:
         void GetAmiiboConfig(Kernel::HLERequestContext& ctx);
         void OpenAppData(Kernel::HLERequestContext& ctx);
         void ReadAppData(Kernel::HLERequestContext& ctx);
+        void WriteAppData(Kernel::HLERequestContext& ctx);
         void Unknown1(Kernel::HLERequestContext& ctx);
         void Unknown0x1A(Kernel::HLERequestContext& ctx);
         void GetIdentificationBlock(Kernel::HLERequestContext& ctx);
+        void InitializeWriteAppData(Kernel::HLERequestContext& ctx);
+        void UpdateStoredAmiiboData(Kernel::HLERequestContext& ctx);
+        void GetAppDataInitStruct(Kernel::HLERequestContext& ctx);
+        void SetAmiiboSettings(Kernel::HLERequestContext& ctx);
 
     private:
         std::shared_ptr<Module> nfc;
@@ -81,11 +94,13 @@ public:
 private:
     Kernel::SharedPtr<Kernel::Event> tag_in_range_event;
     Kernel::SharedPtr<Kernel::Event> tag_out_of_range_event;
-    std::atomic<TagState> nfc_tag_state{TagState::NotInitialized};
-    CommunicationStatus nfc_status{CommunicationStatus::NfcInitialized};
-    std::array<u8, 160> keys{};
+    std::atomic<TagState> tag_state{TagState::NotInitialized};
+    CommunicationStatus status{CommunicationStatus::NfcInitialized};
     std::array<u8, AMIIBO_MAX_SIZE> encrypted_data{};
     std::array<u8, AMIIBO_MAX_SIZE> decrypted_data{};
+    std::string amiibo_file;
+    std::atomic_bool appdata_initialized{};
+    Type type;
 };
 
 void InstallInterfaces(SM::ServiceManager& service_manager);

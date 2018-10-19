@@ -325,7 +325,7 @@
         <item row="7" column="1">
          <widget class="QDateTimeEdit" name="edit_init_time">
           <property name="displayFormat">
-           <string>yyyy.MM.dd HH:mm:ss</string>
+           <string>yyyy-MM-ddTHH:mm:ss</string>
           </property>
          </widget>
         </item>

@@ -295,7 +295,7 @@ public:
         }
 
         Loader::SMDH smdh;
-        memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
+        std::memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
 
         // Get icon from SMDH
         if (UISettings::values.game_list_icon_size)

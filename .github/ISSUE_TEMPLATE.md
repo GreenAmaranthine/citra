@@ -1,11 +1,11 @@
 <!---
 When submitting an issue, please check the following:
-- You are using the latest build.
-- You have provided the version (commit hash) of Citra you are using.
+- You are using the latest build. if you are using a old build, the issue was possibly fixed in new builds. if you are using a updater, delete its files and download manually from here: https://valentinvanelslande.github.io/citra/downloads
 - You have provided sufficient detail for the issue to be reproduced.
 - You have provided system specs (if relevant).
 - Please also provide:
   - For crashes, a backtrace.
   - For graphical issues, comparison screenshots with real hardware.
   - For emulation inaccuracies, a test-case (if able).
+Don't use #. It will create references.
 --->

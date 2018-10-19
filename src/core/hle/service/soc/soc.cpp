@@ -282,7 +282,7 @@ union CTRSockAddr {
     static sockaddr ToPlatform(CTRSockAddr const& ctr_addr) {
         sockaddr result{};
         result.sa_family = ctr_addr.raw.sa_family;
-        memset(result.sa_data, 0, sizeof(result.sa_data));
+        std::memset(result.sa_data, 0, sizeof(result.sa_data));
 
         // We can not guarantee ABI compatibility between platforms so we copy the fields manually
         switch (result.sa_family) {
@@ -290,7 +290,7 @@ union CTRSockAddr {
             sockaddr_in* result_in{reinterpret_cast<sockaddr_in*>(&result)};
             result_in->sin_port = ctr_addr.in.sin_port;
             result_in->sin_addr.s_addr = ctr_addr.in.sin_addr;
-            memset(result_in->sin_zero, 0, sizeof(result_in->sin_zero));
+            std::memset(result_in->sin_zero, 0, sizeof(result_in->sin_zero));
             break;
         }
         default:

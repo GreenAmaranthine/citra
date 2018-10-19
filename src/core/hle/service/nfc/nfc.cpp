@@ -3,8 +3,10 @@
 // Refer to the license.txt file included.
 
 #include "common/file_util.h"
+#include "common/string_util.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/process.h"
 #include "core/hle/lock.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/hle/service/nfc/nfc_m.h"
@@ -17,15 +19,15 @@ namespace Service::NFC {
 #define AMIIBO_DAY_FROM_DATE(dt) (*((&dt) + 1) & 0x1F)
 
 struct TagInfo {
-    u16_le id_offset_size; /// "u16 size/offset of the below ID data. Normally this is 0x7. When
+    u16_le id_offset_size; /// u16 size/offset of the below ID data. Normally this is 0x7. When
                            /// this is <=10, this field is the size of the below ID data. When this
                            /// is >10, this is the offset of the 10-byte ID data, relative to
                            /// structstart+4+<offsetfield-10>. It's unknown in what cases this
-                           /// 10-byte ID data is used."
-    u8 unk_x2;             //"Unknown u8, normally 0x0."
-    u8 unk_x3;             //"Unknown u8, normally 0x2."
-    std::array<u8, 0x28> id; //"ID data. When the above size field is 0x7, this is the 7-byte NFC
-                             // tag UID, followed by all-zeros."
+                           /// 10-byte ID data is used.
+    u8 unk_x2;             // Unknown u8, normally 0x0.
+    u8 unk_x3;             // Unknown u8, normally 0x2.
+    std::array<u8, 0x28> id; // ID data. When the above size field is 0x7, this is the 7-byte NFC
+                             // tag UID, followed by all-zeros.
 };
 
 struct AmiiboConfig {
@@ -33,7 +35,7 @@ struct AmiiboConfig {
     u8 lastwritedate_month;
     u8 lastwritedate_day;
     u16_le write_counter;
-    std::array<u8, 3> characterID; /// the first element is the collection ID, the second the
+    std::array<u8, 3> characterID; /// The first element is the collection ID, the second the
                                    /// character in this collection, the third the variant
     u8 series;                     /// ID of the series
     u16_le amiiboID; /// ID shared by all exact same amiibo. Some amiibo are only distinguished by
@@ -41,19 +43,19 @@ struct AmiiboConfig {
     u8 type;         /// Type of amiibo 0 = figure, 1 = card, 2 = plush
     u8 pagex4_byte3;
     u16_le
-        appdata_size; /// "NFC module writes hard-coded u8 value 0xD8 here. This is the size of the
-                      /// Amiibo AppData, apps can use this with the AppData R/W commands. ..."
+        appdata_size; /// NFC module writes hard-coded u8 value 0xD8 here. This is the size of the
+                      /// amiibo AppData, apps can use this with the AppData R/W commands. ...
     INSERT_PADDING_BYTES(
-        0x30); /// "Unused / reserved: this is cleared by NFC module but never written after that."
+        0x30); /// Unused / reserved: this is cleared by NFC module but never written after that.
 };
 
 struct AmiiboSettings {
-    std::array<u8, 0x60> mii;        /// "Owner Mii."
-    std::array<u16_le, 11> nickname; /// "UTF-16BE Amiibo nickname."
-    u8 flags; /// "This is plaintext_amiibosettingsdata[0] & 0xF." See also the NFC_amiiboFlag
-              /// enums.
-    u8 countrycodeid; /// "This is plaintext_amiibosettingsdata[1]." "Country Code ID, from the
-                      /// system which setup this amiibo."
+    std::array<u8, 0x60> mii;        /// Owner Mii.
+    std::array<u16_le, 11> nickname; /// UTF-16BE Amiibo nickname.
+    u8 flags;         /// This is plaintext_amiibosettingsdata[0] & 0xF. See also the NFC_amiiboFlag
+                      /// enums.
+    u8 countrycodeid; /// This is plaintext_amiibosettingsdata[1]. Country Code ID, from the
+                      /// system which setup this amiibo.
     u16_le setupdate_year;
     u8 setupdate_month;
     u8 setupdate_day;
@@ -78,57 +80,99 @@ struct IdentificationBlockReply {
     INSERT_PADDING_BYTES(0x2F);
 };
 
+struct AppDataInitStruct {
+    std::array<u8, 0xC> data_1;
+    u8 data_xc[0x30]; /// The data starting at struct offset 0xC is the 0x30-byte struct used by
+                      /// NFC:InitializeWriteAppData, sent by the user-process.
+};
+
+struct AppDataWriteStruct {
+    std::array<u8, 7> id;
+    INSERT_PADDING_BYTES(0x2);
+    u8 id_size;
+    INSERT_PADDING_BYTES(0x15);
+};
+
 void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x01, 1, 0};
-    u8 param{rp.Pop<u8>()};
-
-    nfc->nfc_tag_state = TagState::NotScanning;
+    Type type{rp.PopEnum<Type>()};
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    if (nfc->tag_state != TagState::NotInitialized) {
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
+        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    nfc->type = type;
+    nfc->tag_state = TagState::NotScanning;
+
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_NFC, "(STUBBED) called, param={}", param);
+    LOG_DEBUG(Service_NFC, "called, type={}", static_cast<int>(type));
 }
 
 void Module::Interface::Shutdown(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x02, 1, 0};
     u8 param{rp.Pop<u8>()};
 
-    nfc->nfc_tag_state = TagState::NotInitialized;
+    nfc->type = Type::Invalid;
+    nfc->tag_state = TagState::NotInitialized;
+    nfc->appdata_initialized = false;
+    nfc->encrypted_data.fill(0);
+    nfc->decrypted_data.fill(0);
+    nfc->amiibo_file.clear();
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_NFC, "(STUBBED) called, param={}", param);
+    LOG_DEBUG(Service_NFC, "called, param={}", param);
 }
 
 void Module::Interface::StartCommunication(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x03, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_NFC, "(STUBBED) called");
+    LOG_DEBUG(Service_NFC, "called");
 }
 
 void Module::Interface::StopCommunication(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x04, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_NFC, "(STUBBED) called");
+    LOG_DEBUG(Service_NFC, "called");
 }
 
 void Module::Interface::StartTagScanning(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x05, 1, 0};
     u16 in_val{rp.Pop<u16>()};
 
-    nfc->nfc_tag_state = TagState::Scanning;
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    if (nfc->tag_state != TagState::NotScanning && nfc->tag_state != TagState::TagOutOfRange) {
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
+        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    nfc->tag_state = TagState::Scanning;
+
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_NFC, "(STUBBED) called, in_val={:04x}", in_val);
+    LOG_DEBUG(Service_NFC, "called, in_val={:04x}", in_val);
 }
 
 void Module::Interface::GetTagInfo(Kernel::HLERequestContext& ctx) {
+    if (nfc->tag_state != TagState::TagInRange && nfc->tag_state != TagState::TagDataLoaded &&
+        nfc->tag_state != TagState::Unknown6) {
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
+        IPC::ResponseBuilder rb{ctx, 0x11, 1, 0};
+        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
     TagInfo tag_info{};
     tag_info.id_offset_size = 0x7;
     tag_info.unk_x3 = 0x02;
@@ -143,9 +187,20 @@ void Module::Interface::GetTagInfo(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x11, (sizeof(TagInfo) / sizeof(u32)) + 1, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw<TagInfo>(tag_info);
+
+    LOG_DEBUG(Service_NFC, "called");
 }
 
 void Module::Interface::GetAmiiboConfig(Kernel::HLERequestContext& ctx) {
+    if (nfc->tag_state != TagState::TagInRange && nfc->tag_state != TagState::TagDataLoaded &&
+        nfc->tag_state != TagState::Unknown6) {
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
+        IPC::ResponseBuilder rb{ctx, 0x18, 1, 0};
+        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
     AmiiboConfig amiibo_config{};
     amiibo_config.lastwritedate_year = AMIIBO_YEAR_FROM_DATE(nfc->decrypted_data[0x32]);
     amiibo_config.lastwritedate_month = AMIIBO_MONTH_FROM_DATE(nfc->decrypted_data[0x32]);
@@ -163,20 +218,30 @@ void Module::Interface::GetAmiiboConfig(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x18, 17, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw<AmiiboConfig>(amiibo_config);
+
+    LOG_DEBUG(Service_NFC, "called");
 }
 
 void Module::Interface::GetAmiiboSettings(Kernel::HLERequestContext& ctx) {
+    if (nfc->tag_state != TagState::TagInRange && nfc->tag_state != TagState::TagDataLoaded &&
+        nfc->tag_state != TagState::Unknown6) {
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
+        IPC::ResponseBuilder rb{ctx, 0x17, 1, 0};
+        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
     AmiiboSettings amsettings{};
-    ResultCode result{RESULT_SUCCESS};
     if (!(nfc->decrypted_data[0x2C] & 0x10)) {
-        result = ResultCode(0xC8A17628); // uninitialised
+        IPC::ResponseBuilder rb{ctx, 0x17, 1, 0};
+        rb.Push(ResultCode(0xC8A17628)); // Uninitialised
     } else {
-        result = RESULT_SUCCESS;
         memcpy(amsettings.mii.data(), &nfc->decrypted_data[0x4C], amsettings.mii.size());
         memcpy(amsettings.nickname.data(), &nfc->decrypted_data[0x38],
-               4 * 5); // amiibo doesnt have the null terminator
+               4 * 5); // amiibo doesn't have the null terminator
         amsettings.flags = nfc->decrypted_data[0x2C] &
-                           0xF; // todo: we should only load some of these values if the unused
+                           0xF; // TODO: We should only load some of these values if the unused
                                 // flag bits are set correctly https://3dbrew.org/wiki/Amiibo
         amsettings.countrycodeid = nfc->decrypted_data[0x2D];
         amsettings.setupdate_year = AMIIBO_YEAR_FROM_DATE(nfc->decrypted_data[0x30]);
@@ -187,55 +252,173 @@ void Module::Interface::GetAmiiboSettings(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x17, (sizeof(AmiiboSettings) / sizeof(u32)) + 1, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw<AmiiboSettings>(amsettings);
+
+    LOG_DEBUG(Service_NFC, "called");
 }
 
 void Module::Interface::StopTagScanning(Kernel::HLERequestContext& ctx) {
-    nfc->nfc_tag_state = TagState::NotScanning;
+    nfc->tag_state = TagState::NotScanning;
 
     IPC::ResponseBuilder rb{ctx, 0x06, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_NFC, "(STUBBED) called");
+    LOG_DEBUG(Service_NFC, "called");
 }
 
 void Module::Interface::LoadAmiiboData(Kernel::HLERequestContext& ctx) {
-    nfc->nfc_tag_state = TagState::TagDataLoaded;
-
     IPC::ResponseBuilder rb{ctx, 0x07, 1, 0};
+    if (nfc->tag_state != TagState::TagInRange) {
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
+        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    if (!amitool_unpack(nfc->encrypted_data.data(), nfc->encrypted_data.size(),
+                        nfc->decrypted_data.data(), nfc->decrypted_data.size())) {
+        LOG_ERROR(Service_NFC, "Failed to decrypt amiibo {}", nfc->amiibo_file);
+    } else {
+        nfc->tag_state = TagState::TagDataLoaded;
+    }
+
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_NFC, "(STUBBED) called");
+    LOG_DEBUG(Service_NFC, "called");
 }
 
 void Module::Interface::ResetTagScanState(Kernel::HLERequestContext& ctx) {
-    nfc->nfc_tag_state = TagState::TagInRange;
-
     IPC::ResponseBuilder rb{ctx, 0x08, 1, 0};
+    if (nfc->tag_state != TagState::TagDataLoaded && nfc->tag_state != TagState::Unknown6) {
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
+        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    nfc->tag_state = TagState::TagInRange;
+
     rb.Push(RESULT_SUCCESS);
+
+    LOG_DEBUG(Service_NFC, "called");
 }
 
 void Module::Interface::GetTagInRangeEvent(Kernel::HLERequestContext& ctx) {
+    if (nfc->tag_state != TagState::NotScanning) {
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
+        IPC::ResponseBuilder rb{ctx, 0x0B, 1, 0};
+        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
     IPC::ResponseBuilder rb{ctx, 0x0B, 1, 2};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(nfc->tag_in_range_event);
+
+    LOG_DEBUG(Service_NFC, "called");
 }
 
 void Module::Interface::GetTagOutOfRangeEvent(Kernel::HLERequestContext& ctx) {
+    if (nfc->tag_state != TagState::NotScanning) {
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
+        IPC::ResponseBuilder rb{ctx, 0x0C, 1, 0};
+        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
     IPC::ResponseBuilder rb{ctx, 0x0C, 1, 2};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(nfc->tag_out_of_range_event);
+
+    LOG_DEBUG(Service_NFC, "called");
 }
 
 void Module::Interface::GetTagState(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x0D, 2, 0};
     rb.Push(RESULT_SUCCESS);
-    rb.PushEnum(nfc->nfc_tag_state.load());
+    rb.PushEnum(nfc->tag_state.load());
+
+    LOG_DEBUG(Service_NFC, "called, tag_state={}", static_cast<int>(nfc->tag_state.load()));
 }
 
 void Module::Interface::CommunicationGetStatus(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x0F, 2, 0};
     rb.Push(RESULT_SUCCESS);
-    rb.PushEnum(nfc->nfc_status);
+    rb.PushEnum(nfc->status);
+
+    LOG_DEBUG(Service_NFC, "called, status={}", static_cast<int>(nfc->status));
+}
+
+void Module::Interface::InitializeWriteAppData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x14, 14, 4};
+    u32 app_id{rp.Pop<u32>()};
+    u32 size{rp.Pop<u32>()};
+    auto unknown_0x30_byte_structure{rp.PopRaw<std::array<u8, 0x30>>()};
+    rp.PopPID();
+    const auto buffer{rp.PopStaticBuffer()};
+
+    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    if (nfc->tag_state != TagState::TagDataLoaded) {
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
+        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+    ASSERT(std::all_of(unknown_0x30_byte_structure.begin(), unknown_0x30_byte_structure.end(),
+                       [](const auto byte) { return byte == 0; }));
+
+    std::memset(&nfc->decrypted_data[0xDC], 0, 0xD8);
+
+    if (!(nfc->decrypted_data[0x2C] & 0x20)) {
+        std::memcpy(&nfc->decrypted_data[0xDC], &buffer[0], size);
+        nfc->appdata_initialized = true;
+        nfc->decrypted_data[0x2C] |= 0x20;
+    }
+
+    nfc->UpdateAmiiboData();
+
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_DEBUG(Service_NFC, "called, app_id={}, size={}", app_id, size);
+}
+
+void Module::Interface::UpdateStoredAmiiboData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x9, 0, 2};
+    u32 pid{rp.PopPID()};
+
+    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    if (nfc->tag_state != TagState::TagDataLoaded) {
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
+        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    Kernel::SharedPtr<Kernel::Process> process{Kernel::GetProcessById(pid)};
+    // TODO: update last-write date, the write counter and program ID (when a certain state field is
+    // value 0x1)
+
+    nfc->UpdateAmiiboData();
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_WARNING(Service_NFC, "(STUBBED) called");
+}
+
+void Module::Interface::GetAppDataInitStruct(Kernel::HLERequestContext& ctx) {
+    if (nfc->type != Type::NFCTag) {
+        LOG_ERROR(Service_NFC, "Invalid Type {}", static_cast<int>(nfc->type));
+        IPC::ResponseBuilder rb{ctx, 0x19, 1, 0};
+        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    IPC::ResponseBuilder rb{ctx, 0x19, 16, 0};
+    rb.Push(RESULT_SUCCESS);
+    rb.PushRaw(AppDataInitStruct{});
+
+    LOG_DEBUG(Service_NFC, "called");
 }
 
 void Module::Interface::OpenAppData(Kernel::HLERequestContext& ctx) {
@@ -243,44 +426,93 @@ void Module::Interface::OpenAppData(Kernel::HLERequestContext& ctx) {
     u32 app_id{rp.Pop<u32>()};
 
     ResultCode result{RESULT_SUCCESS};
-    if (memcmp(&app_id, &nfc->decrypted_data[0xB6], sizeof(app_id))) {
-        result = ResultCode(0xC8A17638); // app id mismatch
+    if (nfc->tag_state != TagState::TagDataLoaded) {
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
+        result = ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                            ErrorSummary::InvalidState, ErrorLevel::Status);
+    } else if (memcmp(&app_id, &nfc->decrypted_data[0xB6], sizeof(app_id))) {
+        result = ResultCode(0xC8A17638); // App ID mismatch
     } else if (!(nfc->decrypted_data[0x2C] & 0x20)) {
-        result = ResultCode(0xC8A17628); // uninitialised
+        result = ResultCode(0xC8A17628); // Uninitialised
     }
+
+    if (result == RESULT_SUCCESS)
+        nfc->appdata_initialized = true;
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(result);
+
+    LOG_DEBUG(Service_NFC, "called, app_id=0x{:09X}", app_id);
 }
 
 void Module::Interface::ReadAppData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x15, 1, 0};
     u32 size{rp.Pop<u32>()};
+
+    if (!nfc->appdata_initialized) {
+        LOG_ERROR(Service_NFC, "AppData not initialized");
+        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
     ASSERT(size >= 0xD8);
 
-    std::vector<u8> buffer(size);
-    std::memcpy(buffer.data(), &nfc->decrypted_data[0xDC], size);
+    std::vector<u8> buffer(0xD8);
+    std::memcpy(buffer.data(), &nfc->decrypted_data[0xDC], 0xD8);
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(buffer, 0);
+
+    LOG_DEBUG(Service_NFC, "called, size={}", size);
+}
+
+void Module::Interface::WriteAppData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x16, 11, 2};
+    u32 size{rp.Pop<u32>()};
+    AppDataWriteStruct write_struct{rp.PopRaw<AppDataWriteStruct>()};
+    const auto buffer{rp.PopStaticBuffer()};
+
+    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    if (!nfc->appdata_initialized) {
+        LOG_ERROR(Service_NFC, "AppData not initialized");
+        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    // TODO: generate random data instead of filling AppData with zeros
+    std::memset(&nfc->decrypted_data[0xDC], 0, 0xD8);
+    std::memcpy(&nfc->decrypted_data[0xDC], buffer.data(), size);
+
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_DEBUG(Service_NFC, "called, size={}, write_struct.id", size,
+              Common::ArrayToString(write_struct.id.data(), write_struct.id.size()),
+              write_struct.id_size);
 }
 
 void Module::Interface::Unknown0x1A(Kernel::HLERequestContext& ctx) {
     ResultCode result{RESULT_SUCCESS};
-    if (nfc->nfc_tag_state != TagState::TagInRange) {
+    if (nfc->tag_state != TagState::TagInRange) {
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
         result = ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
                             ErrorSummary::InvalidState, ErrorLevel::Status);
     } else {
-        nfc->nfc_tag_state = TagState::Unknown6;
+        nfc->tag_state = TagState::Unknown6;
     }
 
     IPC::ResponseBuilder rb{ctx, 0x1A, 1, 0};
     rb.Push(result);
+
+    LOG_DEBUG(Service_NFC, "called");
 }
 
 void Module::Interface::GetIdentificationBlock(Kernel::HLERequestContext& ctx) {
-    if (nfc->nfc_tag_state != TagState::TagDataLoaded && nfc->nfc_tag_state != TagState::Unknown6) {
+    if (nfc->tag_state != TagState::TagDataLoaded && nfc->tag_state != TagState::Unknown6) {
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
         IPC::ResponseBuilder rb{ctx, 0x1B, 1, 0};
         rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
@@ -300,6 +532,8 @@ void Module::Interface::GetIdentificationBlock(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x1B, 0x1F, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw<IdentificationBlockReply>(identification_block_reply);
+
+    LOG_DEBUG(Service_NFC, "called");
 }
 
 Module::Interface::Interface(std::shared_ptr<Module> nfc, const char* name)
@@ -310,24 +544,24 @@ Module::Interface::~Interface() = default;
 void Module::Interface::LoadAmiibo(const std::string& path) {
     std::lock_guard lock{HLE::g_hle_lock};
     LOG_INFO(Service_NFC, "Loading amiibo {}", path);
-    FileUtil::IOFile file{path, "rb"};
     nfc->encrypted_data.fill(0);
     nfc->decrypted_data.fill(0);
+    FileUtil::IOFile file{path, "rb"};
     file.ReadBytes(nfc->encrypted_data.data(), nfc->encrypted_data.size());
-    if (!amitool_unpack(nfc->encrypted_data.data(), nfc->encrypted_data.size(),
-                        nfc->decrypted_data.data(), nfc->decrypted_data.size())) {
-        LOG_ERROR(Service_NFC, "Failed to decrypt amiibo {}", path);
-    }
-    nfc->nfc_tag_state = Service::NFC::TagState::TagInRange;
+    nfc->appdata_initialized = false;
+    nfc->amiibo_file = path;
+    nfc->tag_state = Service::NFC::TagState::TagInRange;
     nfc->tag_in_range_event->Signal();
 }
 
 void Module::Interface::RemoveAmiibo() {
     std::lock_guard lock{HLE::g_hle_lock};
     LOG_INFO(Service_NFC, "Removing amiibo");
+    nfc->appdata_initialized = false;
+    nfc->amiibo_file.clear();
     nfc->encrypted_data.fill(0);
     nfc->decrypted_data.fill(0);
-    nfc->nfc_tag_state = Service::NFC::TagState::TagOutOfRange;
+    nfc->tag_state = Service::NFC::TagState::TagOutOfRange;
     nfc->tag_out_of_range_event->Signal();
 }
 
@@ -343,12 +577,26 @@ Module::Module() {
     if (!keys_file.IsOpen() || keys_file.GetSize() != 160) {
         LOG_ERROR(Service_NFC, "amiibo_keys.bin file not found or invalid.");
     } else {
+        std::array<u8, 160> keys;
         keys_file.ReadBytes(keys.data(), 160);
-        amitool_setKeys(keys.data(), 160);
+        int ret{amitool_setKeys(keys.data(), 160)};
+        if (ret != 0) {
+            LOG_ERROR(Service_NFC, "failed to set keys (error {})", ret);
+        }
     }
 }
 
 Module::~Module() = default;
+
+void Module::UpdateAmiiboData() {
+    FileUtil::IOFile file{amiibo_file, "wb"};
+    if (!amitool_pack(decrypted_data.data(), decrypted_data.size(), encrypted_data.data(),
+                      encrypted_data.size())) {
+        LOG_ERROR(Service_NFC, "Failed to encrypt amiibo");
+        return;
+    }
+    file.WriteBytes(encrypted_data.data(), encrypted_data.size());
+}
 
 void InstallInterfaces(SM::ServiceManager& service_manager) {
     auto nfc{std::make_shared<Module>()};

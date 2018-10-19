@@ -196,7 +196,7 @@ ResultCode SoftwareKeyboard::StartImpl(const Service::APT::AppletStartupParamete
         boost::static_pointer_cast<Kernel::SharedMemory, Kernel::Object>(parameter.object);
 
     // TODO: Verify if this is the correct behavior
-    memset(text_memory->GetPointer(), 0, text_memory->size);
+    std::memset(text_memory->GetPointer(), 0, text_memory->size);
 
     is_running = true;
     return RESULT_SUCCESS;

@@ -52,8 +52,8 @@ static bool LZSS_Decompress(const u8* compressed, u32 compressed_size, u8* decom
     u32 index{compressed_size - ((buffer_top_and_bottom >> 24) & 0xFF)};
     u32 stop_index{compressed_size - (buffer_top_and_bottom & 0xFFFFFF)};
 
-    memset(decompressed, 0, decompressed_size);
-    memcpy(decompressed, compressed, compressed_size);
+    std::memset(decompressed, 0, decompressed_size);
+    std::memcpy(decompressed, compressed, compressed_size);
 
     while (index > stop_index) {
         u8 control = compressed[--index];

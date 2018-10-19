@@ -23,7 +23,7 @@ void Shutdown() {
 
 template <typename T>
 void Zero(T& o) {
-    memset(&o, 0, sizeof(o));
+    std::memset(&o, 0, sizeof(o));
 }
 
 State::State() : geometry_pipeline{*this} {

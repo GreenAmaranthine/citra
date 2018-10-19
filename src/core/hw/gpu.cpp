@@ -495,7 +495,7 @@ static void VBlankCallback(u64 userdata, s64 cycles_late) {
 
 /// Initialize hardware
 void Init() {
-    memset(&g_regs, 0, sizeof(g_regs));
+    std::memset(&g_regs, 0, sizeof(g_regs));
 
     auto& framebuffer_top{g_regs.framebuffer_config[0]};
     auto& framebuffer_sub{g_regs.framebuffer_config[1]};
