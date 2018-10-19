@@ -17,10 +17,8 @@ ServerPort::ServerPort(KernelSystem& kernel) : WaitObject{kernel} {}
 ServerPort::~ServerPort() {}
 
 ResultVal<SharedPtr<ServerSession>> ServerPort::Accept() {
-    if (pending_sessions.empty()) {
+    if (pending_sessions.empty())
         return ERR_NO_PENDING_SESSIONS;
-    }
-
     auto session{std::move(pending_sessions.back())};
     pending_sessions.pop_back();
     return MakeResult(std::move(session));
@@ -39,13 +37,11 @@ std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> KernelSystem::CreatePor
     u32 max_sessions, std::string name) {
     SharedPtr<ServerPort> server_port{new ServerPort(*this)};
     SharedPtr<ClientPort> client_port{new ClientPort(*this)};
-
     server_port->name = name + "_Server";
     client_port->name = name + "_Client";
     client_port->server_port = server_port;
     client_port->max_sessions = max_sessions;
     client_port->active_sessions = 0;
-
     return std::make_tuple(std::move(server_port), std::move(client_port));
 }
 

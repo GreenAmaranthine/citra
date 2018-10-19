@@ -88,9 +88,8 @@ inline void intrusive_ptr_release(Object* object) {
  */
 template <typename T>
 inline SharedPtr<T> DynamicObjectCast(SharedPtr<Object> object) {
-    if (object != nullptr && object->GetHandleType() == T::HANDLE_TYPE) {
+    if (object != nullptr && object->GetHandleType() == T::HANDLE_TYPE)
         return boost::static_pointer_cast<T>(object);
-    }
     return nullptr;
 }
 

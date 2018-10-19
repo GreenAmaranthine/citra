@@ -35,57 +35,45 @@ void WaitObject::RemoveWaitingThread(Thread* thread) {
 SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
     Thread* candidate{};
     u32 candidate_priority{ThreadPrioLowest + 1};
-
     for (const auto& thread : waiting_threads) {
         // The list of waiting threads must not contain threads that aren't waiting to be awakened.
         ASSERT_MSG(thread->status == ThreadStatus::WaitSynchAny ||
                        thread->status == ThreadStatus::WaitSynchAll ||
                        thread->status == ThreadStatus::WaitHleEvent,
                    "Inconsistent thread statuses in waiting_threads");
-
         if (thread->current_priority >= candidate_priority)
             continue;
-
         if (ShouldWait(thread.get()))
             continue;
-
         // A thread is ready to run if it's either in ThreadStatus::WaitSynchAny or
         // in ThreadStatus::WaitSynchAll and the rest of the objects it is waiting on are ready.
         bool ready_to_run{true};
-        if (thread->status == ThreadStatus::WaitSynchAll) {
+        if (thread->status == ThreadStatus::WaitSynchAll)
             ready_to_run = std::none_of(thread->wait_objects.begin(), thread->wait_objects.end(),
                                         [&thread](const SharedPtr<WaitObject>& object) {
                                             return object->ShouldWait(thread.get());
                                         });
-        }
-
         if (ready_to_run) {
             candidate = thread.get();
             candidate_priority = thread->current_priority;
         }
     }
-
     return candidate;
 }
 
 void WaitObject::WakeupAllWaitingThreads() {
     while (auto thread{GetHighestPriorityReadyThread()}) {
-        if (!thread->IsSleepingOnWaitAll()) {
+        if (!thread->IsSleepingOnWaitAll())
             Acquire(thread.get());
-        } else {
-            for (auto& object : thread->wait_objects) {
+        else
+            for (auto& object : thread->wait_objects)
                 object->Acquire(thread.get());
-            }
-        }
-
         // Invoke the wakeup callback before clearing the wait objects
         if (thread->wakeup_callback)
             thread->wakeup_callback(ThreadWakeupReason::Signal, thread, this);
-
         for (auto& object : thread->wait_objects)
             object->RemoveWaitingThread(thread.get());
         thread->wait_objects.clear();
-
         thread->ResumeFromWait();
     }
 }

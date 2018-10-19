@@ -202,9 +202,6 @@ public:
 
     std::string name;
 
-    /// Handle used as userdata to reference this object when inserting into the CoreTiming queue.
-    Handle callback_handle;
-
     using WakeupCallback = void(ThreadWakeupReason reason, SharedPtr<Thread> thread,
                                 SharedPtr<WaitObject> object);
 

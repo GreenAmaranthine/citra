@@ -27,10 +27,8 @@ void AddressArbiter::ResumeAllThreads(VAddr address) {
                                                   "Inconsistent AddressArbiter state");
                                        return thread->wait_address != address;
                                    })};
-
     // Wake up all the found threads
     std::for_each(itr, waiting_threads.end(), [](auto& thread) { thread->ResumeFromWait(); });
-
     // Remove the woken up threads from the wait list.
     waiting_threads.erase(itr, waiting_threads.end());
 }
@@ -43,7 +41,6 @@ SharedPtr<Thread> AddressArbiter::ResumeHighestPriorityThread(VAddr address) {
                                                             "Inconsistent AddressArbiter state");
                                                  return thread->wait_address != address;
                                              })};
-
     // Iterate through threads, find highest priority thread that is waiting to be arbitrated.
     // Note: The real kernel will pick the first thread in the list if more than one have the
     // same highest priority value. Lower priority values mean higher priority.
@@ -51,13 +48,10 @@ SharedPtr<Thread> AddressArbiter::ResumeHighestPriorityThread(VAddr address) {
                               [](const auto& lhs, const auto& rhs) {
                                   return lhs->current_priority < rhs->current_priority;
                               })};
-
     if (itr == waiting_threads.end())
         return nullptr;
-
     auto thread{*itr};
     thread->ResumeFromWait();
-
     waiting_threads.erase(itr);
     return thread;
 }
@@ -67,9 +61,7 @@ AddressArbiter::~AddressArbiter() {}
 
 SharedPtr<AddressArbiter> KernelSystem::CreateAddressArbiter(std::string name) {
     SharedPtr<AddressArbiter> address_arbiter{new AddressArbiter(*this)};
-
     address_arbiter->name = std::move(name);
-
     return address_arbiter;
 }
 
@@ -83,26 +75,22 @@ ResultCode AddressArbiter::ArbitrateAddress(SharedPtr<Thread> thread, Arbitratio
         waiting_threads.erase(std::remove(waiting_threads.begin(), waiting_threads.end(), thread),
                               waiting_threads.end());
     }};
-
     switch (type) {
-
     // Signal thread(s) waiting for arbitrate address...
     case ArbitrationType::Signal:
         // Negative value means resume all threads
-        if (value < 0) {
+        if (value < 0)
             ResumeAllThreads(address);
-        } else {
+        else
             // Resume first N threads
             for (int i{}; i < value; i++)
                 ResumeHighestPriorityThread(address);
-        }
         break;
 
     // Wait current thread (acquire the arbiter)...
     case ArbitrationType::WaitIfLessThan:
-        if ((s32)Memory::Read32(address) < value) {
+        if ((s32)Memory::Read32(address) < value)
             WaitThread(std::move(thread), address);
-        }
         break;
     case ArbitrationType::WaitIfLessThanWithTimeout:
         if ((s32)Memory::Read32(address) < value) {
@@ -131,19 +119,15 @@ ResultCode AddressArbiter::ArbitrateAddress(SharedPtr<Thread> thread, Arbitratio
         }
         break;
     }
-
     default:
         LOG_ERROR(Kernel, "unknown type {}", static_cast<u32>(type));
         return ERR_INVALID_ENUM_VALUE_FND;
     }
-
     // The calls that use a timeout seem to always return a Timeout error even if they did not put
     // the thread to sleep
     if (type == ArbitrationType::WaitIfLessThanWithTimeout ||
-        type == ArbitrationType::DecrementAndWaitIfLessThanWithTimeout) {
-
+        type == ArbitrationType::DecrementAndWaitIfLessThanWithTimeout)
         return RESULT_TIMEOUT;
-    }
     return RESULT_SUCCESS;
 }
 

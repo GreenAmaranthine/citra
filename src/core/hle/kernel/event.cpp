@@ -17,11 +17,9 @@ Event::~Event() {}
 
 SharedPtr<Event> KernelSystem::CreateEvent(ResetType reset_type, std::string name) {
     SharedPtr<Event> evt{new Event(*this)};
-
     evt->signaled = false;
     evt->reset_type = reset_type;
     evt->name = std::move(name);
-
     return evt;
 }
 
@@ -31,7 +29,6 @@ bool Event::ShouldWait(Thread* thread) const {
 
 void Event::Acquire(Thread* thread) {
     ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
-
     if (reset_type == ResetType::OneShot)
         signaled = false;
 }
@@ -47,7 +44,6 @@ void Event::Clear() {
 
 void Event::WakeupAllWaitingThreads() {
     WaitObject::WakeupAllWaitingThreads();
-
     if (reset_type == ResetType::Pulse)
         signaled = false;
 }

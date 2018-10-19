@@ -247,7 +247,6 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
         if (new_end >= GetLinearHeapBase())
             linheap_memory->resize(new_end - GetLinearHeapBase());
     }
-
     return RESULT_SUCCESS;
 }
 

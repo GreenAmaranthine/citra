@@ -485,10 +485,8 @@ static ResultCode ReceiveIPCRequest(SharedPtr<ServerSession> server_session,
     if (translation_result.IsError()) {
         // Set the output of SendSyncRequest in the client thread to the translation output.
         server_session->currently_handling->SetWaitSynchronizationResult(translation_result);
-
         server_session->currently_handling->ResumeFromWait();
         server_session->currently_handling = nullptr;
-
         // TODO: This path should try to wait again on the same objects.
         ASSERT_MSG(false, "ReplyAndReceive translation error behavior unimplemented");
     }
@@ -557,10 +555,8 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
         WaitObject* object{itr->get()};
         object->Acquire(thread);
         *index = static_cast<s32>(std::distance(objects.begin(), itr));
-
         if (object->GetHandleType() != HandleType::ServerSession)
             return RESULT_SUCCESS;
-
         auto server_session{static_cast<ServerSession*>(object)};
         return ReceiveIPCRequest(server_session, GetCurrentThread());
     }
@@ -585,9 +581,7 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
         thread->SetWaitSynchronizationResult(result);
         thread->SetWaitSynchronizationOutput(thread->GetWaitObjectIndex(object.get()));
     };
-
     Core::System::GetInstance().PrepareReschedule();
-
     // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to a
     // signal in one of its wait objects, or to 0xC8A01836 if there was a translation error.
     // By default the index is set to -1.
@@ -762,9 +756,8 @@ static ResultCode GetThreadPriority(u32* priority, Handle handle) {
 
 /// Sets the priority for the specified thread
 static ResultCode SetThreadPriority(Handle handle, u32 priority) {
-    if (priority > ThreadPrioLowest) {
+    if (priority > ThreadPrioLowest)
         return ERR_OUT_OF_RANGE;
-    }
     SharedPtr<Thread> thread{g_handle_table.Get<Thread>(handle)};
     if (!thread)
         return ERR_INVALID_HANDLE;
@@ -883,7 +876,6 @@ static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
     SharedPtr<Event> evt{Core::System::GetInstance().Kernel().CreateEvent(
         static_cast<ResetType>(reset_type), fmt::format("event-{:08x}", Core::CPU().GetReg(14)))};
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(evt)));
-
     LOG_TRACE(Kernel_SVC, "called reset_type=0x{:08X} : created handle=0x{:08X}", reset_type,
               *out_handle);
     return RESULT_SUCCESS;
@@ -1030,7 +1022,6 @@ static ResultCode CreatePort(Handle* server_port, Handle* client_port, VAddr nam
                              u32 max_sessions) {
     // TODO: Implement named ports.
     ASSERT_MSG(name_address == 0, "Named ports are currently unimplemented");
-
     auto ports{Core::System::GetInstance().Kernel().CreatePortPair(max_sessions)};
     CASCADE_RESULT(*client_port,
                    g_handle_table.Create(std::move(std::get<SharedPtr<ClientPort>>(ports))));
@@ -1038,7 +1029,6 @@ static ResultCode CreatePort(Handle* server_port, Handle* client_port, VAddr nam
     // created.
     CASCADE_RESULT(*server_port,
                    g_handle_table.Create(std::move(std::get<SharedPtr<ServerPort>>(ports))));
-
     LOG_TRACE(Kernel_SVC, "called max_sessions={}", max_sessions);
     return RESULT_SUCCESS;
 }
@@ -1054,13 +1044,10 @@ static ResultCode CreateSessionToPort(Handle* out_client_session, Handle client_
 
 static ResultCode CreateSession(Handle* server_session, Handle* client_session) {
     auto sessions{Core::System::GetInstance().Kernel().CreateSessionPair()};
-
     auto& server{std::get<SharedPtr<ServerSession>>(sessions)};
     CASCADE_RESULT(*server_session, g_handle_table.Create(std::move(server)));
-
     auto& client{std::get<SharedPtr<ClientSession>>(sessions)};
     CASCADE_RESULT(*client_session, g_handle_table.Create(std::move(client)));
-
     LOG_TRACE(Kernel_SVC, "called");
     return RESULT_SUCCESS;
 }
@@ -1135,7 +1122,7 @@ static ResultCode GetProcessInfo(s64* out, Handle process_handle, u32 type) {
     case 7:
     case 8:
         // These are valid, but not implemented yet
-        LOG_ERROR(Kernel_SVC, "unimplemented GetProcessInfo type={}", type);
+        LOG_ERROR(Kernel_SVC, "unimplemented GetProcessInfo {}", type);
         break;
     case 20:
         *out = Memory::FCRAM_PADDR - process->GetLinearHeapAreaAddress();
@@ -1144,10 +1131,10 @@ static ResultCode GetProcessInfo(s64* out, Handle process_handle, u32 type) {
     case 22:
     case 23:
         // These return a different error value than higher invalid values
-        LOG_ERROR(Kernel_SVC, "unknown GetProcessInfo type={}", type);
+        LOG_ERROR(Kernel_SVC, "unknown GetProcessInfo {}", type);
         return ERR_NOT_IMPLEMENTED;
     default:
-        LOG_ERROR(Kernel_SVC, "unknown GetProcessInfo type={}", type);
+        LOG_ERROR(Kernel_SVC, "unknown GetProcessInfo {}", type);
         return ERR_INVALID_ENUM_VALUE;
     }
     return RESULT_SUCCESS;
@@ -1165,7 +1152,7 @@ ResultCode KernelSetState(u32 type, u32 param0, u32 param1, u32 param2) {
     case KernelSetStateType::Type7:
     case KernelSetStateType::Type8:
     case KernelSetStateType::Type9: {
-        LOG_ERROR(Kernel_SVC, "unimplemented KernelSetState type={}", static_cast<u32>(type));
+        LOG_ERROR(Kernel_SVC, "unimplemented KernelSetState {}", static_cast<u32>(type));
         UNIMPLEMENTED();
         break;
     }

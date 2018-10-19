@@ -29,15 +29,12 @@ Mutex::~Mutex() {}
 
 SharedPtr<Mutex> KernelSystem::CreateMutex(bool initial_locked, std::string name) {
     SharedPtr<Mutex> mutex{new Mutex(*this)};
-
     mutex->lock_count = 0;
     mutex->name = std::move(name);
     mutex->holding_thread = nullptr;
-
     // Acquire mutex with current thread if initialized as locked
     if (initial_locked)
         mutex->Acquire(GetCurrentThread());
-
     return mutex;
 }
 
@@ -47,7 +44,6 @@ bool Mutex::ShouldWait(Thread* thread) const {
 
 void Mutex::Acquire(Thread* thread) {
     ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
-
     // Actually "acquire" the mutex only if we don't already have it
     if (lock_count == 0) {
         priority = thread->current_priority;
@@ -56,7 +52,6 @@ void Mutex::Acquire(Thread* thread) {
         thread->UpdatePriority();
         Core::System::GetInstance().PrepareReschedule();
     }
-
     lock_count++;
 }
 
@@ -72,15 +67,12 @@ ResultCode Mutex::Release(Thread* thread) {
         return ResultCode(ErrCodes::WrongLockingThread, ErrorModule::Kernel,
                           ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
     }
-
     // Note: It should not be possible for the situation where the mutex has a holding thread with a
     // zero lock count to occur. The real kernel still checks for this, so we do too.
     if (lock_count <= 0)
         return ResultCode(ErrorDescription::InvalidResultValue, ErrorModule::Kernel,
                           ErrorSummary::InvalidState, ErrorLevel::Permanent);
-
     lock_count--;
-
     // Yield to the next thread only if we've fully released the mutex
     if (lock_count == 0) {
         holding_thread->held_mutexes.erase(this);
@@ -89,7 +81,6 @@ ResultCode Mutex::Release(Thread* thread) {
         WakeupAllWaitingThreads();
         Core::System::GetInstance().PrepareReschedule();
     }
-
     return RESULT_SUCCESS;
 }
 
@@ -108,13 +99,10 @@ void Mutex::RemoveWaitingThread(Thread* thread) {
 void Mutex::UpdatePriority() {
     if (!holding_thread)
         return;
-
     u32 best_priority{ThreadPrioLowest};
-    for (auto& waiter : GetWaitingThreads()) {
+    for (auto& waiter : GetWaitingThreads())
         if (waiter->current_priority < best_priority)
             best_priority = waiter->current_priority;
-    }
-
     if (best_priority != priority) {
         priority = best_priority;
         holding_thread->UpdatePriority();

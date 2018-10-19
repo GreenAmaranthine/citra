@@ -33,7 +33,6 @@ bool Object::IsWaitable() const {
     case HandleType::ClientSession:
         return false;
     }
-
     UNREACHABLE();
 }
 

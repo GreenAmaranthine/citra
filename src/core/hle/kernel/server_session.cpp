@@ -27,7 +27,6 @@ ServerSession::~ServerSession() {
 
 ResultVal<SharedPtr<ServerSession>> ServerSession::Create(KernelSystem& kernel, std::string name) {
     SharedPtr<ServerSession> server_session{new ServerSession(kernel)};
-
     server_session->name = std::move(name);
     server_session->parent = nullptr;
     return MakeResult(std::move(server_session));
@@ -57,18 +56,14 @@ ResultCode ServerSession::HandleSyncRequest(SharedPtr<Thread> thread) {
     // The ServerSession received a sync request, this means that there's new data available
     // from its ClientSession, so wake up any threads that may be waiting on a svcReplyAndReceive or
     // similar.
-
     // If this ServerSession has an associated HLE handler, forward the request to it.
-    if (hle_handler != nullptr) {
+    if (hle_handler != nullptr)
         hle_handler->HandleSyncRequest(SharedPtr<ServerSession>(this));
-    }
-
     if (thread->status == ThreadStatus::Running) {
         // Put the thread to sleep until the server replies, it will be awoken in
         // svcReplyAndReceive for LLE servers.
         thread->status = ThreadStatus::WaitIPC;
-
-        if (hle_handler != nullptr) {
+        if (hle_handler != nullptr)
             // For HLE services, we put the request threads to sleep for a short duration to
             // simulate IPC overhead, but only if the HLE handler didn't put the thread to sleep for
             // other reasons like an async callback. The IPC overhead is needed to prevent
@@ -80,13 +75,11 @@ ResultCode ServerSession::HandleSyncRequest(SharedPtr<Thread> thread) {
             // request to the GSP:GPU service in a n3DS with firmware 11.6. The measured values have
             // a high variance and vary between models.
             thread->WakeAfterDelay(39000);
-        } else {
+        else
             // Add the thread to the list of threads that have issued a sync request with this
             // server.
             pending_requesting_threads.push_back(std::move(thread));
-        }
     }
-
     // If this ServerSession doesn't have an HLE implementation, just wake up the threads waiting
     // on it.
     WakeupAllWaitingThreads();
@@ -98,15 +91,12 @@ std::tuple<SharedPtr<ServerSession>, SharedPtr<ClientSession>> KernelSystem::Cre
     auto server_session{ServerSession::Create(*this, name + "_Server").Unwrap()};
     SharedPtr<ClientSession> client_session{new ClientSession(*this)};
     client_session->name = name + "_Client";
-
     std::shared_ptr<Session> parent{new Session};
     parent->client = client_session.get();
     parent->server = server_session.get();
     parent->port = port;
-
     client_session->parent = parent;
     server_session->parent = parent;
-
     return std::make_tuple(std::move(server_session), std::move(client_session));
 }
 

@@ -19,7 +19,6 @@ class ServerSession;
  * corresponding field in this structure will be set to nullptr.
  */
 struct Session final {
-public:
     ClientSession* client{};    ///< The client endpoint of the session.
     ServerSession* server{};    ///< The server endpoint of the session.
     SharedPtr<ClientPort> port; ///< The port that this session is associated with (optional).

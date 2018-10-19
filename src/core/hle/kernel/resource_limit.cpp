@@ -14,7 +14,6 @@ ResourceLimit::~ResourceLimit() {}
 
 SharedPtr<ResourceLimit> ResourceLimit::Create(KernelSystem& kernel, std::string name) {
     SharedPtr<ResourceLimit> resource_limit{new ResourceLimit(kernel)};
-
     resource_limit->name = std::move(name);
     return resource_limit;
 }
@@ -103,7 +102,6 @@ ResourceLimitList::ResourceLimitList(KernelSystem& kernel) {
     resource_limit->max_address_arbiters = 0x2;
     resource_limit->max_cpu_time = 0x1E;
     resource_limits[static_cast<u8>(ResourceLimitCategory::APPLICATION)] = resource_limit;
-
     // Create the SYS_APPLET resource limit
     resource_limit = ResourceLimit::Create(kernel, "System Applets");
     resource_limit->max_priority = 0x4;
@@ -117,7 +115,6 @@ ResourceLimitList::ResourceLimitList(KernelSystem& kernel) {
     resource_limit->max_address_arbiters = 0x3;
     resource_limit->max_cpu_time = 0x2710;
     resource_limits[static_cast<u8>(ResourceLimitCategory::SYS_APPLET)] = resource_limit;
-
     // Create the LIB_APPLET resource limit
     resource_limit = ResourceLimit::Create(kernel, "Library Applets");
     resource_limit->max_priority = 0x4;
@@ -131,7 +128,6 @@ ResourceLimitList::ResourceLimitList(KernelSystem& kernel) {
     resource_limit->max_address_arbiters = 0x1;
     resource_limit->max_cpu_time = 0x2710;
     resource_limits[static_cast<u8>(ResourceLimitCategory::LIB_APPLET)] = resource_limit;
-
     // Create the OTHER resource limit
     resource_limit = ResourceLimit::Create(kernel, "Others");
     resource_limit->max_priority = 0x4;

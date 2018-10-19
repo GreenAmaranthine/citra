@@ -42,16 +42,12 @@ static const u32 memory_region_sizes[8][3]{
 };
 
 void MemoryInit(u32 mem_type) {
-    if (Service::CFG::IsNewModeEnabled()) {
-        if (Settings::values.force_memory_mode_7) {
+    if (Service::CFG::IsNewModeEnabled())
+        if (Settings::values.force_memory_mode_7)
             mem_type = 7;
-        } else if (mem_type <= 5) {
+        else if (mem_type <= 5)
             mem_type = 6;
-        }
-    }
-
     ASSERT(mem_type != 1);
-
     // The kernel allocation regions (APPLICATION, SYSTEM and BASE) are laid out in sequence, with
     // the sizes specified in the memory_region_sizes table.
     VAddr base{};
@@ -63,17 +59,13 @@ void MemoryInit(u32 mem_type) {
         // Reserve enough space for this region of FCRAM.
         // We don't want this block of memory to be relocated when allocating from it.
         memory_regions[i].linear_heap_memory->reserve(memory_regions[i].size);
-
         base += memory_regions[i].size;
     }
-
     // We must've allocated the entire FCRAM by the end
-    if (mem_type > 5) {
+    if (mem_type > 5)
         ASSERT(base == Memory::FCRAM_N3DS_SIZE);
-    } else {
+    else
         ASSERT(base == Memory::FCRAM_SIZE);
-    }
-
     using ConfigMem::config_mem;
     config_mem.app_mem_type = mem_type;
     // app_mem_alloc doesn't always match the configured size for memory_region[0]: in case the
@@ -107,13 +99,11 @@ MemoryRegionInfo* GetMemoryRegion(MemoryRegion region) {
 
 void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mapping) {
     using namespace Memory;
-
     struct MemoryArea {
         VAddr vaddr_base;
         PAddr paddr_base;
         u32 size;
     };
-
     // The order of entries in this array is important. The VRAM and IO VAddr ranges overlap, and
     // VRAM must be tried first.
     static constexpr MemoryArea memory_areas[]{
@@ -122,14 +112,12 @@ void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mappin
         {DSP_RAM_VADDR, DSP_RAM_PADDR, DSP_RAM_SIZE},
         {N3DS_EXTRA_RAM_VADDR, N3DS_EXTRA_RAM_PADDR, N3DS_EXTRA_RAM_SIZE - 0x20000},
     };
-
     VAddr mapping_limit{mapping.address + mapping.size};
     if (mapping_limit < mapping.address) {
         LOG_CRITICAL(Loader, "Mapping size overflowed: address=0x{:08X}, size=0x{:08X}",
                      mapping.address, mapping.size);
         return;
     }
-
     auto area{std::find_if(std::begin(memory_areas), std::end(memory_areas), [&](const auto& area) {
         return mapping.address >= area.vaddr_base && mapping_limit <= area.vaddr_base + area.size;
     })};
@@ -140,19 +128,15 @@ void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mappin
             mapping.address, mapping.size, mapping.read_only, mapping.unk_flag);
         return;
     }
-
     u32 offset_into_region{mapping.address - area->vaddr_base};
     if (area->paddr_base == IO_AREA_PADDR) {
         LOG_ERROR(Loader, "MMIO mappings aren't supported yet. phys_addr=0x{:08X}",
                   area->paddr_base + offset_into_region);
         return;
     }
-
     u8* target_pointer{Memory::GetPhysicalPointer(area->paddr_base + offset_into_region)};
-
     // TODO: This flag seems to have some other effect, but it's unknown what
     MemoryState memory_state{mapping.unk_flag ? MemoryState::Static : MemoryState::IO};
-
     auto vma{
         address_space.MapBackingMemory(mapping.address, target_pointer, mapping.size, memory_state)
             .Unwrap()};
@@ -167,7 +151,6 @@ void MapSharedPages(VMManager& address_space) {
                                            Memory::CONFIG_MEMORY_SIZE, MemoryState::Shared)
                          .Unwrap()};
     address_space.Reprotect(cfg_mem_vma, VMAPermission::Read);
-
     auto shared_page_vma{
         address_space
             .MapBackingMemory(

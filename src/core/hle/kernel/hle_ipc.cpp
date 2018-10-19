@@ -42,9 +42,7 @@ SharedPtr<Event> HLERequestContext::SleepClientThread(SharedPtr<Thread> thread,
                                                           SharedPtr<WaitObject> object) mutable {
         ASSERT(thread->status == ThreadStatus::WaitHleEvent);
         callback(thread, context, reason);
-
         auto& process{thread->owner_process};
-
         // We must copy the entire command buffer *plus* the entire static buffers area, since
         // the translation might need to read from it in order to retrieve the StaticBuffer
         // target addresses.
@@ -52,21 +50,17 @@ SharedPtr<Event> HLERequestContext::SleepClientThread(SharedPtr<Thread> thread,
         Memory::ReadBlock(*process, thread->GetCommandBufferAddress(), cmd_buff.data(),
                           cmd_buff.size() * sizeof(u32));
         context.WriteToOutgoingCommandBuffer(cmd_buff.data(), *process, Kernel::g_handle_table);
-
         // Copy the translated command buffer back into the thread's command buffer area.
         Memory::WriteBlock(*process, thread->GetCommandBufferAddress(), cmd_buff.data(),
                            cmd_buff.size() * sizeof(u32));
     };
-
     auto event{Core::System::GetInstance().Kernel().CreateEvent(Kernel::ResetType::OneShot,
                                                                 "HLE Pause Event: " + reason)};
     thread->status = ThreadStatus::WaitHleEvent;
     thread->wait_objects = {event};
     event->AddWaitingThread(thread);
-
     if (timeout.count() > 0)
         thread->WakeAfterDelay(timeout.count());
-
     return event;
 }
 
@@ -103,18 +97,14 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
                                                                 Process& src_process,
                                                                 HandleTable& src_table) {
     IPC::Header header{src_cmdbuf[0]};
-
     std::size_t untranslated_size{1u + header.normal_params_size};
     std::size_t command_size{untranslated_size + header.translate_params_size};
     ASSERT(command_size <= IPC::COMMAND_BUFFER_LENGTH); // TODO: Return error
-
     std::copy_n(src_cmdbuf, untranslated_size, cmd_buf.begin());
-
     std::size_t i{untranslated_size};
     while (i < command_size) {
         u32 descriptor{cmd_buf[i] = src_cmdbuf[i]};
         i += 1;
-
         switch (IPC::GetDescriptorType(descriptor)) {
         case IPC::DescriptorType::CopyHandle:
         case IPC::DescriptorType::MoveHandle: {
@@ -126,11 +116,9 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
                 if (handle != 0) {
                     object = src_table.GetGeneric(handle);
                     ASSERT(object != nullptr); // TODO: Return error
-                    if (descriptor == IPC::DescriptorType::MoveHandle) {
+                    if (descriptor == IPC::DescriptorType::MoveHandle)
                         src_table.Close(handle);
-                    }
                 }
-
                 cmd_buf[i++] = AddOutgoingHandle(std::move(object));
             }
             break;
@@ -142,11 +130,9 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
         case IPC::DescriptorType::StaticBuffer: {
             VAddr source_address{src_cmdbuf[i]};
             IPC::StaticBufferDescInfo buffer_info{descriptor};
-
             // Copy the input buffer into our own vector and store it.
             std::vector<u8> data(buffer_info.size);
             Memory::ReadBlock(src_process, source_address, data.data(), data.size());
-
             AddStaticBuffer(buffer_info.buffer_id, std::move(data));
             cmd_buf[i++] = source_address;
             break;
@@ -161,25 +147,20 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
             UNIMPLEMENTED_MSG("Unsupported handle translation: {:#010X}", descriptor);
         }
     }
-
     return RESULT_SUCCESS;
 }
 
 ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, Process& dst_process,
                                                            HandleTable& dst_table) const {
     IPC::Header header{cmd_buf[0]};
-
     std::size_t untranslated_size{1u + header.normal_params_size};
     std::size_t command_size{untranslated_size + header.translate_params_size};
     ASSERT(command_size <= IPC::COMMAND_BUFFER_LENGTH);
-
     std::copy_n(cmd_buf.begin(), untranslated_size, dst_cmdbuf);
-
     std::size_t i{untranslated_size};
     while (i < command_size) {
         u32 descriptor{dst_cmdbuf[i] = cmd_buf[i]};
         i += 1;
-
         switch (IPC::GetDescriptorType(descriptor)) {
         case IPC::DescriptorType::CopyHandle:
         case IPC::DescriptorType::MoveHandle: {
@@ -189,18 +170,15 @@ ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, P
             for (u32 j{}; j < num_handles; ++j) {
                 SharedPtr<Object> object{GetIncomingHandle(cmd_buf[i])};
                 Handle handle{};
-                if (object != nullptr) {
+                if (object)
                     handle = dst_table.Create(object);
-                }
                 dst_cmdbuf[i++] = handle;
             }
             break;
         }
         case IPC::DescriptorType::StaticBuffer: {
             IPC::StaticBufferDescInfo buffer_info{descriptor};
-
             const auto& data{GetStaticBuffer(buffer_info.buffer_id)};
-
             // Grab the address that the target thread set up to receive the response static buffer
             // and write our data there. The static buffers area is located right after the command
             // buffer area.
@@ -208,9 +186,7 @@ ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, P
                                              2 * buffer_info.buffer_id};
             IPC::StaticBufferDescInfo target_descriptor{dst_cmdbuf[static_buffer_offset]};
             VAddr target_address{dst_cmdbuf[static_buffer_offset + 1]};
-
             Memory::WriteBlock(dst_process, target_address, data.data(), data.size());
-
             dst_cmdbuf[i++] = target_address;
             break;
         }

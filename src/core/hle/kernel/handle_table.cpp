@@ -48,17 +48,14 @@ bool HandleTable::IsValid(Handle handle) const {
 }
 
 SharedPtr<Object> HandleTable::GetGeneric(Handle handle) const {
-    if (handle == CurrentThread) {
+    if (handle == CurrentThread)
         return GetCurrentThread();
-    } else if (handle == CurrentProcess) {
+    else if (handle == CurrentProcess)
         // TODO: should this return HandleTable's parent process, or kernel's current process?
         // Should change this either way
         return Core::System::GetInstance().Kernel().GetCurrentProcess();
-    }
-
-    if (!IsValid(handle)) {
+    if (!IsValid(handle))
         return nullptr;
-    }
     return objects.find(handle)->second;
 }
 

@@ -15,18 +15,14 @@ Semaphore::~Semaphore() {}
 
 ResultVal<SharedPtr<Semaphore>> KernelSystem::CreateSemaphore(s32 initial_count, s32 max_count,
                                                               std::string name) {
-
     if (initial_count > max_count)
         return ERR_INVALID_COMBINATION_KERNEL;
-
     SharedPtr<Semaphore> semaphore{new Semaphore(*this)};
-
     // When the semaphore is created, some slots are reserved for other threads,
     // and the rest is reserved for the caller thread
     semaphore->max_count = max_count;
     semaphore->available_count = initial_count;
     semaphore->name = std::move(name);
-
     return MakeResult<SharedPtr<Semaphore>>(std::move(semaphore));
 }
 
@@ -43,12 +39,9 @@ void Semaphore::Acquire(Thread* thread) {
 ResultVal<s32> Semaphore::Release(s32 release_count) {
     if (max_count - available_count < release_count)
         return ERR_OUT_OF_RANGE_KERNEL;
-
     s32 previous_count{available_count};
     available_count += release_count;
-
     WakeupAllWaitingThreads();
-
     return MakeResult<s32>(previous_count);
 }
 
