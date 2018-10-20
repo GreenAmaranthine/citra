@@ -111,7 +111,7 @@ void Renderer::SwapBuffers() {
         u32 lcd_color_addr{static_cast<u32>((fb_id == 0) ? LCD_REG_INDEX(color_fill_top)
                                                          : LCD_REG_INDEX(color_fill_bottom))};
         lcd_color_addr = HW::VADDR_LCD + 4 * lcd_color_addr;
-        LCD::Regs::ColorFill color_fill = {0};
+        LCD::Regs::ColorFill color_fill;
         LCD::Read(color_fill.raw, lcd_color_addr);
 
         if (color_fill.is_enabled) {
@@ -141,8 +141,8 @@ void Renderer::SwapBuffers() {
     if (VideoCore::g_renderer_screenshot_requested) {
         // Draw this frame to the screenshot framebuffer
         screenshot_framebuffer.Create();
-        GLuint old_read_fb = state.draw.read_framebuffer;
-        GLuint old_draw_fb = state.draw.draw_framebuffer;
+        GLuint old_read_fb{state.draw.read_framebuffer};
+        GLuint old_draw_fb{state.draw.draw_framebuffer};
         state.draw.read_framebuffer = state.draw.draw_framebuffer = screenshot_framebuffer.handle;
         state.Apply();
 

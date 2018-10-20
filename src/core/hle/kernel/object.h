@@ -75,7 +75,7 @@ private:
     friend void intrusive_ptr_add_ref(Object*);
     friend void intrusive_ptr_release(Object*);
 
-    std::atomic<u32> ref_count{0};
+    std::atomic<u32> ref_count{};
     std::atomic<u32> object_id{next_object_id++};
 };
 

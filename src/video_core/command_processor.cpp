@@ -7,6 +7,7 @@
 #include <future>
 #include <memory>
 #include <utility>
+#include <variant>
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/thread_pool.h"
@@ -295,15 +296,11 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         // Multithreaded vertex cache. Each thread will lock the vertex that it's processing and add
         // the data to that batch
         struct CachedVertex {
-            explicit CachedVertex() : batch{0}, lock ATOMIC_FLAG_INIT {}
+            explicit CachedVertex() : lock ATOMIC_FLAG_INIT {}
             CachedVertex(const CachedVertex& other) : CachedVertex{} {}
 
-            union {
-                Shader::AttributeBuffer output_attr; // GS used
-                Shader::OutputVertex output_vertex;  // No GS
-            };
-
-            std::atomic<u32> batch;
+            std::variant<Shader::AttributeBuffer, Shader::OutputVertex> output;
+            std::atomic<u32> batch{};
             std::atomic_flag lock;
         };
         static std::vector<CachedVertex> vs_output(0x10000);
@@ -312,11 +309,11 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             vs_output.resize(regs.pipeline.num_vertices);
         }
 
-        // used to invalidate data from the previous batch without clearing it
+        // Used to invalidate data from the previous batch without clearing it
         static u32 batch_id{std::numeric_limits<u32>::max()};
         ++batch_id;
 
-        // reset cache when id overflows for safety
+        // Reset cache when id overflows for safety
         if (batch_id == 0) {
             ++batch_id;
             for (auto& entry : vs_output)
@@ -360,19 +357,20 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                         if (cached_vertex.lock.test_and_set(std::memory_order_acquire)) {
                             // Another thread is processing this vertex
                             continue;
-                        } else if (cached_vertex.batch.load(std::memory_order_acquire) ==
-                                   batch_id) {
+                        } else if (batch_id ==
+                                   cached_vertex.batch.load(std::memory_order_acquire)) {
                             // Vertex is not being processed and is from the correct batch so unlock
                             cached_vertex.lock.clear(std::memory_order_release);
                             continue;
                         }
-                    } else if (cached_vertex.batch.load(std::memory_order_relaxed) == batch_id) {
+                    } else if (batch_id == cached_vertex.batch.load(std::memory_order_relaxed)) {
                         continue;
                     }
                 }
                 Shader::AttributeBuffer attribute_buffer;
-                Shader::AttributeBuffer& output_attr{use_gs ? cached_vertex.output_attr
-                                                            : attribute_buffer};
+                Shader::AttributeBuffer& output_attr{
+                    use_gs ? std::get<Shader::AttributeBuffer>(cached_vertex.output)
+                           : attribute_buffer};
 
                 // Initialize data for the current vertex
                 loader.LoadVertex(base_address, index, vertex, attribute_buffer);
@@ -382,7 +380,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 shader_engine->Run(g_state.vs, shader_unit);
                 shader_unit.WriteOutput(regs.vs, output_attr);
                 if (!use_gs) {
-                    cached_vertex.output_vertex =
+                    cached_vertex.output =
                         Shader::OutputVertex::FromAttributeBuffer(regs.rasterizer, output_attr);
                 }
                 if (!single_thread) {
@@ -434,9 +432,11 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
             if (use_gs) {
                 // Send to geometry pipeline
-                g_state.geometry_pipeline.SubmitVertex(cached_vertex.output_attr);
+                g_state.geometry_pipeline.SubmitVertex(
+                    std::get<Shader::AttributeBuffer>(cached_vertex.output));
             } else {
-                primitive_assembler.SubmitVertex(cached_vertex.output_vertex);
+                primitive_assembler.SubmitVertex(
+                    std::get<Shader::OutputVertex>(cached_vertex.output));
             }
         }
 

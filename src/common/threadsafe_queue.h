@@ -19,7 +19,7 @@ namespace Common {
 template <typename T, bool NeedSize = true>
 class SPSCQueue {
 public:
-    SPSCQueue() : size{0} {
+    SPSCQueue() {
         write_ptr = read_ptr = new ElementPtr();
     }
 
@@ -118,7 +118,7 @@ private:
 
     ElementPtr* write_ptr;
     ElementPtr* read_ptr;
-    std::atomic<u32> size;
+    std::atomic<u32> size{};
     std::mutex cv_mutex;
     std::condition_variable cv;
 };

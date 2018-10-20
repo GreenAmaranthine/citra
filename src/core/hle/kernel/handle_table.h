@@ -89,7 +89,7 @@ public:
 
 private:
     std::map<Handle, SharedPtr<Object>> objects{};
-    std::atomic<u32> handle_counter{0};
+    std::atomic<u32> handle_counter{};
 };
 
 extern HandleTable g_handle_table;
