@@ -627,9 +627,9 @@ bool GMainWindow::LoadROM(const QString& filename) {
         return false;
     }
 
-    std::string title;
-    system.GetAppLoader().ReadTitle(title);
-    game_title = QString::fromStdString(title);
+    std::string short_title;
+    system.GetAppLoader().ReadShortTitle(short_title);
+    game_title = QString::fromStdString(short_title);
     SetupUIStrings();
 
     game_path = filename;
@@ -640,7 +640,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
     handlers.errored = HandleDiscordError;
     Discord_Initialize("472104565165260826", &handlers, 0, NULL);
     DiscordRichPresence presence{};
-    presence.state = title.empty() ? "Unknown game" : title.c_str();
+    presence.state = short_title.empty() ? "Unknown game" : short_title.c_str();
     presence.details = "Playing";
     presence.startTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
                                   std::chrono::system_clock::now().time_since_epoch())

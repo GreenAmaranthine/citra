@@ -167,7 +167,7 @@ ResultStatus AppLoader_NCCH::Load(Kernel::SharedPtr<Kernel::Process>& process) {
 
     if (auto member{Network::GetRoomMember().lock()}) {
         Network::GameInfo game_info;
-        ReadTitle(game_info.name);
+        ReadShortTitle(game_info.name);
         game_info.id = ncch_program_id;
         member->SendGameInfo(game_info);
     }
@@ -229,7 +229,7 @@ ResultStatus AppLoader_NCCH::ReadUpdateRomFS(std::shared_ptr<FileSys::RomFSReade
     return ResultStatus::Success;
 }
 
-ResultStatus AppLoader_NCCH::ReadTitle(std::string& title) {
+ResultStatus AppLoader_NCCH::ReadShortTitle(std::string& short_title) {
     std::vector<u8> data;
     Loader::SMDH smdh;
     ReadIcon(data);
@@ -240,9 +240,9 @@ ResultStatus AppLoader_NCCH::ReadTitle(std::string& title) {
 
     std::memcpy(&smdh, data.data(), sizeof(Loader::SMDH));
 
-    const auto& short_title{smdh.GetShortTitle(SMDH::TitleLanguage::English)};
-    auto title_end{std::find(short_title.begin(), short_title.end(), u'\0')};
-    title = Common::UTF16ToUTF8(std::u16string{short_title.begin(), title_end});
+    const auto& short_title_array{smdh.GetShortTitle(SMDH::TitleLanguage::English)};
+    auto end{std::find(short_title_array.begin(), short_title_array.end(), u'\0')};
+    short_title = Common::UTF16ToUTF8(std::u16string{short_title_array.begin(), end});
 
     return ResultStatus::Success;
 }

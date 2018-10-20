@@ -184,11 +184,11 @@ public:
     }
 
     /**
-     * Get the title of the application
-     * @param title Reference to store the application title into
+     * Get the short title of the application
+     * @param short_title Reference to store the application title into
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadTitle(std::string& title) {
+    virtual ResultStatus ReadShortTitle(std::string& short_title) {
         return ResultStatus::ErrorNotImplemented;
     }
 
