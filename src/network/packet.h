@@ -126,7 +126,7 @@ Packet& Packet::operator>>(std::vector<T>& out_data) {
 
     // Then extract the data
     for (std::size_t i{}; i < out_data.size(); ++i) {
-        T character = 0;
+        T character{};
         *this >> character;
         out_data[i] = character;
     }

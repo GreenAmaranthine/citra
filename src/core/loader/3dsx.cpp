@@ -148,7 +148,7 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
 
     // Relocate the segments
     for (unsigned int current_segment{}; current_segment < NUM_SEGMENTS; ++current_segment) {
-        for (unsigned current_segment_reloc_table = 0; current_segment_reloc_table < n_reloc_tables;
+        for (unsigned current_segment_reloc_table{}; current_segment_reloc_table < n_reloc_tables;
              current_segment_reloc_table++) {
             u32 n_relocs{relocs[current_segment * n_reloc_tables + current_segment_reloc_table]};
             if (current_segment_reloc_table >= 2) {
@@ -218,19 +218,15 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
 
     // Create the CodeSet
     SharedPtr<CodeSet> code_set{CodeSet::Create("", 0)};
-
     code_set->CodeSegment().offset = loadinfo.seg_ptrs[0] - program_image.data();
     code_set->CodeSegment().addr = loadinfo.seg_addrs[0];
     code_set->CodeSegment().size = loadinfo.seg_sizes[0];
-
     code_set->RODataSegment().offset = loadinfo.seg_ptrs[1] - program_image.data();
     code_set->RODataSegment().addr = loadinfo.seg_addrs[1];
     code_set->RODataSegment().size = loadinfo.seg_sizes[1];
-
     code_set->DataSegment().offset = loadinfo.seg_ptrs[2] - program_image.data();
     code_set->DataSegment().addr = loadinfo.seg_addrs[2];
     code_set->DataSegment().size = loadinfo.seg_sizes[2];
-
     code_set->entrypoint = code_set->CodeSegment().addr;
     code_set->memory = std::make_shared<std::vector<u8>>(std::move(program_image));
 

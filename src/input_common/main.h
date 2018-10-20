@@ -10,7 +10,7 @@
 
 namespace Common {
 class ParamPackage;
-}
+} // namespace Common
 
 namespace InputCommon {
 
@@ -53,10 +53,13 @@ enum class DeviceType { Button, Analog };
 class DevicePoller {
 public:
     virtual ~DevicePoller() = default;
+
     /// Setup and start polling for inputs, should be called before GetNextInput
     virtual void Start() = 0;
+
     /// Stop polling
     virtual void Stop() = 0;
+
     /**
      * Every call to this function returns the next input recorded since calling Start
      * @return A ParamPackage of the recorded input, which can be used to create an InputDevice.
@@ -67,5 +70,7 @@ public:
 
 // Get all DevicePoller from all backends for a specific device type
 std::vector<std::unique_ptr<DevicePoller>> GetPollers(DeviceType type);
+
 } // namespace Polling
+
 } // namespace InputCommon

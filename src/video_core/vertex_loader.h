@@ -31,7 +31,7 @@ private:
     std::array<u32, 16> vertex_attribute_elements{};
     std::array<bool, 16> vertex_attribute_is_default;
     int num_total_attributes{};
-    bool is_setup = false;
+    bool is_setup{};
 };
 
 } // namespace Pica

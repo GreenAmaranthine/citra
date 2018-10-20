@@ -89,7 +89,7 @@ private:
     std::unique_ptr<QCamera> camera;
     QtCameraSurface camera_surface{};
     QCameraViewfinderSettings settings;
-    bool started = false;
+    bool started{};
 
     static std::array<std::shared_ptr<QtMultimediaCameraHandler>, 3> handlers;
     static std::array<bool, 3> status;

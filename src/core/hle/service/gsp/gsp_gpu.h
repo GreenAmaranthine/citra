@@ -184,10 +184,12 @@ struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
 
     /// Event triggered when GSP interrupt has been signalled
     Kernel::SharedPtr<Kernel::Event> interrupt_event;
+
     /// Thread index into interrupt relay queue
     u32 thread_id;
+
     /// Whether RegisterInterruptRelayQueue was called for this session
-    bool registered = false;
+    bool registered{};
 };
 
 class GSP_GPU final : public ServiceFramework<GSP_GPU, SessionData> {
