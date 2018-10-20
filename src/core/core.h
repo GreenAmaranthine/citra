@@ -253,10 +253,10 @@ private:
     u64 jump_tid;
     Service::FS::MediaType jump_media;
 
-    std::atomic<bool> jump_requested;
-    std::atomic<bool> shutdown_requested;
-    std::atomic<bool> sleep_mode_enabled;
-    std::atomic<bool> running;
+    std::atomic_bool jump_requested;
+    std::atomic_bool shutdown_requested;
+    std::atomic_bool sleep_mode_enabled;
+    std::atomic_bool running;
     std::mutex running_mutex;
     std::condition_variable running_cv;
 };

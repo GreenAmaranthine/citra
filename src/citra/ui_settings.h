@@ -35,9 +35,7 @@ struct GameDir {
 struct Values {
     QByteArray geometry;
     QByteArray state;
-
     QByteArray screens_geometry;
-
     QByteArray gamelist_header_state;
 
     bool single_window_mode;

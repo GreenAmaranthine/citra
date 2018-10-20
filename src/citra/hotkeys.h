@@ -4,17 +4,17 @@
 
 #pragma once
 
+#include <memory>
 #include "ui_hotkeys.h"
 
 class QDialog;
 class QKeySequence;
-class QSettings;
 class QShortcut;
 
 /**
  * Register a hotkey.
  *
- * @param group General group this hotkey belongs to (e.g. "Main Window", "Debugger")
+ * @param group General group this hotkey belongs to (e.g. "Main Window")
  * @param action Name of the action (e.g. "Start Emulation", "Load Image")
  * @param default_keyseq Default key sequence to assign if the hotkey wasn't present in the settings
  * file before
@@ -29,7 +29,7 @@ void RegisterHotkey(const QString& group, const QString& action,
 /**
  * Returns a QShortcut object whose activated() signal can be connected to other QObjects' slots.
  *
- * @param group  General group this hotkey belongs to (e.g. "Main Window", "Debugger").
+ * @param group General group this hotkey belongs to (e.g. "Main Window").
  * @param action Name of the action (e.g. "Start Emulation", "Load Image").
  * @param widget Parent widget of the returned QShortcut.
  * @warning If multiple QWidgets' call this function for the same action, the returned QShortcut
@@ -60,5 +60,5 @@ public:
     explicit GHotkeysDialog(QWidget* parent = nullptr);
 
 private:
-    Ui::hotkeys ui;
+    std::unique_ptr<Ui::Hotkeys> ui;
 };

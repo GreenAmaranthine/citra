@@ -76,7 +76,7 @@ private:
             return task->get_future();
         }
 
-        std::atomic<bool> spinlock_enabled{};
+        std::atomic_bool spinlock_enabled{};
         std::mutex mutex;
         std::condition_variable cv;
 

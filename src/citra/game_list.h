@@ -25,6 +25,7 @@ class QStandardItemModel;
 class QTreeView;
 class QToolButton;
 class QVBoxLayout;
+class QMenu;
 
 enum class GameListOpenTarget { SAVE_DATA = 0, EXT_DATA = 1, APPLICATION = 2, UPDATE_DATA = 3 };
 
@@ -92,12 +93,12 @@ private:
     QString FindGameByProgramID(QStandardItem* current_item, u64 program_id);
 
     GameListSearchField* search_field;
-    GMainWindow* main_window{};
-    QVBoxLayout* layout{};
-    QTreeView* tree_view{};
-    QStandardItemModel* item_model{};
-    GameListWorker* current_worker{};
-    QFileSystemWatcher* watcher{};
+    GMainWindow* main_window;
+    QVBoxLayout* layout;
+    QTreeView* tree_view;
+    QStandardItemModel* item_model;
+    GameListWorker* current_worker;
+    QFileSystemWatcher* watcher;
 
     friend class GameListSearchField;
 };

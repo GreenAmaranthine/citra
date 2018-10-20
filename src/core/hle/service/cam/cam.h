@@ -354,7 +354,7 @@ private:
     std::array<CameraConfig, NumCameras> cameras;
     std::array<PortConfig, 2> ports;
     CoreTiming::EventType* completion_event_callback;
-    std::atomic<bool> is_camera_reload_pending{false};
+    std::atomic_bool is_camera_reload_pending{};
 };
 
 /// Reload camera devices. Used when input configuration changed

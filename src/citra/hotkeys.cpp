@@ -5,31 +5,29 @@
 #include <map>
 #include <QKeySequence>
 #include <QShortcut>
-#include <QtGlobal>
+#include <QTreeWidgetItem>
 #include "citra/hotkeys.h"
 #include "citra/ui_settings.h"
 
 struct Hotkey {
-    Hotkey() : shortcut(nullptr), context(Qt::WindowShortcut) {}
-
     QKeySequence keyseq;
-    QShortcut* shortcut;
-    Qt::ShortcutContext context;
+    QShortcut* shortcut{};
+    Qt::ShortcutContext context{Qt::WindowShortcut};
 };
 
-typedef std::map<QString, Hotkey> HotkeyMap;
-typedef std::map<QString, HotkeyMap> HotkeyGroupMap;
+using HotkeyMap = std::map<QString, Hotkey>;
+using HotkeyGroupMap = std::map<QString, HotkeyMap>;
 
 HotkeyGroupMap hotkey_groups;
 
 void SaveHotkeys() {
     UISettings::values.shortcuts.clear();
-    for (auto group : hotkey_groups) {
-        for (auto hotkey : group.second) {
+    for (const auto& group : hotkey_groups) {
+        for (const auto& hotkey : group.second) {
             UISettings::values.shortcuts.emplace_back(
-                UISettings::Shortcut(group.first + "/" + hotkey.first,
-                                     UISettings::ContextualShortcut(hotkey.second.keyseq.toString(),
-                                                                    hotkey.second.context)));
+                UISettings::Shortcut{group.first + "/" + hotkey.first,
+                                     UISettings::ContextualShortcut{hotkey.second.keyseq.toString(),
+                                                                    hotkey.second.context}});
         }
     }
 }
@@ -61,7 +59,7 @@ void RegisterHotkey(const QString& group, const QString& action, const QKeySeque
 }
 
 QShortcut* GetHotkey(const QString& group, const QString& action, QWidget* widget) {
-    Hotkey& hk = hotkey_groups[group][action];
+    Hotkey& hk{hotkey_groups[group][action]};
 
     if (!hk.shortcut)
         hk.shortcut = new QShortcut(hk.keyseq, widget, nullptr, nullptr, hk.context);
@@ -69,22 +67,24 @@ QShortcut* GetHotkey(const QString& group, const QString& action, QWidget* widge
     return hk.shortcut;
 }
 
-GHotkeysDialog::GHotkeysDialog(QWidget* parent) : QWidget{parent} {
-    ui.setupUi(this);
+GHotkeysDialog::GHotkeysDialog(QWidget* parent)
+    : QWidget{parent}, ui{std::make_unique<Ui::Hotkeys>()} {
+    ui->setupUi(this);
 
-    for (auto group : hotkey_groups) {
-        QTreeWidgetItem* toplevel_item{new QTreeWidgetItem(QStringList(group.first))};
-        for (auto hotkey : group.second) {
-            QStringList columns{};
+    for (const auto& group : hotkey_groups) {
+        QTreeWidgetItem* toplevel_item{new QTreeWidgetItem(QStringList{group.first})};
+        for (const auto& hotkey : group.second) {
+            QStringList columns;
             columns << hotkey.first << hotkey.second.keyseq.toString();
             QTreeWidgetItem* item{new QTreeWidgetItem(columns)};
             toplevel_item->addChild(item);
         }
-        ui.treeWidget->addTopLevelItem(toplevel_item);
+        ui->treeWidget->addTopLevelItem(toplevel_item);
     }
-    // TODO: Make context configurable as well (hiding the column for now)
-    ui.treeWidget->setColumnCount(2);
 
-    ui.treeWidget->resizeColumnToContents(0);
-    ui.treeWidget->resizeColumnToContents(1);
+    // TODO: Make context configurable as well (hiding the column for now)
+    ui->treeWidget->setColumnCount(2);
+
+    ui->treeWidget->resizeColumnToContents(0);
+    ui->treeWidget->resizeColumnToContents(1);
 }

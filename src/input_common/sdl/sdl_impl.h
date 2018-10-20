@@ -40,7 +40,7 @@ public:
         std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>>& pollers) override;
 
     /// Used by the Pollers during config
-    std::atomic<bool> polling{};
+    std::atomic_bool polling{};
     Common::SPSCQueue<SDL_Event> event_queue;
 
 private:
@@ -58,7 +58,7 @@ private:
     std::shared_ptr<SDLAnalogFactory> analog_factory;
 
     bool start_thread{};
-    std::atomic<bool> initialized{};
+    std::atomic_bool initialized{};
 
     std::thread poll_thread;
 };

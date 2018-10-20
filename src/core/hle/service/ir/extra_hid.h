@@ -62,7 +62,7 @@ private:
     std::unique_ptr<Input::ButtonDevice> zl;
     std::unique_ptr<Input::ButtonDevice> zr;
     std::unique_ptr<Input::AnalogDevice> c_stick;
-    std::atomic<bool> is_device_reload_pending;
+    std::atomic_bool is_device_reload_pending;
 };
 
 } // namespace Service::IR

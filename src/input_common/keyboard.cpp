@@ -28,7 +28,7 @@ public:
 
 private:
     std::shared_ptr<KeyButtonList> key_button_list;
-    std::atomic<bool> status{false};
+    std::atomic_bool status{};
 };
 
 struct KeyButtonPair {

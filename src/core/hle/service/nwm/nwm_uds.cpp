@@ -48,7 +48,7 @@ static Kernel::SharedPtr<Kernel::SharedMemory> recv_buffer_memory;
 // Connection status of this 3DS.
 static ConnectionStatus connection_status{};
 
-static std::atomic<bool> initialized(false);
+static std::atomic_bool initialized(false);
 
 /* Node information about the current network.
  * The amount of elements in this vector is always the maximum number

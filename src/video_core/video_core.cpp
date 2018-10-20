@@ -13,13 +13,13 @@ namespace VideoCore {
 
 std::unique_ptr<Renderer> g_renderer; ///< Renderer plugin
 
-std::atomic<bool> g_hw_shader_enabled;
-std::atomic<bool> g_hw_shader_accurate_gs;
-std::atomic<bool> g_hw_shader_accurate_mul;
-std::atomic<bool> g_renderer_bg_color_update_requested;
+std::atomic_bool g_hw_shader_enabled;
+std::atomic_bool g_hw_shader_accurate_gs;
+std::atomic_bool g_hw_shader_accurate_mul;
+std::atomic_bool g_renderer_bg_color_update_requested;
 
 // Screenshot
-std::atomic<bool> g_renderer_screenshot_requested;
+std::atomic_bool g_renderer_screenshot_requested;
 void* g_screenshot_bits;
 std::function<void()> g_screenshot_complete_callback;
 Layout::FramebufferLayout g_screenshot_framebuffer_layout;

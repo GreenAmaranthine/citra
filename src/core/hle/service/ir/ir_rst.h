@@ -59,7 +59,7 @@ private:
     std::unique_ptr<Input::ButtonDevice> zl_button;
     std::unique_ptr<Input::ButtonDevice> zr_button;
     std::unique_ptr<Input::AnalogDevice> c_stick;
-    std::atomic<bool> is_device_reload_pending{false};
+    std::atomic_bool is_device_reload_pending{};
     bool raw_c_stick{};
     int update_period{};
 };

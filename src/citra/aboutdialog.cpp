@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <QIcon>
-#include "aboutdialog.h"
+#include "citra/aboutdialog.h"
 #include "common/scm_rev.h"
 #include "ui_aboutdialog.h"
 

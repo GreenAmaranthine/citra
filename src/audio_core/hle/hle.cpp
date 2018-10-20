@@ -257,10 +257,12 @@ void DspHle::Impl::AudioPipeWriteStructAddresses() {
 
     // Begin with a u16 denoting the number of structs.
     WriteU16(DspPipe::Audio, static_cast<u16>(struct_addresses.size()));
+
     // Then write the struct addresses.
     for (u16 addr : struct_addresses) {
         WriteU16(DspPipe::Audio, addr);
     }
+
     // Signal that we have data on this pipe.
     if (auto service{dsp_dsp.lock()}) {
         service->SignalInterrupt(InterruptType::Pipe, DspPipe::Audio);

@@ -252,7 +252,7 @@ private:
     CoreTiming::EventType* accelerometer_update_event;
     CoreTiming::EventType* gyroscope_update_event;
 
-    std::atomic<bool> is_device_reload_pending{true};
+    std::atomic_bool is_device_reload_pending{true};
     std::array<std::unique_ptr<Input::ButtonDevice>, Settings::NativeButton::NUM_BUTTONS_HID>
         buttons;
     std::unique_ptr<Input::ButtonDevice> button_home;

@@ -42,7 +42,7 @@ public:
 
 private:
     bool running{};
-    std::atomic<bool> stop_run{false};
+    std::atomic_bool stop_run{};
 
     Screens* screens;
 

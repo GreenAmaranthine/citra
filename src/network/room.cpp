@@ -24,7 +24,7 @@ public:
 
     ENetHost* server{}; ///< Network interface.
 
-    std::atomic_bool is_open{false};  ///< Whether the room is open.
+    std::atomic_bool is_open{};       ///< Whether the room is open.
     RoomInformation room_information; ///< Information about this room.
 
     std::string password; ///< The password required to connect to this room.

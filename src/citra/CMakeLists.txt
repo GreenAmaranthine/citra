@@ -21,6 +21,7 @@ add_executable(citra
     camera/qt_multimedia_camera.cpp
     camera/qt_multimedia_camera.h
     citra.rc
+    compatibility.h
     camera/still_image_camera.cpp
     camera/still_image_camera.h
     configuration/config.cpp
@@ -66,6 +67,8 @@ add_executable(citra
     game_list.cpp
     game_list.h
     game_list_p.h
+    game_list_worker.cpp
+    game_list_worker.h
     hotkeys.cpp
     hotkeys.h
     main.cpp
