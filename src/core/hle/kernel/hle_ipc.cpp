@@ -49,7 +49,7 @@ SharedPtr<Event> HLERequestContext::SleepClientThread(SharedPtr<Thread> thread,
         std::array<u32_le, IPC::COMMAND_BUFFER_LENGTH + 2 * IPC::MAX_STATIC_BUFFERS> cmd_buff;
         Memory::ReadBlock(*process, thread->GetCommandBufferAddress(), cmd_buff.data(),
                           cmd_buff.size() * sizeof(u32));
-        context.WriteToOutgoingCommandBuffer(cmd_buff.data(), *process, Kernel::g_handle_table);
+        context.WriteToOutgoingCommandBuffer(cmd_buff.data(), *process);
         // Copy the translated command buffer back into the thread's command buffer area.
         Memory::WriteBlock(*process, thread->GetCommandBufferAddress(), cmd_buff.data(),
                            cmd_buff.size() * sizeof(u32));
@@ -94,8 +94,7 @@ void HLERequestContext::AddStaticBuffer(u8 buffer_id, std::vector<u8> data) {
 }
 
 ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* src_cmdbuf,
-                                                                Process& src_process,
-                                                                HandleTable& src_table) {
+                                                                Process& src_process) {
     IPC::Header header{src_cmdbuf[0]};
     std::size_t untranslated_size{1u + header.normal_params_size};
     std::size_t command_size{untranslated_size + header.translate_params_size};
@@ -150,8 +149,8 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
     return RESULT_SUCCESS;
 }
 
-ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, Process& dst_process,
-                                                           HandleTable& dst_table) const {
+ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf,
+                                                           Process& dst_process) const {
     IPC::Header header{cmd_buf[0]};
     std::size_t untranslated_size{1u + header.normal_params_size};
     std::size_t command_size{untranslated_size + header.translate_params_size};
@@ -171,7 +170,8 @@ ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, P
                 SharedPtr<Object> object{GetIncomingHandle(cmd_buf[i])};
                 Handle handle{};
                 if (object)
-                    handle = dst_table.Create(object);
+                    // TODO: Figure out the proper error handling for if this fails
+                    handle = dst_process.handle_table.Create(object).Unwrap();
                 dst_cmdbuf[i++] = handle;
             }
             break;

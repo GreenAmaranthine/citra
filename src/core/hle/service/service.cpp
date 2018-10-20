@@ -124,11 +124,9 @@ static std::string MakeFunctionString(const char* name, const char* port_name,
                                       const u32* cmd_buff) {
     // Number of params == bits 0-5 + bits 6-11
     int num_params{static_cast<int>((cmd_buff[0] & 0x3F) + ((cmd_buff[0] >> 6) & 0x3F))};
-
     std::string function_string{fmt::format("function '{}': port={}", name, port_name)};
-    for (int i{1}; i <= num_params; ++i) {
+    for (int i{1}; i <= num_params; ++i)
         function_string += fmt::format(", cmd_buff[{}]=0x{:X}", i, cmd_buff[i]);
-    }
     return function_string;
 }
 
@@ -160,31 +158,25 @@ void ServiceFrameworkBase::RegisterHandlersBase(const FunctionInfoBase* function
 
 void ServiceFrameworkBase::ReportUnimplementedFunction(u32* cmd_buf, const FunctionInfoBase* info) {
     std::string function_name{!info ? fmt::format("{:#08x}", cmd_buf[0]) : info->name};
-    LOG_ERROR(
-        Service, "unimplemented {}",
-        fmt::to_string(MakeFunctionString(function_name.c_str(), service_name.c_str(), cmd_buf)));
+    LOG_ERROR(Service, "unimplemented {}",
+              MakeFunctionString(function_name.c_str(), service_name.c_str(), cmd_buf));
 }
 
 void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_session) {
     u32* cmd_buf{Kernel::GetCommandBuffer()};
-
     u32 header_code{cmd_buf[0]};
     auto itr{handlers.find(header_code)};
     const FunctionInfoBase* info{itr == handlers.end() ? nullptr : &itr->second};
     if (!info || !info->handler_callback)
         return ReportUnimplementedFunction(cmd_buf, info);
-
     Kernel::SharedPtr<Kernel::Process> current_process{
         Core::System::GetInstance().Kernel().GetCurrentProcess()};
-
-    // TODO(yuriks): The kernel should be the one handling this as part of translation after
+    // TODO: The kernel should be the one handling this as part of translation after
     // everything else is migrated
-    Kernel::HLERequestContext context{std::move(server_session};
-    context.PopulateFromIncomingCommandBuffer(cmd_buf, *current_process, Kernel::g_handle_table);
-
+    Kernel::HLERequestContext context{std::move(server_session)};
+    context.PopulateFromIncomingCommandBuffer(cmd_buf, *current_process);
     LOG_TRACE(Service, "{}", MakeFunctionString(info->name, GetServiceName().c_str(), cmd_buf));
     handler_invoker(this, info->handler_callback, context);
-
     auto thread{Kernel::GetCurrentThread()};
     ASSERT(thread->status == Kernel::ThreadStatus::Running ||
            thread->status == Kernel::ThreadStatus::WaitHleEvent);
@@ -192,7 +184,7 @@ void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_ses
     // the thread to sleep then the writing of the command buffer will be deferred to the wakeup
     // callback.
     if (thread->status == Kernel::ThreadStatus::Running)
-        context.WriteToOutgoingCommandBuffer(cmd_buf, *current_process, Kernel::g_handle_table);
+        context.WriteToOutgoingCommandBuffer(cmd_buf, *current_process);
 }
 
 static bool AttemptLLE(const ServiceModuleInfo& service_module) {

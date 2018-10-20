@@ -43,7 +43,7 @@ enum KernelHandle : Handle {
  */
 class HandleTable final : NonCopyable {
 public:
-    HandleTable();
+    explicit HandleTable(KernelSystem& kernel);
 
     /**
      * Allocates a handle for the given object.
@@ -90,8 +90,8 @@ public:
 private:
     std::map<Handle, SharedPtr<Object>> objects{};
     std::atomic<u32> handle_counter{};
-};
 
-extern HandleTable g_handle_table;
+    KernelSystem& kernel;
+};
 
 } // namespace Kernel
