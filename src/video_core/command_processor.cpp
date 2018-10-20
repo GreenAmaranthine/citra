@@ -7,7 +7,6 @@
 #include <future>
 #include <memory>
 #include <utility>
-#include <boost/variant.hpp>
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/thread_pool.h"
@@ -298,7 +297,10 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         struct CachedVertex {
             CachedVertex() {}
             CachedVertex(const CachedVertex& other) : CachedVertex{} {}
-            boost::variant<Shader::AttributeBuffer, Shader::OutputVertex> output;
+            union {
+                Shader::AttributeBuffer output_attr; // GS used
+                Shader::OutputVertex output_vertex;  // No GS
+            };
             std::atomic<u32> batch{};
             std::atomic_flag lock ATOMIC_FLAG_INIT;
         };
@@ -367,9 +369,8 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     }
                 }
                 Shader::AttributeBuffer attribute_buffer;
-                Shader::AttributeBuffer& output_attr{
-                    use_gs ? boost::get<Shader::AttributeBuffer>(cached_vertex.output)
-                           : attribute_buffer};
+                Shader::AttributeBuffer& output_attr{use_gs ? cached_vertex.output_attr
+                                                            : attribute_buffer};
 
                 // Initialize data for the current vertex
                 loader.LoadVertex(base_address, index, vertex, attribute_buffer);
@@ -379,7 +380,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 shader_engine->Run(g_state.vs, shader_unit);
                 shader_unit.WriteOutput(regs.vs, output_attr);
                 if (!use_gs) {
-                    cached_vertex.output =
+                    cached_vertex.output_vertex =
                         Shader::OutputVertex::FromAttributeBuffer(regs.rasterizer, output_attr);
                 }
                 if (!single_thread) {
@@ -396,7 +397,6 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
         auto& thread_pool{Common::ThreadPool::GetPool()};
         std::vector<std::future<void>> futures;
-
         u32 vs_threads{regs.pipeline.num_vertices / Settings::values.min_vertices_per_thread};
         vs_threads = std::min(vs_threads, std::thread::hardware_concurrency() - 1);
 
@@ -424,18 +424,16 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
             // Synchronize threads
             if (vs_threads) {
-                while (cached_vertex.batch.load(std::memory_order_acquire) != batch_id) {
+                while (batch_id != cached_vertex.batch.load(std::memory_order_acquire)) {
                     std::this_thread::yield();
                 }
             }
 
             if (use_gs) {
                 // Send to geometry pipeline
-                g_state.geometry_pipeline.SubmitVertex(
-                    boost::get<Shader::AttributeBuffer>(cached_vertex.output));
+                g_state.geometry_pipeline.SubmitVertex(cached_vertex.output_attr);
             } else {
-                primitive_assembler.SubmitVertex(
-                    boost::get<Shader::OutputVertex>(cached_vertex.output));
+                primitive_assembler.SubmitVertex(cached_vertex.output_vertex);
             }
         }
 
