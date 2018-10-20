@@ -308,13 +308,13 @@ void Config::ReadValues() {
     UISettings::values.game_list_icon_size = UISettings::GameListIconSize{icon_size};
 
     int row_1{qt_config->value("row1", 2).toInt()};
-    if (row_1 < 0 || row_1 > 3) {
+    if (row_1 < 0 || row_1 > 4) {
         row_1 = 2;
     }
     UISettings::values.game_list_row_1 = UISettings::GameListText{row_1};
 
     int row_2{qt_config->value("row2", 0).toInt()};
-    if (row_2 < -1 || row_2 > 3) {
+    if (row_2 < -1 || row_2 > 4) {
         row_2 = 0;
     }
     UISettings::values.game_list_row_2 = UISettings::GameListText{row_2};

@@ -257,9 +257,16 @@ void Module::Interface::GetAmiiboSettings(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::StopTagScanning(Kernel::HLERequestContext& ctx) {
+    IPC::ResponseBuilder rb{ctx, 0x06, 1, 0};
+    if (nfc->tag_state == TagState::NotInitialized || nfc->tag_state == TagState::NotScanning) {
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
+        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
     nfc->tag_state = TagState::NotScanning;
 
-    IPC::ResponseBuilder rb{ctx, 0x06, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_NFC, "called");
