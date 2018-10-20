@@ -7,7 +7,7 @@
 #include <future>
 #include <memory>
 #include <utility>
-#include <variant>
+#include <boost/variant.hpp>
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/thread_pool.h"
@@ -298,7 +298,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         struct CachedVertex {
             CachedVertex() {}
             CachedVertex(const CachedVertex& other) : CachedVertex{} {}
-            std::variant<Shader::AttributeBuffer, Shader::OutputVertex> output;
+            boost::variant<Shader::AttributeBuffer, Shader::OutputVertex> output;
             std::atomic<u32> batch{};
             std::atomic_flag lock ATOMIC_FLAG_INIT;
         };
@@ -368,7 +368,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 }
                 Shader::AttributeBuffer attribute_buffer;
                 Shader::AttributeBuffer& output_attr{
-                    use_gs ? std::get<Shader::AttributeBuffer>(cached_vertex.output)
+                    use_gs ? boost::get<Shader::AttributeBuffer>(cached_vertex.output)
                            : attribute_buffer};
 
                 // Initialize data for the current vertex
@@ -432,10 +432,10 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             if (use_gs) {
                 // Send to geometry pipeline
                 g_state.geometry_pipeline.SubmitVertex(
-                    std::get<Shader::AttributeBuffer>(cached_vertex.output));
+                    boost::get<Shader::AttributeBuffer>(cached_vertex.output));
             } else {
                 primitive_assembler.SubmitVertex(
-                    std::get<Shader::OutputVertex>(cached_vertex.output));
+                    boost::get<Shader::OutputVertex>(cached_vertex.output));
             }
         }
 
