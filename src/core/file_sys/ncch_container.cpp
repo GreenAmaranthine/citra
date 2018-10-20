@@ -430,7 +430,7 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
         const auto& section{exefs_header.section[section_number]};
 
         // Load the specified section...
-        if (strcmp(section.name, name) == 0) {
+        if (std::strcmp(section.name, name) == 0) {
             LOG_DEBUG(Service_FS, "{} - offset: 0x{:08X}, size: 0x{:08X}, name: {}", section_number,
                       section.offset, section.size, section.name);
 
@@ -438,8 +438,9 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
                 (section.offset + exefs_offset + sizeof(ExeFs_Header) + ncch_offset))};
             exefs_file.Seek(section_offset, SEEK_SET);
 
-            std::array<u8, 16> key{};
-            if (strcmp(section.name, "icon") == 0 || strcmp(section.name, "banner") == 0) {
+            std::array<u8, 16> key;
+            if (std::strcmp(section.name, "icon") == 0 ||
+                std::strcmp(section.name, "banner") == 0) {
                 key = primary_key;
             } else {
                 key = secondary_key;
@@ -449,7 +450,7 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
                                                               exefs_ctr.data());
             dec.Seek(section.offset + sizeof(ExeFs_Header));
 
-            if (strcmp(section.name, ".code") == 0 && is_compressed) {
+            if (std::strcmp(section.name, ".code") == 0 && is_compressed) {
                 // Section is compressed, read compressed .code section...
                 std::unique_ptr<u8[]> temp_buffer{};
                 try {
@@ -490,13 +491,13 @@ Loader::ResultStatus NCCHContainer::LoadOverrideExeFSSection(const char* name,
     std::string override_name{};
 
     // Map our section name to the extracted equivalent
-    if (!strcmp(name, ".code"))
+    if (!std::strcmp(name, ".code"))
         override_name = "code.bin";
-    else if (!strcmp(name, "icon"))
+    else if (!std::strcmp(name, "icon"))
         override_name = "code.bin";
-    else if (!strcmp(name, "banner"))
+    else if (!std::strcmp(name, "banner"))
         override_name = "banner.bnr";
-    else if (!strcmp(name, "logo"))
+    else if (!std::strcmp(name, "logo"))
         override_name = "logo.bcma.lz";
     else
         return Loader::ResultStatus::Error;

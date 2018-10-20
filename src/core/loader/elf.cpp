@@ -342,7 +342,7 @@ SectionID ElfReader::GetSectionByName(const char* name, int firstSection) const 
     for (int i{firstSection}; i < header->e_shnum; i++) {
         const char* secname{GetSectionName(i)};
 
-        if (secname != nullptr && strcmp(name, secname) == 0)
+        if (secname != nullptr && std::strcmp(name, secname) == 0)
             return i;
     }
     return -1;
