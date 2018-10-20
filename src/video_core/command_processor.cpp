@@ -296,12 +296,11 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         // Multithreaded vertex cache. Each thread will lock the vertex that it's processing and add
         // the data to that batch
         struct CachedVertex {
-            explicit CachedVertex() : lock ATOMIC_FLAG_INIT {}
+            CachedVertex() {}
             CachedVertex(const CachedVertex& other) : CachedVertex{} {}
-
             std::variant<Shader::AttributeBuffer, Shader::OutputVertex> output;
             std::atomic<u32> batch{};
-            std::atomic_flag lock;
+            std::atomic_flag lock ATOMIC_FLAG_INIT;
         };
         static std::vector<CachedVertex> vs_output(0x10000);
 
