@@ -623,9 +623,9 @@ static const std::string GetDataDirectory() {
 
 // Returns a string with a Citra data dir or file in the user's home
 // directory.
-const std::string& GetUserPath(UserPath path, const std::string& settings_sdmc_dir) {
-    if (path == UserPath::SDMCDir && settings_sdmc_dir.length() > 1) {
-        return settings_sdmc_dir;
+const std::string& GetUserPath(UserPath path, const std::string& settings_dir) {
+    if ((path == UserPath::NANDDir || path == UserPath::SDMCDir) && settings_dir.length() > 1) {
+        return settings_dir;
     }
 
     static std::unordered_map<UserPath, std::string> paths;
@@ -656,13 +656,12 @@ const std::string& GetUserPath(UserPath path, const std::string& settings_sdmc_d
     return paths[path];
 }
 
-size_t WriteStringToFile(bool text_file, const std::string& str, const char* filename) {
+std::size_t WriteStringToFile(bool text_file, const std::string& str, const char* filename) {
     return IOFile{filename, text_file ? "w" : "wb"}.WriteBytes(str.data(), str.size());
 }
 
-size_t ReadFileToString(bool text_file, const char* filename, std::string& str) {
+std::size_t ReadFileToString(bool text_file, const char* filename, std::string& str) {
     IOFile file{filename, text_file ? "r" : "rb"};
-
     if (!file)
         return false;
 

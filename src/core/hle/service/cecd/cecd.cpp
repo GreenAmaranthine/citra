@@ -21,6 +21,7 @@
 #include "core/hle/service/cecd/cecd_s.h"
 #include "core/hle/service/cecd/cecd_u.h"
 #include "core/hle/service/cfg/cfg.h"
+#include "core/settings.h"
 #include "fmt/format.h"
 
 namespace Service::CECD {
@@ -1355,7 +1356,8 @@ Module::Module() {
     change_state_event =
         Kernel::Event::Create(Kernel::ResetType::OneShot, "CECD::change_state_event");
 
-    std::string nand_directory{FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)};
+    std::string nand_directory{
+        FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir + "/")};
     FileSys::ArchiveFactory_SystemSaveData systemsavedata_factory{nand_directory};
 
     // Open the SystemSaveData archive 0x00010026

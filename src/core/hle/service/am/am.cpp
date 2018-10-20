@@ -488,8 +488,10 @@ std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid) {
 
 std::string GetMediaTitlePath(Service::FS::MediaType media_type) {
     if (media_type == Service::FS::MediaType::NAND)
-        return fmt::format("{}{}/title/", FileUtil::GetUserPath(FileUtil::UserPath::NANDDir),
-                           SYSTEM_CID);
+        return fmt::format(
+            "{}{}/title/",
+            FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir + "/"),
+            SYSTEM_CID);
 
     if (media_type == Service::FS::MediaType::SDMC)
         return fmt::format(

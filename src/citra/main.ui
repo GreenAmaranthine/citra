@@ -57,23 +57,43 @@
       <string>Recent Files</string>
      </property>
     </widget>
-    <widget class="QMenu" name="menuAmiibo">
+    <widget class="QMenu" name="menu_Amiibo">
      <property name="title">
       <string>Amiibo</string>
      </property>
      <addaction name="action_Load_Amiibo"/>
      <addaction name="action_Remove_Amiibo"/>
     </widget>
+    <widget class="QMenu" name="menu_Directories_2">
+     <property name="title">
+      <string>Directories</string>
+     </property>
+     <widget class="QMenu" name="menu_NAND">
+      <property name="title">
+       <string>NAND</string>
+      </property>
+      <addaction name="action_NAND_Default"/>
+      <addaction name="action_NAND_Custom"/>
+     </widget>
+     <widget class="QMenu" name="menu_SDMC">
+      <property name="title">
+       <string>SDMC</string>
+      </property>
+      <addaction name="action_SDMC_Default"/>
+      <addaction name="action_SDMC_Custom"/>
+     </widget>
+     <addaction name="menu_NAND"/>
+     <addaction name="menu_SDMC"/>
+    </widget>
     <addaction name="action_Load_File"/>
     <addaction name="action_Install_CIA"/>
     <addaction name="action_Add_Seed"/>
     <addaction name="separator"/>
     <addaction name="action_Open_User_Directory"/>
+    <addaction name="separator"/>
+    <addaction name="menu_Amiibo"/>
     <addaction name="menu_recent_files"/>
-    <addaction name="separator"/>
-    <addaction name="menuAmiibo"/>
-    <addaction name="separator"/>
-    <addaction name="action_Select_SDMC_Directory"/>
+    <addaction name="menu_Directories_2"/>
     <addaction name="separator"/>
     <addaction name="action_Exit"/>
    </widget>
@@ -381,11 +401,6 @@
     <string>Set Play Coins</string>
    </property>
   </action>
-  <action name="action_Select_SDMC_Directory">
-   <property name="text">
-    <string>Select SD Card Directory</string>
-   </property>
-  </action>
   <action name="action_Enable_Frame_Advancing">
    <property name="checkable">
     <bool>true</bool>
@@ -440,6 +455,38 @@
    </property>
    <property name="text">
     <string>Remove</string>
+   </property>
+  </action>
+  <action name="action_NAND_Default">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Default</string>
+   </property>
+  </action>
+  <action name="action_NAND_Custom">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Custom</string>
+   </property>
+  </action>
+  <action name="action_SDMC_Default">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Default</string>
+   </property>
+  </action>
+  <action name="action_SDMC_Custom">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Custom</string>
    </property>
   </action>
  </widget>

@@ -151,7 +151,10 @@ private slots:
     void OnCheats();
     void OnControlPanel();
     void OnOpenUserDirectory();
-    void OnSelectSDMCDirectory();
+    void OnNANDDefault();
+    void OnNANDCustom();
+    void OnSDMCDefault();
+    void OnSDMCCustom();
     void OnLoadAmiibo();
     void OnRemoveAmiibo();
     void OnToggleFilterBar();

@@ -214,6 +214,14 @@ void GMainWindow::InitializeWidgets() {
     actionGroup_ScreenLayouts->addAction(ui.action_Screen_Layout_Medium_Screen);
     actionGroup_ScreenLayouts->addAction(ui.action_Screen_Layout_Large_Screen);
     actionGroup_ScreenLayouts->addAction(ui.action_Screen_Layout_Side_by_Side);
+
+    QActionGroup* actionGroup_NAND{new QActionGroup(this)};
+    actionGroup_NAND->addAction(ui.action_NAND_Default);
+    actionGroup_NAND->addAction(ui.action_NAND_Custom);
+
+    QActionGroup* actionGroup_SDMC{new QActionGroup(this)};
+    actionGroup_SDMC->addAction(ui.action_SDMC_Default);
+    actionGroup_SDMC->addAction(ui.action_SDMC_Custom);
 }
 
 void GMainWindow::InitializeRecentFileMenuActions() {
@@ -387,11 +395,6 @@ void GMainWindow::RestoreUIState() {
     screens->BackupGeometry();
     ui.horizontalLayout->addWidget(screens);
     screens->setFocusPolicy(Qt::ClickFocus);
-    if (emulation_running) {
-        screens->setVisible(true);
-        screens->setFocus();
-        game_list->hide();
-    }
 
     ui.action_Fullscreen->setChecked(UISettings::values.fullscreen);
     SyncMenuUISettings();
@@ -401,6 +404,11 @@ void GMainWindow::RestoreUIState() {
 
     ui.action_Show_Status_Bar->setChecked(UISettings::values.show_status_bar);
     statusBar()->setVisible(ui.action_Show_Status_Bar->isChecked());
+
+    ui.action_NAND_Default->setChecked(Settings::values.nand_dir.empty());
+    ui.action_NAND_Custom->setChecked(!Settings::values.nand_dir.empty());
+    ui.action_SDMC_Default->setChecked(Settings::values.sdmc_dir.empty());
+    ui.action_SDMC_Custom->setChecked(!Settings::values.sdmc_dir.empty());
 }
 
 void GMainWindow::ConnectWidgetEvents() {
@@ -432,10 +440,12 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Exit, &QAction::triggered, this, &QMainWindow::close);
     connect(ui.action_Open_User_Directory, &QAction::triggered, this,
             &GMainWindow::OnOpenUserDirectory);
-    connect(ui.action_Select_SDMC_Directory, &QAction::triggered, this,
-            &GMainWindow::OnSelectSDMCDirectory);
     connect(ui.action_Load_Amiibo, &QAction::triggered, this, &GMainWindow::OnLoadAmiibo);
     connect(ui.action_Remove_Amiibo, &QAction::triggered, this, &GMainWindow::OnRemoveAmiibo);
+    connect(ui.action_NAND_Default, &QAction::triggered, this, &GMainWindow::OnNANDDefault);
+    connect(ui.action_NAND_Custom, &QAction::triggered, this, &GMainWindow::OnNANDCustom);
+    connect(ui.action_SDMC_Default, &QAction::triggered, this, &GMainWindow::OnSDMCDefault);
+    connect(ui.action_SDMC_Custom, &QAction::triggered, this, &GMainWindow::OnSDMCCustom);
 
     // Emulation
     connect(ui.action_Start, &QAction::triggered, this, &GMainWindow::OnStartGame);
@@ -740,7 +750,10 @@ void GMainWindow::ShutdownGame() {
     ui.action_Stop->setEnabled(false);
     ui.action_Restart->setEnabled(false);
     ui.action_Cheats->setEnabled(false);
-    ui.action_Select_SDMC_Directory->setEnabled(true);
+    ui.action_NAND_Default->setEnabled(true);
+    ui.action_NAND_Custom->setEnabled(true);
+    ui.action_SDMC_Default->setEnabled(true);
+    ui.action_SDMC_Custom->setEnabled(true);
     ui.action_Capture_Screenshot->setEnabled(false);
     ui.action_Load_Amiibo->setEnabled(false);
     ui.action_Remove_Amiibo->setEnabled(false);
@@ -779,10 +792,8 @@ void GMainWindow::ShutdownGame() {
 void GMainWindow::StoreRecentFile(const QString& filename) {
     UISettings::values.recent_files.prepend(filename);
     UISettings::values.recent_files.removeDuplicates();
-    while (UISettings::values.recent_files.size() > max_recent_files_item) {
+    while (UISettings::values.recent_files.size() > max_recent_files_item)
         UISettings::values.recent_files.removeLast();
-    }
-
     UpdateRecentFiles();
 }
 
@@ -891,9 +902,8 @@ void GMainWindow::UpdateControlPanelNetwork() {
         return;
     }
 
-    if (control_panel != nullptr) {
+    if (control_panel != nullptr)
         control_panel->UpdateNetwork();
-    }
 }
 
 void GMainWindow::UpdateRecentFiles() {
@@ -909,9 +919,8 @@ void GMainWindow::UpdateRecentFiles() {
         actions_recent_files[i]->setVisible(true);
     }
 
-    for (int j{num_recent_files}; j < max_recent_files_item; ++j) {
+    for (int j{num_recent_files}; j < max_recent_files_item; ++j)
         actions_recent_files[j]->setVisible(false);
-    }
 
     // Enable the recent files menu if the list isn't empty
     ui.menu_recent_files->setEnabled(num_recent_files != 0);
@@ -979,9 +988,10 @@ void GMainWindow::OnGameListOpenDirectory(QString directory) {
             "Nintendo "
             "3DS/00000000000000000000000000000000/00000000000000000000000000000000/title/00040000");
     } else if (directory == "SYSTEM") {
-        path =
-            QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir).c_str() +
-                                   std::string("00000000000000000000000000000000/title/00040010"));
+        path = QString::fromStdString(
+            FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir + "/")
+                .c_str() +
+            std::string("00000000000000000000000000000000/title/00040010"));
     } else {
         path = directory;
     }
@@ -1157,7 +1167,10 @@ void GMainWindow::OnStartGame() {
     ui.action_Stop->setEnabled(true);
     ui.action_Restart->setEnabled(true);
     ui.action_Cheats->setEnabled(true);
-    ui.action_Select_SDMC_Directory->setEnabled(false);
+    ui.action_NAND_Default->setEnabled(false);
+    ui.action_NAND_Custom->setEnabled(false);
+    ui.action_SDMC_Default->setEnabled(false);
+    ui.action_SDMC_Custom->setEnabled(false);
     ui.action_Capture_Screenshot->setEnabled(true);
     ui.action_Load_Amiibo->setEnabled(true);
     ui.action_Enable_Frame_Advancing->setEnabled(true);
@@ -1305,7 +1318,25 @@ void GMainWindow::OnOpenUserDirectory() {
         QUrl::fromLocalFile(path.replace("./user", QDir::currentPath() + "/user")));
 }
 
-void GMainWindow::OnSelectSDMCDirectory() {
+void GMainWindow::OnNANDDefault() {
+    Settings::values.nand_dir.clear();
+    game_list->PopulateAsync(UISettings::values.game_dirs);
+}
+
+void GMainWindow::OnNANDCustom() {
+    QString dir{QFileDialog::getExistingDirectory(this, "Set NAND Directory", ".")};
+    if (dir.isEmpty())
+        return;
+    Settings::values.nand_dir = dir.toStdString();
+    game_list->PopulateAsync(UISettings::values.game_dirs);
+}
+
+void GMainWindow::OnSDMCDefault() {
+    Settings::values.sdmc_dir.clear();
+    game_list->PopulateAsync(UISettings::values.game_dirs);
+}
+
+void GMainWindow::OnSDMCCustom() {
     QString dir{QFileDialog::getExistingDirectory(this, "Set SD Card Directory", ".")};
     if (dir.isEmpty())
         return;

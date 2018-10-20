@@ -811,7 +811,9 @@ void FS_USER::EnumerateExtSaveData(Kernel::HLERequestContext& ctx) {
     FileUtil::FSTEntry entries{};
     FileUtil::ScanDirectoryTree(shared == 1
                                     ? FileSys::GetExtDataContainerPath(
-                                          FileUtil::GetUserPath(FileUtil::UserPath::NANDDir), true)
+                                          FileUtil::GetUserPath(FileUtil::UserPath::NANDDir,
+                                                                Settings::values.nand_dir + "/"),
+                                          true)
                                     : FileSys::GetExtDataContainerPath(
                                           FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir,
                                                                 Settings::values.sdmc_dir + "/"),
@@ -847,9 +849,9 @@ void FS_USER::EnumerateSystemSaveData(Kernel::HLERequestContext& ctx) {
     u32 offset{};
 
     FileUtil::FSTEntry entries{};
-    FileUtil::ScanDirectoryTree(
-        FileSys::GetSystemSaveDataContainerPath(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)),
-        entries, 1);
+    FileUtil::ScanDirectoryTree(FileSys::GetSystemSaveDataContainerPath(FileUtil::GetUserPath(
+                                    FileUtil::UserPath::NANDDir, Settings::values.nand_dir + "/")),
+                                entries, 1);
     for (const FileUtil::FSTEntry& high : entries.children) {
         for (const FileUtil::FSTEntry& low : high.children) {
             std::string tid_string{high.virtualName + low.virtualName};
@@ -878,7 +880,8 @@ void FS_USER::ReadExtSaveDataIcon(Kernel::HLERequestContext& ctx) {
 
     FileUtil::IOFile file{
         FileSys::GetExtDataPathFromId(info.media_type == static_cast<u8>(MediaType::NAND)
-                                          ? FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)
+                                          ? FileUtil::GetUserPath(FileUtil::UserPath::NANDDir,
+                                                                  Settings::values.nand_dir + "/")
                                           : FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir,
                                                                   Settings::values.sdmc_dir + "/"),
                                       info.save_id),

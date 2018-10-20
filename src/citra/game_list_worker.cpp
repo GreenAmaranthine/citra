@@ -128,9 +128,9 @@ void GameListWorker::run() {
                 AddFstEntriesToGameList(path.toStdString(), 2, game_list_dir);
             }
         } else if (game_dir.path == "SYSTEM") {
-            QString path{
-                QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)) +
-                "00000000000000000000000000000000/title/00040010"};
+            QString path{QString::fromStdString(FileUtil::GetUserPath(
+                             FileUtil::UserPath::NANDDir, Settings::values.nand_dir + "/")) +
+                         "00000000000000000000000000000000/title/00040010"};
             watch_list.append(path);
             GameListDir* game_list_dir{new GameListDir(game_dir, GameListItemType::SystemDir)};
             emit DirEntryReady({game_list_dir});

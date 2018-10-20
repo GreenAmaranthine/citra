@@ -121,7 +121,7 @@ bool SetCurrentDir(const std::string& directory);
 
 // Returns a pointer to a string with a Citra data dir in the user's home
 // directory.
-const std::string& GetUserPath(UserPath path, const std::string& settings_sdmc_dir = "");
+const std::string& GetUserPath(UserPath path, const std::string& settings_dir = "");
 
 // Returns the path to where the sys file are
 std::string GetSysDirectory();
@@ -131,8 +131,8 @@ const std::string& GetExeDirectory();
 std::string AppDataRoamingDirectory();
 #endif
 
-size_t WriteStringToFile(bool text_file, const std::string& str, const char* filename);
-size_t ReadFileToString(bool text_file, const char* filename, std::string& str);
+std::size_t WriteStringToFile(bool text_file, const std::string& str, const char* filename);
+std::size_t ReadFileToString(bool text_file, const char* filename, std::string& str);
 
 /**
  * Splits the filename into 8.3 format

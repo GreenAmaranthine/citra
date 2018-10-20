@@ -10,6 +10,7 @@
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/service/ptm/ptm.h"
+#include "core/settings.h"
 #include "ui_mii_selector.h"
 
 MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiConfig& config,
@@ -22,7 +23,8 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
     std::u16string title{reinterpret_cast<const char16_t*>(config.title.data())};
     setWindowTitle(title.empty() ? "Mii Selector" : QString::fromStdU16String(title));
 
-    std::string nand_directory{FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)};
+    std::string nand_directory{
+        FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir + "/")};
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory{nand_directory, true};
 
     auto archive_result{extdata_archive_factory.Open(Service::PTM::ptm_shared_extdata_id)};
@@ -66,7 +68,7 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
         return;
     }
 
-    if (ui->mii->count() >= static_cast<int>(config.initially_selected_mii_index)) {
+    if (ui->mii->count() > static_cast<int>(config.initially_selected_mii_index)) {
         ui->mii->setCurrentIndex(static_cast<int>(config.initially_selected_mii_index));
     }
 
