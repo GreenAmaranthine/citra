@@ -350,11 +350,10 @@ void Config::ReadValues() {
 
     qt_config->beginGroup("Shortcuts");
     QStringList groups{qt_config->childGroups()};
-    for (auto group : groups) {
+    for (const auto& group : groups) {
         qt_config->beginGroup(group);
-
         QStringList hotkeys{qt_config->childGroups()};
-        for (auto hotkey : hotkeys) {
+        for (const auto& hotkey : hotkeys) {
             qt_config->beginGroup(hotkey);
             UISettings::values.shortcuts.emplace_back(UISettings::Shortcut(
                 group + "/" + hotkey,
@@ -362,7 +361,6 @@ void Config::ReadValues() {
                                                qt_config->value("Context").toInt())));
             qt_config->endGroup();
         }
-
         qt_config->endGroup();
     }
     qt_config->endGroup();
