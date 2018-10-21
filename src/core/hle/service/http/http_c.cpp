@@ -1495,7 +1495,6 @@ HTTP_C::HTTP_C() : ServiceFramework{"http:C", 32} {
         {0x00390000, &HTTP_C::Finalize, "Finalize"},
     };
     RegisterHandlers(functions);
-
     DecryptClCertA();
     LoadDefaultCerts();
 }

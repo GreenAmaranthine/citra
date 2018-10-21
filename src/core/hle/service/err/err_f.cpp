@@ -124,8 +124,7 @@ static std::string GetExceptionType(u8 type_code) {
 static std::string GetCurrentSystemTime() {
     auto now{std::chrono::system_clock::now()};
     auto time{std::chrono::system_clock::to_time_t(now)};
-
-    std::stringstream time_stream{};
+    std::stringstream time_stream;
     time_stream << std::put_time(std::localtime(&time), "%Y/%m/%d %H:%M:%S");
     return time_stream.str();
 }
@@ -139,7 +138,6 @@ static void LogGenericInfo(const ErrInfo::ErrInfoCommon& errinfo_common) {
     LOG_CRITICAL(Service_ERR, "AID: 0x{:08X}_0x{:08X}", errinfo_common.app_title_id_high,
                  errinfo_common.app_title_id_low);
     LOG_CRITICAL(Service_ERR, "ADR: 0x{:08X}", errinfo_common.pc_address);
-
     ResultCode result_code{errinfo_common.result_code};
     LOG_CRITICAL(Service_ERR, "RSL: 0x{:08X}", result_code.raw);
     LOG_CRITICAL(Service_ERR, "  Level: {}", static_cast<u32>(result_code.level.Value()));
@@ -150,15 +148,12 @@ static void LogGenericInfo(const ErrInfo::ErrInfoCommon& errinfo_common) {
 
 void ERR_F::ThrowFatalError(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 1, 32, 0};
-
     LOG_CRITICAL(Service_ERR, "Fatal error");
     const ErrInfo errinfo{rp.PopRaw<ErrInfo>()};
     LOG_CRITICAL(Service_ERR, "Fatal error type: {}", GetErrType(errinfo.errinfo_common.specifier));
     Core::System::GetInstance().SetStatus(Core::System::ResultStatus::FatalError);
-
     // Generic Info
     LogGenericInfo(errinfo.errinfo_common);
-
     switch (static_cast<FatalErrType>(errinfo.errinfo_common.specifier)) {
     case FatalErrType::Generic:
     case FatalErrType::Corrupted:
@@ -169,7 +164,6 @@ void ERR_F::ThrowFatalError(Kernel::HLERequestContext& ctx) {
     }
     case FatalErrType::Exception: {
         const auto& errtype{errinfo.exception};
-
         // Register Info
         LOG_CRITICAL(Service_ERR, "ARM Registers:");
         for (u32 index{}; index < errtype.exception_data.exception_context.arm_regs.size();
@@ -189,7 +183,6 @@ void ERR_F::ThrowFatalError(Kernel::HLERequestContext& ctx) {
             }
         }
         LOG_CRITICAL(Service_ERR, "CPSR=0x{:08X}", errtype.exception_data.exception_context.cpsr);
-
         // Exception Info
         LOG_CRITICAL(
             Service_ERR, "EXCEPTION TYPE: {}",
@@ -217,17 +210,14 @@ void ERR_F::ThrowFatalError(Kernel::HLERequestContext& ctx) {
         LOG_CRITICAL(Service_ERR, "Datetime: {}", GetCurrentSystemTime());
         break;
     }
-
     case FatalErrType::ResultFailure: {
         const auto& errtype{errinfo.result_failure};
-
         // Failure Message
         LOG_CRITICAL(Service_ERR, "Failure Message: {}", errtype.message);
         LOG_CRITICAL(Service_ERR, "Datetime: {}", GetCurrentSystemTime());
         break;
     }
     }
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }

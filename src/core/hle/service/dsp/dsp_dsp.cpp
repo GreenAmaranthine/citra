@@ -209,8 +209,8 @@ void DSP_DSP::LoadComponent(Kernel::HLERequestContext& ctx) {
         LOG_INFO(Service_DSP, "Structures hash: {:#018x}",
                  Common::ComputeHash64(component_data.data() + 0x340, 60));
     }
-    LOG_WARNING(Service_DSP, "(STUBBED) size=0x{:X}, prog_mask=0x{:08X}, data_mask=0x{:08X}",
-                size, prog_mask, data_mask);
+    LOG_WARNING(Service_DSP, "(STUBBED) size=0x{:X}, prog_mask=0x{:08X}, data_mask=0x{:08X}", size,
+                prog_mask, data_mask);
 }
 
 void DSP_DSP::UnloadComponent(Kernel::HLERequestContext& ctx) {
@@ -352,7 +352,6 @@ bool DSP_DSP::HasTooManyEventsRegistered() const {
 
 DSP_DSP::DSP_DSP() : ServiceFramework{"dsp::DSP"} {
     static const FunctionInfo functions[]{
-        // clang-format off
         {0x00010040, &DSP_DSP::RecvData, "RecvData"},
         {0x00020040, &DSP_DSP::RecvDataIsReady, "RecvDataIsReady"},
         {0x00030080, nullptr, "SendData"},
@@ -364,7 +363,8 @@ DSP_DSP::DSP_DSP() : ServiceFramework{"dsp::DSP"} {
         {0x00090040, nullptr, "ClearSemaphore"},
         {0x000A0040, nullptr, "MaskSemaphore"},
         {0x000B0000, nullptr, "CheckSemaphoreRequest"},
-        {0x000C0040, &DSP_DSP::ConvertProcessAddressFromDspDram, "ConvertProcessAddressFromDspDram"},
+        {0x000C0040, &DSP_DSP::ConvertProcessAddressFromDspDram,
+         "ConvertProcessAddressFromDspDram"},
         {0x000D0082, &DSP_DSP::WriteProcessPipe, "WriteProcessPipe"},
         {0x000E00C0, &DSP_DSP::ReadPipe, "ReadPipe"},
         {0x000F0080, &DSP_DSP::GetPipeReadableSize, "GetPipeReadableSize"},
@@ -386,11 +386,8 @@ DSP_DSP::DSP_DSP() : ServiceFramework{"dsp::DSP"} {
         {0x001F0000, &DSP_DSP::GetHeadphoneStatus, "GetHeadphoneStatus"},
         {0x00200040, &DSP_DSP::ForceHeadphoneOut, "ForceHeadphoneOut"},
         {0x00210000, &DSP_DSP::GetIsDspOccupied, "GetIsDspOccupied"},
-        // clang-format on
     };
-
     RegisterHandlers(functions);
-
     semaphore_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "DSP_DSP::semaphore_event");
 }
 

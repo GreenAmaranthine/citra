@@ -107,8 +107,8 @@ void CSND_SND::FlushDataCache(Kernel::HLERequestContext& ctx) {
     const auto process{rp.PopObject<Kernel::Process>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_TRACE(Service_CSND, "(STUBBED) address=0x{:08X}, size=0x{:08X}, process={}", address,
-              size, process->process_id);
+    LOG_TRACE(Service_CSND, "(STUBBED) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
+              process->process_id);
 }
 
 void CSND_SND::StoreDataCache(Kernel::HLERequestContext& ctx) {
@@ -118,8 +118,8 @@ void CSND_SND::StoreDataCache(Kernel::HLERequestContext& ctx) {
     const auto process{rp.PopObject<Kernel::Process>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_TRACE(Service_CSND, "(STUBBED) address=0x{:08X}, size=0x{:08X}, process={}", address,
-              size, process->process_id);
+    LOG_TRACE(Service_CSND, "(STUBBED) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
+              process->process_id);
 }
 
 void CSND_SND::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
@@ -129,8 +129,8 @@ void CSND_SND::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
     const auto process{rp.PopObject<Kernel::Process>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_TRACE(Service_CSND, "(STUBBED) address=0x{:08X}, size=0x{:08X}, process={}", address,
-              size, process->process_id);
+    LOG_TRACE(Service_CSND, "(STUBBED) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
+              process->process_id);
 }
 
 void CSND_SND::Reset(Kernel::HLERequestContext& ctx) {
@@ -141,7 +141,6 @@ void CSND_SND::Reset(Kernel::HLERequestContext& ctx) {
 
 CSND_SND::CSND_SND() : ServiceFramework{"csnd:SND", 4} {
     static const FunctionInfo functions[]{
-        // clang-format off
         {0x00010140, &CSND_SND::Initialize, "Initialize"},
         {0x00020000, &CSND_SND::Shutdown, "Shutdown"},
         {0x00030040, &CSND_SND::ExecuteCommands, "ExecuteCommands"},
@@ -154,7 +153,6 @@ CSND_SND::CSND_SND() : ServiceFramework{"csnd:SND", 4} {
         {0x000A0082, &CSND_SND::StoreDataCache, "StoreDataCache"},
         {0x000B0082, &CSND_SND::InvalidateDataCache, "InvalidateDataCache"},
         {0x000C0000, &CSND_SND::Reset, "Reset"},
-        // clang-format on
     };
     RegisterHandlers(functions);
 };

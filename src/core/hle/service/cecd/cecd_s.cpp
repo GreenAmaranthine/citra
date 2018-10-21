@@ -9,7 +9,6 @@ namespace Service::CECD {
 CECD_S::CECD_S(std::shared_ptr<Module> cecd) : Module::Interface{std::move(cecd), "cecd:s"} {
     static const FunctionInfo functions[]{
         // cecd:u shared commands
-        // clang-format off
         {0x000100C2, &CECD_S::Open, "Open"},
         {0x00020042, &CECD_S::Read, "Read"},
         {0x00030104, &CECD_S::ReadMessage, "ReadMessage"},
@@ -32,7 +31,6 @@ CECD_S::CECD_S(std::shared_ptr<Module> cecd) : Module::Interface{std::move(cecd)
         {0x001F0000, nullptr, "GetEventLogStart"},
         // cecd:s commands
         {0x04020002, nullptr, "GetCecInfoEventHandleSys"},
-        // clang-format on
     };
 
     RegisterHandlers(functions);

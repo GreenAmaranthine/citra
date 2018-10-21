@@ -26,38 +26,30 @@ constexpr u64 pad_update_ticks{BASE_CLOCK_RATE_ARM11 / 234};
 constexpr u64 accelerometer_update_ticks{BASE_CLOCK_RATE_ARM11 / 104};
 constexpr u64 gyroscope_update_ticks{BASE_CLOCK_RATE_ARM11 / 101};
 
-constexpr float accelerometer_coef{512.0f}; // measured from hw test result
-constexpr float gyroscope_coef{14.375f}; // got from hwtest GetGyroscopeLowRawToDpsCoefficient call
+constexpr float accelerometer_coef{512.0f}; // Measured from hw test result
+constexpr float gyroscope_coef{14.375f}; // Got from hwtest GetGyroscopeLowRawToDpsCoefficient call
 static PadState inputs_this_frame;
 
 DirectionState GetStickDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
     // 30 degree and 60 degree are angular thresholds for directions
     constexpr float TAN30{0.577350269f};
     constexpr float TAN60{1 / TAN30};
-
     // A circle pad radius greater than 40 will trigger circle pad direction
     constexpr int CIRCLE_PAD_THRESHOLD_SQUARE{40 * 40};
-
     DirectionState state{false, false, false, false};
-
     if (circle_pad_x * circle_pad_x + circle_pad_y * circle_pad_y > CIRCLE_PAD_THRESHOLD_SQUARE) {
         float t{std::abs(static_cast<float>(circle_pad_y) / circle_pad_x)};
-
-        if (circle_pad_x != 0 && t < TAN60) {
+        if (circle_pad_x != 0 && t < TAN60)
             if (circle_pad_x > 0)
                 state.right = true;
             else
                 state.left = true;
-        }
-
-        if (circle_pad_x == 0 || t > TAN30) {
+        if (circle_pad_x == 0 || t > TAN30)
             if (circle_pad_y > 0)
                 state.up = true;
             else
                 state.down = true;
-        }
     }
-
     return state;
 }
 
@@ -75,10 +67,8 @@ void Module::LoadInputDevices() {
 
 void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     SharedMem* mem{reinterpret_cast<SharedMem*>(shared_mem->GetPointer())};
-
     if (is_device_reload_pending.exchange(false))
         LoadInputDevices();
-
     PadState state;
     using namespace Settings::NativeButton;
     state.a.Assign(buttons[A - BUTTON_HID_BEGIN]->GetStatus());
@@ -95,9 +85,8 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     state.select.Assign(buttons[Select - BUTTON_HID_BEGIN]->GetStatus());
     if (button_home->GetStatus())
         Core::System::GetInstance().CloseApplication();
-
     // Get current circle pad position and update circle pad direction
-    s16 circle_pad_x{}, circle_pad_y{};
+    s16 circle_pad_x, circle_pad_y;
     if (use_override_circle_pad) {
         circle_pad_x = override_circle_x;
         circle_pad_y = override_circle_y;
@@ -108,48 +97,37 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
         circle_pad_y = static_cast<s16>(circle_pad_y_f * MAX_CIRCLEPAD_POS);
     }
     Core::Movie::GetInstance().HandlePadAndCircleStatus(state, circle_pad_x, circle_pad_y);
-
-    const DirectionState direction = GetStickDirectionState(circle_pad_x, circle_pad_y);
+    const DirectionState direction{GetStickDirectionState(circle_pad_x, circle_pad_y)};
     state.circle_up.Assign(direction.up);
     state.circle_down.Assign(direction.down);
     state.circle_left.Assign(direction.left);
     state.circle_right.Assign(direction.right);
-
-    if (use_override_pad_state) {
+    if (use_override_pad_state)
         state.hex = override_pad_state;
-    }
     inputs_this_frame.hex = state.hex;
-
     mem->pad.current_state.hex = state.hex;
     mem->pad.index = next_pad_index;
     next_pad_index = (next_pad_index + 1) % mem->pad.entries.size();
-
     // Get the previous Pad state
     u32 last_entry_index{static_cast<u32>((mem->pad.index - 1) % mem->pad.entries.size())};
-    PadState old_state = mem->pad.entries[last_entry_index].current_state;
-
+    PadState old_state{mem->pad.entries[last_entry_index].current_state};
     // Compute bitmask with 1s for bits different from the old state
-    PadState changed = {{(state.hex ^ old_state.hex)}};
-
+    PadState changed{(state.hex ^ old_state.hex)};
     // Get the current Pad entry
-    PadDataEntry& pad_entry = mem->pad.entries[mem->pad.index];
-
+    PadDataEntry& pad_entry{mem->pad.entries[mem->pad.index]};
     // Update entry properties
     pad_entry.current_state.hex = state.hex;
     pad_entry.delta_additions.hex = changed.hex & state.hex;
     pad_entry.delta_removals.hex = changed.hex & old_state.hex;
     pad_entry.circle_pad_x = circle_pad_x;
     pad_entry.circle_pad_y = circle_pad_y;
-
     // If we just updated index 0, provide a new timestamp
     if (mem->pad.index == 0) {
         mem->pad.index_reset_ticks_previous = mem->pad.index_reset_ticks;
         mem->pad.index_reset_ticks = (s64)CoreTiming::GetTicks();
     }
-
     mem->touch.index = next_touch_index;
     next_touch_index = (next_touch_index + 1) % mem->touch.entries.size();
-
     // Get the current touch entry
     TouchDataEntry& touch_entry = mem->touch.entries[mem->touch.index];
     if (use_override_touch) {
@@ -162,30 +140,24 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
         touch_entry.y = static_cast<u16>(y * Core::kScreenBottomHeight);
         touch_entry.valid.Assign(pressed ? 1 : 0);
     }
-
     Core::Movie::GetInstance().HandleTouchStatus(touch_entry);
-
     // TODO: We're not doing anything with offset 0xA8 + 0x18 of HID SharedMemory, which
     // supposedly is "Touch-screen entry, which contains the raw coordinate data prior to being
     // converted to pixel coordinates." (http://3dbrew.org/wiki/HID_Shared_Memory#Offset_0xA8).
-
     // If we just updated index 0, provide a new timestamp
     if (mem->touch.index == 0) {
         mem->touch.index_reset_ticks_previous = mem->touch.index_reset_ticks;
         mem->touch.index_reset_ticks = (s64)CoreTiming::GetTicks();
     }
-
     // Signal both handles when there's an update to Pad or touch
     event_pad_or_touch_1->Signal();
     event_pad_or_touch_2->Signal();
-
     // Reschedule recurrent event
     CoreTiming::ScheduleEvent(pad_update_ticks - cycles_late, pad_update_event);
 }
 
 void Module::UpdateAccelerometerCallback(u64 userdata, s64 cycles_late) {
     SharedMem* mem{reinterpret_cast<SharedMem*>(shared_mem->GetPointer())};
-
     mem->accelerometer.index = next_accelerometer_index;
     next_accelerometer_index = (next_accelerometer_index + 1) % mem->accelerometer.entries.size();
     AccelerometerDataEntry& accelerometer_entry{
@@ -198,7 +170,6 @@ void Module::UpdateAccelerometerCallback(u64 userdata, s64 cycles_late) {
         Math::Vec3<float> accel;
         std::tie(accel, std::ignore) = motion_device->GetStatus();
         accel *= accelerometer_coef;
-
         // TODO: do a time stretch like the one in UpdateGyroscopeCallback
         // The time stretch formula should be like
         // stretched_vector = (raw_vector - gravity) * stretch_ratio + gravity
@@ -206,9 +177,7 @@ void Module::UpdateAccelerometerCallback(u64 userdata, s64 cycles_late) {
         accelerometer_entry.y = static_cast<s16>(accel.y);
         accelerometer_entry.z = static_cast<s16>(accel.z);
     }
-
     Core::Movie::GetInstance().HandleAccelerometerStatus(accelerometer_entry);
-
     // Make up "raw" entry
     // TODO:
     // From hardware testing, the raw_entry values are approximately, but not exactly, as twice as
@@ -218,15 +187,12 @@ void Module::UpdateAccelerometerCallback(u64 userdata, s64 cycles_late) {
     mem->accelerometer.raw_entry.x = -2 * accelerometer_entry.x;
     mem->accelerometer.raw_entry.z = 2 * accelerometer_entry.y;
     mem->accelerometer.raw_entry.y = -2 * accelerometer_entry.z;
-
     // If we just updated index 0, provide a new timestamp
     if (mem->accelerometer.index == 0) {
         mem->accelerometer.index_reset_ticks_previous = mem->accelerometer.index_reset_ticks;
         mem->accelerometer.index_reset_ticks = (s64)CoreTiming::GetTicks();
     }
-
     event_accelerometer->Signal();
-
     // Reschedule recurrent event
     CoreTiming::ScheduleEvent(accelerometer_update_ticks - cycles_late, accelerometer_update_event);
 }
@@ -237,12 +203,9 @@ const PadState& GetInputsThisFrame() {
 
 void Module::UpdateGyroscopeCallback(u64 userdata, s64 cycles_late) {
     SharedMem* mem{reinterpret_cast<SharedMem*>(shared_mem->GetPointer())};
-
     mem->gyroscope.index = next_gyroscope_index;
     next_gyroscope_index = (next_gyroscope_index + 1) % mem->gyroscope.entries.size();
-
     GyroscopeDataEntry& gyroscope_entry{mem->gyroscope.entries[mem->gyroscope.index]};
-
     if (use_override_motion) {
         gyroscope_entry.x = override_motion_roll;
         gyroscope_entry.y = override_motion_pitch;
@@ -256,22 +219,17 @@ void Module::UpdateGyroscopeCallback(u64 userdata, s64 cycles_late) {
         gyroscope_entry.y = static_cast<s16>(gyro.y);
         gyroscope_entry.z = static_cast<s16>(gyro.z);
     }
-
     Core::Movie::GetInstance().HandleGyroscopeStatus(gyroscope_entry);
-
     // Make up "raw" entry
     mem->gyroscope.raw_entry.x = gyroscope_entry.x;
     mem->gyroscope.raw_entry.z = -gyroscope_entry.y;
     mem->gyroscope.raw_entry.y = gyroscope_entry.z;
-
     // If we just updated index 0, provide a new timestamp
     if (mem->gyroscope.index == 0) {
         mem->gyroscope.index_reset_ticks_previous = mem->gyroscope.index_reset_ticks;
         mem->gyroscope.index_reset_ticks = (s64)CoreTiming::GetTicks();
     }
-
     event_gyroscope->Signal();
-
     // Reschedule recurrent event
     CoreTiming::ScheduleEvent(gyroscope_update_ticks - cycles_late, gyroscope_update_event);
 }
@@ -285,57 +243,42 @@ void Module::Interface::GetIPCHandles(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::EnableAccelerometer(Kernel::HLERequestContext& ctx) {
     ++hid->enable_accelerometer_count;
-
     // Schedules the accelerometer update event if the accelerometer was just enabled
-    if (hid->enable_accelerometer_count == 1) {
+    if (hid->enable_accelerometer_count == 1)
         CoreTiming::ScheduleEvent(accelerometer_update_ticks, hid->accelerometer_update_event);
-    }
-
     IPC::ResponseBuilder rb{ctx, 0x11, 1, 0};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_HID, "called");
 }
 
 void Module::Interface::DisableAccelerometer(Kernel::HLERequestContext& ctx) {
     --hid->enable_accelerometer_count;
-
     // Unschedules the accelerometer update event if the accelerometer was just disabled
-    if (hid->enable_accelerometer_count == 0) {
+    if (hid->enable_accelerometer_count == 0)
         CoreTiming::UnscheduleEvent(hid->accelerometer_update_event, 0);
-    }
-
     IPC::ResponseBuilder rb{ctx, 0x12, 1, 0};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_HID, "called");
 }
 
 void Module::Interface::EnableGyroscopeLow(Kernel::HLERequestContext& ctx) {
     ++hid->enable_gyroscope_count;
-
     // Schedules the gyroscope update event if the gyroscope was just enabled
-    if (hid->enable_gyroscope_count == 1) {
+    if (hid->enable_gyroscope_count == 1)
         CoreTiming::ScheduleEvent(gyroscope_update_ticks, hid->gyroscope_update_event);
-    }
-
     IPC::ResponseBuilder rb{ctx, 0x13, 1, 0};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_HID, "called");
 }
 
 void Module::Interface::DisableGyroscopeLow(Kernel::HLERequestContext& ctx) {
     --hid->enable_gyroscope_count;
-
     // Unschedules the gyroscope update event if the gyroscope was just disabled
     if (hid->enable_gyroscope_count == 0) {
         CoreTiming::UnscheduleEvent(hid->gyroscope_update_event, 0);
     }
-
     IPC::ResponseBuilder rb{ctx, 0x14, 1, 0};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_HID, "called");
 }
 
@@ -348,7 +291,6 @@ void Module::Interface::GetGyroscopeLowRawToDpsCoefficient(Kernel::HLERequestCon
 void Module::Interface::GetGyroscopeLowCalibrateParam(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x16, 6, 0};
     rb.Push(RESULT_SUCCESS);
-
     const s16 param_unit{6700}; // an approximate value taken from hw
     GyroscopeCalibrateParam param{
         {0, param_unit, -param_unit},
@@ -356,7 +298,6 @@ void Module::Interface::GetGyroscopeLowCalibrateParam(Kernel::HLERequestContext&
         {0, param_unit, -param_unit},
     };
     rb.PushRaw(param);
-
     LOG_WARNING(Service_HID, "(STUBBED)");
 }
 
@@ -371,18 +312,15 @@ Module::Interface::Interface(std::shared_ptr<Module> hid, const char* name)
 
 Module::Module() {
     using namespace Kernel;
-
     shared_mem =
         SharedMemory::Create(nullptr, 0x1000, MemoryPermission::ReadWrite, MemoryPermission::Read,
                              0, MemoryRegion::BASE, "HID:SharedMemory");
-
     // Create event handles
     event_pad_or_touch_1 = Event::Create(ResetType::OneShot, "HID:EventPadOrTouch1");
     event_pad_or_touch_2 = Event::Create(ResetType::OneShot, "HID:EventPadOrTouch2");
     event_accelerometer = Event::Create(ResetType::OneShot, "HID:EventAccelerometer");
     event_gyroscope = Event::Create(ResetType::OneShot, "HID:EventGyroscope");
     event_debug_pad = Event::Create(ResetType::OneShot, "HID:EventDebugPad");
-
     // Register update callbacks
     pad_update_event =
         CoreTiming::RegisterEvent("HID::UpdatePadCallback", [this](u64 userdata, s64 cycles_late) {
@@ -395,7 +333,6 @@ Module::Module() {
     gyroscope_update_event = CoreTiming::RegisterEvent(
         "HID::UpdateGyroscopeCallback",
         [this](u64 userdata, s64 cycles_late) { UpdateGyroscopeCallback(userdata, cycles_late); });
-
     CoreTiming::ScheduleEvent(pad_update_ticks, pad_update_event);
 }
 
@@ -436,10 +373,8 @@ void Module::SetOverrideControls(bool pad, bool touch, bool motion, bool circle)
 
 void ReloadInputDevices() {
     auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn()) {
+    if (!system.IsPoweredOn())
         return;
-    }
-
     auto user{system.ServiceManager().GetService<User>("hid:USER")};
     auto hid{user->GetModule()};
     hid->ReloadInputDevices();
@@ -447,10 +382,8 @@ void ReloadInputDevices() {
 
 void SetPadState(u32 raw) {
     auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn()) {
+    if (!system.IsPoweredOn())
         return;
-    }
-
     auto user{system.ServiceManager().GetService<User>("hid:USER")};
     auto hid{user->GetModule()};
     hid->SetPadState(raw);
@@ -458,10 +391,8 @@ void SetPadState(u32 raw) {
 
 void SetTouchState(s16 x, s16 y, bool valid) {
     auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn()) {
+    if (!system.IsPoweredOn())
         return;
-    }
-
     auto user{system.ServiceManager().GetService<User>("hid:USER")};
     auto hid{user->GetModule()};
     hid->SetTouchState(x, y, valid);
@@ -469,10 +400,8 @@ void SetTouchState(s16 x, s16 y, bool valid) {
 
 void SetMotionState(s16 x, s16 y, s16 z, s16 roll, s16 pitch, s16 yaw) {
     auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn()) {
+    if (!system.IsPoweredOn())
         return;
-    }
-
     auto user{system.ServiceManager().GetService<User>("hid:USER")};
     auto hid{user->GetModule()};
     hid->SetMotionState(x, y, z, roll, pitch, yaw);
@@ -480,10 +409,8 @@ void SetMotionState(s16 x, s16 y, s16 z, s16 roll, s16 pitch, s16 yaw) {
 
 void SetCircleState(s16 x, s16 y) {
     auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn()) {
+    if (!system.IsPoweredOn())
         return;
-    }
-
     auto user{system.ServiceManager().GetService<User>("hid:USER")};
     auto hid{user->GetModule()};
     hid->SetCircleState(x, y);
@@ -491,10 +418,8 @@ void SetCircleState(s16 x, s16 y) {
 
 void SetOverrideControls(bool pad, bool touch, bool motion, bool circle) {
     auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn()) {
+    if (!system.IsPoweredOn())
         return;
-    }
-
     auto user{system.ServiceManager().GetService<User>("hid:USER")};
     auto hid{user->GetModule()};
     hid->SetOverrideControls(pad, touch, motion, circle);

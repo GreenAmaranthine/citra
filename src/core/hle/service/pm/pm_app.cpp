@@ -9,7 +9,6 @@ namespace Service::PM {
 
 PM_APP::PM_APP() : ServiceFramework{"pm:app", 3} {
     static const FunctionInfo functions[]{
-        // clang-format off
         {0x00010140, nullptr, "LaunchTitle"},
         {0x00020082, nullptr, "LaunchFIRM"},
         {0x00030080, nullptr, "TerminateApplication"},
@@ -23,9 +22,7 @@ PM_APP::PM_APP() : ServiceFramework{"pm:app", 3} {
         {0x000B0140, nullptr, "GetAppResourceLimit"},
         {0x000C0080, nullptr, "UnregisterProcess"},
         {0x000D0240, nullptr, "LaunchTitleUpdate"},
-        // clang-format on
     };
-
     RegisterHandlers(functions);
 }
 

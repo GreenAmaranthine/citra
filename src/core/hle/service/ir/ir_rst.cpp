@@ -49,22 +49,17 @@ void IR_RST::UnloadInputDevices() {
 
 void IR_RST::UpdateCallback(u64 userdata, s64 cycles_late) {
     SharedMem* mem{reinterpret_cast<SharedMem*>(shared_memory->GetPointer())};
-
     if (is_device_reload_pending.exchange(false))
         LoadInputDevices();
-
     PadState state;
     state.zl.Assign(zl_button->GetStatus());
     state.zr.Assign(zr_button->GetStatus());
-
     // Get current c-stick position and update c-stick direction
     auto [c_stick_x_f, c_stick_y_f]{c_stick->GetStatus()};
     constexpr int MAX_CSTICK_RADIUS{0x9C}; // Max value for a c-stick radius
     s16 c_stick_x{static_cast<s16>(c_stick_x_f * MAX_CSTICK_RADIUS)};
     s16 c_stick_y{static_cast<s16>(c_stick_y_f * MAX_CSTICK_RADIUS)};
-
     Core::Movie::GetInstance().HandleIrRst(state, c_stick_x, c_stick_y);
-
     if (!raw_c_stick) {
         const HID::DirectionState direction{HID::GetStickDirectionState(c_stick_x, c_stick_y)};
         state.c_stick_up.Assign(direction.up);
@@ -72,37 +67,28 @@ void IR_RST::UpdateCallback(u64 userdata, s64 cycles_late) {
         state.c_stick_left.Assign(direction.left);
         state.c_stick_right.Assign(direction.right);
     }
-
     // TODO: implement raw C-stick data for raw_c_stick = true
-
     const u32 last_entry_index{mem->index};
     mem->index = next_pad_index;
     next_pad_index = (next_pad_index + 1) % mem->entries.size();
-
     // Get the previous Pad state
     PadState old_state{mem->entries[last_entry_index].current_state};
-
     // Compute bitmask with 1s for bits different from the old state
     PadState changed{state.hex ^ old_state.hex};
-
     // Get the current Pad entry
     PadDataEntry& pad_entry{mem->entries[mem->index]};
-
     // Update entry properties
     pad_entry.current_state.hex = state.hex;
     pad_entry.delta_additions.hex = changed.hex & state.hex;
     pad_entry.delta_removals.hex = changed.hex & old_state.hex;
     pad_entry.c_stick_x = c_stick_x;
     pad_entry.c_stick_y = c_stick_y;
-
     // If we just updated index 0, provide a new timestamp
     if (mem->index == 0) {
         mem->index_reset_ticks_previous = mem->index_reset_ticks;
         mem->index_reset_ticks = CoreTiming::GetTicks();
     }
-
     update_event->Signal();
-
     // Reschedule recurrent event
     CoreTiming::ScheduleEvent(msToCycles(update_period) - cycles_late, update_callback_id);
 }
@@ -117,24 +103,19 @@ void IR_RST::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x02, 2, 0};
     update_period = static_cast<int>(rp.Pop<u32>());
     raw_c_stick = rp.Pop<bool>();
-
     if (raw_c_stick)
         LOG_ERROR(Service_IR, "raw C-stick data is not implemented!");
-
     next_pad_index = 0;
     is_device_reload_pending.store(true);
     CoreTiming::ScheduleEvent(msToCycles(update_period), update_callback_id);
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_IR, "called. update_period={}, raw_c_stick={}", update_period, raw_c_stick);
 }
 
 void IR_RST::Shutdown(Kernel::HLERequestContext& ctx) {
     CoreTiming::UnscheduleEvent(update_callback_id, 0);
     UnloadInputDevices();
-
     IPC::ResponseBuilder rb{ctx, 0x03, 1, 0};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_IR, "called");
@@ -148,12 +129,10 @@ IR_RST::IR_RST() : ServiceFramework{"ir:rst", 1} {
         SharedMemory::Create(nullptr, 0x1000, MemoryPermission::ReadWrite, MemoryPermission::Read,
                              0, MemoryRegion::BASE, "IRRST:SharedMemory");
     update_event = Event::Create(ResetType::OneShot, "IRRST:UpdateEvent");
-
     update_callback_id =
         CoreTiming::RegisterEvent("IRRST:UpdateCallBack", [this](u64 userdata, s64 cycles_late) {
             UpdateCallback(userdata, cycles_late);
         });
-
     static const FunctionInfo functions[]{
         {0x00010000, &IR_RST::GetHandles, "GetHandles"},
         {0x00020080, &IR_RST::Initialize, "Initialize"},

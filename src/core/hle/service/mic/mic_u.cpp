@@ -37,21 +37,16 @@ struct MIC_U::Impl {
         IPC::RequestParser rp{ctx, 0x01, 1, 2};
         const u32 size{rp.Pop<u32>()};
         shared_memory = rp.PopObject<Kernel::SharedMemory>();
-
-        if (shared_memory) {
+        if (shared_memory)
             shared_memory->name = "MIC_U:shared_memory";
-        }
-
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
-
         LOG_DEBUG(Service_MIC, "size=0x{:X}", size);
     }
 
     void UnmapSharedMem(Kernel::HLERequestContext& ctx) {
         IPC::ResponseBuilder rb{ctx, 0x02, 1, 0};
         rb.Push(RESULT_SUCCESS);
-
         LOG_DEBUG(Service_MIC, "called");
     }
 
@@ -90,23 +85,17 @@ struct MIC_U::Impl {
         want.userdata = this;
         want.callback = [](void* userdata, Uint8* data, int len) {
             Impl* impl{static_cast<Impl*>(userdata)};
-            if (!impl) {
+            if (!impl)
                 return;
-            }
-
             u8* buffer{impl->shared_memory->GetPointer()};
-            if (!buffer) {
+            if (!buffer)
                 return;
-            }
-
             u32 offset;
             std::memcpy(&offset, buffer + impl->audio_buffer_size, sizeof(offset));
-
             // TODO: How does the 3DS handles looped input buffers
             if (len > impl->audio_buffer_size - offset) {
                 offset = impl->audio_buffer_offset;
             }
-
             std::memcpy(buffer + offset, data, len);
             offset += len;
             std::memcpy(buffer + impl->audio_buffer_size, &offset, sizeof(offset));
@@ -119,9 +108,9 @@ struct MIC_U::Impl {
         if (dev == 0) {
             LOG_ERROR(Service_MIC, "Failed to open device: {}", SDL_GetError());
         } else {
-            if (have.format != want.format) {
+            if (have.format != want.format)
                 LOG_ERROR(Service_MIC, "Format not supported");
-            } else {
+            else {
                 SDL_PauseAudioDevice(dev, 0);
                 is_sampling = true;
             }
@@ -138,7 +127,6 @@ struct MIC_U::Impl {
         StartSampling();
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
-
         LOG_DEBUG(Service_MIC,
                   "encoding={}, sample_rate={}, "
                   "audio_buffer_offset={}, audio_buffer_size={}, audio_buffer_loop={}",
@@ -153,7 +141,6 @@ struct MIC_U::Impl {
         StartSampling();
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
-
         LOG_DEBUG(Service_MIC, "sample_rate={}", static_cast<u32>(sample_rate));
     }
 
@@ -166,10 +153,8 @@ struct MIC_U::Impl {
 
     void StopSampling(Kernel::HLERequestContext& ctx) {
         StopSampling();
-
         IPC::ResponseBuilder rb{ctx, 0x05, 1, 0};
         rb.Push(RESULT_SUCCESS);
-
         LOG_DEBUG(Service_MIC, "called");
     }
 
@@ -177,7 +162,6 @@ struct MIC_U::Impl {
         IPC::ResponseBuilder rb{ctx, 0x06, 2, 0};
         rb.Push(RESULT_SUCCESS);
         rb.Push<bool>(is_sampling);
-
         LOG_DEBUG(Service_MIC, "is_sampling={}", is_sampling);
     }
 
@@ -185,17 +169,14 @@ struct MIC_U::Impl {
         IPC::ResponseBuilder rb{ctx, 0x07, 1, 2};
         rb.Push(RESULT_SUCCESS);
         rb.PushCopyObjects(buffer_full_event);
-
         LOG_DEBUG(Service_MIC, "called");
     }
 
     void SetGain(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp{ctx, 0x08, 1, 0};
         mic_gain = rp.Pop<u8>();
-
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
-
         LOG_DEBUG(Service_MIC, "mic_gain={}", mic_gain);
     }
 
@@ -203,17 +184,14 @@ struct MIC_U::Impl {
         IPC::ResponseBuilder rb{ctx, 0x09, 2, 0};
         rb.Push(RESULT_SUCCESS);
         rb.Push<u8>(mic_gain);
-
         LOG_DEBUG(Service_MIC, "mic_gain={}", mic_gain);
     }
 
     void SetPower(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp{ctx, 0x0A, 1, 0};
         mic_power = rp.Pop<bool>();
-
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
-
         LOG_DEBUG(Service_MIC, "mic_power={}", mic_power);
     }
 
@@ -221,7 +199,6 @@ struct MIC_U::Impl {
         IPC::ResponseBuilder rb{ctx, 0x0B, 2, 0};
         rb.Push(RESULT_SUCCESS);
         rb.Push<u8>(mic_power);
-
         LOG_DEBUG(Service_MIC, "mic_power={}", mic_power);
     }
 
@@ -229,21 +206,17 @@ struct MIC_U::Impl {
         IPC::RequestParser rp{ctx, 0x0C, 1, 2};
         const u32 size{rp.Pop<u32>()};
         const Kernel::MappedBuffer& buffer{rp.PopMappedBuffer()};
-
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
         rb.Push(RESULT_SUCCESS);
         rb.PushMappedBuffer(buffer);
-
         LOG_DEBUG(Service_MIC, "size=0x{:X}, buffer=0x{:08X}", size, buffer.GetId());
     }
 
     void SetClamp(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp{ctx, 0x0D, 1, 0};
         clamp = rp.Pop<bool>();
-
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
-
         LOG_DEBUG(Service_MIC, "clamp={}", clamp);
     }
 
@@ -251,17 +224,14 @@ struct MIC_U::Impl {
         IPC::ResponseBuilder rb{ctx, 0x0E, 2, 0};
         rb.Push(RESULT_SUCCESS);
         rb.Push<bool>(clamp);
-
         LOG_DEBUG(Service_MIC, "clamp={}", clamp);
     }
 
     void SetAllowShellClosed(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp{ctx, 0x0F, 1, 0};
         allow_shell_closed = rp.Pop<bool>();
-
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
-
         LOG_DEBUG(Service_MIC, "allow_shell_closed={}", allow_shell_closed);
     }
 
@@ -271,7 +241,6 @@ struct MIC_U::Impl {
         client_version = version;
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
-
         LOG_DEBUG(Service_MIC, "version=0x{:08X}", version);
     }
 
@@ -285,7 +254,7 @@ struct MIC_U::Impl {
     u32 client_version{};
     Kernel::SharedPtr<Kernel::Event> buffer_full_event{
         Kernel::Event::Create(Kernel::ResetType::OneShot, "MIC_U::buffer_full_event")};
-    Kernel::SharedPtr<Kernel::SharedMemory> shared_memory{};
+    Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
     u8 mic_gain{};
     bool mic_power{};
     bool is_sampling{};
@@ -381,7 +350,6 @@ MIC_U::MIC_U() : ServiceFramework{"mic:u", 1}, impl{std::make_unique<Impl>()} {
         {0x000F0040, &MIC_U::SetAllowShellClosed, "SetAllowShellClosed"},
         {0x00100040, &MIC_U::SetClientVersion, "SetClientVersion"},
     };
-
     RegisterHandlers(functions);
 }
 

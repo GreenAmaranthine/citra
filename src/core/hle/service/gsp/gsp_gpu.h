@@ -110,7 +110,10 @@ struct Command {
             u32 size;
             u32 flags;
             u32 unused[3];
-            u32 do_flush;
+            u32 do_flush; /// This flag flushes the command list (params.address, params.size) from
+                          /// the cache.
+                          /// Command lists are not processed by the renderer, so we don't need to
+                          /// actually flush them in Citra.
         } submit_gpu_cmdlist;
 
         struct {

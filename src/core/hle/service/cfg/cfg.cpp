@@ -134,7 +134,6 @@ Module::Interface::~Interface() = default;
 void Module::Interface::GetCountryCodeString(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x09, 1, 0};
     u16 country_code_id{rp.Pop<u16>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     if (country_code_id >= country_codes.size() || 0 == country_codes[country_code_id]) {
         LOG_ERROR(Service_CFG, "requested country code id={} is invalid", country_code_id);
@@ -143,9 +142,8 @@ void Module::Interface::GetCountryCodeString(Kernel::HLERequestContext& ctx) {
         rb.Skip(1, false);
         return;
     }
-
     rb.Push(RESULT_SUCCESS);
-    // the real CFG service copies only three bytes (including the null-terminator) here
+    // The real CFG service copies only three bytes (including the null-terminator) here
     rb.Push<u32>(country_codes[country_code_id]);
 }
 
@@ -153,17 +151,14 @@ void Module::Interface::GetCountryCodeID(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0A, 1, 0};
     u16 country_code{rp.Pop<u16>()};
     u16 country_code_id{};
-
     // The following algorithm will fail if the first country code isn't 0.
     DEBUG_ASSERT(country_codes[0] == 0);
-
     for (u16 id{}; id < country_codes.size(); ++id) {
         if (country_codes[id] == country_code) {
             country_code_id = id;
             break;
         }
     }
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     if (country_code_id == 0) {
         LOG_ERROR(Service_CFG, "requested country code name={}{} is invalid", country_code & 0xff,
@@ -173,16 +168,13 @@ void Module::Interface::GetCountryCodeID(Kernel::HLERequestContext& ctx) {
         rb.Push<u16>(0x00FF);
         return;
     }
-
     rb.Push(RESULT_SUCCESS);
     rb.Push<u16>(country_code_id);
 }
 
 u32 Module::GetRegionValue() {
-    if (Settings::values.region_value == Settings::REGION_VALUE_AUTO_SELECT) {
+    if (Settings::values.region_value == Settings::REGION_VALUE_AUTO_SELECT)
         return preferred_region_code;
-    }
-
     return Settings::values.region_value;
 }
 
@@ -220,11 +212,10 @@ void Module::Interface::GetRegionCanadaUSA(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     u8 canada_or_usa{1};
-    if (cfg->GetRegionValue() == canada_or_usa) {
+    if (cfg->GetRegionValue() == canada_or_usa)
         rb.Push(true);
-    } else {
+    else
         rb.Push(false);
-    }
 }
 
 void Module::SetSystemModel(SystemModel model) {
@@ -774,7 +765,6 @@ ResultCode Module::SetConsoleUniqueId(u32 random_number, u64 console_id) {
                              &random_number_le);
     if (!res.IsSuccess())
         return res;
-
     return RESULT_SUCCESS;
 }
 

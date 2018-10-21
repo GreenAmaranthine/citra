@@ -38,7 +38,6 @@ void Module::Interface::GetShellState(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetBatteryLevel(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x7, 0, 0};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(Settings::values.p_battery_level);
@@ -46,7 +45,6 @@ void Module::Interface::GetBatteryLevel(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetBatteryChargeState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x8, 0, 0};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(Settings::values.p_battery_charging);
@@ -54,11 +52,9 @@ void Module::Interface::GetBatteryChargeState(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetPedometerState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x9, 0, 0};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(ptm->pedometer_is_counting);
-
     LOG_WARNING(Service_PTM, "(STUBBED)");
 }
 
@@ -69,37 +65,30 @@ void Module::Interface::GetStepHistory(Kernel::HLERequestContext& ctx) {
     auto& buffer{rp.PopMappedBuffer()};
     ASSERT_MSG(sizeof(u16) * hours == buffer.GetSize(),
                "Buffer for steps count has incorrect size");
-
     // Stub: set zero steps count for every hour
     for (u32 i{}; i < hours; ++i) {
         const u16_le steps_per_hour{};
         buffer.Write(&steps_per_hour, i * sizeof(u16), sizeof(u16));
     }
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(buffer);
-
     LOG_WARNING(Service_PTM, "(STUBBED) from time(raw): 0x{:X}, for {} hours", start_time, hours);
 }
 
 void Module::Interface::GetTotalStepCount(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0xC, 0, 0};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
-
     LOG_WARNING(Service_PTM, "(STUBBED)");
 }
 
 void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x80F, 0, 0};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(false);
-
     LOG_WARNING(Service_PTM, "(STUBBED)");
 }
 
@@ -118,20 +107,16 @@ void Module::Interface::ConfigureNew3DSCPU(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x40A, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
-    Service::PTM::CheckNew3DS(rb);
+    IPC::ResponseBuilder rb{ctx, 0x40A, 2, 0};
+    PTM::CheckNew3DS(rb);
 }
 
 Module::Module() {
     std::string nand_directory{
         FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir + "/")};
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory{nand_directory, true};
-
     // Open the SharedExtSaveData archive 0xF000000B and create the gamecoin.dat file if it doesn't
     // exist
-
     FileSys::Path archive_path{ptm_shared_extdata_id};
     auto archive_result{extdata_archive_factory.Open(archive_path)};
     // If the archive didn't exist, create the files inside
@@ -142,7 +127,6 @@ Module::Module() {
         auto new_archive_result{extdata_archive_factory.Open(archive_path)};
         ASSERT_MSG(new_archive_result.Succeeded(),
                    "Could not open the PTM SharedExtSaveData archive!");
-
         FileSys::Path gamecoin_path{"/gamecoin.dat"};
         auto archive{std::move(new_archive_result).Unwrap()};
         archive->CreateFile(gamecoin_path, sizeof(GameCoin));
@@ -162,14 +146,10 @@ void SetPlayCoins(u16 play_coins) {
     std::string nand_directory{
         FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir + "/")};
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory{nand_directory, true};
-
     FileSys::Path archive_path{ptm_shared_extdata_id};
     auto archive_result{extdata_archive_factory.Open(archive_path)};
-
     ASSERT_MSG(archive_result.Succeeded(), "Could not open the PTM SharedExtSaveData archive!");
-
     auto archive{std::move(archive_result).Unwrap()};
-
     FileSys::Path gamecoin_path{"/gamecoin.dat"};
     FileSys::Mode open_mode{};
     open_mode.read_flag.Assign(1);

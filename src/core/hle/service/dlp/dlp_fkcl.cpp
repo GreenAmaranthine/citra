@@ -9,7 +9,6 @@ namespace Service::DLP {
 
 DLP_FKCL::DLP_FKCL() : ServiceFramework{"dlp:FKCL", 1} {
     static const FunctionInfo functions[]{
-        // clang-format off
         {0x00010083, nullptr, "Initialize"},
         {0x00020000, nullptr, "Finalize"},
         {0x00030000, nullptr, "GetEventDesc"},
@@ -27,9 +26,7 @@ DLP_FKCL::DLP_FKCL() : ServiceFramework{"dlp:FKCL", 1} {
         {0x000F0000, nullptr, "GetWirelessRebootPassphrase"},
         {0x00100000, nullptr, "StopSession"},
         {0x00110203, nullptr, "Initialize2"},
-        // clang-format on
     };
-
     RegisterHandlers(functions);
 }
 

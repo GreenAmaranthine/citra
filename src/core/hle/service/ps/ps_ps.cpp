@@ -18,7 +18,6 @@ void PS_PS::GetLocalFriendCodeSeed(Kernel::HLERequestContext& ctx) {
 
 PS_PS::PS_PS() : ServiceFramework{"ps:ps"} {
     static const FunctionInfo functions[]{
-        // clang-format off
         {0x00010244, nullptr, "SignRsaSha256"},
         {0x00020244, nullptr, "VerifyRsaSha256"},
         {0x00040204, nullptr, "EncryptDecryptAes"},
@@ -35,9 +34,7 @@ PS_PS::PS_PS() : ServiceFramework{"ps:ps"} {
         {0x000F0082, nullptr, "InterfaceForPXI_0x04020082"},
         {0x00100042, nullptr, "InterfaceForPXI_0x04030044"},
         {0x00110042, nullptr, "InterfaceForPXI_0x04040044"},
-        // clang-format on
     };
-
     RegisterHandlers(functions);
 };
 

@@ -189,22 +189,18 @@ void Module::Interface::NotifyToWait(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetLockHandle(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x1, 1, 0};
-
     // Bits [0:2] are the applet type (System, Library, etc)
     // Bit 5 tells the application that there's a pending APT parameter,
     // this will cause the app to wait until parameter_event is signaled.
     u32 applet_attributes{rp.Pop<u32>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(3, 2)};
     rb.Push(RESULT_SUCCESS); // No error
-
     // TODO: The output attributes should have an AppletPos of either Library or System |
     // Library (depending on the type of the last launched applet) if the input attributes'
     // AppletPos has the Library bit set.
-
     rb.Push(applet_attributes); // Applet Attributes, this value is passed to Enable.
     rb.Push<u32>(0);            // Least significant bit = power button state
     rb.PushCopyObjects(apt->lock);
-
     LOG_WARNING(Service_APT, "(STUBBED) applet_attributes={:#010X}", applet_attributes);
 }
 
@@ -257,22 +253,18 @@ void Module::Interface::SendParameter(Kernel::HLERequestContext& ctx) {
     u32 buffer_size{rp.Pop<u32>()};
     Kernel::SharedPtr<Kernel::Object> object{rp.PopGenericObject()};
     std::vector<u8> buffer{rp.PopStaticBuffer()};
-
     LOG_DEBUG(Service_APT,
               "src_app_id={:#010X}, dst_app_id={:#010X}, signal_type={:#010X},"
               "buffer_size={:#010X}",
               static_cast<u32>(src_app_id), static_cast<u32>(dst_app_id),
               static_cast<u32>(signal_type), buffer_size);
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-
     MessageParameter param;
     param.destination_id = dst_app_id;
     param.sender_id = src_app_id;
     param.object = std::move(object);
     param.signal = signal_type;
     param.buffer = std::move(buffer);
-
     rb.Push(apt->applet_manager->SendParameter(param));
 }
 
@@ -428,9 +420,7 @@ void Module::Interface::PrepareToStartNewestHomeMenu(Kernel::HLERequestContext& 
 void Module::Interface::PreloadLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x16, 1, 0};
     AppletId applet_id{rp.PopEnum<AppletId>()};
-
     LOG_DEBUG(Service_APT, "applet_id={:08X}", static_cast<u32>(applet_id));
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(apt->applet_manager->PreloadLibraryApplet(applet_id));
 }
@@ -438,23 +428,18 @@ void Module::Interface::PreloadLibraryApplet(Kernel::HLERequestContext& ctx) {
 void Module::Interface::FinishPreloadingLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x17, 1, 0};
     AppletId applet_id{rp.PopEnum<AppletId>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(apt->applet_manager->FinishPreloadingLibraryApplet(applet_id));
-
     LOG_WARNING(Service_APT, "(STUBBED) applet_id={:#05X}", static_cast<u32>(applet_id));
 }
 
 void Module::Interface::StartLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x1E, 2, 4};
     AppletId applet_id{rp.PopEnum<AppletId>()};
-
     std::size_t buffer_size{rp.Pop<u32>()};
     Kernel::SharedPtr<Kernel::Object> object{rp.PopGenericObject()};
     std::vector<u8> buffer{rp.PopStaticBuffer()};
-
     LOG_DEBUG(Service_APT, "applet_id={:08X}", static_cast<u32>(applet_id));
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(apt->applet_manager->StartLibraryApplet(applet_id, object, buffer));
 }
@@ -464,11 +449,8 @@ void Module::Interface::CloseApplication(Kernel::HLERequestContext& ctx) {
     u32 parameters_size{rp.Pop<u32>()};
     Kernel::SharedPtr<Kernel::Object> object{rp.PopGenericObject()};
     std::vector<u8> buffer{rp.PopStaticBuffer()};
-
     LOG_DEBUG(Service_APT, "called");
-
     Core::System::GetInstance().CloseApplication();
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
@@ -479,7 +461,6 @@ void Module::Interface::PrepareToDoApplicationJump(Kernel::HLERequestContext& ct
     apt->jump_tid = rp.Pop<u64>();
     apt->jump_media = static_cast<FS::MediaType>(rp.Pop<u8>());
     apt->application_restart = flags == 0x2;
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
@@ -492,7 +473,6 @@ void Module::Interface::DoApplicationJump(Kernel::HLERequestContext& ctx) {
     argument.resize(parameter_size);
     argument_source = Kernel::g_current_process->codeset->program_id;
     hmac = rp.PopStaticBuffer();
-
     if (apt->application_restart) {
         // Restart system
         Core::System::GetInstance().Restart();
@@ -500,7 +480,6 @@ void Module::Interface::DoApplicationJump(Kernel::HLERequestContext& ctx) {
         Core::System::GetInstance().SetApplication(
             AM::GetTitleContentPath(apt->jump_media, apt->jump_tid));
     }
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }

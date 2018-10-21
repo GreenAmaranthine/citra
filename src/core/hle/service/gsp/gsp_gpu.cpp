@@ -52,10 +52,9 @@ constexpr u32 MaxGSPThreads{4};
 static std::array<bool, MaxGSPThreads> used_thread_ids{false, false, false, false};
 
 static u32 GetUnusedThreadId() {
-    for (u32 id{}; id < MaxGSPThreads; ++id) {
+    for (u32 id{}; id < MaxGSPThreads; ++id)
         if (!used_thread_ids[id])
             return id;
-    }
     ASSERT_MSG(false, "All GSP threads are in use");
 }
 
@@ -67,7 +66,6 @@ static inline u8* GetCommandBuffer(Kernel::SharedPtr<Kernel::SharedMemory> share
 
 FrameBufferUpdate* GSP_GPU::GetFrameBufferInfo(u32 thread_id, u32 screen_index) {
     DEBUG_ASSERT_MSG(screen_index < 2, "Invalid screen index");
-
     // For each thread there are two FrameBufferUpdate fields
     u32 offset{
         static_cast<u32>(0x200 + (2 * thread_id + screen_index) * sizeof(FrameBufferUpdate))};
@@ -113,7 +111,6 @@ static void WriteSingleHWReg(u32 base_address, u32 data) {
 static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, const std::vector<u8>& data) {
     // This magic number is verified to be done by the gsp module
     const u32 max_size_in_bytes{0x80};
-
     if (base_address & 3 || base_address >= 0x420000) {
         LOG_ERROR(Service_GSP,
                   "Write address was out of range or misaligned! (address=0x{:08x}, size=0x{:08x})",
@@ -129,7 +126,6 @@ static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, const std::ve
                 u32 value;
                 std::memcpy(&value, &data[offset], sizeof(u32));
                 WriteSingleHWReg(base_address, value);
-
                 size_in_bytes -= 4;
                 offset += 4;
                 base_address += 4;
@@ -157,7 +153,6 @@ static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes,
                                       const std::vector<u8>& data, const std::vector<u8>& masks) {
     // This magic number is verified to be done by the gsp module
     const u32 max_size_in_bytes{0x80};
-
     if (base_address & 3 || base_address >= 0x420000) {
         LOG_ERROR(Service_GSP,
                   "Write address was out of range or misaligned! (address=0x{:08x}, size=0x{:08x})",
@@ -171,26 +166,20 @@ static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes,
             std::size_t offset{};
             while (size_in_bytes > 0) {
                 const u32 reg_address{base_address + REGS_BEGIN};
-
                 u32 reg_value;
                 HW::Read<u32>(reg_value, reg_address);
-
                 u32 value, mask;
                 std::memcpy(&value, &data[offset], sizeof(u32));
                 std::memcpy(&mask, &masks[offset], sizeof(u32));
-
                 // Update the current value of the register only for set mask bits
                 reg_value = (reg_value & ~mask) | (value & mask);
-
                 WriteSingleHWReg(base_address, reg_value);
-
                 size_in_bytes -= 4;
                 offset += 4;
                 base_address += 4;
             }
             return RESULT_SUCCESS;
         }
-
     } else {
         LOG_ERROR(Service_GSP, "Out of range size 0x{:08x}", size_in_bytes);
         return ERR_REGS_INVALID_SIZE;
@@ -202,7 +191,6 @@ void GSP_GPU::WriteHWRegs(Kernel::HLERequestContext& ctx) {
     u32 reg_addr{rp.Pop<u32>()};
     u32 size{rp.Pop<u32>()};
     std::vector<u8> src_data{rp.PopStaticBuffer()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(GSP::WriteHWRegs(reg_addr, size, src_data));
 }
@@ -211,10 +199,8 @@ void GSP_GPU::WriteHWRegsWithMask(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x2, 2, 4};
     u32 reg_addr{rp.Pop<u32>()};
     u32 size{rp.Pop<u32>()};
-
     std::vector<u8> src_data{rp.PopStaticBuffer()};
     std::vector<u8> mask_data{rp.PopStaticBuffer()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(GSP::WriteHWRegsWithMask(reg_addr, size, src_data, mask_data));
 }
@@ -223,30 +209,25 @@ void GSP_GPU::ReadHWRegs(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x4, 2, 0};
     u32 reg_addr{rp.Pop<u32>()};
     u32 input_size{rp.Pop<u32>()};
-
     static constexpr u32 MaxReadSize{0x80};
     u32 size{std::min(input_size, MaxReadSize)};
-
     if ((reg_addr % 4) != 0 || reg_addr >= 0x420000) {
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(ERR_REGS_OUTOFRANGE_OR_MISALIGNED);
         LOG_ERROR(Service_GSP, "Invalid address 0x{:08x}", reg_addr);
         return;
     }
-
-    // size should be word-aligned
+    // Size should be word-aligned
     if ((size % 4) != 0) {
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(ERR_REGS_MISALIGNED);
         LOG_ERROR(Service_GSP, "Invalid size 0x{:08x}", size);
         return;
     }
-
     std::vector<u8> buffer(size);
     for (u32 offset{}; offset < size; ++offset) {
         HW::Read<u8>(buffer[offset], REGS_BEGIN + reg_addr + offset);
     }
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(std::move(buffer), 0);
@@ -280,11 +261,8 @@ ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
     WriteSingleHWReg(
         base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].active_fb)),
         info.shown_fb);
-
-    if (screen_id == 0) {
+    if (screen_id == 0)
         Core::System::GetInstance().perf_stats.EndGameFrame();
-    }
-
     return RESULT_SUCCESS;
 }
 
@@ -292,7 +270,6 @@ void GSP_GPU::SetBufferSwap(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x5, 8, 0};
     u32 screen_id{rp.Pop<u32>()};
     auto fb_info{rp.PopRaw<FrameBufferInfo>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(GSP::SetBufferSwap(screen_id, fb_info));
 }
@@ -302,12 +279,9 @@ void GSP_GPU::FlushDataCache(Kernel::HLERequestContext& ctx) {
     u32 address{rp.Pop<u32>()};
     u32 size{rp.Pop<u32>()};
     auto process{rp.PopObject<Kernel::Process>()};
-
     // TODO: Verify return header on HW
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_GSP, "(STUBBED) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
               process->process_id);
 }
@@ -346,10 +320,8 @@ void GSP_GPU::UnregisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
     SessionData* session_data{GetSessionData(ctx.Session())};
     session_data->interrupt_event = nullptr;
     session_data->registered = false;
-
     IPC::ResponseBuilder rb{ctx, 0x14, 1, 0};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_GSP, "called");
 }
 
@@ -357,9 +329,8 @@ void GSP_GPU::SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id) 
     SessionData* session_data{FindRegisteredThreadData(thread_id)};
     if (session_data == nullptr)
         return;
-
     auto interrupt_event{session_data->interrupt_event};
-    if (interrupt_event == nullptr) {
+    if (!interrupt_event) {
         LOG_WARNING(Service_GSP, "cannot synchronize until GSP event has been created!");
         return;
     }
@@ -367,12 +338,9 @@ void GSP_GPU::SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id) 
     u8 next{interrupt_relay_queue->index};
     next += interrupt_relay_queue->number_interrupts;
     next = next % 0x34; // 0x34 is the number of interrupt slots
-
     interrupt_relay_queue->number_interrupts += 1;
-
     interrupt_relay_queue->slot[next] = interrupt_id;
     interrupt_relay_queue->error_code = 0x0; // No error
-
     // Update framebuffer information if requested
     // TODO: Confirm where this code should be called. It is definitely updated without
     //               executing any GSP commands, only waiting on the event.
@@ -397,25 +365,21 @@ void GSP_GPU::SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id) 
  * @todo This probably does not belong in the GSP module, instead move to video_core
  */
 void GSP_GPU::SignalInterrupt(InterruptId interrupt_id) {
-    if (nullptr == shared_memory) {
+    if (!shared_memory) {
         LOG_WARNING(Service_GSP, "cannot synchronize until GSP shared memory has been created!");
         return;
     }
-
     // The PDC0 and PDC1 interrupts are fired even if the GPU right hasn't been acquired.
     // Normal interrupts are only signaled for the active thread (ie, the thread that has the GPU
     // right), but the PDC0/1 interrupts are signaled for every registered thread.
     if (interrupt_id == InterruptId::PDC0 || interrupt_id == InterruptId::PDC1) {
-        for (u32 thread_id{}; thread_id < MaxGSPThreads; ++thread_id) {
+        for (u32 thread_id{}; thread_id < MaxGSPThreads; ++thread_id)
             SignalInterruptForThread(interrupt_id, thread_id);
-        }
         return;
     }
-
     // For normal interrupts, don't do anything if no process has acquired the GPU right.
     if (active_thread_id == -1)
         return;
-
     SignalInterruptForThread(interrupt_id, active_thread_id);
 }
 
@@ -424,7 +388,6 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
     // Utility function to convert register ID to address
     static auto WriteGPURegister{
         [](u32 id, u32 data) { GPU::Write<u32>(0x1EF00000 + 4 * id, data); }};
-
     switch (command.id) {
     // GX request DMA - typically used for copying memory from GSP heap to VRAM
     case CommandId::REQUEST_DMA: {
@@ -435,7 +398,6 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         Memory::RasterizerFlushVirtualRegion(command.dma_request.dest_address,
                                              command.dma_request.size,
                                              Memory::FlushMode::Invalidate);
-
         // TODO: These memory accesses should not go through the application's memory mapping.
         // They should go through the GSP module's memory mapping.
         Memory::CopyBlock(command.dma_request.dest_address, command.dma_request.source_address,
@@ -446,31 +408,20 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
     // TODO: This will need some rework in the future. (why?)
     case CommandId::SUBMIT_GPU_CMDLIST: {
         auto& params{command.submit_gpu_cmdlist};
-
-        if (params.do_flush) {
-            // This flag flushes the command list (params.address, params.size) from the cache.
-            // Command lists are not processed by the renderer, so we don't need to
-            // actually flush them in Citra.
-        }
-
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(command_processor_config.address)),
                          Memory::VirtualToPhysicalAddress(params.address) >> 3);
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(command_processor_config.size)),
                          params.size);
-
         // TODO: Not sure if we are supposed to always write this.. seems to trigger processing
         // though
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(command_processor_config.trigger)), 1);
-
         // TODO: Figure out the meaning of the `flags` field.
         break;
     }
-
     // It's assumed that the two "blocks" behave equivalently.
     // Presumably this is done simply to allow two memory fills to run in parallel.
     case CommandId::SET_MEMORY_FILL: {
         auto& params{command.memory_fill};
-
         if (params.start1 != 0) {
             WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[0].address_start)),
                              Memory::VirtualToPhysicalAddress(params.start1) >> 3);
@@ -481,7 +432,6 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
             WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[0].control)),
                              params.control1);
         }
-
         if (params.start2 != 0) {
             WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[1].address_start)),
                              Memory::VirtualToPhysicalAddress(params.start2) >> 3);
@@ -530,13 +480,11 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         WriteGPURegister((u32)GPU_REG_INDEX(display_transfer_config.trigger), 1);
         break;
     }
-
     case CommandId::CACHE_FLUSH: {
         // NOTE: Rasterizer flushing handled elsewhere in CPU read/write and other GPU handlers
         // Use command.cache_flush.regions to implement this handler
         break;
     }
-
     default:
         LOG_ERROR(Service_GSP, "unknown command 0x{:08X}", (int)command.id.Value());
     }
@@ -544,17 +492,13 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
 
 void GSP_GPU::SetLcdForceBlack(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0xB, 1, 0};
-
     bool enable_black{rp.Pop<bool>()};
-    LCD::Regs::ColorFill data = {0};
-
+    LCD::Regs::ColorFill data{};
     // Since data is already zeroed, there is no need to explicitly set
     // the color to black (all zero).
     data.is_enabled.Assign(enable_black);
-
     LCD::Write(HW::VADDR_LCD + 4 * LCD_REG_INDEX(color_fill_top), data.raw);    // Top LCD
     LCD::Write(HW::VADDR_LCD + 4 * LCD_REG_INDEX(color_fill_bottom), data.raw); // Bottom LCD
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
@@ -563,17 +507,14 @@ void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
     // Iterate through each thread's command queue...
     for (unsigned thread_id{}; thread_id < 0x4; ++thread_id) {
         CommandBuffer* command_buffer{(CommandBuffer*)GetCommandBuffer(shared_memory, thread_id)};
-
         // Iterate through each command...
         for (unsigned i{}; i < command_buffer->number_commands; ++i) {
             // Decode and execute command
             ExecuteCommand(command_buffer->commands[i], thread_id);
-
             // Indicates that command has completed
             command_buffer->number_commands.Assign(command_buffer->number_commands - 1);
         }
     }
-
     IPC::ResponseBuilder rb{ctx, 0xC, 1, 0};
     rb.Push(RESULT_SUCCESS);
 }
@@ -581,60 +522,46 @@ void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
 void GSP_GPU::ImportDisplayCaptureInfo(Kernel::HLERequestContext& ctx) {
     FrameBufferUpdate* top_screen{GetFrameBufferInfo(active_thread_id, 0)};
     FrameBufferUpdate* bottom_screen{GetFrameBufferInfo(active_thread_id, 1)};
-
     struct CaptureInfoEntry {
         u32_le address_left;
         u32_le address_right;
         u32_le format;
         u32_le stride;
     };
-
     CaptureInfoEntry top_entry, bottom_entry;
-
     // Top Screen
     top_entry.address_left = top_screen->framebuffer_info[top_screen->index].address_left;
     top_entry.address_right = top_screen->framebuffer_info[top_screen->index].address_right;
     top_entry.format = top_screen->framebuffer_info[top_screen->index].format;
     top_entry.stride = top_screen->framebuffer_info[top_screen->index].stride;
-
     // Bottom Screen
     bottom_entry.address_left = bottom_screen->framebuffer_info[bottom_screen->index].address_left;
     bottom_entry.address_right =
         bottom_screen->framebuffer_info[bottom_screen->index].address_right;
     bottom_entry.format = bottom_screen->framebuffer_info[bottom_screen->index].format;
     bottom_entry.stride = bottom_screen->framebuffer_info[bottom_screen->index].stride;
-
     IPC::ResponseBuilder rb{ctx, 0x18, 9, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(top_entry);
     rb.PushRaw(bottom_entry);
-
-    LOG_WARNING(Service_GSP, "called");
+    LOG_DEBUG(Service_GSP, "called");
 }
 
 void GSP_GPU::AcquireRight(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x16, 1, 2};
-
     u32 flag{rp.Pop<u32>()};
     auto process{rp.PopObject<Kernel::Process>()};
-
     SessionData* session_data{GetSessionData(ctx.Session())};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-
     if (active_thread_id == session_data->thread_id) {
         rb.Push(ResultCode(ErrorDescription::AlreadyDone, ErrorModule::GX, ErrorSummary::Success,
                            ErrorLevel::Success));
         return;
     }
-
     // TODO: This case should put the caller thread to sleep until the right is released.
     ASSERT_MSG(active_thread_id == -1, "GPU right has already been acquired");
-
     active_thread_id = session_data->thread_id;
-
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_GSP, "flag={:08X}, process={}, thread_id={}", flag, process->process_id,
               session_data->thread_id);
 }
@@ -648,32 +575,25 @@ void GSP_GPU::ReleaseRight(SessionData* session_data) {
 void GSP_GPU::ReleaseRight(Kernel::HLERequestContext& ctx) {
     SessionData* session_data{GetSessionData(ctx.Session())};
     ReleaseRight(session_data);
-
     IPC::ResponseBuilder rb{ctx, 0x17, 1, 0};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_GSP, "called");
 }
 
 void GSP_GPU::StoreDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x1F, 2, 2};
-
     u32 address{rp.Pop<u32>()};
     u32 size{rp.Pop<u32>()};
     auto process{rp.PopObject<Kernel::Process>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_GSP, "(STUBBED) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
               process->process_id);
 }
 
 void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x1C, 1, 0};
-
     u8 state{rp.Pop<u8>()};
-
     if (!Settings::values.disable_mh_3d) {
         if (state == 1) {
             Settings::values.factor_3d = 0;
@@ -682,10 +602,8 @@ void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
         }
         Core::System::GetInstance().GetSharedPageHandler()->Update3DSettings();
     }
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_GSP, "(STUBBED)");
 }
 
@@ -737,12 +655,10 @@ GSP_GPU::GSP_GPU() : ServiceFramework{"gsp::Gpu", 2} {
         {0x001F0082, &GSP_GPU::StoreDataCache, "StoreDataCache"},
     };
     RegisterHandlers(functions);
-
     using Kernel::MemoryPermission;
     shared_memory = Kernel::SharedMemory::Create(nullptr, 0x1000, MemoryPermission::ReadWrite,
                                                  MemoryPermission::ReadWrite, 0,
                                                  Kernel::MemoryRegion::BASE, "GSP:SharedMemory");
-
     first_initialization = true;
 };
 

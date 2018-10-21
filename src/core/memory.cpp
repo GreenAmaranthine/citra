@@ -62,9 +62,8 @@ static PageTable* current_page_table{};
 
 void SetCurrentPageTable(PageTable* page_table) {
     current_page_table = page_table;
-    if (Core::System::GetInstance().IsPoweredOn()) {
+    if (Core::System::GetInstance().IsPoweredOn())
         Core::CPU().PageTableChanged();
-    }
 }
 
 PageTable* GetCurrentPageTable() {

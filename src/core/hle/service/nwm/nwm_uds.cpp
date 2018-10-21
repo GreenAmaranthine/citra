@@ -1181,10 +1181,9 @@ NWM_UDS::NWM_UDS() : ServiceFramework{"nwm::UDS"} {
     // Keep the Nintendo 3DS MAC header and randomly generate the last 3 bytes
     rng.GenerateBlock(static_cast<CryptoPP::byte*>(mac.data() + 3), 3);
     if (auto member{Network::GetRoomMember().lock()})
-        if (member->IsConnected()) {
+        if (member->IsConnected())
             mac = member->GetMacAddress();
-            Core::System::GetInstance().GetSharedPageHandler()->SetMacAddress(mac);
-        }
+    Core::System::GetInstance().GetSharedPageHandler()->SetMacAddress(mac);
 }
 
 NWM_UDS::~NWM_UDS() {

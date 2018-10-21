@@ -9,13 +9,10 @@ namespace Service::PM {
 
 PM_DBG::PM_DBG() : ServiceFramework{"pm:dbg", 3} {
     static const FunctionInfo functions[]{
-        // clang-format off
         {0x00010140, nullptr, "LaunchAppDebug"},
         {0x00020140, nullptr, "LaunchApp"},
         {0x00030000, nullptr, "RunQueuedProcess"},
-        // clang-format on
     };
-
     RegisterHandlers(functions);
 }
 

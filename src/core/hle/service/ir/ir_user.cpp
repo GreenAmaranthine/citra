@@ -327,9 +327,9 @@ void IR_USER::ReleaseReceivedData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x19, 1, 0};
     u32 count{rp.Pop<u32>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-    if (receive_buffer->Release(count)) {
+    if (receive_buffer->Release(count))
         rb.Push(RESULT_SUCCESS);
-    } else {
+    else {
         LOG_ERROR(Service_IR, "failed to release {} packets", count);
         rb.Push(ResultCode(ErrorDescription::NoData, ErrorModule::IR, ErrorSummary::NotFound,
                            ErrorLevel::Status));

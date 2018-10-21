@@ -13,12 +13,9 @@ namespace Service::IR {
 
 void ReloadInputDevices() {
     auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn()) {
+    if (!system.IsPoweredOn())
         return;
-    }
-
     auto& sm{system.ServiceManager()};
-
     auto ir_user{sm.GetService<IR_USER>("ir:USER")};
     auto ir_rst{sm.GetService<IR_RST>("ir:rst")};
     ir_user->ReloadInputDevices();
