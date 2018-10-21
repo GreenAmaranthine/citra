@@ -174,7 +174,7 @@ void AppletManager::CancelAndSendParameter(const MessageParameter& parameter) {
     next_parameter = parameter;
     // Signal the event to let the receiver know that a new parameter is ready to be read
     auto* const slot_data{GetAppletSlotData(static_cast<AppletId>(parameter.destination_id))};
-    if (slot_data == nullptr) {
+    if (!slot_data) {
         LOG_DEBUG(Service_APT, "No applet was registered with the id {:03X}",
                   static_cast<u32>(parameter.destination_id));
         return;
@@ -398,13 +398,12 @@ ResultCode AppletManager::StartLibraryApplet(AppletId applet_id,
 ResultVal<AppletManager::AppletInfo> AppletManager::GetAppletInfo(AppletId app_id) {
     const auto* slot{GetAppletSlotData(app_id)};
 
-    if (slot == nullptr || !slot->registered) {
+    if (!slot || !slot->registered) {
         // See if there's an HLE applet and try to use it before erroring out.
         auto hle_applet{HLE::Applets::Applet::Get(app_id)};
-        if (hle_applet == nullptr) {
+        if (!hle_applet)
             return ResultCode(ErrorDescription::NotFound, ErrorModule::Applet,
                               ErrorSummary::NotFound, ErrorLevel::Status);
-        }
         LOG_WARNING(Service_APT, "Using HLE applet info for applet {:03X}",
                     static_cast<u32>(app_id));
         // TODO: Get the title id for the current applet and write it in the response[2-3]

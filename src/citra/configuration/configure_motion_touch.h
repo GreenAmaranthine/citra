@@ -20,6 +20,7 @@ class ConfigureMotionTouch;
 /// A dialog for touchpad calibration configuration.
 class CalibrationConfigurationDialog : public QDialog {
     Q_OBJECT
+
 public:
     explicit CalibrationConfigurationDialog(QWidget* parent, const std::string& host, u16 port,
                                             u8 pad_index, u16 client_id);
@@ -28,16 +29,13 @@ public:
 private:
     Q_INVOKABLE void UpdateLabelText(QString text);
     Q_INVOKABLE void UpdateButtonText(QString text);
-
     QVBoxLayout* layout;
     QLabel* status_label;
     QPushButton* cancel_button;
     std::unique_ptr<InputCommon::CemuhookUDP::CalibrationConfigurationJob> job;
-
     // Configuration results
     bool completed{};
     u16 min_x, min_y, max_x, max_y;
-
     friend class ConfigureMotionTouch;
 };
 
@@ -62,11 +60,7 @@ private:
     void updateUiDisplay();
     void connectEvents();
     bool CanCloseDialog();
-
     std::unique_ptr<Ui::ConfigureMotionTouch> ui;
-
-    // Coordinate system of the CemuhookUDP touch provider
-    int min_x, min_y, max_x, max_y;
-
+    int min_x, min_y, max_x, max_y; ///< Coordinate system of the CemuhookUDP touch provider
     bool udp_test_in_progress{};
 };

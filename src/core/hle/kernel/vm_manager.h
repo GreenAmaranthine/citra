@@ -13,36 +13,28 @@
 #include "core/mmio.h"
 
 namespace Kernel {
-
 enum class VMAType : u8 {
     /// VMA represents an unmapped region of the address space.
     Free,
-
     /// VMA is backed by a ref-counted allocate memory block.
     AllocatedMemoryBlock,
-
     /// VMA is backed by a raw, unmanaged pointer.
     BackingMemory,
-
     /// VMA is mapped to MMIO registers at a fixed PAddr.
     MMIO,
-
     // TODO: Implement MemoryAlias to support MAP/UNMAP
 };
-
 /// Permissions for mapped memory blocks
 enum class VMAPermission : u8 {
     None = 0,
     Read = 1,
     Write = 2,
     Execute = 4,
-
     ReadWrite = Read | Write,
     ReadExecute = Read | Execute,
     WriteExecute = Write | Execute,
     ReadWriteExecute = Read | Write | Execute,
 };
-
 /// Set of values returned in MemoryInfo.state by svcQueryMemory.
 enum class MemoryState : u8 {
     Free = 0,
@@ -58,7 +50,6 @@ enum class MemoryState : u8 {
     AliasCode = 10,
     Locked = 11,
 };
-
 /**
  * Represents a VMA in an address space. A VMA is a contiguous region of virtual addressing space
  * with homogeneous attributes across its extents. In this particular implementation each VMA is
@@ -67,36 +58,27 @@ enum class MemoryState : u8 {
 struct VirtualMemoryArea {
     /// Virtual base address of the region.
     VAddr base{};
-
     /// Size of the region.
     u32 size{};
-
     VMAType type{VMAType::Free};
     VMAPermission permissions{VMAPermission::None};
-
     /// Tag returned by svcQueryMemory. Not otherwise used.
-    MemoryState meminfo_state = MemoryState::Free;
-
+    MemoryState meminfo_state{MemoryState::Free};
     // Settings for type = AllocatedMemoryBlock
     /// Memory block backing this VMA.
-    std::shared_ptr<std::vector<u8>> backing_block{};
-
+    std::shared_ptr<std::vector<u8>> backing_block;
     /// Offset into the backing_memory the mapping starts from.
     std::size_t offset{};
-
     // Settings for type = BackingMemory
     /// Pointer backing this VMA. It will not be destroyed or freed when the VMA is removed.
     u8* backing_memory{};
-
     // Settings for type = MMIO
     /// Physical address of the register area this VMA maps to.
     PAddr paddr{};
-    Memory::MMIORegionPointer mmio_handler{};
-
+    Memory::MMIORegionPointer mmio_handler;
     /// Tests if this area can be merged to the right with `next`.
     bool CanBeMergedWith(const VirtualMemoryArea& next) const;
 };
-
 /**
  * Manages a process' virtual addressing space. This class maintains a list of allocated and free
  * regions in the address space, along with their attributes, and allows kernel clients to
@@ -117,7 +99,6 @@ public:
      * @note This is the limit used by the New 3DS kernel. Old 3DS used 0x20000000.
      */
     static const u32 MAX_ADDRESS{0x40000000};
-
     /**
      * A map covering the entirety of the managed address space, keyed by the `base` field of each
      * VMA. It must always be modified by splitting or merging VMAs, so that the invariant
@@ -126,20 +107,14 @@ public:
      * merged.
      */
     std::map<VAddr, VirtualMemoryArea> vma_map;
-
     using VMAHandle = decltype(vma_map)::const_iterator;
-
     VMManager();
     ~VMManager();
-
     /// Clears the address space map, re-initializing with a single free area.
     void Reset();
-
     /// Finds the VMA in which the given address is included in, or `vma_map.end()`.
     VMAHandle FindVMA(VAddr target) const;
-
     // TODO: Should these functions actually return the handle?
-
     /**
      * Maps part of a ref-counted block of memory at a given address.
      *
@@ -151,7 +126,6 @@ public:
      */
     ResultVal<VMAHandle> MapMemoryBlock(VAddr target, std::shared_ptr<std::vector<u8>> block,
                                         std::size_t offset, u32 size, MemoryState state);
-
     /**
      * Maps part of a ref-counted block of memory at the first free address after the given base.
      *
@@ -175,7 +149,6 @@ public:
      * @param state MemoryState tag to attach to the VMA.
      */
     ResultVal<VMAHandle> MapBackingMemory(VAddr target, u8* memory, u32 size, MemoryState state);
-
     /**
      * Maps a memory-mapped IO region at a given address.
      *
@@ -187,7 +160,6 @@ public:
      */
     ResultVal<VMAHandle> MapMMIO(VAddr target, PAddr paddr, u32 size, MemoryState state,
                                  Memory::MMIORegionPointer mmio_handler);
-
     /**
      * Updates the memory state and permissions of the specified range. The range's original memory
      * state and permissions must match the `expected` parameters.
@@ -202,62 +174,49 @@ public:
     ResultCode ChangeMemoryState(VAddr target, u32 size, MemoryState expected_state,
                                  VMAPermission expected_perms, MemoryState new_state,
                                  VMAPermission new_perms);
-
     /// Unmaps a range of addresses, splitting VMAs as necessary.
     ResultCode UnmapRange(VAddr target, u32 size);
-
     /// Changes the permissions of the given VMA.
     VMAHandle Reprotect(VMAHandle vma, VMAPermission new_perms);
-
     /// Changes the permissions of a range of addresses, splitting VMAs as necessary.
     ResultCode ReprotectRange(VAddr target, u32 size, VMAPermission new_perms);
-
     /**
      * Scans all VMAs and updates the page table range of any that use the given vector as backing
      * memory. This should be called after any operation that causes reallocation of the vector.
      */
     void RefreshMemoryBlockMappings(const std::vector<u8>* block);
-
     /// Dumps the address space layout to the log, for debugging
     void LogLayout(Log::Level log_level) const;
-
     /// Each VMManager has its own page table, which is set as the main one when the owning process
     /// is scheduled.
     Memory::PageTable page_table;
 
 private:
     using VMAIter = decltype(vma_map)::iterator;
-
     /// Converts a VMAHandle to a mutable VMAIter.
     VMAIter StripIterConstness(const VMAHandle& iter);
-
     /// Unmaps the given VMA.
     VMAIter Unmap(VMAIter vma);
-
     /**
      * Carves a VMA of a specific size at the specified address by splitting Free VMAs while doing
      * the appropriate error checking.
      */
     ResultVal<VMAIter> CarveVMA(VAddr base, u32 size);
-
     /**
      * Splits the edges of the given range of non-Free VMAs so that there is a VMA split at each
      * end of the range.
      */
     ResultVal<VMAIter> CarveVMARange(VAddr base, u32 size);
-
     /**
      * Splits a VMA in two, at the specified offset.
      * @returns the right side of the split, with the original iterator becoming the left side.
      */
     VMAIter SplitVMA(VMAIter vma, u32 offset_in_vma);
-
     /**
      * Checks for and merges the specified VMA with adjacent ones if possible.
      * @returns the merged VMA or the original if no merging was possible.
      */
     VMAIter MergeAdjacent(VMAIter vma);
-
     /// Updates the pages corresponding to this VMA so they match the VMA's attributes.
     void UpdatePageTableForVMA(const VirtualMemoryArea& vma);
 };

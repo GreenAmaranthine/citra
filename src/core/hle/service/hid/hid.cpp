@@ -298,7 +298,7 @@ void Module::Interface::GetGyroscopeLowCalibrateParam(Kernel::HLERequestContext&
         {0, param_unit, -param_unit},
     };
     rb.PushRaw(param);
-    LOG_WARNING(Service_HID, "(STUBBED)");
+    LOG_WARNING(Service_HID, "(stubbed)");
 }
 
 void Module::Interface::GetSoundVolume(Kernel::HLERequestContext& ctx) {

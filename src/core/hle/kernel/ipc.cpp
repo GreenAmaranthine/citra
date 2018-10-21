@@ -79,7 +79,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
                     }
                 }
 
-                if (object == nullptr) {
+                if (!object) {
                     // Note: The real kernel sets invalid translated handles to 0 in the target
                     // command buffer.
                     cmd_buf[i++] = 0;

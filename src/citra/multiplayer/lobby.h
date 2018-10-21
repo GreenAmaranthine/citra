@@ -18,10 +18,8 @@
 class LobbyModel;
 class LobbyFilterProxyModel;
 
-/**
- * Listing of all public games pulled from services. The lobby should be simple enough for users to
- * find the game they want to play, and join it.
- */
+// Listing of all public games pulled from services. The lobby should be simple enough for users to
+// find the game they want to play, and join it.
 class Lobby : public QDialog {
     Q_OBJECT
 
@@ -85,11 +83,9 @@ private:
     Validation validation;
 };
 
-/**
- * Proxy Model for filtering the lobby
- */
+// Proxy Model for filtering the lobby
 class LobbyFilterProxyModel : public QSortFilterProxyModel {
-    Q_OBJECT;
+    Q_OBJECT
 
 public:
     explicit LobbyFilterProxyModel(QWidget* parent, QStandardItemModel* list);

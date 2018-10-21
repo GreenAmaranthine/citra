@@ -135,7 +135,7 @@ void Screens::restoreGeometry(const QByteArray& geometry) {
 QByteArray Screens::saveGeometry() {
     // If we are a top-level widget, store the current geometry
     // otherwise, store the last backup
-    if (parent() == nullptr)
+    if (!parent())
         return ((QGLWidget*)this)->saveGeometry();
     else
         return geometry;

@@ -120,11 +120,10 @@ void MultiplayerState::OnAnnounceFailed(const Common::WebResult& result) {
 }
 
 void MultiplayerState::UpdateThemedIcons() {
-    if (current_state == Network::RoomMember::State::Joined) {
+    if (current_state == Network::RoomMember::State::Joined)
         status_icon->setPixmap(QIcon::fromTheme("connected").pixmap(16));
-    } else {
+    else
         status_icon->setPixmap(QIcon::fromTheme("disconnected").pixmap(16));
-    }
 }
 
 static void BringWidgetToFront(QWidget* widget) {
@@ -134,16 +133,14 @@ static void BringWidgetToFront(QWidget* widget) {
 }
 
 void MultiplayerState::OnViewLobby() {
-    if (lobby == nullptr) {
+    if (!lobby)
         lobby = new Lobby(this, game_list_model, announce_multiplayer_session);
-    }
     BringWidgetToFront(lobby);
 }
 
 void MultiplayerState::OnCreateRoom() {
-    if (host_room == nullptr) {
+    if (!host_room)
         host_room = new HostRoomWindow(this, game_list_model, announce_multiplayer_session);
-    }
     BringWidgetToFront(host_room);
 }
 
@@ -151,16 +148,14 @@ bool MultiplayerState::OnCloseRoom() {
     if (!NetworkMessage::WarnCloseRoom())
         return false;
     if (auto room{Network::GetRoom().lock()}) {
-        // if you are in a room, leave it
+        // If you are in a room, leave it
         if (auto member{Network::GetRoomMember().lock()}) {
             member->Leave();
             LOG_DEBUG(Frontend, "Left the room (as a client)");
         }
-
-        // if you are hosting a room, also stop hosting
-        if (!room->IsOpen()) {
+        // If you are hosting a room, also stop hosting
+        if (!room->IsOpen())
             return true;
-        }
         room->Destroy();
         announce_multiplayer_session->Stop();
         LOG_DEBUG(Frontend, "Closed the room (as a server)");
@@ -170,23 +165,20 @@ bool MultiplayerState::OnCloseRoom() {
 }
 
 void MultiplayerState::OnOpenNetworkRoom() {
-    if (auto member{Network::GetRoomMember().lock()}) {
+    if (auto member{Network::GetRoomMember().lock()})
         if (member->IsConnected()) {
-            if (client_room == nullptr) {
+            if (!client_room)
                 client_room = new ClientRoomWindow(this);
-            }
             BringWidgetToFront(client_room);
             return;
         }
-    }
     // If the user is not a member of a room, show the lobby instead.
     // This is currently only used on the clickable label in the status bar
     OnViewLobby();
 }
 
 void MultiplayerState::OnDirectConnectToRoom() {
-    if (direct_connect == nullptr) {
+    if (!direct_connect)
         direct_connect = new DirectConnectWindow(this);
-    }
     BringWidgetToFront(direct_connect);
 }

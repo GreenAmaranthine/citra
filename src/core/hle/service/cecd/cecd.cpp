@@ -612,7 +612,7 @@ void Module::Interface::Start(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_CECD, "(STUBBED) command={}", cecd->GetCecCommandAsString(command));
+    LOG_WARNING(Service_CECD, "(stubbed) command={}", cecd->GetCecCommandAsString(command));
 }
 
 void Module::Interface::Stop(Kernel::HLERequestContext& ctx) {
@@ -622,7 +622,7 @@ void Module::Interface::Stop(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_CECD, "(STUBBED) command={}", cecd->GetCecCommandAsString(command));
+    LOG_WARNING(Service_CECD, "(stubbed) command={}", cecd->GetCecCommandAsString(command));
 }
 
 void Module::Interface::GetCecInfoBuffer(Kernel::HLERequestContext& ctx) {
@@ -641,7 +641,7 @@ void Module::Interface::GetCecdState(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x0E, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushEnum(CecdState::NdmStatusIdle);
-    LOG_WARNING(Service_CECD, "(STUBBED)");
+    LOG_WARNING(Service_CECD, "(stubbed)");
 }
 
 void Module::Interface::GetCecInfoEventHandle(Kernel::HLERequestContext& ctx) {
@@ -649,7 +649,7 @@ void Module::Interface::GetCecInfoEventHandle(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(cecd->cecinfo_event);
 
-    LOG_WARNING(Service_CECD, "(STUBBED)");
+    LOG_WARNING(Service_CECD, "(stubbed)");
 }
 
 void Module::Interface::GetChangeStateEventHandle(Kernel::HLERequestContext& ctx) {
@@ -657,7 +657,7 @@ void Module::Interface::GetChangeStateEventHandle(Kernel::HLERequestContext& ctx
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(cecd->change_state_event);
 
-    LOG_WARNING(Service_CECD, "(STUBBED)");
+    LOG_WARNING(Service_CECD, "(stubbed)");
 }
 
 void Module::Interface::OpenAndWrite(Kernel::HLERequestContext& ctx) {

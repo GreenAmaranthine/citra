@@ -229,7 +229,7 @@ static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 o
               "memblock=0x{:08X}, addr=0x{:08X}, mypermissions=0x{:08X}, otherpermission={}",
               handle, addr, permissions, other_permissions);
     SharedPtr<SharedMemory> shared_memory{g_handle_table.Get<SharedMemory>(handle)};
-    if (shared_memory == nullptr)
+    if (!shared_memory)
         return ERR_INVALID_HANDLE;
     MemoryPermission permissions_type{static_cast<MemoryPermission>(permissions)};
     switch (permissions_type) {
@@ -253,7 +253,7 @@ static ResultCode UnmapMemoryBlock(Handle handle, u32 addr) {
     LOG_TRACE(Kernel_SVC, "memblock=0x{:08X}, addr=0x{:08X}", handle, addr);
     // TODO: Return E0A01BF5 if the address is not in the application's heap
     SharedPtr<SharedMemory> shared_memory{g_handle_table.Get<SharedMemory>(handle)};
-    if (shared_memory == nullptr)
+    if (!shared_memory)
         return ERR_INVALID_HANDLE;
     return shared_memory->Unmap(g_current_process.get(), addr);
 }
@@ -284,7 +284,7 @@ static ResultCode ConnectToPort(Handle* out_handle, VAddr port_name_address) {
 /// Makes a blocking IPC call to an OS service.
 static ResultCode SendSyncRequest(Handle handle) {
     SharedPtr<ClientSession> session{g_handle_table.Get<ClientSession>(handle)};
-    if (session == nullptr)
+    if (!session)
         return ERR_INVALID_HANDLE;
     LOG_TRACE(Kernel_SVC, "handle=0x{:08X}({})", handle, session->GetName());
     Core::System::GetInstance().PrepareReschedule();
@@ -324,7 +324,7 @@ static ResultCode CloseHandle(Handle handle) {
 static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
     auto object{g_handle_table.Get<WaitObject>(handle)};
     Thread* thread{GetCurrentThread()};
-    if (object == nullptr)
+    if (!object)
         return ERR_INVALID_HANDLE;
     LOG_TRACE(Kernel_SVC, "handle=0x{:08X}({}:{}), nanoseconds={}", handle, object->GetTypeName(),
               object->GetName(), nano_seconds);
@@ -375,7 +375,7 @@ static ResultCode WaitSynchronizationN(s32* out, VAddr handles_address, s32 hand
     for (int i{}; i < handle_count; ++i) {
         Handle handle{Memory::Read32(handles_address + i * sizeof(Handle))};
         auto object{g_handle_table.Get<WaitObject>(handle)};
-        if (object == nullptr)
+        if (!object)
             return ERR_INVALID_HANDLE;
         objects[i] = object;
     }
@@ -473,9 +473,8 @@ static ResultCode WaitSynchronizationN(s32* out, VAddr handles_address, s32 hand
 
 static ResultCode ReceiveIPCRequest(SharedPtr<ServerSession> server_session,
                                     SharedPtr<Thread> thread) {
-    if (server_session->parent->client == nullptr) {
+    if (!server_session->parent->client)
         return ERR_SESSION_CLOSED_BY_REMOTE;
-    }
     VAddr target_address{thread->GetCommandBufferAddress()};
     VAddr source_address{server_session->currently_handling->GetCommandBufferAddress()};
     ResultCode translation_result{TranslateCommandBuffer(server_session->currently_handling, thread,
@@ -507,7 +506,7 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
     for (int i{}; i < handle_count; ++i) {
         Handle handle{Memory::Read32(handles_address + i * sizeof(Handle))};
         auto object{g_handle_table.Get<WaitObject>(handle)};
-        if (object == nullptr)
+        if (!object)
             return ERR_INVALID_HANDLE;
         objects[i] = object;
     }
@@ -517,14 +516,14 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
     IPC::Header header{cmd_buff[0]};
     if (reply_target != 0 && header.command_id != 0xFFFF) {
         auto session{g_handle_table.Get<ServerSession>(reply_target)};
-        if (session == nullptr)
+        if (!session)
             return ERR_INVALID_HANDLE;
         auto request_thread{std::move(session->currently_handling)};
         // Mark the request as "handled".
         session->currently_handling = nullptr;
         // Error out if there's no request thread or the session was closed.
         // TODO: Is the same error code (ClosedByRemote) returned for both of these cases?
-        if (request_thread == nullptr || session->parent->client == nullptr) {
+        if (!request_thread || !session->parent->client) {
             *index = -1;
             return ERR_SESSION_CLOSED_BY_REMOTE;
         }
@@ -608,7 +607,7 @@ static ResultCode ArbitrateAddress(Handle handle, u32 address, u32 type, u32 val
     LOG_TRACE(Kernel_SVC, "handle=0x{:08X}, address=0x{:08X}, type=0x{:08X}, value=0x{:08X}",
               handle, address, type, value);
     SharedPtr<AddressArbiter> arbiter{g_handle_table.Get<AddressArbiter>(handle)};
-    if (arbiter == nullptr)
+    if (!arbiter)
         return ERR_INVALID_HANDLE;
     auto res{arbiter->ArbitrateAddress(GetCurrentThread(), static_cast<ArbitrationType>(type),
                                        address, value, nanoseconds)};
@@ -650,13 +649,10 @@ static void OutputDebugString(VAddr address, int len) {
 /// Get resource limit
 static ResultCode GetResourceLimit(Handle* resource_limit, Handle process_handle) {
     LOG_TRACE(Kernel_SVC, "process=0x{:08X}", process_handle);
-
     SharedPtr<Process> process{g_handle_table.Get<Process>(process_handle)};
-    if (process == nullptr)
+    if (!process)
         return ERR_INVALID_HANDLE;
-
     *resource_limit = g_handle_table.Create(process->resource_limit);
-
     return RESULT_SUCCESS;
 }
 
@@ -665,18 +661,15 @@ static ResultCode GetResourceLimitCurrentValues(VAddr values, Handle resource_li
                                                 VAddr names, u32 name_count) {
     LOG_TRACE(Kernel_SVC, "resource_limit={:08X}, names={:08X}, name_count={}",
               resource_limit_handle, names, name_count);
-
     SharedPtr<ResourceLimit> resource_limit{
         g_handle_table.Get<ResourceLimit>(resource_limit_handle)};
-    if (resource_limit == nullptr)
+    if (!resource_limit)
         return ERR_INVALID_HANDLE;
-
     for (unsigned int i{}; i < name_count; ++i) {
         u32 name{Memory::Read32(names + i * sizeof(u32))};
         s64 value{static_cast<s64>(resource_limit->GetCurrentResourceValue(name))};
         Memory::Write64(values + i * sizeof(u64), value);
     }
-
     return RESULT_SUCCESS;
 }
 
@@ -687,7 +680,7 @@ static ResultCode GetResourceLimitLimitValues(VAddr values, Handle resource_limi
               resource_limit_handle, names, name_count);
     SharedPtr<ResourceLimit> resource_limit{
         g_handle_table.Get<ResourceLimit>(resource_limit_handle)};
-    if (resource_limit == nullptr)
+    if (!resource_limit)
         return ERR_INVALID_HANDLE;
     for (unsigned int i{}; i < name_count; ++i) {
         u32 name{Memory::Read32(names + i * sizeof(u32))};
@@ -757,7 +750,7 @@ static void ExitThread() {
 /// Gets the priority for the specified thread
 static ResultCode GetThreadPriority(u32* priority, Handle handle) {
     const SharedPtr<Thread> thread{g_handle_table.Get<Thread>(handle)};
-    if (thread == nullptr)
+    if (!thread)
         return ERR_INVALID_HANDLE;
 
     *priority = thread->GetPriority();
@@ -770,7 +763,7 @@ static ResultCode SetThreadPriority(Handle handle, u32 priority) {
         return ERR_OUT_OF_RANGE;
     }
     SharedPtr<Thread> thread{g_handle_table.Get<Thread>(handle)};
-    if (thread == nullptr)
+    if (!thread)
         return ERR_INVALID_HANDLE;
     // Note: The kernel uses the current process's resource limit instead of
     // the one from the thread owner's resource limit.
@@ -801,7 +794,7 @@ static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
 static ResultCode ReleaseMutex(Handle handle) {
     LOG_TRACE(Kernel_SVC, "handle=0x{:08X}", handle);
     SharedPtr<Mutex> mutex{g_handle_table.Get<Mutex>(handle)};
-    if (mutex == nullptr)
+    if (!mutex)
         return ERR_INVALID_HANDLE;
     return mutex->Release(GetCurrentThread());
 }
@@ -810,7 +803,7 @@ static ResultCode ReleaseMutex(Handle handle) {
 static ResultCode GetProcessId(u32* process_id, Handle process_handle) {
     LOG_TRACE(Kernel_SVC, "process=0x{:08X}", process_handle);
     const SharedPtr<Process> process{g_handle_table.Get<Process>(process_handle)};
-    if (process == nullptr)
+    if (!process)
         return ERR_INVALID_HANDLE;
     *process_id = process->process_id;
     return RESULT_SUCCESS;
@@ -820,7 +813,7 @@ static ResultCode GetProcessId(u32* process_id, Handle process_handle) {
 static ResultCode GetProcessIdOfThread(u32* process_id, Handle thread_handle) {
     LOG_TRACE(Kernel_SVC, "thread=0x{:08X}", thread_handle);
     const SharedPtr<Thread> thread{g_handle_table.Get<Thread>(thread_handle)};
-    if (thread == nullptr)
+    if (!thread)
         return ERR_INVALID_HANDLE;
     const SharedPtr<Process> process{thread->owner_process};
     ASSERT_MSG(process != nullptr, "Invalid parent process for thread={:#010X}", thread_handle);
@@ -832,7 +825,7 @@ static ResultCode GetProcessIdOfThread(u32* process_id, Handle thread_handle) {
 static ResultCode GetThreadId(u32* thread_id, Handle handle) {
     LOG_TRACE(Kernel_SVC, "thread=0x{:08X}", handle);
     const SharedPtr<Thread> thread{g_handle_table.Get<Thread>(handle)};
-    if (thread == nullptr)
+    if (!thread)
         return ERR_INVALID_HANDLE;
     *thread_id = thread->GetThreadId();
     return RESULT_SUCCESS;
@@ -852,7 +845,7 @@ static ResultCode CreateSemaphore(Handle* out_handle, s32 initial_count, s32 max
 static ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count) {
     LOG_TRACE(Kernel_SVC, "release_count={}, handle=0x{:08X}", release_count, handle);
     SharedPtr<Semaphore> semaphore{g_handle_table.Get<Semaphore>(handle)};
-    if (semaphore == nullptr)
+    if (!semaphore)
         return ERR_INVALID_HANDLE;
     CASCADE_RESULT(*count, semaphore->Release(release_count));
     return RESULT_SUCCESS;
@@ -862,7 +855,7 @@ static ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count)
 static ResultCode QueryProcessMemory(MemoryInfo* memory_info, PageInfo* page_info,
                                      Handle process_handle, u32 addr) {
     SharedPtr<Process> process{g_handle_table.Get<Process>(process_handle)};
-    if (process == nullptr)
+    if (!process)
         return ERR_INVALID_HANDLE;
     auto vma{process->vm_manager.FindVMA(addr)};
     if (vma == process->vm_manager.vma_map.end())
@@ -901,7 +894,7 @@ static ResultCode DuplicateHandle(Handle* out, Handle handle) {
 static ResultCode SignalEvent(Handle handle) {
     LOG_TRACE(Kernel_SVC, "event=0x{:08X}", handle);
     SharedPtr<Event> evt{g_handle_table.Get<Event>(handle)};
-    if (evt == nullptr)
+    if (!evt)
         return ERR_INVALID_HANDLE;
     evt->Signal();
     return RESULT_SUCCESS;
@@ -911,7 +904,7 @@ static ResultCode SignalEvent(Handle handle) {
 static ResultCode ClearEvent(Handle handle) {
     LOG_TRACE(Kernel_SVC, "event=0x{:08X}", handle);
     SharedPtr<Event> evt{g_handle_table.Get<Event>(handle)};
-    if (evt == nullptr)
+    if (!evt)
         return ERR_INVALID_HANDLE;
     evt->Clear();
     return RESULT_SUCCESS;
@@ -930,7 +923,7 @@ static ResultCode CreateTimer(Handle* out_handle, u32 reset_type) {
 static ResultCode ClearTimer(Handle handle) {
     LOG_TRACE(Kernel_SVC, "timer=0x{:08X}", handle);
     SharedPtr<Timer> timer{g_handle_table.Get<Timer>(handle)};
-    if (timer == nullptr)
+    if (!timer)
         return ERR_INVALID_HANDLE;
     timer->Clear();
     return RESULT_SUCCESS;
@@ -942,7 +935,7 @@ static ResultCode SetTimer(Handle handle, s64 initial, s64 interval) {
     if (initial < 0 || interval < 0)
         return ERR_OUT_OF_RANGE_KERNEL;
     SharedPtr<Timer> timer{g_handle_table.Get<Timer>(handle)};
-    if (timer == nullptr)
+    if (!timer)
         return ERR_INVALID_HANDLE;
     timer->Set(initial, interval);
     return RESULT_SUCCESS;
@@ -952,7 +945,7 @@ static ResultCode SetTimer(Handle handle, s64 initial, s64 interval) {
 static ResultCode CancelTimer(Handle handle) {
     LOG_TRACE(Kernel_SVC, "timer=0x{:08X}", handle);
     SharedPtr<Timer> timer{g_handle_table.Get<Timer>(handle)};
-    if (timer == nullptr)
+    if (!timer)
         return ERR_INVALID_HANDLE;
     timer->Cancel();
     return RESULT_SUCCESS;
@@ -985,7 +978,7 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
                                     u32 other_permission) {
     if (size % Memory::PAGE_SIZE != 0)
         return ERR_MISALIGNED_SIZE;
-    SharedPtr<SharedMemory> shared_memory{nullptr};
+    SharedPtr<SharedMemory> shared_memory{};
     auto VerifyPermissions{[](MemoryPermission permission) {
         // SharedMemory blocks can not be created with Execute permissions
         switch (permission) {
@@ -1036,7 +1029,7 @@ static ResultCode CreatePort(Handle* server_port, Handle* client_port, VAddr nam
 
 static ResultCode CreateSessionToPort(Handle* out_client_session, Handle client_port_handle) {
     SharedPtr<ClientPort> client_port{g_handle_table.Get<ClientPort>(client_port_handle)};
-    if (client_port == nullptr)
+    if (!client_port)
         return ERR_INVALID_HANDLE;
     CASCADE_RESULT(auto session, client_port->Connect());
     *out_client_session = g_handle_table.Create(std::move(session));
@@ -1055,7 +1048,7 @@ static ResultCode CreateSession(Handle* server_session, Handle* client_session) 
 
 static ResultCode AcceptSession(Handle* out_server_session, Handle server_port_handle) {
     SharedPtr<ServerPort> server_port{g_handle_table.Get<ServerPort>(server_port_handle)};
-    if (server_port == nullptr)
+    if (!server_port)
         return ERR_INVALID_HANDLE;
     CASCADE_RESULT(auto session, server_port->Accept());
     *out_server_session = g_handle_table.Create(std::move(session));
@@ -1102,7 +1095,7 @@ static ResultCode GetSystemInfo(s64* out, u32 type, s32 param) {
 static ResultCode GetProcessInfo(s64* out, Handle process_handle, u32 type) {
     LOG_TRACE(Kernel_SVC, "process=0x{:08X}, type={}", process_handle, type);
     SharedPtr<Process> process{g_handle_table.Get<Process>(process_handle)};
-    if (process == nullptr)
+    if (!process)
         return ERR_INVALID_HANDLE;
     switch (type) {
     case 0:

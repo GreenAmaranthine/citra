@@ -269,7 +269,7 @@ void Module::Interface::ClearBuffer(Kernel::HLERequestContext& ctx) {
     const PortSet port_select{rp.Pop<u8>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_CAM, "(STUBBED) port_select={}", port_select.m_val);
+    LOG_WARNING(Service_CAM, "(stubbed) port_select={}", port_select.m_val);
 }
 
 void Module::Interface::GetVsyncInterruptEvent(Kernel::HLERequestContext& ctx) {
@@ -285,7 +285,7 @@ void Module::Interface::GetVsyncInterruptEvent(Kernel::HLERequestContext& ctx) {
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.PushCopyObjects<Kernel::Object>(nullptr);
     }
-    LOG_WARNING(Service_CAM, "(STUBBED) port_select={}", port_select.m_val);
+    LOG_WARNING(Service_CAM, "(stubbed) port_select={}", port_select.m_val);
 }
 
 void Module::Interface::GetBufferErrorInterruptEvent(Kernel::HLERequestContext& ctx) {
@@ -301,7 +301,7 @@ void Module::Interface::GetBufferErrorInterruptEvent(Kernel::HLERequestContext& 
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.PushCopyObjects<Kernel::Object>(nullptr);
     }
-    LOG_WARNING(Service_CAM, "(STUBBED) port_select={}", port_select.m_val);
+    LOG_WARNING(Service_CAM, "(stubbed) port_select={}", port_select.m_val);
 }
 
 void Module::Interface::SetReceiving(Kernel::HLERequestContext& ctx) {
@@ -367,7 +367,7 @@ void Module::Interface::SetTransferLines(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
-    LOG_WARNING(Service_CAM, "(STUBBED) port_select={}, lines={}, width={}, height={}",
+    LOG_WARNING(Service_CAM, "(stubbed) port_select={}, lines={}, width={}, height={}",
                 port_select.m_val, transfer_lines, width, height);
 }
 
@@ -416,7 +416,7 @@ void Module::Interface::SetTransferBytes(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
-    LOG_WARNING(Service_CAM, "(STUBBED) port_select={}, bytes={}, width={}, height={}",
+    LOG_WARNING(Service_CAM, "(stubbed) port_select={}, bytes={}, width={}, height={}",
                 port_select.m_val, transfer_bytes, width, height);
 }
 
@@ -433,7 +433,7 @@ void Module::Interface::GetTransferBytes(Kernel::HLERequestContext& ctx) {
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.Skip(1, false);
     }
-    LOG_WARNING(Service_CAM, "(STUBBED) port_select={}", port_select.m_val);
+    LOG_WARNING(Service_CAM, "(stubbed) port_select={}", port_select.m_val);
 }
 
 void Module::Interface::GetMaxBytes(Kernel::HLERequestContext& ctx) {
@@ -712,7 +712,7 @@ void Module::Interface::SetFrameRate(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_CAM, "invalid camera_select={}", camera_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
-    LOG_WARNING(Service_CAM, "(STUBBED) camera_select={}, frame_rate={}", camera_select.m_val,
+    LOG_WARNING(Service_CAM, "(stubbed) camera_select={}, frame_rate={}", camera_select.m_val,
                 static_cast<int>(frame_rate));
 }
 
@@ -771,7 +771,7 @@ void Module::Interface::SynchronizeVsyncTiming(Kernel::HLERequestContext& ctx) {
     const u8 camera_select2{rp.Pop<u8>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_CAM, "(STUBBED) camera_select1={}, camera_select2={}", camera_select1,
+    LOG_WARNING(Service_CAM, "(stubbed) camera_select1={}, camera_select2={}", camera_select1,
                 camera_select2);
 }
 
@@ -804,7 +804,7 @@ void Module::Interface::SetPackageParameterWithoutContext(Kernel::HLERequestCont
     rp.PopRaw(package);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_CAM, "(STUBBED)");
+    LOG_WARNING(Service_CAM, "(stubbed)");
 }
 
 template <typename PackageParameterType>
@@ -862,7 +862,7 @@ void Module::Interface::GetSuitableY2rStandardCoefficient(Kernel::HLERequestCont
     IPC::ResponseBuilder rb{ctx, 0x36, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
-    LOG_WARNING(Service_CAM, "(STUBBED)");
+    LOG_WARNING(Service_CAM, "(stubbed)");
 }
 
 void Module::Interface::PlayShutterSound(Kernel::HLERequestContext& ctx) {
@@ -870,7 +870,7 @@ void Module::Interface::PlayShutterSound(Kernel::HLERequestContext& ctx) {
     u8 sound_id{rp.Pop<u8>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_CAM, "(STUBBED) sound_id={}", sound_id);
+    LOG_WARNING(Service_CAM, "(stubbed) sound_id={}", sound_id);
 }
 
 void Module::Interface::DriverInitialize(Kernel::HLERequestContext& ctx) {

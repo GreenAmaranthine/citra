@@ -33,7 +33,7 @@ Client::Client(const std::string& host, const std::string& username, const std::
 Common::WebResult Client::GenericJson(const std::string& method, const std::string& path,
                                       const std::string& data, const std::string& jwt,
                                       const std::string& username, const std::string& token) {
-    if (cli == nullptr) {
+    if (!cli) {
         auto parsedUrl{LUrlParser::clParseURL::ParseURL(host)};
         int port;
         if (parsedUrl.m_Scheme == "http") {
@@ -53,7 +53,7 @@ Common::WebResult Client::GenericJson(const std::string& method, const std::stri
             return Common::WebResult{Common::WebResult::Code::InvalidURL, "Bad URL scheme"};
         }
     }
-    if (cli == nullptr) {
+    if (!cli) {
         LOG_ERROR(WebService, "Invalid URL {}", host + path);
         return Common::WebResult{Common::WebResult::Code::InvalidURL, "Invalid URL"};
     }
@@ -127,9 +127,8 @@ void Client::UpdateJWT() {
 
 Common::WebResult Client::GenericJson(const std::string& method, const std::string& path,
                                       const std::string& data, bool allow_anonymous) {
-    if (jwt.empty()) {
+    if (jwt.empty())
         UpdateJWT();
-    }
 
     if (jwt.empty() && !allow_anonymous) {
         LOG_ERROR(WebService, "Credentials must be provided for authenticated requests");

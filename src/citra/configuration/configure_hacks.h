@@ -17,11 +17,9 @@ class ConfigureHacks : public QWidget {
 public:
     explicit ConfigureHacks(QWidget* parent = nullptr);
     ~ConfigureHacks();
-
     void applyConfiguration();
 
 private:
     void setConfiguration();
-
     std::unique_ptr<Ui::ConfigureHacks> ui;
 };

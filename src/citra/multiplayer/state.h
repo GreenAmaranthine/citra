@@ -17,7 +17,7 @@ class DirectConnectWindow;
 class ClickableLabel;
 
 class MultiplayerState : public QWidget {
-    Q_OBJECT;
+    Q_OBJECT
 
 public:
     using Replies = std::unordered_map<std::string, std::string>;

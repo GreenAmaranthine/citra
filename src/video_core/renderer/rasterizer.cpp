@@ -463,9 +463,9 @@ bool Rasterizer::Draw(bool accelerate, bool is_indexed) {
     MathUtil::Rectangle<u32> surfaces_rect;
     std::tie(color_surface, depth_surface, surfaces_rect) =
         res_cache.GetFramebufferSurfaces(using_color_fb, using_depth_fb, viewport_rect_unscaled);
-    const u16 res_scale{static_cast<u16>(
-        color_surface != nullptr ? color_surface->res_scale
-                                 : (depth_surface == nullptr ? 1u : depth_surface->res_scale))};
+    const u16 res_scale{static_cast<u16>(color_surface != nullptr
+                                             ? color_surface->res_scale
+                                             : (!depth_surface ? 1u : depth_surface->res_scale))};
     MathUtil::Rectangle<u32> draw_rect{
         static_cast<u32>(std::clamp<s32>(static_cast<s32>(surfaces_rect.left) +
                                              viewport_rect_unscaled.left * res_scale,
@@ -483,7 +483,7 @@ bool Rasterizer::Draw(bool accelerate, bool is_indexed) {
     state.draw.draw_framebuffer = framebuffer.handle;
     state.Apply();
     if (shadow_rendering) {
-        if (!allow_shadow || color_surface == nullptr)
+        if (!allow_shadow || !color_surface)
             return true;
         glFramebufferParameteri(GL_DRAW_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_WIDTH,
                                 color_surface->width * color_surface->res_scale);
@@ -1223,14 +1223,14 @@ bool Rasterizer::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransferConfi
     Surface src_surface;
     std::tie(src_surface, src_rect) =
         res_cache.GetSurfaceSubRect(src_params, ScaleMatch::Ignore, true);
-    if (src_surface == nullptr)
+    if (!src_surface)
         return false;
     dst_params.res_scale = src_surface->res_scale;
     MathUtil::Rectangle<u32> dst_rect;
     Surface dst_surface;
     std::tie(dst_surface, dst_rect) =
         res_cache.GetSurfaceSubRect(dst_params, ScaleMatch::Upscale, false);
-    if (dst_surface == nullptr)
+    if (!dst_surface)
         return false;
     if (src_surface->is_tiled != dst_surface->is_tiled)
         std::swap(src_rect.top, src_rect.bottom);
@@ -1276,7 +1276,7 @@ bool Rasterizer::AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& c
     MathUtil::Rectangle<u32> src_rect;
     Surface src_surface;
     std::tie(src_surface, src_rect) = res_cache.GetTexCopySurface(src_params);
-    if (src_surface == nullptr)
+    if (!src_surface)
         return false;
     if (output_gap != 0 &&
         (output_width != src_surface->BytesInPixels(src_rect.GetWidth() / src_surface->res_scale) *
@@ -1298,7 +1298,7 @@ bool Rasterizer::AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& c
     Surface dst_surface;
     std::tie(dst_surface, dst_rect) =
         res_cache.GetSurfaceSubRect(dst_params, ScaleMatch::Upscale, load_gap);
-    if (dst_surface == nullptr)
+    if (!dst_surface)
         return false;
     if (dst_surface->type == SurfaceType::Texture)
         return false;
@@ -1310,7 +1310,7 @@ bool Rasterizer::AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& c
 
 bool Rasterizer::AccelerateFill(const GPU::Regs::MemoryFillConfig& config) {
     Surface dst_surface{res_cache.GetFillSurface(config)};
-    if (dst_surface == nullptr)
+    if (!dst_surface)
         return false;
     res_cache.InvalidateRegion(dst_surface->addr, dst_surface->size, dst_surface);
     return true;

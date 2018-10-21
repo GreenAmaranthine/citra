@@ -182,7 +182,7 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
         return ERR_INVALID_ADDRESS;
     }
 
-    if (heap_memory == nullptr) {
+    if (!heap_memory) {
         // Initialize heap
         heap_memory = std::make_shared<std::vector<u8>>();
         heap_start = heap_end = target;

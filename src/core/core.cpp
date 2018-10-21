@@ -25,6 +25,9 @@
 #ifdef ENABLE_SCRIPTING
 #include "core/rpc/rpc_server.h"
 #endif
+#ifdef ENABLE_WEB_SERVICE
+#include "web_service/verify_login.h"
+#endif
 #include "core/settings.h"
 #include "network/network.h"
 #include "video_core/renderer/renderer.h"
@@ -51,7 +54,7 @@ System::ResultStatus System::RunLoop() {
     }
     // If we don't have a currently active thread then don't execute instructions,
     // instead advance to the next event and try to yield to the next thread
-    if (Kernel::GetCurrentThread() == nullptr) {
+    if (!Kernel::GetCurrentThread()) {
         LOG_TRACE(Core_ARM11, "Idling");
         CoreTiming::Idle();
         CoreTiming::Advance();
@@ -223,6 +226,14 @@ void System::SetApplication(const std::string& path) {
 
 void System::CloseApplication() {
     SetApplication("");
+}
+
+bool VerifyLogin(const std::string& host, const std::string& username, const std::string& token) {
+#ifdef ENABLE_WEB_SERVICE
+    return WebService::VerifyLogin(host, username, token);
+#else
+    return false;
+#endif
 }
 
 } // namespace Core

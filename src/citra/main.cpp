@@ -148,8 +148,8 @@ GMainWindow::GMainWindow() : config{new Config()} /*, emu_thread{nullptr}*/ {
 }
 
 GMainWindow::~GMainWindow() {
-    // will get automatically deleted otherwise
-    if (screens->parent() == nullptr)
+    // Will get automatically deleted otherwise
+    if (!screens->parent())
         delete screens;
     Network::Shutdown();
 }
@@ -247,39 +247,35 @@ void GMainWindow::InitializeRecentFileMenuActions() {
 
 void GMainWindow::InitializeHotkeys() {
     RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
-    RegisterHotkey("Main Window", "Start Emulation");
+    RegisterHotkey("Main Window", "Load Amiibo", QKeySequence("CTRL+L"));
+    RegisterHotkey("Main Window", "Remove Amiibo", QKeySequence("CTRL+R"));
     RegisterHotkey("Main Window", "Continue/Pause", QKeySequence(Qt::Key_F4));
     RegisterHotkey("Main Window", "Restart", QKeySequence(Qt::Key_F5));
     RegisterHotkey("Main Window", "Swap Screens", QKeySequence("F9"));
     RegisterHotkey("Main Window", "Toggle Screen Layout", QKeySequence("F10"));
     RegisterHotkey("Main Window", "Fullscreen", QKeySequence::FullScreen);
-    RegisterHotkey("Main Window", "Exit Fullscreen", QKeySequence(Qt::Key_Escape),
-                   Qt::ApplicationShortcut);
-    RegisterHotkey("Main Window", "Toggle Speed Limit", QKeySequence("CTRL+Z"),
-                   Qt::ApplicationShortcut);
-    RegisterHotkey("Main Window", "Increase Speed Limit", QKeySequence("+"),
-                   Qt::ApplicationShortcut);
-    RegisterHotkey("Main Window", "Decrease Speed Limit", QKeySequence("-"),
-                   Qt::ApplicationShortcut);
-    RegisterHotkey("Main Window", "Increase Internal Resolution", QKeySequence("CTRL+I"),
-                   Qt::ApplicationShortcut);
-    RegisterHotkey("Main Window", "Decrease Internal Resolution", QKeySequence("CTRL+D"),
-                   Qt::ApplicationShortcut);
+    RegisterHotkey("Main Window", "Exit Fullscreen", QKeySequence(Qt::Key_Escape));
+    RegisterHotkey("Main Window", "Toggle Speed Limit", QKeySequence("CTRL+Z"));
+    RegisterHotkey("Main Window", "Increase Speed Limit", QKeySequence("+"));
+    RegisterHotkey("Main Window", "Decrease Speed Limit", QKeySequence("-"));
+    RegisterHotkey("Main Window", "Increase Internal Resolution", QKeySequence("CTRL+I"));
+    RegisterHotkey("Main Window", "Decrease Internal Resolution", QKeySequence("CTRL+D"));
     RegisterHotkey("Main Window", "Capture Screenshot", QKeySequence("CTRL+S"));
     RegisterHotkey("Main Window", "Toggle Sleep Mode", QKeySequence("F2"));
     RegisterHotkey("Main Window", "Change CPU Ticks", QKeySequence("CTRL+T"));
-    RegisterHotkey("Main Window", "Toggle Frame Advancing", QKeySequence("CTRL+A"),
-                   Qt::ApplicationShortcut);
-    RegisterHotkey("Main Window", "Advance Frame", QKeySequence(Qt::Key_Backslash),
-                   Qt::ApplicationShortcut);
+    RegisterHotkey("Main Window", "Toggle Frame Advancing", QKeySequence("CTRL+A"));
+    RegisterHotkey("Main Window", "Advance Frame", QKeySequence(Qt::Key_Backslash));
+    RegisterHotkey("Main Window", "Open User Directory", QKeySequence("CTRL+U"));
     LoadHotkeys();
 
     connect(GetHotkey("Main Window", "Load File", this), &QShortcut::activated, this,
             &GMainWindow::OnMenuLoadFile);
-    connect(GetHotkey("Main Window", "Start Emulation", this), &QShortcut::activated, this,
-            &GMainWindow::OnStartGame);
+    connect(GetHotkey("Main Window", "Load Amiibo", this), &QShortcut::activated, this,
+            &GMainWindow::OnLoadAmiibo);
+    connect(GetHotkey("Main Window", "Remove Amiibo", this), &QShortcut::activated, this,
+            &GMainWindow::OnRemoveAmiibo);
     connect(GetHotkey("Main Window", "Continue/Pause", this), &QShortcut::activated, this, [&] {
-        if (emulation_running) {
+        if (system.IsPoweredOn()) {
             if (system.IsRunning())
                 OnPauseGame();
             else
@@ -300,7 +296,7 @@ void GMainWindow::InitializeHotkeys() {
     connect(GetHotkey("Main Window", "Fullscreen", screens), &QShortcut::activatedAmbiguously,
             ui.action_Fullscreen, &QAction::trigger);
     connect(GetHotkey("Main Window", "Exit Fullscreen", this), &QShortcut::activated, this, [&] {
-        if (emulation_running) {
+        if (system.IsPoweredOn()) {
             ui.action_Fullscreen->setChecked(false);
             ToggleFullscreen();
         }
@@ -349,7 +345,7 @@ void GMainWindow::InitializeHotkeys() {
         QString str{QInputDialog::getText(this, "Change CPU Ticks", "Ticks:")};
         if (str.isEmpty())
             return;
-        bool ok;
+        bool ok{};
         u64 ticks{str.toULongLong(&ok)};
         if (ok) {
             Settings::values.ticks_mode = Settings::TicksMode::Custom;
@@ -363,6 +359,8 @@ void GMainWindow::InitializeHotkeys() {
             ui.action_Enable_Frame_Advancing, &QAction::trigger);
     connect(GetHotkey("Main Window", "Advance Frame", this), &QShortcut::activated,
             ui.action_Advance_Frame, &QAction::trigger);
+    connect(GetHotkey("Main Window", "Open User Directory", this), &QShortcut::activated,
+            ui.action_Open_User_Directory, &QAction::trigger);
 }
 
 void GMainWindow::SetDefaultUIGeometry() {
@@ -429,6 +427,7 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_NAND_Custom, &QAction::triggered, this, &GMainWindow::OnNANDCustom);
     connect(ui.action_SDMC_Default, &QAction::triggered, this, &GMainWindow::OnSDMCDefault);
     connect(ui.action_SDMC_Custom, &QAction::triggered, this, &GMainWindow::OnSDMCCustom);
+
     // Emulation
     connect(ui.action_Start, &QAction::triggered, this, &GMainWindow::OnStartGame);
     connect(ui.action_Pause, &QAction::triggered, this, &GMainWindow::OnPauseGame);
@@ -439,6 +438,7 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Configuration, &QAction::triggered, this, &GMainWindow::OnOpenConfiguration);
     connect(ui.action_Cheats, &QAction::triggered, this, &GMainWindow::OnCheats);
     connect(ui.action_Control_Panel, &QAction::triggered, this, &GMainWindow::OnControlPanel);
+
     // View
     ui.action_Show_Filter_Bar->setShortcut(QKeySequence("CTRL+F"));
     connect(ui.action_Show_Filter_Bar, &QAction::triggered, this, &GMainWindow::OnToggleFilterBar);
@@ -460,6 +460,7 @@ void GMainWindow::ConnectMenuEvents() {
             &GMainWindow::ChangeScreenLayout);
     connect(ui.action_Screen_Layout_Swap_Screens, &QAction::triggered, this,
             &GMainWindow::OnSwapScreens);
+
     // Tools
     connect(ui.action_Record_Movie, &QAction::triggered, this, &GMainWindow::OnRecordMovie);
     connect(ui.action_Play_Movie, &QAction::triggered, this, &GMainWindow::OnPlayMovie);
@@ -469,18 +470,19 @@ void GMainWindow::ConnectMenuEvents() {
             &GMainWindow::OnCaptureScreenshot);
     connect(ui.action_Set_Play_Coins, &QAction::triggered, this, &GMainWindow::OnSetPlayCoins);
     connect(ui.action_Enable_Frame_Advancing, &QAction::triggered, this, [this] {
-        if (emulation_running) {
+        if (system.IsPoweredOn()) {
             system.frame_limiter.SetFrameAdvancing(ui.action_Enable_Frame_Advancing->isChecked());
             ui.action_Advance_Frame->setEnabled(ui.action_Enable_Frame_Advancing->isChecked());
         }
     });
     connect(ui.action_Advance_Frame, &QAction::triggered, this, [this] {
-        if (emulation_running) {
+        if (system.IsPoweredOn()) {
             ui.action_Enable_Frame_Advancing->setChecked(true);
             ui.action_Advance_Frame->setEnabled(true);
             system.frame_limiter.AdvanceFrame();
         }
     });
+
     // Multiplayer
     connect(ui.action_View_Lobby, &QAction::triggered, multiplayer_state,
             &MultiplayerState::OnViewLobby);
@@ -492,6 +494,7 @@ void GMainWindow::ConnectMenuEvents() {
             &MultiplayerState::OnDirectConnectToRoom);
     connect(ui.action_Show_Room, &QAction::triggered, multiplayer_state,
             &MultiplayerState::OnOpenNetworkRoom);
+
     // Help
     connect(ui.action_About, &QAction::triggered, this, &GMainWindow::OnMenuAboutCitra);
 }
@@ -642,8 +645,6 @@ void GMainWindow::BootApplication(const std::string& filename) {
     screens->show();
     screens->setFocus();
 
-    emulation_running = true;
-
     if (ui.action_Fullscreen->isChecked())
         ShowFullscreen();
 
@@ -730,7 +731,6 @@ void GMainWindow::ShutdownGame() {
     game_fps_label->setVisible(false);
     emu_frametime_label->setVisible(false);
 
-    emulation_running = false;
     short_title.clear();
     SetupUIStrings();
 #ifdef ENABLE_DISCORD_RPC
@@ -909,19 +909,18 @@ void GMainWindow::OnGameListOpenFolder(u64 data_id, GameListOpenTarget target) {
 
 void GMainWindow::OnGameListOpenDirectory(const QString& directory) {
     QString path;
-    if (directory == "INSTALLED") {
+    if (directory == "INSTALLED")
         path = QString::fromStdString(
             FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir, Settings::values.sdmc_dir + "/") +
             "Nintendo "
             "3DS/00000000000000000000000000000000/00000000000000000000000000000000/title/00040000");
-    } else if (directory == "SYSTEM") {
+    else if (directory == "SYSTEM")
         path = QString::fromStdString(
             FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir + "/")
                 .c_str() +
             std::string("00000000000000000000000000000000/title/00040010"));
-    } else {
+    else
         path = directory;
-    }
     if (!QFileInfo::exists(path)) {
         QMessageBox::critical(this, QString("Error Opening %1").arg(path),
                               "Folder does not exist!");
@@ -943,7 +942,7 @@ void GMainWindow::OnGameListAddDirectory() {
 }
 
 void GMainWindow::OnGameListShowList(bool show) {
-    if (emulation_running)
+    if (system.IsPoweredOn())
         return;
     game_list->setVisible(show);
     game_list_placeholder->setVisible(!show);
@@ -987,7 +986,7 @@ void GMainWindow::OnMenuAddSeed() {
     const QString program_id_s{QInputDialog::getText(this, "Add Seed", "Enter the program ID")};
     if (program_id_s.isEmpty())
         return;
-    bool ok;
+    bool ok{};
     u64 program_id{program_id_s.toULongLong(&ok, 16)};
     if (!ok) {
         QMessageBox::critical(this, "Error", "Invalid program ID");
@@ -1105,7 +1104,7 @@ void GMainWindow::OnStopGame() {
 }
 
 void GMainWindow::ToggleFullscreen() {
-    if (!emulation_running)
+    if (!system.IsPoweredOn())
         return;
     if (ui.action_Fullscreen->isChecked())
         ShowFullscreen();
@@ -1198,13 +1197,13 @@ void GMainWindow::OnOpenConfiguration() {
 }
 
 void GMainWindow::OnCheats() {
-    if (cheats_window == nullptr)
+    if (!cheats_window)
         cheats_window = std::make_shared<CheatDialog>(this);
     cheats_window->show();
 }
 
 void GMainWindow::OnControlPanel() {
-    if (control_panel == nullptr)
+    if (!control_panel)
         control_panel = std::make_shared<ControlPanel>(this);
     control_panel->show();
 }
@@ -1277,7 +1276,7 @@ void GMainWindow::OnToggleFilterBar() {
 }
 
 void GMainWindow::OnRecordMovie() {
-    if (emulation_running) {
+    if (system.IsPoweredOn()) {
         QMessageBox::StandardButton answer{QMessageBox::warning(
             this, "Record Movie",
             "To keep consistency with the RNG, it is recommended to record the movie from game "
@@ -1290,7 +1289,7 @@ void GMainWindow::OnRecordMovie() {
         QFileDialog::getSaveFileName(this, "Record Movie", ".", "Citra TAS Movie (*.ctm)")};
     if (path.isEmpty())
         return;
-    if (emulation_running)
+    if (system.IsPoweredOn())
         Core::Movie::GetInstance().StartRecording(path.toStdString());
     else {
         movie_record_on_start = true;
@@ -1345,7 +1344,7 @@ bool GMainWindow::ValidateMovie(const QString& path, u64 program_id) {
 }
 
 void GMainWindow::OnPlayMovie() {
-    if (emulation_running) {
+    if (system.IsPoweredOn()) {
         QMessageBox::StandardButton answer{QMessageBox::warning(
             this, "Play Movie",
             "To keep consistency with the RNG, it is recommended to play the movie from game "
@@ -1358,7 +1357,7 @@ void GMainWindow::OnPlayMovie() {
         QFileDialog::getOpenFileName(this, "Play Movie", ".", "Citra TAS Movie (*.ctm)")};
     if (path.isEmpty())
         return;
-    if (emulation_running) {
+    if (system.IsPoweredOn()) {
         if (!ValidateMovie(path))
             return;
     } else {
@@ -1515,7 +1514,7 @@ void GMainWindow::OnMenuAboutCitra() {
 }
 
 bool GMainWindow::ConfirmClose() {
-    if (emu_thread == nullptr)
+    if (!emu_thread)
         return true;
     QMessageBox::StandardButton answer{
         QMessageBox::question(this, "Citra", "Are you sure you want to close Citra?",
@@ -1570,7 +1569,7 @@ void GMainWindow::dragMoveEvent(QDragMoveEvent* event) {
 }
 
 bool GMainWindow::ConfirmChangeGame() {
-    if (emu_thread == nullptr)
+    if (!emu_thread)
         return true;
     auto answer{QMessageBox::question(
         this, "Citra",

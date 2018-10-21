@@ -727,7 +727,7 @@ void HTTP_C::SetPostDataType(Kernel::HLERequestContext& ctx) {
     ASSERT(itr != contexts.end());
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_HTTP, "(STUBBED) context_id={}, type={}", context_id,
+    LOG_WARNING(Service_HTTP, "(stubbed) context_id={}, type={}", context_id,
                 static_cast<u32>(type));
 }
 
@@ -761,7 +761,7 @@ void HTTP_C::NotifyFinishSendPostData(Kernel::HLERequestContext& ctx) {
     ASSERT(itr != contexts.end());
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_HTTP, "(STUBBED) context_id={}", context_id);
+    LOG_WARNING(Service_HTTP, "(stubbed) context_id={}", context_id);
 }
 
 void HTTP_C::GetResponseHeader(Kernel::HLERequestContext& ctx) {
@@ -1273,7 +1273,7 @@ void HTTP_C::SetBasicAuthorization(Kernel::HLERequestContext& ctx) {
     itr->second.basic_auth->password = password;
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_HTTP, "(STUBBED) username={}, password={}", username, password);
+    LOG_WARNING(Service_HTTP, "(stubbed) username={}, password={}", username, password);
 }
 
 void HTTP_C::SetProxy(Kernel::HLERequestContext& ctx) {
@@ -1301,7 +1301,7 @@ void HTTP_C::SetProxy(Kernel::HLERequestContext& ctx) {
     itr->second.proxy->port = port;
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_HTTP, "(STUBBED) proxy={}, username={}, password={}, port={}", proxy,
+    LOG_WARNING(Service_HTTP, "(stubbed) proxy={}, username={}, password={}, port={}", proxy,
                 username, password, username);
 }
 

@@ -18,7 +18,7 @@ static CoreTiming::EventType* tick_event;
 static std::unique_ptr<Engine> cheat_engine;
 
 static void CheatTickCallback(u64, int cycles_late) {
-    if (cheat_engine == nullptr)
+    if (!cheat_engine)
         cheat_engine = std::make_unique<Engine>();
     cheat_engine->Run();
     CoreTiming::ScheduleEvent(BASE_CLOCK_RATE_ARM11 - cycles_late, tick_event);
@@ -38,7 +38,7 @@ void Shutdown() {
 }
 
 void RefreshCheats() {
-    if (cheat_engine == nullptr)
+    if (!cheat_engine)
         cheat_engine = std::make_unique<Engine>();
     cheat_engine->RefreshCheats();
 }

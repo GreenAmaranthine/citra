@@ -17,11 +17,9 @@ class ConfigureGeneral : public QWidget {
 public:
     explicit ConfigureGeneral(QWidget* parent = nullptr);
     ~ConfigureGeneral();
-
     void applyConfiguration();
 
 private:
     void setConfiguration();
-
     std::unique_ptr<Ui::ConfigureGeneral> ui;
 };

@@ -383,7 +383,7 @@ void FS_USER::GetCardType(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x813, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(0); // CTR card = 0, TWL card = 1
-    LOG_WARNING(Service_FS, "(STUBBED)");
+    LOG_WARNING(Service_FS, "(stubbed)");
 }
 
 void FS_USER::DeleteSdmcRoot(Kernel::HLERequestContext& ctx) {
@@ -463,7 +463,7 @@ void FS_USER::CreateSystemSaveData(Kernel::HLERequestContext& ctx) {
     bool duplicate{rp.Pop<bool>()};
     LOG_WARNING(
         Service_FS,
-        "(STUBBED) savedata_high={:08X} savedata_low={:08X} total_size={:08X}  block_size={:08X} "
+        "(stubbed) savedata_high={:08X} savedata_low={:08X} total_size={:08X}  block_size={:08X} "
         "directories={} files={} directory_buckets={} file_buckets={} duplicate={}",
         savedata_high, savedata_low, total_size, block_size, directories, files, directory_buckets,
         file_buckets, duplicate);
@@ -482,7 +482,7 @@ void FS_USER::CreateLegacySystemSaveData(Kernel::HLERequestContext& ctx) {
     u32 file_buckets{rp.Pop<u32>()};
     bool duplicate{rp.Pop<bool>()};
     LOG_WARNING(Service_FS,
-                "(STUBBED) savedata_id={:08X}, total_size={:08X}, block_size={:08X}, "
+                "(stubbed) savedata_id={:08X}, total_size={:08X}, block_size={:08X}, "
                 "directories={}, "
                 "files={}, directory_buckets={}, file_buckets={}, duplicate={}",
                 savedata_id, total_size, block_size, directories, files, directory_buckets,
@@ -496,7 +496,7 @@ void FS_USER::InitializeWithSdkVersion(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x861, 1, 2};
     const u32 version{rp.Pop<u32>()};
     rp.PopPID();
-    LOG_WARNING(Service_FS, "(STUBBED) version: 0x{:08X}", version);
+    LOG_WARNING(Service_FS, "(stubbed) version: 0x{:08X}", version);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
@@ -521,7 +521,7 @@ void FS_USER::GetPriority(Kernel::HLERequestContext& ctx) {
 void FS_USER::GetArchiveResource(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x849, 1, 0};
     u32 system_media_type{rp.Pop<u32>()};
-    LOG_WARNING(Service_FS, "(STUBBED) system_media_type=0x{:08X}", system_media_type);
+    LOG_WARNING(Service_FS, "(stubbed) system_media_type=0x{:08X}", system_media_type);
     IPC::ResponseBuilder rb{rp.MakeBuilder(5, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(512);
@@ -651,7 +651,7 @@ void FS_USER::SetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_FS,
-                "(STUBBED) value=0x{:016X}, secure_value_slot=0x{:08X} "
+                "(stubbed) value=0x{:016X}, secure_value_slot=0x{:08X} "
                 "unique_id=0x{:08X}, title_variation=0x{:02X}",
                 value, secure_value_slot, unique_id, title_variation);
 }
@@ -662,7 +662,7 @@ void FS_USER::GetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     u32 unique_id{rp.Pop<u32>()};
     u8 title_variation{rp.Pop<u8>()};
     LOG_WARNING(Service_FS,
-                "(STUBBED) secure_value_slot=0x{:08X}, unique_id=0x{:08X}, "
+                "(stubbed) secure_value_slot=0x{:08X}, unique_id=0x{:08X}, "
                 "title_variation=0x{:02X}",
                 secure_value_slot, unique_id, title_variation);
     IPC::ResponseBuilder rb{rp.MakeBuilder(4, 0)};
@@ -680,7 +680,7 @@ void FS_USER::GetThisSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     // TODO: Implement secure value lookup
     rb.Push<bool>(false); // Indicates that the secure value doesn't exist
     rb.Push<u64>(0);      // The secure value
-    LOG_WARNING(Service_FS, "(STUBBED) secure_value_slot={}", secure_value_slot);
+    LOG_WARNING(Service_FS, "(stubbed) secure_value_slot={}", secure_value_slot);
 }
 
 void FS_USER::EnumerateExtSaveData(Kernel::HLERequestContext& ctx) {

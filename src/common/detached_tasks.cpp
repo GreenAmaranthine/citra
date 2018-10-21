@@ -11,7 +11,7 @@ namespace Common {
 DetachedTasks* DetachedTasks::instance{};
 
 DetachedTasks::DetachedTasks() {
-    ASSERT(instance == nullptr);
+    ASSERT(!instance);
     instance = this;
 }
 

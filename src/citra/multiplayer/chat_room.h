@@ -23,7 +23,6 @@ class AnnounceMultiplayerSession;
 
 class ConnectionError;
 class ComboBoxProxyModel;
-
 class ChatMessage;
 
 class ChatRoom : public QWidget {

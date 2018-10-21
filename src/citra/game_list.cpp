@@ -358,16 +358,15 @@ void GameList::ValidateEntry(const QModelIndex& item) {
     // clicked
     int row{item_model->itemFromIndex(item)->row()};
     const QStandardItem* parent{item_model->itemFromIndex(item.parent())};
-    if (parent == nullptr)
+    if (!parent)
         parent = item_model->invisibleRootItem();
     const QStandardItem* child{parent->child(row, COLUMN_NAME)};
 
     switch (static_cast<GameListItemType>(child->type())) {
     case GameListItemType::Game: {
         QString file_path{child->data(GameListItemPath::FullPathRole).toString()};
-        if (file_path.isEmpty()) {
+        if (file_path.isEmpty())
             return;
-        }
         QFileInfo file_info{file_path};
         if (!file_info.exists() || file_info.isDir())
             return;
@@ -443,7 +442,7 @@ void GameList::PopupContextMenu(const QPoint& menu_location) {
     int row{item_model->itemFromIndex(item)->row()};
     QStandardItem* parent{item_model->itemFromIndex(item.parent())};
     // invisibleRootItem() will not appear as an item's parent
-    if (parent == nullptr)
+    if (!parent)
         parent = item_model->invisibleRootItem();
     QStandardItem* child{parent->child(row, COLUMN_NAME)};
     QMenu context_menu{};

@@ -99,11 +99,11 @@ public:
     }
 
 private:
-    // stores a pointer to element
+    // Stores a pointer to element
     // and a pointer to the next ElementPtr
     class ElementPtr {
     public:
-        ElementPtr() : next{nullptr} {}
+        //        ElementPtr() {}
 
         ~ElementPtr() {
             ElementPtr* next_ptr{next.load()};
@@ -113,7 +113,7 @@ private:
         }
 
         std::optional<T> current;
-        std::atomic<ElementPtr*> next;
+        std::atomic<ElementPtr*> next{};
     };
 
     ElementPtr* write_ptr;

@@ -77,15 +77,6 @@ private:
     void InitializeHotkeys();
     void SetDefaultUIGeometry();
 
-    Q_INVOKABLE void ErrEulaCallback(HLE::Applets::ErrEulaConfig& config);
-    Q_INVOKABLE void SwkbdCallback(HLE::Applets::SoftwareKeyboardConfig& config,
-                                   std::u16string& text);
-    Q_INVOKABLE void MiiSelectorCallback(const HLE::Applets::MiiConfig& config,
-                                         HLE::Applets::MiiResult& result);
-    Q_INVOKABLE void Update3D();
-    Q_INVOKABLE void UpdateFrameAdvancingCallback();
-    Q_INVOKABLE void UpdateControlPanelNetwork();
-
     void SyncMenuUISettings();
     void RestoreUIState();
 
@@ -175,9 +166,18 @@ private slots:
 
 private:
     bool ValidateMovie(const QString& path, u64 program_id = 0);
-    Q_INVOKABLE void OnMoviePlaybackCompleted();
     void UpdateStatusBar();
     void SetupUIStrings();
+
+    Q_INVOKABLE void ErrEulaCallback(HLE::Applets::ErrEulaConfig& config);
+    Q_INVOKABLE void SwkbdCallback(HLE::Applets::SoftwareKeyboardConfig& config,
+                                   std::u16string& text);
+    Q_INVOKABLE void MiiSelectorCallback(const HLE::Applets::MiiConfig& config,
+                                         HLE::Applets::MiiResult& result);
+    Q_INVOKABLE void Update3D();
+    Q_INVOKABLE void UpdateFrameAdvancingCallback();
+    Q_INVOKABLE void UpdateControlPanelNetwork();
+    Q_INVOKABLE void OnMoviePlaybackCompleted();
 
     Ui::MainWindow ui;
 
@@ -196,11 +196,8 @@ private:
     QTimer status_bar_update_timer;
     QTimer movie_play_timer;
 
-    MultiplayerState* multiplayer_state{};
+    MultiplayerState* multiplayer_state;
     std::unique_ptr<Config> config;
-
-    // Whether emulation is currently running in Citra.
-    bool emulation_running{};
 
     std::unique_ptr<EmuThread> emu_thread;
 
@@ -212,6 +209,7 @@ private:
     QString movie_record_path;
 
     // Variables used to pause the application when a Qt applet is open.
+    // TODO: get rid of these variables
     bool applet_open{};
     std::mutex applet_mutex;
     std::condition_variable applet_cv;

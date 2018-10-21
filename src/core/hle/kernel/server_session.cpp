@@ -18,29 +18,24 @@ ServerSession::ServerSession() = default;
 ServerSession::~ServerSession() {
     // This destructor will be called automatically when the last ServerSession handle is closed by
     // the emulated application.
-
     // Decrease the port's connection count.
     if (parent->port)
         parent->port->ConnectionClosed();
-
     // TODO: Wake up all the ClientSession's waiting threads and set
     // the SendSyncRequest result to 0xC920181A.
-
     parent->server = nullptr;
 }
 
 ResultVal<SharedPtr<ServerSession>> ServerSession::Create(std::string name) {
     SharedPtr<ServerSession> server_session{new ServerSession};
-
     server_session->name = std::move(name);
     server_session->parent = nullptr;
-
     return MakeResult(std::move(server_session));
 }
 
 bool ServerSession::ShouldWait(Thread* thread) const {
     // Closed sessions should never wait, an error will be returned from svcReplyAndReceive.
-    if (parent->client == nullptr)
+    if (!parent->client)
         return false;
     // Wait if we have no pending requests, or if we're currently handling a request.
     return pending_requesting_threads.empty() || currently_handling != nullptr;
@@ -48,12 +43,10 @@ bool ServerSession::ShouldWait(Thread* thread) const {
 
 void ServerSession::Acquire(Thread* thread) {
     ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
-
     // If the client endpoint was closed, don't do anything. This ServerSession is now useless and
     // will linger until its last handle is closed by the running application.
-    if (parent->client == nullptr)
+    if (!parent->client)
         return;
-
     // We are now handling a request, pop it from the stack.
     ASSERT(!pending_requesting_threads.empty());
     currently_handling = pending_requesting_threads.back();

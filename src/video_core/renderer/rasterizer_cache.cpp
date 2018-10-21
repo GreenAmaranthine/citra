@@ -555,9 +555,9 @@ void RasterizerCache::CopySurface(const Surface& src_surface, const Surface& dst
 void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
     ASSERT(type != SurfaceType::Fill);
     const u8* texture_src_data{Memory::GetPhysicalPointer(addr)};
-    if (texture_src_data == nullptr)
+    if (!texture_src_data)
         return;
-    if (gl_buffer == nullptr) {
+    if (!gl_buffer) {
         gl_buffer_size = width * height * GetGLBytesPerPixel(pixel_format);
         gl_buffer.reset(new u8[gl_buffer_size]);
     }
@@ -599,7 +599,7 @@ void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
 
 void CachedSurface::FlushGLBuffer(PAddr flush_start, PAddr flush_end) {
     u8* dst_buffer{Memory::GetPhysicalPointer(addr)};
-    if (dst_buffer == nullptr)
+    if (!dst_buffer)
         return;
     ASSERT(gl_buffer_size == width * height * GetGLBytesPerPixel(pixel_format));
     // TODO: Should probably be done in ::Memory:: and check for other regions too
@@ -682,7 +682,7 @@ void CachedSurface::DownloadGLTexture(const MathUtil::Rectangle<u32>& rect, GLui
                                       GLuint draw_fb_handle) {
     if (type == SurfaceType::Fill)
         return;
-    if (gl_buffer == nullptr) {
+    if (!gl_buffer) {
         gl_buffer_size = width * height * GetGLBytesPerPixel(pixel_format);
         gl_buffer.reset(new u8[gl_buffer_size]);
     }
@@ -1020,10 +1020,10 @@ SurfaceRect_Tuple RasterizerCache::GetSurfaceSubRect(const SurfaceParams& params
         aligned_params.UpdateParams();
     }
     // Check for a surface we can expand before creating a new one
-    if (surface == nullptr) {
+    if (!surface) {
         surface = FindMatch<MatchFlags::Expand | MatchFlags::Invalid>(surface_cache, aligned_params,
                                                                       match_res_scale);
-        if (surface != nullptr) {
+        if (surface) {
             aligned_params.width = aligned_params.stride;
             aligned_params.UpdateParams();
             SurfaceParams new_params{*surface};
@@ -1043,16 +1043,15 @@ SurfaceRect_Tuple RasterizerCache::GetSurfaceSubRect(const SurfaceParams& params
         }
     }
     // No subrect found - create and return a new surface
-    if (surface == nullptr) {
+    if (!surface) {
         SurfaceParams new_params{aligned_params};
         // Can't have gaps in a surface
         new_params.width = aligned_params.stride;
         new_params.UpdateParams();
         // GetSurface will create the new surface and possibly adjust res_scale if necessary
         surface = GetSurface(new_params, match_res_scale, load_if_create);
-    } else if (load_if_create) {
+    } else if (load_if_create)
         ValidateSurface(surface, aligned_params.addr, aligned_params.size);
-    }
     return std::make_tuple(surface, surface->GetScaledSubRect(params));
 }
 
@@ -1439,7 +1438,7 @@ void RasterizerCache::InvalidateRegion(PAddr addr, u32 size, const Surface& regi
 
             // If cpu is invalidating this region we want to remove it
             // to (likely) mark the memory pages as uncached
-            if (region_owner == nullptr && size <= 8) {
+            if (region_owner && size <= 8) {
                 FlushRegion(cached_surface->addr, cached_surface->size, cached_surface);
                 remove_surfaces.emplace(cached_surface);
                 continue;

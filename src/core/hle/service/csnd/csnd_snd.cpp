@@ -25,7 +25,7 @@ void CSND_SND::Initialize(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(mutex, shared_memory);
     LOG_WARNING(Service_CSND,
-                "(STUBBED) size=0x{:08X} "
+                "(stubbed) size=0x{:08X} "
                 "offset0=0x{:08X} offset1=0x{:08X} offset2=0x{:08X} offset3=0x{:08X}",
                 size, offset0, offset1, offset2, offset3);
 }
@@ -37,7 +37,7 @@ void CSND_SND::Shutdown(Kernel::HLERequestContext& ctx) {
         shared_memory = nullptr;
     IPC::ResponseBuilder rb{ctx, 0x02, 1, 0};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_CSND, "(STUBBED)");
+    LOG_WARNING(Service_CSND, "(stubbed)");
 }
 
 void CSND_SND::ExecuteCommands(Kernel::HLERequestContext& ctx) {
@@ -55,20 +55,20 @@ void CSND_SND::ExecuteCommands(Kernel::HLERequestContext& ctx) {
         std::memcpy(ptr, &command, sizeof(Type0Command));
         rb.Push(RESULT_SUCCESS);
     }
-    LOG_WARNING(Service_CSND, "(STUBBED) addr=0x{:08X}", addr);
+    LOG_WARNING(Service_CSND, "(stubbed) addr=0x{:08X}", addr);
 }
 
 void CSND_SND::AcquireSoundChannels(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x05, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0xFFFFFF00);
-    LOG_WARNING(Service_CSND, "(STUBBED)");
+    LOG_WARNING(Service_CSND, "(stubbed)");
 }
 
 void CSND_SND::ReleaseSoundChannels(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x06, 1, 0};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_CSND, "(STUBBED)");
+    LOG_WARNING(Service_CSND, "(stubbed)");
 }
 
 void CSND_SND::AcquireCapUnit(Kernel::HLERequestContext& ctx) {
@@ -88,7 +88,7 @@ void CSND_SND::AcquireCapUnit(Kernel::HLERequestContext& ctx) {
         capture_units[0] = true;
         rb.Push<u32>(0);
     }
-    LOG_WARNING(Service_CSND, "(STUBBED)");
+    LOG_WARNING(Service_CSND, "(stubbed)");
 }
 
 void CSND_SND::ReleaseCapUnit(Kernel::HLERequestContext& ctx) {
@@ -97,7 +97,7 @@ void CSND_SND::ReleaseCapUnit(Kernel::HLERequestContext& ctx) {
     capture_units[index] = false;
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_CSND, "(STUBBED) capture_unit_index={}", index);
+    LOG_WARNING(Service_CSND, "(stubbed) capture_unit_index={}", index);
 }
 
 void CSND_SND::FlushDataCache(Kernel::HLERequestContext& ctx) {
@@ -107,7 +107,7 @@ void CSND_SND::FlushDataCache(Kernel::HLERequestContext& ctx) {
     const auto process{rp.PopObject<Kernel::Process>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_TRACE(Service_CSND, "(STUBBED) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
+    LOG_TRACE(Service_CSND, "(stubbed) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
               process->process_id);
 }
 
@@ -118,7 +118,7 @@ void CSND_SND::StoreDataCache(Kernel::HLERequestContext& ctx) {
     const auto process{rp.PopObject<Kernel::Process>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_TRACE(Service_CSND, "(STUBBED) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
+    LOG_TRACE(Service_CSND, "(stubbed) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
               process->process_id);
 }
 
@@ -129,14 +129,14 @@ void CSND_SND::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
     const auto process{rp.PopObject<Kernel::Process>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_TRACE(Service_CSND, "(STUBBED) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
+    LOG_TRACE(Service_CSND, "(stubbed) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
               process->process_id);
 }
 
 void CSND_SND::Reset(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0xC, 1, 0};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_CSND, "(STUBBED)");
+    LOG_WARNING(Service_CSND, "(stubbed)");
 }
 
 CSND_SND::CSND_SND() : ServiceFramework{"csnd:SND", 4} {

@@ -407,7 +407,7 @@ void Module::Interface::UpdateStoredAmiiboData(Kernel::HLERequestContext& ctx) {
     nfc->UpdateAmiiboData();
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_NFC, "(STUBBED)");
+    LOG_WARNING(Service_NFC, "(stubbed)");
 }
 
 void Module::Interface::GetAppDataInitStruct(Kernel::HLERequestContext& ctx) {

@@ -209,7 +209,7 @@ void ExitCurrentThread() {
  */
 static void ThreadWakeupCallback(u64 thread_handle, s64 cycles_late) {
     SharedPtr<Thread> thread{wakeup_callback_handle_table.Get<Thread>((Handle)thread_handle)};
-    if (thread == nullptr) {
+    if (!thread) {
         LOG_CRITICAL(Kernel, "Callback fired for invalid thread {:08X}", thread_handle);
         return;
     }
@@ -254,7 +254,7 @@ void Thread::ResumeFromWait() {
     case ThreadStatus::Ready:
         // The thread's wakeup callback must have already been cleared when the thread was first
         // awoken.
-        ASSERT(wakeup_callback == nullptr);
+        ASSERT(wakeup_callback);
         // If the thread is waiting on multiple wait objects, it might be awoken more than once
         // before actually resuming. We can ignore subsequent wakeups if the thread status has
         // already been set to ThreadStatus::Ready.

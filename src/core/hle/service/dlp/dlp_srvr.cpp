@@ -18,7 +18,7 @@ void DLP_SRVR::IsChild(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(false);
 
-    LOG_WARNING(Service_DLP, "(STUBBED)");
+    LOG_WARNING(Service_DLP, "(stubbed)");
 }
 
 DLP_SRVR::DLP_SRVR() : ServiceFramework{"dlp:SRVR", 1} {

@@ -181,21 +181,16 @@ public:
                 shader_map[key] = nullptr;
                 return 0;
             }
-
             std::string program{*program_opt};
             auto [iter, new_shader]{shader_cache.emplace(program, ShaderStage{separable})};
             ShaderStage& cached_shader{iter->second};
-            if (new_shader) {
+            if (new_shader)
                 cached_shader.Create(program.c_str(), ShaderType);
-            }
             shader_map[key] = &cached_shader;
             return cached_shader.GetHandle();
         }
-
-        if (map_it->second == nullptr) {
+        if (!map_it->second)
             return 0;
-        }
-
         return map_it->second->GetHandle();
     }
 

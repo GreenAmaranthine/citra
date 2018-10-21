@@ -592,7 +592,7 @@ void Module::Interface::DeleteContents(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(content_ids_in);
-    LOG_WARNING(Service_AM, "(STUBBED) media_type={}, title_id=0x{:016x}, content_count={}",
+    LOG_WARNING(Service_AM, "(stubbed) media_type={}, title_id=0x{:016x}, content_count={}",
                 media_type, title_id, content_count);
 }
 
@@ -781,7 +781,7 @@ void Module::Interface::ListDataTitleTicketInfos(Kernel::HLERequestContext& ctx)
     rb.Push(ticket_count);
     rb.PushMappedBuffer(ticket_info_out);
     LOG_WARNING(Service_AM,
-                "(STUBBED) ticket_count=0x{:08X}, title_id=0x{:016x}, start_index=0x{:08X}",
+                "(stubbed) ticket_count=0x{:08X}, title_id=0x{:016x}, start_index=0x{:08X}",
                 ticket_count, title_id, start_index);
 }
 
@@ -806,7 +806,7 @@ void Module::Interface::GetDLCContentInfoCount(Kernel::HLERequestContext& ctx) {
         rb.Push<u32>(static_cast<u32>(tmd.GetContentCount()));
     else {
         rb.Push<u32>(1); // Number of content infos plus one
-        LOG_WARNING(Service_AM, "(STUBBED) media_type={}, title_id=0x{:016x}",
+        LOG_WARNING(Service_AM, "(stubbed) media_type={}, title_id=0x{:016x}",
                     static_cast<u32>(media_type), title_id);
     }
 }
@@ -816,14 +816,14 @@ void Module::Interface::DeleteTicket(Kernel::HLERequestContext& ctx) {
     u64 title_id{rp.Pop<u64>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_AM, "(STUBBED) title_id=0x{:016x}", title_id);
+    LOG_WARNING(Service_AM, "(stubbed) title_id=0x{:016x}", title_id);
 }
 
 void Module::Interface::GetNumTickets(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x0008, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
-    LOG_WARNING(Service_AM, "(STUBBED)");
+    LOG_WARNING(Service_AM, "(stubbed)");
 }
 
 void Module::Interface::GetTicketList(Kernel::HLERequestContext& ctx) {
@@ -835,7 +835,7 @@ void Module::Interface::GetTicketList(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(ticket_list_count);
     rb.PushMappedBuffer(ticket_tids_out);
-    LOG_WARNING(Service_AM, "(STUBBED) ticket_list_count=0x{:08x}, ticket_index=0x{:08x}",
+    LOG_WARNING(Service_AM, "(stubbed) ticket_list_count=0x{:08x}, ticket_index=0x{:08x}",
                 ticket_list_count, ticket_index);
 }
 
@@ -845,7 +845,7 @@ void Module::Interface::QueryAvailableTitleDatabase(Kernel::HLERequestContext& c
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(true);
-    LOG_WARNING(Service_AM, "(STUBBED) media_type={}", media_type);
+    LOG_WARNING(Service_AM, "(stubbed) media_type={}", media_type);
 }
 
 void Module::Interface::CheckContentRights(Kernel::HLERequestContext& ctx) {
@@ -858,7 +858,7 @@ void Module::Interface::CheckContentRights(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(has_rights);
-    LOG_WARNING(Service_AM, "(STUBBED) tid={:016x}, content_index={}", tid, content_index);
+    LOG_WARNING(Service_AM, "(stubbed) tid={:016x}, content_index={}", tid, content_index);
 }
 
 void Module::Interface::CheckContentRightsIgnorePlatform(Kernel::HLERequestContext& ctx) {
@@ -871,7 +871,7 @@ void Module::Interface::CheckContentRightsIgnorePlatform(Kernel::HLERequestConte
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(has_rights);
-    LOG_WARNING(Service_AM, "(STUBBED) tid={:016x}, content_index={}", tid, content_index);
+    LOG_WARNING(Service_AM, "(stubbed) tid={:016x}, content_index={}", tid, content_index);
 }
 
 void Module::Interface::BeginImportProgram(Kernel::HLERequestContext& ctx) {
@@ -891,7 +891,7 @@ void Module::Interface::BeginImportProgram(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS); // No error
     rb.PushCopyObjects(file->Connect());
-    LOG_WARNING(Service_AM, "(STUBBED) media_type={}", static_cast<u32>(media_type));
+    LOG_WARNING(Service_AM, "(stubbed) media_type={}", static_cast<u32>(media_type));
 }
 
 void Module::Interface::BeginImportProgramTemporarily(Kernel::HLERequestContext& ctx) {
@@ -912,7 +912,7 @@ void Module::Interface::BeginImportProgramTemporarily(Kernel::HLERequestContext&
     IPC::ResponseBuilder rb{ctx, 0x0403, 1, 2};
     rb.Push(RESULT_SUCCESS); // No error
     rb.PushCopyObjects(file->Connect());
-    LOG_WARNING(Service_AM, "(STUBBED)");
+    LOG_WARNING(Service_AM, "(stubbed)");
 }
 
 void Module::Interface::EndImportProgram(Kernel::HLERequestContext& ctx) {
@@ -988,7 +988,7 @@ ResultVal<std::unique_ptr<AMFileWrapper>> GetFileFromSession(
     Kernel::SharedPtr<Kernel::ClientSession> file_session) {
     // Step up the chain from ClientSession->ServerSession and then
     // cast to File. For AM on 3DS, invalid handles actually hang the system.
-    if (file_session->parent == nullptr) {
+    if (!file_session->parent) {
         // Invalid handle. Emulate the hang
         for (;;)
             ;

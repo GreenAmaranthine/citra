@@ -7,16 +7,15 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include "citra/configuration/configure_web.h"
 #include "citra/ui_settings.h"
+#include "core/core.h"
 #include "core/settings.h"
 #include "ui_configure_web.h"
-#include "web_service/verify_login.h"
 
 ConfigureWeb::ConfigureWeb(QWidget* parent)
     : QWidget{parent}, ui{std::make_unique<Ui::ConfigureWeb>()} {
     ui->setupUi(this);
     connect(ui->button_verify_login, &QPushButton::clicked, this, &ConfigureWeb::VerifyLogin);
     connect(&verify_watcher, &QFutureWatcher<bool>::finished, this, &ConfigureWeb::OnLoginVerified);
-
     setConfiguration();
 }
 
@@ -46,11 +45,10 @@ void ConfigureWeb::applyConfiguration() {
     if (user_verified) {
         Settings::values.citra_username = ui->edit_username->text().toStdString();
         Settings::values.citra_token = ui->edit_token->text().toStdString();
-    } else {
+    } else
         QMessageBox::warning(this, "Username and token not verified",
                              "Username and token were not verified. The changes to your "
                              "username and/or token have not been saved.");
-    }
 }
 
 void ConfigureWeb::OnLoginChanged() {
@@ -71,11 +69,7 @@ void ConfigureWeb::VerifyLogin() {
     verify_watcher.setFuture(
         QtConcurrent::run([this, username = ui->edit_username->text().toStdString(),
                            token = ui->edit_token->text().toStdString()]() {
-#ifdef ENABLE_WEB_SERVICE
-            return WebService::VerifyLogin(Settings::values.web_api_url, username, token);
-#else
-            return false;
-#endif
+            return Core::VerifyLogin(Settings::values.web_api_url, username, token);
         }));
 }
 

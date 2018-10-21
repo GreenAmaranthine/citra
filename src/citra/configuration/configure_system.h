@@ -34,10 +34,8 @@ public slots:
 private:
     void ReadSystemSettings();
     void ConfigureTime();
-
     std::unique_ptr<Ui::ConfigureSystem> ui;
     bool enabled;
-
     std::shared_ptr<Service::CFG::Module> cfg;
     std::u16string username;
     int birthmonth, birthday;

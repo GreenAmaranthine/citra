@@ -17,7 +17,6 @@ class ConfigureGraphics : public QWidget {
 public:
     explicit ConfigureGraphics(QWidget* parent = nullptr);
     ~ConfigureGraphics();
-
     void applyConfiguration();
 
 private:

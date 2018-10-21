@@ -282,7 +282,7 @@ void GSP_GPU::FlushDataCache(Kernel::HLERequestContext& ctx) {
     // TODO: Verify return header on HW
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_DEBUG(Service_GSP, "(STUBBED) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
+    LOG_DEBUG(Service_GSP, "(stubbed) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
               process->process_id);
 }
 
@@ -291,7 +291,7 @@ void GSP_GPU::SetAxiConfigQoSMode(Kernel::HLERequestContext& ctx) {
     u32 mode{rp.Pop<u32>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_DEBUG(Service_GSP, "(STUBBED) mode=0x{:08X}", mode);
+    LOG_DEBUG(Service_GSP, "(stubbed) mode=0x{:08X}", mode);
 }
 
 void GSP_GPU::RegisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
@@ -327,7 +327,7 @@ void GSP_GPU::UnregisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
 
 void GSP_GPU::SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id) {
     SessionData* session_data{FindRegisteredThreadData(thread_id)};
-    if (session_data == nullptr)
+    if (!session_data)
         return;
     auto interrupt_event{session_data->interrupt_event};
     if (!interrupt_event) {
@@ -587,7 +587,7 @@ void GSP_GPU::StoreDataCache(Kernel::HLERequestContext& ctx) {
     auto process{rp.PopObject<Kernel::Process>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_DEBUG(Service_GSP, "(STUBBED) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
+    LOG_DEBUG(Service_GSP, "(stubbed) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
               process->process_id);
 }
 
@@ -604,7 +604,7 @@ void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
     }
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_DEBUG(Service_GSP, "(STUBBED)");
+    LOG_DEBUG(Service_GSP, "(stubbed)");
 }
 
 SessionData* GSP_GPU::FindRegisteredThreadData(u32 thread_id) {

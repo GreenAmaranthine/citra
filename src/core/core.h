@@ -256,4 +256,6 @@ inline AudioCore::DspHle& DSP() {
     return System::GetInstance().DSP();
 }
 
+bool VerifyLogin(const std::string& host, const std::string& username, const std::string& token);
+
 } // namespace Core

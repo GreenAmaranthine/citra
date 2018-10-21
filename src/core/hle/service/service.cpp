@@ -139,13 +139,13 @@ ServiceFrameworkBase::ServiceFrameworkBase(const char* service_name, u32 max_ses
 ServiceFrameworkBase::~ServiceFrameworkBase() = default;
 
 void ServiceFrameworkBase::InstallAsService(SM::ServiceManager& service_manager) {
-    ASSERT(port == nullptr);
+    ASSERT(!port);
     port = service_manager.RegisterService(service_name, max_sessions).Unwrap();
     port->SetHleHandler(shared_from_this());
 }
 
 void ServiceFrameworkBase::InstallAsNamedPort() {
-    ASSERT(port == nullptr);
+    ASSERT(!port);
     auto [server_port, client_port]{ServerPort::CreatePortPair(max_sessions, service_name)};
     server_port->SetHleHandler(shared_from_this());
     AddNamedPort(service_name, std::move(client_port));
@@ -153,26 +153,16 @@ void ServiceFrameworkBase::InstallAsNamedPort() {
 
 void ServiceFrameworkBase::RegisterHandlersBase(const FunctionInfoBase* functions, std::size_t n) {
     handlers.reserve(handlers.size() + n);
-    for (std::size_t i{}; i < n; ++i) {
+    for (std::size_t i{}; i < n; ++i)
         // Usually this array is sorted by id already, so hint to insert at the end
         handlers.emplace_hint(handlers.cend(), functions[i].expected_header, functions[i]);
-    }
 }
 
 void ServiceFrameworkBase::ReportUnimplementedFunction(u32* cmd_buf, const FunctionInfoBase* info) {
-    IPC::Header header{cmd_buf[0]};
-    int num_params{static_cast<int>(header.normal_params_size + header.translate_params_size)};
-    std::string function_name{info == nullptr ? fmt::format("{:#08x}", cmd_buf[0]) : info->name};
-
-    fmt::memory_buffer buf;
-    fmt::format_to(buf, "function '{}': port='{}' cmd_buf={{[0]={:#x}", function_name, service_name,
-                   cmd_buf[0]);
-    for (int i{1}; i <= num_params; ++i) {
-        fmt::format_to(buf, ", [{}]={:#x}", i, cmd_buf[i]);
-    }
-    buf.push_back('}');
-
-    LOG_ERROR(Service, "unimplemented {}", fmt::to_string(buf));
+    std::string function_name{!info ? fmt::format("{:#08x}", cmd_buf[0]) : info->name};
+    LOG_ERROR(
+        Service, "unimplemented {}",
+        fmt::to_string(MakeFunctionString(function_name.c_str(), service_name.c_str(), cmd_buf)));
 }
 
 void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_session) {
@@ -181,9 +171,8 @@ void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_ses
     u32 header_code{cmd_buf[0]};
     auto itr{handlers.find(header_code)};
     const FunctionInfoBase* info{itr == handlers.end() ? nullptr : &itr->second};
-    if (info == nullptr || info->handler_callback == nullptr) {
+    if (!info || !info->handler_callback)
         return ReportUnimplementedFunction(cmd_buf, info);
-    }
 
     // TODO: The kernel should be the one handling this as part of translation after
     // everything else is migrated

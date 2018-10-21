@@ -22,9 +22,7 @@ public:
 
 private:
     int width, height;
-    bool output_rgb;
-    bool flip_horizontal, flip_vertical;
-    bool basic_flip_horizontal, basic_flip_vertical;
+    bool output_rgb, flip_horizontal, flip_vertical, basic_flip_horizontal, basic_flip_vertical;
 };
 
 // Base class for Qt camera factories

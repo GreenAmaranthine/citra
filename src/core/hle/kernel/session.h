@@ -18,7 +18,7 @@ class ServerSession;
  * FS File and Directory sessions. When one of the endpoints of a session is destroyed, its
  * corresponding field in this structure will be set to nullptr.
  */
-class Session final {
+struct Session final {
 public:
     ClientSession* client{};    ///< The client endpoint of the session.
     ServerSession* server{};    ///< The server endpoint of the session.

@@ -96,12 +96,10 @@ void Timer::Signal(s64 cycles_late) {
 static void TimerCallback(u64 timer_handle, s64 cycles_late) {
     SharedPtr<Timer> timer =
         timer_callback_handle_table.Get<Timer>(static_cast<Handle>(timer_handle));
-
-    if (timer == nullptr) {
+    if (!timer) {
         LOG_CRITICAL(Kernel, "Callback fired for invalid timer {:08X}", timer_handle);
         return;
     }
-
     timer->Signal(cycles_late);
 }
 

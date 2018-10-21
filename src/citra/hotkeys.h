@@ -13,7 +13,6 @@ class QShortcut;
 
 /**
  * Register a hotkey.
- *
  * @param group General group this hotkey belongs to (e.g. "Main Window")
  * @param action Name of the action (e.g. "Start Emulation", "Load Image")
  * @param default_keyseq Default key sequence to assign if the hotkey wasn't present in the settings
@@ -24,11 +23,10 @@ class QShortcut;
  */
 void RegisterHotkey(const QString& group, const QString& action,
                     const QKeySequence& default_keyseq = QKeySequence(),
-                    Qt::ShortcutContext default_context = Qt::WindowShortcut);
+                    Qt::ShortcutContext default_context = Qt::ApplicationShortcut);
 
 /**
  * Returns a QShortcut object whose activated() signal can be connected to other QObjects' slots.
- *
  * @param group General group this hotkey belongs to (e.g. "Main Window").
  * @param action Name of the action (e.g. "Start Emulation", "Load Image").
  * @param widget Parent widget of the returned QShortcut.
@@ -39,7 +37,6 @@ QShortcut* GetHotkey(const QString& group, const QString& action, QWidget* widge
 
 /**
  * Saves all registered hotkeys to the settings file.
- *
  * @note Each hotkey group will be stored a settings group; For each hotkey inside that group, a
  * settings group will be created to store the key sequence and the hotkey context.
  */

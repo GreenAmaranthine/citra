@@ -203,7 +203,6 @@ void GeometryPipeline::SetVertexHandler(Shader::VertexHandler vertex_handler) {
 void GeometryPipeline::Setup(Shader::ShaderEngine* shader_engine) {
     if (!backend)
         return;
-
     this->shader_engine = shader_engine;
     shader_engine->SetupBatch(state.gs, state.regs.gs.main_offset);
 }

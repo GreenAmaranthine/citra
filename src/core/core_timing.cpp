@@ -65,19 +65,18 @@ static s64 idled_cycles;
 // don't change slice_length and downcount.
 static bool is_global_timer_sane;
 
-static EventType* ev_lost{nullptr};
+static EventType* ev_lost;
 
 static void EmptyTimedCallback(u64 userdata, s64 cyclesLate) {}
 
 EventType* RegisterEvent(const std::string& name, TimedCallback callback) {
-    // check for existing type with same name.
-    // we want event type names to remain unique so that we can use them for serialization.
+    // Check for existing type with same name.
+    // We want event type names to remain unique so that we can use them for serialization.
     ASSERT_MSG(event_types.find(name) == event_types.end(),
                "CoreTiming Event \"{}\" is already registered. Events should only be registered "
                "during Init to avoid breaking save states.",
                name);
-
-    auto info = event_types.emplace(name, EventType{callback, nullptr});
+    auto info{event_types.emplace(name, EventType{callback, nullptr})};
     EventType* event_type = &info.first->second;
     event_type->name = &info.first->first;
     return event_type;
@@ -113,7 +112,7 @@ void Shutdown() {
 // This should only be called from the CPU thread. If you are calling
 // it from any other thread, you are doing something evil
 u64 GetTicks() {
-    u64 ticks = static_cast<u64>(global_timer);
+    u64 ticks{static_cast<u64>(global_timer)};
     if (!is_global_timer_sane) {
         ticks += slice_length - downcount;
     }

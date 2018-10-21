@@ -17,7 +17,6 @@ class JitX64Engine final : public ShaderEngine {
 public:
     JitX64Engine();
     ~JitX64Engine() override;
-
     void SetupBatch(ShaderSetup& setup, unsigned int entry_point) override;
     void Run(const ShaderSetup& setup, UnitState& state) const override;
 

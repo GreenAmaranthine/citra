@@ -74,25 +74,18 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     u32 length{rp.Pop<u32>()};
     auto& buffer{rp.PopMappedBuffer()};
     LOG_TRACE(Service_FS, "Read {}: offset=0x{:X} length=0x{:08X}", GetName(), offset, length);
-
     const FileSessionSlot* file{GetSessionData(ctx.Session())};
-
     if (file->subfile && length > file->size) {
         LOG_WARNING(Service_FS, "Trying to read beyond the subfile size, truncating");
         length = static_cast<u32>(file->size);
     }
-
     // This file session might have a specific offset from where to start reading, apply it.
     offset += file->offset;
-
-    if (offset + length > backend->GetSize()) {
+    if (offset + length > backend->GetSize())
         LOG_ERROR(Service_FS,
                   "Reading from out of bounds offset=0x{:X} length=0x{:08X} file_size=0x{:X}",
                   offset, length, backend->GetSize());
-    }
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
-
     std::vector<u8> data(length);
     ResultVal<std::size_t> read{backend->Read(offset, data.size(), data.data())};
     if (read.Failed()) {
@@ -104,7 +97,6 @@ void File::Read(Kernel::HLERequestContext& ctx) {
         rb.Push<u32>(static_cast<u32>(*read));
     }
     rb.PushMappedBuffer(buffer);
-
     std::chrono::nanoseconds read_timeout_ns{backend->GetReadDelayNs(length)};
     ctx.SleepClientThread(Kernel::GetCurrentThread(), "file::read", read_timeout_ns,
                           [](Kernel::SharedPtr<Kernel::Thread> thread,
@@ -121,11 +113,8 @@ void File::Write(Kernel::HLERequestContext& ctx) {
     auto& buffer{rp.PopMappedBuffer()};
     LOG_TRACE(Service_FS, "Write {}: offset=0x{:X}, length={}, flush=0x{:x}", GetName(), offset,
               length, flush);
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
-
     const FileSessionSlot* file{GetSessionData(ctx.Session())};
-
     // Subfiles can not be written to
     if (file->subfile) {
         rb.Push(FileSys::ERROR_UNSUPPORTED_OPEN_FLAGS);
@@ -133,7 +122,6 @@ void File::Write(Kernel::HLERequestContext& ctx) {
         rb.PushMappedBuffer(buffer);
         return;
     }
-
     std::vector<u8> data(length);
     buffer.Read(data.data(), 0, data.size());
     ResultVal<std::size_t> written{backend->Write(offset, data.size(), flush != 0, data.data())};
@@ -149,7 +137,6 @@ void File::Write(Kernel::HLERequestContext& ctx) {
 
 void File::GetSize(Kernel::HLERequestContext& ctx) {
     const FileSessionSlot* file{GetSessionData(ctx.Session())};
-
     IPC::ResponseBuilder rb{ctx, 0x0804, 3, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u64>(file->size);
@@ -158,17 +145,13 @@ void File::GetSize(Kernel::HLERequestContext& ctx) {
 void File::SetSize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0805, 2, 0};
     u64 size{rp.Pop<u64>()};
-
     FileSessionSlot* file{GetSessionData(ctx.Session())};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-
     // SetSize can not be called on subfiles.
     if (file->subfile) {
         rb.Push(FileSys::ERROR_UNSUPPORTED_OPEN_FLAGS);
         return;
     }
-
     file->size = size;
     backend->SetSize(size);
     rb.Push(RESULT_SUCCESS);
@@ -176,45 +159,36 @@ void File::SetSize(Kernel::HLERequestContext& ctx) {
 
 void File::Close(Kernel::HLERequestContext& ctx) {
     // TODO: Only close the backend if this client is the only one left.
-    if (connected_sessions.size() > 1) {
+    if (connected_sessions.size() > 1)
         LOG_WARNING(Service_FS, "Closing File backend but {} clients still connected",
                     connected_sessions.size());
-    }
-
     backend->Close();
-
     IPC::ResponseBuilder rb{ctx, 0x0808, 1, 0};
     rb.Push(RESULT_SUCCESS);
 }
 
 void File::Flush(Kernel::HLERequestContext& ctx) {
     const FileSessionSlot* file{GetSessionData(ctx.Session())};
-
     IPC::ResponseBuilder rb{ctx, 0x0809, 1, 0};
-
     // Subfiles can not be flushed.
     if (file->subfile) {
         rb.Push(FileSys::ERROR_UNSUPPORTED_OPEN_FLAGS);
         return;
     }
-
     backend->Flush();
     rb.Push(RESULT_SUCCESS);
 }
 
 void File::SetPriority(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x080A, 1, 0};
-
     FileSessionSlot* file{GetSessionData(ctx.Session())};
     file->priority = rp.Pop<u32>();
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 
 void File::GetPriority(Kernel::HLERequestContext& ctx) {
     const FileSessionSlot* file{GetSessionData(ctx.Session())};
-
     IPC::ResponseBuilder rb{ctx, 0x080B, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push(file->priority);
@@ -224,68 +198,53 @@ void File::OpenLinkFile(Kernel::HLERequestContext& ctx) {
     using Kernel::ClientSession;
     using Kernel::ServerSession;
     using Kernel::SharedPtr;
-
     auto sessions{ServerSession::CreateSessionPair(GetName())};
     auto server{std::get<SharedPtr<ServerSession>>(sessions)};
     ClientConnected(server);
-
     FileSessionSlot* slot{GetSessionData(server)};
     const FileSessionSlot* original_file{GetSessionData(ctx.Session())};
-
     slot->priority = original_file->priority;
     slot->offset = 0;
     slot->size = backend->GetSize();
     slot->subfile = false;
-
     IPC::ResponseBuilder rb{ctx, 0x080C, 1, 2};
     rb.Push(RESULT_SUCCESS);
     rb.PushMoveObjects(std::get<SharedPtr<ClientSession>>(sessions));
-
-    LOG_WARNING(Service_FS, "(STUBBED) File command OpenLinkFile {}", GetName());
+    LOG_WARNING(Service_FS, "(stubbed) File command OpenLinkFile {}", GetName());
 }
 
 void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0801, 4, 0};
     s64 offset{rp.PopRaw<s64>()};
     s64 size{rp.PopRaw<s64>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
-
     const FileSessionSlot* original_file{GetSessionData(ctx.Session())};
-
     if (original_file->subfile) {
         // OpenSubFile can not be called on a file which is already as subfile
         rb.Push(FileSys::ERROR_UNSUPPORTED_OPEN_FLAGS);
         return;
     }
-
     if (offset < 0 || size < 0) {
         rb.Push(FileSys::ERR_WRITE_BEYOND_END);
         return;
     }
-
     auto end{offset + size};
-
     // TODO: Check for overflow and return ERR_WRITE_BEYOND_END
-
     if (end > original_file->size) {
         rb.Push(FileSys::ERR_WRITE_BEYOND_END);
         return;
     }
-
     using Kernel::ClientSession;
     using Kernel::ServerSession;
     using Kernel::SharedPtr;
     auto sessions{ServerSession::CreateSessionPair(GetName())};
     auto server{std::get<SharedPtr<ServerSession>>(sessions)};
     ClientConnected(server);
-
     FileSessionSlot* slot{GetSessionData(server)};
     slot->priority = original_file->priority;
     slot->offset = offset;
     slot->size = size;
     slot->subfile = true;
-
     rb.Push(RESULT_SUCCESS);
     rb.PushMoveObjects(std::get<SharedPtr<ClientSession>>(sessions));
 }
@@ -294,13 +253,11 @@ Kernel::SharedPtr<Kernel::ClientSession> File::Connect() {
     auto sessions{Kernel::ServerSession::CreateSessionPair(GetName())};
     auto server{std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions)};
     ClientConnected(server);
-
     FileSessionSlot* slot{GetSessionData(server)};
     slot->priority = 0;
     slot->offset = 0;
     slot->size = backend->GetSize();
     slot->subfile = false;
-
     return std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions);
 }
 
@@ -339,7 +296,6 @@ void Directory::Read(Kernel::HLERequestContext& ctx) {
     // Number of entries actually read
     u32 read{backend->Read(static_cast<u32>(entries.size()), entries.data())};
     buffer.Write(entries.data(), 0, read * sizeof(FileSys::Entry));
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(read);
@@ -349,7 +305,6 @@ void Directory::Read(Kernel::HLERequestContext& ctx) {
 void Directory::Close(Kernel::HLERequestContext& ctx) {
     LOG_TRACE(Service_FS, "Close {}", GetName());
     backend->Close();
-
     IPC::ResponseBuilder rb{ctx, 0x0802, 1, 0};
     rb.Push(RESULT_SUCCESS);
 }
@@ -357,15 +312,11 @@ void Directory::Close(Kernel::HLERequestContext& ctx) {
 using FileSys::ArchiveBackend;
 using FileSys::ArchiveFactory;
 
-/**
- * Map of registered archives, identified by id code. Once an archive is registered here, it is
- * never removed until UnregisterArchiveTypes is called.
- */
+/// Map of registered archives, identified by id code. Once an archive is registered here, it is
+/// never removed until UnregisterArchiveTypes is called.
 static boost::container::flat_map<ArchiveIdCode, std::unique_ptr<ArchiveFactory>> id_code_map;
 
-/**
- * Map of active archive handles. Values are pointers to the archives in `idcode_map`.
- */
+/// Map of active archive handles. Values are pointers to the archives in idcode_map.
 static std::unordered_map<ArchiveHandle, std::unique_ptr<ArchiveBackend>> handle_map;
 static ArchiveHandle next_handle;
 
@@ -378,16 +329,14 @@ ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code, FileSys::Path& archi
     LOG_TRACE(Service_FS, "Opening archive with id code 0x{:08X}", static_cast<u32>(id_code));
 
     auto itr{id_code_map.find(id_code)};
-    if (itr == id_code_map.end()) {
+    if (itr == id_code_map.end())
         return FileSys::ERROR_NOT_FOUND;
-    }
 
     CASCADE_RESULT(std::unique_ptr<ArchiveBackend> res, itr->second->Open(archive_path));
 
     // This should never even happen in the first place with 64-bit handles,
-    while (handle_map.count(next_handle) != 0) {
+    while (handle_map.count(next_handle) != 0)
         ++next_handle;
-    }
     handle_map.emplace(next_handle, std::move(res));
     return MakeResult<ArchiveHandle>(next_handle++);
 }
@@ -418,22 +367,19 @@ ResultVal<std::shared_ptr<File>> OpenFileFromArchive(ArchiveHandle archive_handl
                                                      const FileSys::Path& path,
                                                      const FileSys::Mode mode) {
     ArchiveBackend* archive{GetArchive(archive_handle)};
-    if (archive == nullptr)
+    if (!archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
     auto backend{archive->OpenFile(path, mode)};
     if (backend.Failed())
         return backend.Code();
-
     auto file{std::shared_ptr<File>(new File(std::move(backend).Unwrap(), path))};
     return MakeResult<std::shared_ptr<File>>(std::move(file));
 }
 
 ResultCode DeleteFileFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
     ArchiveBackend* archive{GetArchive(archive_handle)};
-    if (archive == nullptr)
+    if (!archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
     return archive->DeleteFile(path);
 }
 
@@ -443,48 +389,42 @@ ResultCode RenameFileBetweenArchives(ArchiveHandle src_archive_handle,
                                      const FileSys::Path& dest_path) {
     ArchiveBackend* src_archive{GetArchive(src_archive_handle)};
     ArchiveBackend* dest_archive{GetArchive(dest_archive_handle)};
-    if (src_archive == nullptr || dest_archive == nullptr)
+    if (!src_archive || !dest_archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
-    if (src_archive == dest_archive) {
+    if (src_archive == dest_archive)
         return src_archive->RenameFile(src_path, dest_path);
-    } else {
+    else
         // TODO: Implement renaming across archives
         return UnimplementedFunction(ErrorModule::FS);
-    }
 }
 
 ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
     ArchiveBackend* archive{GetArchive(archive_handle)};
-    if (archive == nullptr)
+    if (!archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
     return archive->DeleteDirectory(path);
 }
 
 ResultCode DeleteDirectoryRecursivelyFromArchive(ArchiveHandle archive_handle,
                                                  const FileSys::Path& path) {
     ArchiveBackend* archive{GetArchive(archive_handle)};
-    if (archive == nullptr)
+    if (!archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
     return archive->DeleteDirectoryRecursively(path);
 }
 
 ResultCode CreateFileInArchive(ArchiveHandle archive_handle, const FileSys::Path& path,
                                u64 file_size) {
     ArchiveBackend* archive{GetArchive(archive_handle)};
-    if (archive == nullptr)
+    if (!archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
     return archive->CreateFile(path, file_size);
 }
 
 ResultCode CreateDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
     ArchiveBackend* archive{GetArchive(archive_handle)};
-    if (archive == nullptr)
+    if (!archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
     return archive->CreateDirectory(path);
 }
 
@@ -492,36 +432,32 @@ ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle,
                                           const FileSys::Path& src_path,
                                           ArchiveHandle dest_archive_handle,
                                           const FileSys::Path& dest_path) {
-    ArchiveBackend* src_archive = GetArchive(src_archive_handle);
-    ArchiveBackend* dest_archive = GetArchive(dest_archive_handle);
-    if (src_archive == nullptr || dest_archive == nullptr)
+    ArchiveBackend* src_archive{GetArchive(src_archive_handle)};
+    ArchiveBackend* dest_archive{GetArchive(dest_archive_handle)};
+    if (!src_archive || !dest_archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
-    if (src_archive == dest_archive) {
+    if (src_archive == dest_archive)
         return src_archive->RenameDirectory(src_path, dest_path);
-    } else {
+    else
         // TODO: Implement renaming across archives
         return UnimplementedFunction(ErrorModule::FS);
-    }
 }
 
 ResultVal<std::shared_ptr<Directory>> OpenDirectoryFromArchive(ArchiveHandle archive_handle,
                                                                const FileSys::Path& path) {
     ArchiveBackend* archive{GetArchive(archive_handle)};
-    if (archive == nullptr)
+    if (!archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
     auto backend{archive->OpenDirectory(path)};
     if (backend.Failed())
         return backend.Code();
-
     auto directory{std::shared_ptr<Directory>(new Directory(std::move(backend).Unwrap(), path))};
     return MakeResult<std::shared_ptr<Directory>>(std::move(directory));
 }
 
 ResultVal<u64> GetFreeBytesInArchive(ArchiveHandle archive_handle) {
     ArchiveBackend* archive{GetArchive(archive_handle)};
-    if (archive == nullptr)
+    if (!archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
     return MakeResult<u64>(archive->GetFreeBytes());
 }
@@ -529,20 +465,16 @@ ResultVal<u64> GetFreeBytesInArchive(ArchiveHandle archive_handle) {
 ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::ArchiveFormatInfo& format_info,
                          const FileSys::Path& path) {
     auto archive_itr{id_code_map.find(id_code)};
-    if (archive_itr == id_code_map.end()) {
+    if (archive_itr == id_code_map.end())
         return UnimplementedFunction(ErrorModule::FS); // TODO: Find the right error
-    }
-
     return archive_itr->second->Format(path, format_info);
 }
 
 ResultVal<FileSys::ArchiveFormatInfo> GetArchiveFormatInfo(ArchiveIdCode id_code,
                                                            FileSys::Path& archive_path) {
     auto archive{id_code_map.find(id_code)};
-    if (archive == id_code_map.end()) {
+    if (archive == id_code_map.end())
         return UnimplementedFunction(ErrorModule::FS); // TODO: Find the right error
-    }
-
     return archive->second->GetFormatInfo(archive_path);
 }
 
@@ -552,20 +484,14 @@ ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low,
     // Construct the binary path to the archive first
     FileSys::Path path{
         FileSys::ConstructExtDataBinaryPath(static_cast<u32>(media_type), high, low)};
-
     auto archive{id_code_map.find(media_type == MediaType::NAND ? ArchiveIdCode::SharedExtSaveData
                                                                 : ArchiveIdCode::ExtSaveData)};
-
-    if (archive == id_code_map.end()) {
+    if (archive == id_code_map.end())
         return UnimplementedFunction(ErrorModule::FS); // TODO: Find the right error
-    }
-
     auto ext_savedata{static_cast<FileSys::ArchiveFactory_ExtSaveData*>(archive->second.get())};
-
     ResultCode result{ext_savedata->Format(path, format_info)};
     if (result.IsError())
         return result;
-
     ext_savedata->WriteIcon(path, smdh_icon.data(), smdh_icon.size());
     return RESULT_SUCCESS;
 }
@@ -574,15 +500,14 @@ ResultCode DeleteExtSaveData(MediaType media_type, u32 high, u32 low) {
     // Construct the binary path to the archive first
     FileSys::Path path{
         FileSys::ConstructExtDataBinaryPath(static_cast<u32>(media_type), high, low)};
-
     std::string media_type_directory;
-    if (media_type == MediaType::NAND) {
+    if (media_type == MediaType::NAND)
         media_type_directory =
             FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir + "/");
-    } else if (media_type == MediaType::SDMC) {
+    else if (media_type == MediaType::SDMC)
         media_type_directory =
             FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir, Settings::values.sdmc_dir + "/");
-    } else {
+    else {
         LOG_ERROR(Service_FS, "Unsupported media type {}", static_cast<u32>(media_type));
         return ResultCode(-1); // TODO: Find the right error code
     }

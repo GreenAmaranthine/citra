@@ -17,7 +17,6 @@ class ConfigurationDialog : public QDialog {
 public:
     explicit ConfigurationDialog(QWidget* parent);
     ~ConfigurationDialog();
-
     void applyConfiguration();
 
 private:

@@ -34,7 +34,7 @@ void SRV::RegisterClient(Kernel::HLERequestContext& ctx) {
     u32 caller_pid{rp.Pop<u32>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_SRV, "(STUBBED)");
+    LOG_WARNING(Service_SRV, "(stubbed)");
 }
 
 void SRV::EnableNotification(Kernel::HLERequestContext& ctx) {
@@ -43,7 +43,7 @@ void SRV::EnableNotification(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x2, 1, 2};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(notification_semaphore);
-    LOG_WARNING(Service_SRV, "(STUBBED)");
+    LOG_WARNING(Service_SRV, "(stubbed)");
 }
 
 void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
@@ -119,7 +119,7 @@ void SRV::Subscribe(Kernel::HLERequestContext& ctx) {
     u32 notification_id{rp.Pop<u32>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_SRV, "(STUBBED) notification_id=0x{:X}", notification_id);
+    LOG_WARNING(Service_SRV, "(stubbed) notification_id=0x{:X}", notification_id);
 }
 
 void SRV::Unsubscribe(Kernel::HLERequestContext& ctx) {
@@ -127,7 +127,7 @@ void SRV::Unsubscribe(Kernel::HLERequestContext& ctx) {
     u32 notification_id{rp.Pop<u32>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_SRV, "(STUBBED) notification_id=0x{:X}", notification_id);
+    LOG_WARNING(Service_SRV, "(stubbed) notification_id=0x{:X}", notification_id);
 }
 
 void SRV::PublishToSubscriber(Kernel::HLERequestContext& ctx) {
@@ -136,7 +136,7 @@ void SRV::PublishToSubscriber(Kernel::HLERequestContext& ctx) {
     u8 flags{rp.Pop<u8>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_SRV, "(STUBBED) notification_id=0x{:X}, flags={}", notification_id, flags);
+    LOG_WARNING(Service_SRV, "(stubbed) notification_id=0x{:X}, flags={}", notification_id, flags);
 }
 
 void SRV::RegisterService(Kernel::HLERequestContext& ctx) {

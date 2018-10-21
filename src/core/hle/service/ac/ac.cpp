@@ -24,7 +24,7 @@ void Module::Interface::CreateDefaultConfig(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x1, 1, 2};
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(std::move(buffer), 0);
-    LOG_WARNING(Service_AC, "(STUBBED)");
+    LOG_WARNING(Service_AC, "(stubbed)");
 }
 
 void Module::Interface::ConnectAsync(Kernel::HLERequestContext& ctx) {
@@ -38,7 +38,7 @@ void Module::Interface::ConnectAsync(Kernel::HLERequestContext& ctx) {
     }
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_AC, "(STUBBED)");
+    LOG_WARNING(Service_AC, "(stubbed)");
 }
 
 void Module::Interface::GetConnectResult(Kernel::HLERequestContext& ctx) {
@@ -68,7 +68,7 @@ void Module::Interface::GetCloseResult(Kernel::HLERequestContext& ctx) {
     rp.Skip(2, false); // ProcessId descriptor
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_AC, "(STUBBED)");
+    LOG_WARNING(Service_AC, "(stubbed)");
 }
 
 void Module::Interface::GetWifiStatus(Kernel::HLERequestContext& ctx) {
@@ -83,7 +83,7 @@ void Module::Interface::GetInfraPriority(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0); // Infra Priority, default 0
-    LOG_WARNING(Service_AC, "(STUBBED)");
+    LOG_WARNING(Service_AC, "(stubbed)");
 }
 
 void Module::Interface::SetRequestEulaVersion(Kernel::HLERequestContext& ctx) {
@@ -95,7 +95,7 @@ void Module::Interface::SetRequestEulaVersion(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(std::move(ac_config), 0);
-    LOG_WARNING(Service_AC, "(STUBBED) major={}, minor={}", major, minor);
+    LOG_WARNING(Service_AC, "(stubbed) major={}, minor={}", major, minor);
 }
 
 void Module::Interface::RegisterDisconnectEvent(Kernel::HLERequestContext& ctx) {
@@ -106,14 +106,14 @@ void Module::Interface::RegisterDisconnectEvent(Kernel::HLERequestContext& ctx) 
         ac->disconnect_event->SetName("AC:disconnect_event");
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_AC, "(STUBBED)");
+    LOG_WARNING(Service_AC, "(stubbed)");
 }
 
 void Module::Interface::GetConnectingSsidLength(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x35, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(static_cast<u32>(ac->connected_network_name.length()));
-    LOG_WARNING(Service_AC, "(STUBBED)");
+    LOG_WARNING(Service_AC, "(stubbed)");
 }
 
 void Module::Interface::IsConnected(Kernel::HLERequestContext& ctx) {
@@ -124,7 +124,7 @@ void Module::Interface::IsConnected(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(ac->ac_connected);
-    LOG_WARNING(Service_AC, "(STUBBED) unk=0x{:08X}, descriptor=0x{:08X}, param=0x{:08X}", unk,
+    LOG_WARNING(Service_AC, "(stubbed) unk=0x{:08X}, descriptor=0x{:08X}, param=0x{:08X}", unk,
                 unk_descriptor, unk_param);
 }
 
@@ -134,7 +134,7 @@ void Module::Interface::SetClientVersion(Kernel::HLERequestContext& ctx) {
     rp.Skip(2, false); // ProcessId descriptor
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_AC, "(STUBBED) version: 0x{:08X}", version);
+    LOG_WARNING(Service_AC, "(stubbed) version: 0x{:08X}", version);
 }
 
 Module::Interface::Interface(std::shared_ptr<Module> ac, const char* name)

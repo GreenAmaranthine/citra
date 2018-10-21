@@ -121,9 +121,8 @@ void GSUnitState::ConfigOutput(const ShaderRegs& config) {
 static std::unique_ptr<JitX64Engine> jit_engine;
 
 ShaderEngine* GetEngine() {
-    if (jit_engine == nullptr) {
+    if (!jit_engine)
         jit_engine = std::make_unique<JitX64Engine>();
-    }
     return jit_engine.get();
 }
 

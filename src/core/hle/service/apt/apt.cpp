@@ -104,9 +104,10 @@ static u32 DecompressLZ11(const u8* in, u8* out) {
 bool Module::LoadSharedFont() {
     u8 font_region_code;
     switch (Core::System::GetInstance()
-                  .ServiceManager()
-                  .GetService<Service::CFG::Module::Interface>("cfg:u")
-                  ->GetModule()->GetRegionValue()) {
+                .ServiceManager()
+                .GetService<Service::CFG::Module::Interface>("cfg:u")
+                ->GetModule()
+                ->GetRegionValue()) {
     case 4: // CHN
         font_region_code = 2;
         break;
@@ -138,7 +139,7 @@ bool Module::LoadSharedFont() {
                                  u"cbf_ko-Hang-KR.bcfnt.lz", u"cbf_zh-Hant-TW.bcfnt.lz"};
     const RomFS::RomFSFile font_file{
         RomFS::GetFile(romfs_buffer.data(), {file_name[font_region_code - 1]})};
-    if (font_file.Data() == nullptr)
+    if (!font_file.Data())
         return false;
     struct {
         u32_le status;
@@ -187,7 +188,7 @@ void Module::Interface::NotifyToWait(Kernel::HLERequestContext& ctx) {
     u32 app_id{rp.Pop<u32>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS); // No error
-    LOG_WARNING(Service_APT, "(STUBBED) app_id={}", app_id);
+    LOG_WARNING(Service_APT, "(stubbed) app_id={}", app_id);
 }
 
 void Module::Interface::GetLockHandle(Kernel::HLERequestContext& ctx) {
@@ -204,7 +205,7 @@ void Module::Interface::GetLockHandle(Kernel::HLERequestContext& ctx) {
     rb.Push(applet_attributes); // Applet Attributes, this value is passed to Enable.
     rb.Push<u32>(0);            // Least significant bit = power button state
     rb.PushCopyObjects(apt->lock);
-    LOG_WARNING(Service_APT, "(STUBBED) applet_attributes={:#010X}", applet_attributes);
+    LOG_WARNING(Service_APT, "(stubbed) applet_attributes={:#010X}", applet_attributes);
 }
 
 void Module::Interface::Enable(Kernel::HLERequestContext& ctx) {
@@ -226,7 +227,7 @@ void Module::Interface::GetAppletManInfo(Kernel::HLERequestContext& ctx) {
     rb.Push(static_cast<u32>(AppletId::HomeMenu));    // Home menu AppID
     rb.Push(static_cast<u32>(AppletId::Application)); // TODO: Do this correctly
 
-    LOG_WARNING(Service_APT, "(STUBBED) unk={:#010X}", unk);
+    LOG_WARNING(Service_APT, "(stubbed) unk={:#010X}", unk);
 }
 
 void Module::Interface::IsRegistered(Kernel::HLERequestContext& ctx) {
@@ -245,7 +246,7 @@ void Module::Interface::InquireNotification(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);                     // No error
     rb.Push(static_cast<u32>(SignalType::None)); // Signal type
-    LOG_WARNING(Service_APT, "(STUBBED) app_id={:#010X}", app_id);
+    LOG_WARNING(Service_APT, "(stubbed) app_id={:#010X}", app_id);
 }
 
 void Module::Interface::SendParameter(Kernel::HLERequestContext& ctx) {
@@ -376,7 +377,7 @@ void Module::Interface::AppletUtility(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS); // No error
     LOG_WARNING(Service_APT,
-                "(STUBBED) command={:#010X}, input_size={:#010X}, output_size={:#010X}",
+                "(stubbed) command={:#010X}, input_size={:#010X}, output_size={:#010X}",
                 utility_command, input_size, output_size);
 }
 
@@ -388,7 +389,7 @@ void Module::Interface::SetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_APT, "This value should be one, but is actually {}!", value);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS); // No error
-    LOG_WARNING(Service_APT, "(STUBBED) cpu_percent={}, value={}", apt->cpu_percent, value);
+    LOG_WARNING(Service_APT, "(stubbed) cpu_percent={}, value={}", apt->cpu_percent, value);
 }
 
 void Module::Interface::GetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
@@ -399,7 +400,7 @@ void Module::Interface::GetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(apt->cpu_percent);
-    LOG_WARNING(Service_APT, "(STUBBED) value={}", value);
+    LOG_WARNING(Service_APT, "(stubbed) value={}", value);
 }
 
 void Module::Interface::PrepareToStartLibraryApplet(Kernel::HLERequestContext& ctx) {
@@ -433,7 +434,7 @@ void Module::Interface::FinishPreloadingLibraryApplet(Kernel::HLERequestContext&
     AppletId applet_id{rp.PopEnum<AppletId>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(apt->applet_manager->FinishPreloadingLibraryApplet(applet_id));
-    LOG_WARNING(Service_APT, "(STUBBED) applet_id={:#05X}", static_cast<u32>(applet_id));
+    LOG_WARNING(Service_APT, "(stubbed) applet_id={:#05X}", static_cast<u32>(applet_id));
 }
 
 void Module::Interface::StartLibraryApplet(Kernel::HLERequestContext& ctx) {
@@ -492,7 +493,7 @@ void Module::Interface::CancelLibraryApplet(Kernel::HLERequestContext& ctx) {
     bool exiting{rp.Pop<bool>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push<u32>(1); // TODO: Find the return code meaning
-    LOG_WARNING(Service_APT, "(STUBBED) exiting={}", exiting);
+    LOG_WARNING(Service_APT, "(stubbed) exiting={}", exiting);
 }
 
 void Module::Interface::PrepareToCloseLibraryApplet(Kernel::HLERequestContext& ctx) {
@@ -572,7 +573,7 @@ void Module::Interface::SetScreenCapPostPermission(Kernel::HLERequestContext& ct
     apt->screen_capture_post_permission = static_cast<ScreencapPostPermission>(rp.Pop<u32>() & 0xF);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS); // No error
-    LOG_WARNING(Service_APT, "(STUBBED) screen_capture_post_permission={}",
+    LOG_WARNING(Service_APT, "(stubbed) screen_capture_post_permission={}",
                 static_cast<u32>(apt->screen_capture_post_permission));
 }
 
@@ -580,7 +581,7 @@ void Module::Interface::GetScreenCapPostPermission(Kernel::HLERequestContext& ct
     IPC::ResponseBuilder rb{ctx, 0x56, 2, 0};
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(static_cast<u32>(apt->screen_capture_post_permission));
-    LOG_WARNING(Service_APT, "(STUBBED) screen_capture_post_permission={}",
+    LOG_WARNING(Service_APT, "(stubbed) screen_capture_post_permission={}",
                 static_cast<u32>(apt->screen_capture_post_permission));
 }
 
@@ -735,7 +736,7 @@ void Module::Interface::ReplySleepQuery(Kernel::HLERequestContext& ctx) {
     QueryReply query_reply{rp.PopEnum<QueryReply>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_APT, "(STUBBED)");
+    LOG_WARNING(Service_APT, "(stubbed)");
 }
 
 void Module::Interface::ReceiveDeliverArg(Kernel::HLERequestContext& ctx) {

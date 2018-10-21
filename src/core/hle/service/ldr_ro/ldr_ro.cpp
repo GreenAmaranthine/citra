@@ -152,7 +152,7 @@ void RO::LoadCRR(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_LDR, "(STUBBED) crr_buffer_ptr=0x{:08X}, crr_size=0x{:08X}", crr_buffer_ptr,
+    LOG_WARNING(Service_LDR, "(stubbed) crr_buffer_ptr=0x{:08X}, crr_size=0x{:08X}", crr_buffer_ptr,
                 crr_size);
 }
 
@@ -164,7 +164,7 @@ void RO::UnloadCRR(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_LDR, "(STUBBED) crr_buffer_ptr=0x{:08X}", crr_buffer_ptr);
+    LOG_WARNING(Service_LDR, "(stubbed) crr_buffer_ptr=0x{:08X}", crr_buffer_ptr);
 }
 
 void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {

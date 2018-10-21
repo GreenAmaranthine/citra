@@ -79,7 +79,7 @@ static u8 network_channel{DefaultNetworkChannel};
 // Information about the network that we're currently connected to.
 static NetworkInfo network_info;
 
-// Mapping of mac addresses to their respective node_ids.
+// Mapping of mac addresses to their respective node IDs.
 struct Node {
     bool connected;
     u16 node_id;
@@ -332,9 +332,8 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
         node_info.clear();
         node_info.reserve(network_info.max_nodes);
         for (std::size_t index{}; index < logoff.connected_nodes; ++index) {
-            if ((connection_status.node_bitmask & (1 << index)) == 0) {
+            if ((connection_status.node_bitmask & (1 << index)) == 0)
                 connection_status.changed_nodes |= 1 << index;
-            }
             connection_status.nodes[index] = logoff.nodes[index].network_node_id;
             connection_status.node_bitmask |= 1 << index;
             node_info.emplace_back(DeserializeNodeInfo(logoff.nodes[index]));
@@ -835,7 +834,7 @@ void NWM_UDS::UpdateNetworkAttribute(Kernel::HLERequestContext& ctx) {
     rp.Skip(2, false);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_NWM, "(STUBBED)");
+    LOG_WARNING(Service_NWM, "(stubbed)");
 }
 
 void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {

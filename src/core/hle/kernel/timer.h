@@ -9,7 +9,6 @@
 #include "core/hle/kernel/wait_object.h"
 
 namespace Kernel {
-
 class Timer final : public WaitObject {
 public:
     /**
@@ -19,48 +18,36 @@ public:
      * @return The created Timer
      */
     static SharedPtr<Timer> Create(ResetType reset_type, std::string name = "Unknown");
-
     std::string GetTypeName() const override {
         return "Timer";
     }
-
     std::string GetName() const override {
         return name;
     }
-
     static const HandleType HANDLE_TYPE{HandleType::Timer};
-
     HandleType GetHandleType() const override {
         return HANDLE_TYPE;
     }
-
     ResetType GetResetType() const {
         return reset_type;
     }
-
     u64 GetInitialDelay() const {
         return initial_delay;
     }
-
     u64 GetIntervalDelay() const {
         return interval_delay;
     }
-
     bool ShouldWait(Thread* thread) const override;
     void Acquire(Thread* thread) override;
-
     void WakeupAllWaitingThreads() override;
-
     /**
      * Starts the timer, with the specified initial delay and interval.
      * @param initial Delay until the timer is first fired
      * @param interval Delay until the timer is fired after the first time
      */
     void Set(s64 initial, s64 interval);
-
     void Cancel();
     void Clear();
-
     /**
      * Signals the timer, waking up any waiting threads and rescheduling it
      * for the next interval.
@@ -72,23 +59,17 @@ public:
 private:
     Timer();
     ~Timer() override;
-
     ResetType reset_type; ///< The ResetType of this timer
-
-    u64 initial_delay;  ///< The delay until the timer fires for the first time
-    u64 interval_delay; ///< The delay until the timer fires after the first time
-
-    bool signaled;    ///< Whether the timer has been signaled or not
-    std::string name; ///< Name of timer (optional)
-
-    /// Handle used as userdata to reference this object when inserting into the CoreTiming queue.
-    Handle callback_handle;
+    u64 initial_delay;    ///< The delay until the timer fires for the first time
+    u64 interval_delay;   ///< The delay until the timer fires after the first time
+    bool signaled;        ///< Whether the timer has been signaled or not
+    std::string name;     ///< Name of timer (optional)
+    Handle
+        callback_handle; ///< Handle used as userdata to reference this object when inserting into
+                         // the CoreTiming queue.
 };
-
 /// Initializes the required variables for timers
 void TimersInit();
-
 /// Tears down the timer variables
 void TimersShutdown();
-
 } // namespace Kernel

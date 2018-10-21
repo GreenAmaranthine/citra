@@ -17,9 +17,7 @@ class ConfigureCamera : public QWidget {
 public:
     explicit ConfigureCamera(QWidget* parent = nullptr);
     ~ConfigureCamera();
-
     void applyConfiguration();
-
     void timerEvent(QTimerEvent*) override;
 
 public slots:
@@ -29,16 +27,9 @@ public slots:
 private:
     enum class CameraPosition { RearRight, Front, RearLeft, RearBoth, Null };
     static const std::array<std::string, 3> Implementations;
-
-    /// Record the current configuration
-    void recordConfig();
-
-    /// Updates camera mode
-    void updateCameraMode();
-
-    /// Updates image source
-    void updateImageSourceUI();
-
+    void recordConfig();        ///< Record the current configuration
+    void updateCameraMode();    ///< Updates camera mode
+    void updateImageSourceUI(); ///< Updates image source
     void startPreviewing();
     void stopPreviewing();
     void connectEvents();

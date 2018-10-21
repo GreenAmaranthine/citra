@@ -69,7 +69,7 @@ void DSP_DSP::SetSemaphore(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_DSP, "(STUBBED) semaphore_value={:04X}", semaphore_value);
+    LOG_WARNING(Service_DSP, "(stubbed) semaphore_value={:04X}", semaphore_value);
 }
 
 void DSP_DSP::ConvertProcessAddressFromDspDram(Kernel::HLERequestContext& ctx) {
@@ -209,7 +209,7 @@ void DSP_DSP::LoadComponent(Kernel::HLERequestContext& ctx) {
         LOG_INFO(Service_DSP, "Structures hash: {:#018x}",
                  Common::ComputeHash64(component_data.data() + 0x340, 60));
     }
-    LOG_WARNING(Service_DSP, "(STUBBED) size=0x{:X}, prog_mask=0x{:08X}, data_mask=0x{:08X}", size,
+    LOG_WARNING(Service_DSP, "(stubbed) size=0x{:X}, prog_mask=0x{:08X}, data_mask=0x{:08X}", size,
                 prog_mask, data_mask);
 }
 
@@ -217,7 +217,7 @@ void DSP_DSP::UnloadComponent(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x12, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_DSP, "(STUBBED)");
+    LOG_WARNING(Service_DSP, "(stubbed)");
 }
 
 void DSP_DSP::FlushDataCache(Kernel::HLERequestContext& ctx) {
@@ -278,7 +278,7 @@ void DSP_DSP::GetSemaphoreEventHandle(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(semaphore_event);
     semaphore_event->Signal();
-    LOG_WARNING(Service_DSP, "(STUBBED)");
+    LOG_WARNING(Service_DSP, "(stubbed)");
 }
 
 void DSP_DSP::SetSemaphoreMask(Kernel::HLERequestContext& ctx) {
@@ -286,7 +286,7 @@ void DSP_DSP::SetSemaphoreMask(Kernel::HLERequestContext& ctx) {
     const u32 mask{rp.Pop<u32>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_DSP, "(STUBBED) mask=0x{:08X}", mask);
+    LOG_WARNING(Service_DSP, "(stubbed) mask=0x{:08X}", mask);
 }
 
 void DSP_DSP::GetHeadphoneStatus(Kernel::HLERequestContext& ctx) {
@@ -302,7 +302,7 @@ void DSP_DSP::ForceHeadphoneOut(Kernel::HLERequestContext& ctx) {
     Settings::values.headphones_connected = true;
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_DEBUG(Service_DSP, "(STUBBED) force={}", force);
+    LOG_DEBUG(Service_DSP, "(stubbed) force={}", force);
 }
 
 void DSP_DSP::GetIsDspOccupied(Kernel::HLERequestContext& ctx) {
@@ -310,7 +310,7 @@ void DSP_DSP::GetIsDspOccupied(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(0);
-    LOG_WARNING(Service_DSP, "(STUBBED)");
+    LOG_WARNING(Service_DSP, "(stubbed)");
 }
 
 // DSP Interrupts:
