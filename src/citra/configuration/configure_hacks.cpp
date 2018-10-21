@@ -12,7 +12,6 @@ ConfigureHacks::ConfigureHacks(QWidget* parent)
     ui->setupUi(this);
     setConfiguration();
     ui->toggle_priority_boost->setEnabled(!Core::System::GetInstance().IsPoweredOn());
-    ui->toggle_bos->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     ui->toggle_force_memory_mode_7->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     connect(ui->combo_ticks_mode,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
