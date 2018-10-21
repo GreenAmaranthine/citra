@@ -118,18 +118,15 @@ static const std::vector<u8> cfg_system_savedata_id{
 };
 
 static bool new_mode_enabled;
-static std::weak_ptr<Module> current_cfg;
-
-std::shared_ptr<Module> GetCurrentModule() {
-    auto cfg{current_cfg.lock()};
-    ASSERT_MSG(cfg, "No CFG module running!");
-    return cfg;
-}
 
 Module::Interface::Interface(std::shared_ptr<Module> cfg, const char* name, u32 max_session)
     : ServiceFramework{name, max_session}, cfg{std::move(cfg)} {}
 
 Module::Interface::~Interface() = default;
+
+std::shared_ptr<Module> Module::Interface::GetModule() {
+    return cfg;
+}
 
 void Module::Interface::GetCountryCodeString(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x09, 1, 0};
@@ -592,7 +589,6 @@ ResultCode Module::LoadConfigNANDSaveFile() {
         cfg_system_save_data_archive = systemsavedata_factory.Open(archive_path).Unwrap();
     } else {
         ASSERT_MSG(archive_result.Succeeded(), "Could not open the CFG SystemSaveData archive!");
-
         cfg_system_save_data_archive = std::move(archive_result).Unwrap();
     }
     FileSys::Path config_path{"/config"};
@@ -780,7 +776,6 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<CFG_S>(cfg)->InstallAsService(service_manager);
     std::make_shared<CFG_U>(cfg)->InstallAsService(service_manager);
     std::make_shared<CFG_NOR>()->InstallAsService(service_manager);
-    current_cfg = cfg;
     new_mode_enabled = cfg->IsNewModeEnabled();
 }
 

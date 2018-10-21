@@ -80,7 +80,11 @@ static u64 GetTitleIdForApplet(AppletId id) {
 
     ASSERT_MSG(itr != applet_titleids.end(), "Unknown applet id {:#05X}", static_cast<u32>(id));
 
-    return itr->title_ids[Service::CFG::GetCurrentModule()->GetRegionValue()];
+    return itr->title_ids[Core::System::GetInstance()
+                              .ServiceManager()
+                              .GetService<Service::CFG::Module::Interface>("cfg:u")
+                              ->GetModule()
+                              ->GetRegionValue()];
 }
 
 AppletManager::AppletSlotData* AppletManager::GetAppletSlotData(AppletId id) {

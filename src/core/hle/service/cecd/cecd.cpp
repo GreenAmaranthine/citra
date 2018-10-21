@@ -572,11 +572,19 @@ void Module::Interface::ReadData(Kernel::HLERequestContext& ctx) {
     std::vector<u8> buffer;
     switch (info_type) {
     case CecSystemInfoType::EulaVersion:
-        buffer = Service::CFG::GetCurrentModule()->GetEulaVersion();
+        buffer = Core::System::GetInstance()
+                     .ServiceManager()
+                     .GetService<CFG::Module::Interface>("cfg:u")
+                     ->GetModule()
+                     ->GetEulaVersion();
         dest_buffer.Write(buffer.data(), 0, buffer.size());
         break;
     case CecSystemInfoType::Eula:
-        if (Service::CFG::GetCurrentModule()->GetEulaVersion() == std::vector<u8>{0x00, 0x00}) {
+        if (Core::System::GetInstance()
+                .ServiceManager()
+                .GetService<CFG::Module::Interface>("cfg:u")
+                ->GetModule()
+                ->GetEulaVersion() == std::vector<u8>{0x00, 0x00}) {
             buffer = {0x00};
         } else {
             buffer = {0x01};

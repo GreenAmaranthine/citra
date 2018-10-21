@@ -47,7 +47,11 @@ void Module::Interface::GetAccountDataBlock(Kernel::HLERequestContext& ctx) {
     auto& buffer{rp.PopMappedBuffer()};
     switch (id) {
     case BlkID::NNID: {
-        std::string nnid{Common::UTF16ToUTF8(CFG::GetCurrentModule()->GetUsername())};
+        std::string nnid{Common::UTF16ToUTF8(Core::System::GetInstance()
+                                                 .ServiceManager()
+                                                 .GetService<CFG::Module::Interface>("cfg:u")
+                                                 ->GetModule()
+                                                 ->GetUsername())};
         nnid.resize(0x11);
         nnid = Common::ReplaceAll(nnid, " ", "_");
         buffer.Write(nnid.c_str(), 0, nnid.length());
@@ -59,7 +63,11 @@ void Module::Interface::GetAccountDataBlock(Kernel::HLERequestContext& ctx) {
         break;
     }
     case BlkID::U16MiiName: {
-        std::u16string username{CFG::GetCurrentModule()->GetUsername()};
+        std::u16string username{Core::System::GetInstance()
+                                    .ServiceManager()
+                                    .GetService<CFG::Module::Interface>("cfg:u")
+                                    ->GetModule()
+                                    ->GetUsername()};
         buffer.Write(username.c_str(), 0, username.length());
         break;
     }
@@ -69,7 +77,11 @@ void Module::Interface::GetAccountDataBlock(Kernel::HLERequestContext& ctx) {
         break;
     }
     case BlkID::CountryName: {
-        u8 country_code{CFG::GetCurrentModule()->GetCountryCode()};
+        u8 country_code{Core::System::GetInstance()
+                            .ServiceManager()
+                            .GetService<CFG::Module::Interface>("cfg:u")
+                            ->GetModule()
+                            ->GetCountryCode()};
         u16 country_name{CFG::country_codes[country_code]};
         buffer.Write(&country_name, 0, sizeof(u16));
         break;
@@ -86,7 +98,11 @@ void Module::Interface::GetAccountDataBlock(Kernel::HLERequestContext& ctx) {
     }
     case BlkID::InfoStruct: {
         InfoBlock info{};
-        std::u16string username{CFG::GetCurrentModule()->GetUsername()};
+        std::u16string username{Core::System::GetInstance()
+                                    .ServiceManager()
+                                    .GetService<Service::CFG::Module::Interface>("cfg:u")
+                                    ->GetModule()
+                                    ->GetUsername()};
         username.copy(info.MachinUserName, username.length());
         buffer.Write(&info, 0, username.length());
         break;

@@ -203,6 +203,7 @@ public:
     class Interface : public ServiceFramework<Interface> {
     public:
         Interface(std::shared_ptr<Module> hid, const char* name);
+        std::shared_ptr<Module> GetModule();
 
     protected:
         void GetIPCHandles(Kernel::HLERequestContext& ctx);

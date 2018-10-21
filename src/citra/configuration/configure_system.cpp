@@ -247,7 +247,10 @@ void ConfigureSystem::setConfiguration() {
     ui->edit_init_time->setDateTime(date_time);
 
     if (!enabled) {
-        cfg = Service::CFG::GetCurrentModule();
+        cfg = Core::System::GetInstance()
+                  .ServiceManager()
+                  .GetService<Service::CFG::Module::Interface>("cfg:u")
+                  ->GetModule();
         ReadSystemSettings();
         ui->group_system_settings->setEnabled(false);
     } else {

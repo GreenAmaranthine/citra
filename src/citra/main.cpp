@@ -775,7 +775,11 @@ void GMainWindow::ErrEulaCallback(HLE::Applets::ErrEulaConfig& config) {
     case HLE::Applets::ErrEulaErrorType::EulaFirstBoot:
         if (QMessageBox::question(nullptr, "ErrEula", "Agree EULA?") ==
             QMessageBox::StandardButton::Yes)
-            Service::CFG::GetCurrentModule()->AgreeEula();
+            Core::System::GetInstance()
+                .ServiceManager()
+                .GetService<Service::CFG::Module::Interface>("cfg:u")
+                ->GetModule()
+                ->AgreeEula();
         break;
     }
     config.return_code = HLE::Applets::ErrEulaResult::Success;
@@ -1040,8 +1044,7 @@ void GMainWindow::OnCIAInstallFinished() {
     ui.action_Install_CIA->setEnabled(true);
     game_list->PopulateAsync(UISettings::values.game_dirs);
     if (system.IsPoweredOn()) {
-        auto u{system.ServiceManager().GetService<Service::AM::AM_U>("am:u")};
-        auto am{u->GetModule()};
+        auto am{system.ServiceManager().GetService<Service::AM::AM_U>("am:u")->GetModule()};
         am->ScanForAllTitles();
     }
 }

@@ -25,8 +25,4 @@ User::User(std::shared_ptr<Module> hid) : Module::Interface{std::move(hid), "hid
     RegisterHandlers(functions);
 }
 
-std::shared_ptr<Module> User::GetModule() {
-    return hid;
-}
-
 } // namespace Service::HID

@@ -14,7 +14,6 @@ namespace Service::HID {
 class User final : public Module::Interface {
 public:
     explicit User(std::shared_ptr<Module> hid);
-    std::shared_ptr<Module> GetModule();
 };
 
 } // namespace Service::HID

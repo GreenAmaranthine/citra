@@ -95,6 +95,7 @@ public:
     public:
         Interface(std::shared_ptr<Module> cfg, const char* name, u32 max_session);
         ~Interface();
+        std::shared_ptr<Module> GetModule();
 
         void GetCountryCodeString(Kernel::HLERequestContext& ctx);
         void GetCountryCodeID(Kernel::HLERequestContext& ctx);
@@ -310,6 +311,5 @@ private:
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 bool IsNewModeEnabled();
-std::shared_ptr<Module> GetCurrentModule();
 
 } // namespace Service::CFG

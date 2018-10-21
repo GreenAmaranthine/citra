@@ -140,7 +140,11 @@ void AppLoader_NCCH::ParseRegionLockoutInfo() {
             }
             region_lockout >>= 1;
         }
-        Service::CFG::GetCurrentModule()->SetPreferredRegionCodes(regions);
+        Core::System::GetInstance()
+            .ServiceManager()
+            .GetService<Service::CFG::Module::Interface>("cfg:u")
+            ->GetModule()
+            ->SetPreferredRegionCodes(regions);
     }
 }
 

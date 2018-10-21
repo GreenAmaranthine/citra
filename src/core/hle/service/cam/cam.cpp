@@ -943,8 +943,7 @@ void ReloadCameraDevices() {
     if (!system.IsPoweredOn()) {
         return;
     }
-    auto u{system.ServiceManager().GetService<CAM_U>("cam:u")};
-    auto cam{u->GetModule()};
+    auto cam{system.ServiceManager().GetService<CAM_U>("cam:u")->GetModule()};
     cam->ReloadCameraDevices();
 }
 
