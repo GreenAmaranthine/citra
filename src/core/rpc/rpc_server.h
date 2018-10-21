@@ -33,7 +33,7 @@ private:
     void HandleMotionState(Packet& packet, s16 x, s16 y, s16 z, s16 roll, s16 pitch, s16 yaw);
     void HandleCircleState(Packet& packet, s16 x, s16 y);
     void HandleSetResolution(Packet& packet, u16 resolution);
-    void HandleSetGame(Packet& packet, const std::string& path);
+    void HandleSetApplication(Packet& packet, const std::string& path);
     void HandleSetOverrideControls(Packet& packet, bool pad, bool touch, bool motion, bool circle);
     void HandlePause(Packet& packet);
     void HandleResume(Packet& packet);

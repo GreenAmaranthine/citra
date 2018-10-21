@@ -69,7 +69,7 @@ void DSP_DSP::SetSemaphore(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_DSP, "(STUBBED) called, semaphore_value={:04X}", semaphore_value);
+    LOG_WARNING(Service_DSP, "(STUBBED) semaphore_value={:04X}", semaphore_value);
 }
 
 void DSP_DSP::ConvertProcessAddressFromDspDram(Kernel::HLERequestContext& ctx) {
@@ -209,7 +209,7 @@ void DSP_DSP::LoadComponent(Kernel::HLERequestContext& ctx) {
         LOG_INFO(Service_DSP, "Structures hash: {:#018x}",
                  Common::ComputeHash64(component_data.data() + 0x340, 60));
     }
-    LOG_WARNING(Service_DSP, "(STUBBED) called size=0x{:X}, prog_mask=0x{:08X}, data_mask=0x{:08X}",
+    LOG_WARNING(Service_DSP, "(STUBBED) size=0x{:X}, prog_mask=0x{:08X}, data_mask=0x{:08X}",
                 size, prog_mask, data_mask);
 }
 
@@ -217,7 +217,7 @@ void DSP_DSP::UnloadComponent(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x12, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_DSP, "(STUBBED) called");
+    LOG_WARNING(Service_DSP, "(STUBBED)");
 }
 
 void DSP_DSP::FlushDataCache(Kernel::HLERequestContext& ctx) {
@@ -225,11 +225,9 @@ void DSP_DSP::FlushDataCache(Kernel::HLERequestContext& ctx) {
     const VAddr address{rp.Pop<u32>()};
     const u32 size{rp.Pop<u32>()};
     const auto process{rp.PopObject<Kernel::Process>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
-    LOG_TRACE(Service_DSP, "called address=0x{:08X}, size=0x{:X}, process={}", address, size,
+    LOG_TRACE(Service_DSP, "address=0x{:08X}, size=0x{:X}, process={}", address, size,
               process->process_id);
 }
 
@@ -238,11 +236,9 @@ void DSP_DSP::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
     const VAddr address{rp.Pop<u32>()};
     const u32 size{rp.Pop<u32>()};
     const auto process{rp.PopObject<Kernel::Process>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
-    LOG_TRACE(Service_DSP, "called address=0x{:08X}, size=0x{:X}, process={}", address, size,
+    LOG_TRACE(Service_DSP, "address=0x{:08X}, size=0x{:X}, process={}", address, size,
               process->process_id);
 }
 
@@ -251,15 +247,11 @@ void DSP_DSP::RegisterInterruptEvents(Kernel::HLERequestContext& ctx) {
     const u32 interrupt{rp.Pop<u32>()};
     const u32 channel{rp.Pop<u32>()};
     auto event{rp.PopObject<Kernel::Event>()};
-
     ASSERT_MSG(interrupt < NUM_INTERRUPT_TYPE && channel < AudioCore::num_dsp_pipe,
-               "Invalid type or pipe: interrupt = {}, channel = {}", interrupt, channel);
-
+               "Invalid type or pipe: interrupt={}, channel={}", interrupt, channel);
     const InterruptType type{static_cast<InterruptType>(interrupt)};
     const DspPipe pipe{static_cast<DspPipe>(channel)};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-
     if (event) { /// Register interrupt event
         if (HasTooManyEventsRegistered()) {
             LOG_INFO(Service_DSP,
@@ -286,48 +278,39 @@ void DSP_DSP::GetSemaphoreEventHandle(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(semaphore_event);
     semaphore_event->Signal();
-
-    LOG_WARNING(Service_DSP, "(STUBBED) called");
+    LOG_WARNING(Service_DSP, "(STUBBED)");
 }
 
 void DSP_DSP::SetSemaphoreMask(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x17, 1, 0};
     const u32 mask{rp.Pop<u32>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
-    LOG_WARNING(Service_DSP, "(STUBBED) called mask=0x{:08X}", mask);
+    LOG_WARNING(Service_DSP, "(STUBBED) mask=0x{:08X}", mask);
 }
 
 void DSP_DSP::GetHeadphoneStatus(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x1F, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(static_cast<u8>(Settings::values.headphones_connected));
-
     LOG_DEBUG(Service_DSP, "called");
 }
 
 void DSP_DSP::ForceHeadphoneOut(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x20, 1, 0};
     const u8 force{rp.Pop<u8>()};
-
     Settings::values.headphones_connected = true;
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
-    LOG_DEBUG(Service_DSP, "(STUBBED) called, force={}", force);
+    LOG_DEBUG(Service_DSP, "(STUBBED) force={}", force);
 }
 
 void DSP_DSP::GetIsDspOccupied(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x21, 2, 0};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(0);
-
-    LOG_WARNING(Service_DSP, "(STUBBED) called");
+    LOG_WARNING(Service_DSP, "(STUBBED)");
 }
 
 // DSP Interrupts:
@@ -335,12 +318,10 @@ void DSP_DSP::GetIsDspOccupied(Kernel::HLERequestContext& ctx) {
 // that's waiting for an interrupt event. Immediately after this interrupt event, userland
 // normally updates the state in the next region and increments the relevant frame counter by two.
 void DSP_DSP::SignalInterrupt(InterruptType type, DspPipe pipe) {
-    LOG_DEBUG(Service_DSP, "called, type={}, pipe={}", static_cast<u32>(type),
-              static_cast<u32>(pipe));
+    LOG_DEBUG(Service_DSP, "type={}, pipe={}", static_cast<u32>(type), static_cast<u32>(pipe));
     const auto& event{GetInterruptEvent(type, pipe)};
-    if (event) {
+    if (event)
         event->Signal();
-    }
 }
 
 Kernel::SharedPtr<Kernel::Event>& DSP_DSP::GetInterruptEvent(InterruptType type, DspPipe pipe) {
@@ -361,12 +342,10 @@ Kernel::SharedPtr<Kernel::Event>& DSP_DSP::GetInterruptEvent(InterruptType type,
 bool DSP_DSP::HasTooManyEventsRegistered() const {
     std::size_t number{static_cast<std::size_t>(
         std::count_if(pipes.begin(), pipes.end(), [](const auto& evt) { return evt != nullptr; }))};
-
     if (interrupt_zero != nullptr)
         number++;
     if (interrupt_one != nullptr)
         number++;
-
     LOG_DEBUG(Service_DSP, "Number of events registered = {}", number);
     return number >= max_number_of_interrupt_events;
 }

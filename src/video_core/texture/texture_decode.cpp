@@ -61,11 +61,9 @@ Math::Vec4<u8> LookupTexture(const u8* source, unsigned int x, unsigned int y,
     // Coordinate in tiles
     const unsigned int coarse_x{x / 8};
     const unsigned int coarse_y{y / 8};
-
     // Coordinate inside the tile
     const unsigned int fine_x{x % 8};
     const unsigned int fine_y{y % 8};
-
     const u8* line{source + coarse_y * info.stride};
     const u8* tile{line + coarse_x * CalculateTileSize(info.format)};
     return LookupTexelInTile(tile, fine_x, fine_y, info);
@@ -75,118 +73,88 @@ Math::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned int 
                                  const TextureInfo& info) {
     DEBUG_ASSERT(x < 8);
     DEBUG_ASSERT(y < 8);
-
     using VideoCore::MortonInterleave;
-
     switch (info.format) {
     case TextureFormat::RGBA8: {
         auto res{Color::DecodeRGBA8(source + MortonInterleave(x, y) * 4)};
         return {res.r(), res.g(), res.b(), res.a()};
     }
-
     case TextureFormat::RGB8: {
         auto res{Color::DecodeRGB8(source + MortonInterleave(x, y) * 3)};
         return {res.r(), res.g(), res.b(), 255};
     }
-
     case TextureFormat::RGB5A1: {
         auto res{Color::DecodeRGB5A1(source + MortonInterleave(x, y) * 2)};
         return {res.r(), res.g(), res.b(), res.a()};
     }
-
     case TextureFormat::RGB565: {
         auto res{Color::DecodeRGB565(source + MortonInterleave(x, y) * 2)};
         return {res.r(), res.g(), res.b(), 255};
     }
-
     case TextureFormat::RGBA4: {
         auto res{Color::DecodeRGBA4(source + MortonInterleave(x, y) * 2)};
         return {res.r(), res.g(), res.b(), res.a()};
     }
-
     case TextureFormat::IA8: {
         const u8* source_ptr{source + MortonInterleave(x, y) * 2};
-
         return {source_ptr[1], source_ptr[1], source_ptr[1], source_ptr[0]};
     }
-
     case TextureFormat::RG8: {
         auto res{Color::DecodeRG8(source + MortonInterleave(x, y) * 2)};
         return {res.r(), res.g(), 0, 255};
     }
-
     case TextureFormat::I8: {
         const u8* source_ptr{source + MortonInterleave(x, y)};
         return {*source_ptr, *source_ptr, *source_ptr, 255};
     }
-
     case TextureFormat::A8: {
         const u8* source_ptr{source + MortonInterleave(x, y)};
-
         return {0, 0, 0, *source_ptr};
     }
-
     case TextureFormat::IA4: {
         const u8* source_ptr{source + MortonInterleave(x, y)};
-
         u8 i{Color::Convert4To8(((*source_ptr) & 0xF0) >> 4)};
         u8 a{Color::Convert4To8((*source_ptr) & 0xF)};
-
         return {i, i, i, a};
     }
-
     case TextureFormat::I4: {
         u32 morton_offset{MortonInterleave(x, y)};
         const u8* source_ptr{source + morton_offset / 2};
-
         u8 i{static_cast<u8>((morton_offset % 2) ? ((*source_ptr & 0xF0) >> 4)
                                                  : (*source_ptr & 0xF))};
         i = Color::Convert4To8(i);
-
         return {i, i, i, 255};
     }
-
     case TextureFormat::A4: {
         u32 morton_offset{MortonInterleave(x, y)};
         const u8* source_ptr{source + morton_offset / 2};
-
         u8 a{static_cast<u8>((morton_offset % 2) ? ((*source_ptr & 0xF0) >> 4)
                                                  : (*source_ptr & 0xF))};
         a = Color::Convert4To8(a);
-
         return {0, 0, 0, a};
     }
-
     case TextureFormat::ETC1:
     case TextureFormat::ETC1A4: {
         bool has_alpha{info.format == TextureFormat::ETC1A4};
         int subtile_size{has_alpha ? 16 : 8};
-
         // ETC1 further subdivides each 8x8 tile into four 4x4 subtiles
         constexpr unsigned int subtile_width{4};
         constexpr unsigned int subtile_height{4};
-
         unsigned int subtile_index{(x / subtile_width) + 2 * (y / subtile_height)};
         x %= subtile_width;
         y %= subtile_height;
-
         const u8* subtile_ptr{source + subtile_index * subtile_size};
-
         u8 alpha{255};
         if (has_alpha) {
             u64_le packed_alpha;
             std::memcpy(&packed_alpha, subtile_ptr, sizeof(u64));
             subtile_ptr += sizeof(u64);
-
             alpha = Color::Convert4To8((packed_alpha >> (4 * (x * subtile_width + y))) & 0xF);
         }
-
         u64_le subtile_data;
         std::memcpy(&subtile_data, subtile_ptr, sizeof(u64));
-
         return Math::MakeVec(SampleETC1Subtile(subtile_data, x, y), alpha);
     }
-
     default:
         LOG_ERROR(HW_GPU, "Unknown texture format: {:x}", (u32)info.format);
         DEBUG_ASSERT(false);

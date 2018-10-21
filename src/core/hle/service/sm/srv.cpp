@@ -2,8 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <condition_variable>
-#include <mutex>
 #include <tuple>
 #include "common/common_types.h"
 #include "common/logging/log.h"
@@ -27,7 +25,6 @@ constexpr int MAX_PENDING_NOTIFICATIONS{16};
 
 void SRV::RegisterClient(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x1, 0, 2};
-
     u32 pid_descriptor{rp.Pop<u32>()};
     if (pid_descriptor != IPC::CallingPidDesc()) {
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
@@ -35,20 +32,18 @@ void SRV::RegisterClient(Kernel::HLERequestContext& ctx) {
         return;
     }
     u32 caller_pid{rp.Pop<u32>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_SRV, "(STUBBED) called");
+    LOG_WARNING(Service_SRV, "(STUBBED)");
 }
 
 void SRV::EnableNotification(Kernel::HLERequestContext& ctx) {
     notification_semaphore =
         Kernel::Semaphore::Create(0, MAX_PENDING_NOTIFICATIONS, "SRV:Notification").Unwrap();
-
     IPC::ResponseBuilder rb{ctx, 0x2, 1, 2};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(notification_semaphore);
-    LOG_WARNING(Service_SRV, "(STUBBED) called");
+    LOG_WARNING(Service_SRV, "(STUBBED)");
 }
 
 void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
@@ -56,56 +51,40 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
     auto name_buf{rp.PopRaw<std::array<char, 8>>()};
     std::size_t name_len{rp.Pop<u32>()};
     u32 flags{rp.Pop<u32>()};
-
     bool wait_until_available{(flags & 1) == 0};
-
     if (name_len > Service::kMaxPortSize) {
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(ERR_INVALID_NAME_SIZE);
-        LOG_ERROR(Service_SRV, "called name_len=0x{:X} -> ERR_INVALID_NAME_SIZE", name_len);
+        LOG_ERROR(Service_SRV, "name_len=0x{:X} -> ERR_INVALID_NAME_SIZE", name_len);
         return;
     }
-
     std::string name{name_buf.data(), name_len};
-
     // TODO: Permission checks go here
-
     auto get_handle{[name, this](Kernel::SharedPtr<Kernel::Thread> thread,
                                  Kernel::HLERequestContext& ctx,
                                  Kernel::ThreadWakeupReason reason) {
-        LOG_ERROR(Service_SRV, "called service={} wakeup", name);
+        LOG_INFO(Service_SRV, "service={} wakeup", name);
         auto client_port{service_manager->GetServicePort(name)};
-
         auto session{client_port.Unwrap()->Connect()};
         if (session.Succeeded()) {
-            LOG_DEBUG(Service_SRV, "called service={} -> session={}", name,
-                      (*session)->GetObjectId());
+            LOG_DEBUG(Service_SRV, "service={} -> session={}", name, (*session)->GetObjectId());
             IPC::ResponseBuilder rb{ctx, 0x5, 1, 2};
             rb.Push(session.Code());
             rb.PushMoveObjects(std::move(session).Unwrap());
         } else if (session.Code() == Kernel::ERR_MAX_CONNECTIONS_REACHED) {
-            LOG_WARNING(Service_SRV, "called service={} -> ERR_MAX_CONNECTIONS_REACHED", name);
-            std::mutex mutex;
-            std::unique_lock<std::mutex> lock{mutex};
-            std::condition_variable cv;
-            cv.wait(lock, [&]() -> bool {
-                session = client_port.Unwrap()->Connect();
-                return session.Code() == Kernel::ERR_MAX_CONNECTIONS_REACHED;
-            });
-            IPC::ResponseBuilder rb{ctx, 0x5, 1, 2};
-            rb.Push(session.Code());
-            rb.PushMoveObjects(std::move(session).Unwrap());
+            LOG_INFO(Service_SRV, "service={} -> ERR_MAX_CONNECTIONS_REACHED", name);
+            // TODO: Put the caller guest thread to sleep until this port becomes available again.
+            UNIMPLEMENTED_MSG("Unimplemented wait until port {} is available.", name);
         } else {
-            LOG_ERROR(Service_SRV, "called service={} -> error 0x{:08X}", name, session.Code().raw);
+            LOG_ERROR(Service_SRV, "service={} -> error 0x{:08X}", name, session.Code().raw);
             IPC::ResponseBuilder rb{ctx, 0x5, 1, 0};
             rb.Push(session.Code());
         }
     }};
-
     auto client_port{service_manager->GetServicePort(name)};
     if (client_port.Failed()) {
         if (wait_until_available && client_port.Code() == ERR_SERVICE_NOT_REGISTERED) {
-            LOG_INFO(Service_SRV, "called service={} delayed", name);
+            LOG_INFO(Service_SRV, "service={} delayed", name);
             Kernel::SharedPtr<Kernel::Event> get_service_handle_event{
                 ctx.SleepClientThread(Kernel::GetCurrentThread(), "GetServiceHandle",
                                       std::chrono::nanoseconds(-1), get_handle)};
@@ -114,32 +93,22 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
         } else {
             IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
             rb.Push(client_port.Code());
-            LOG_ERROR(Service_SRV, "called service={} -> error 0x{:08X}", name,
-                      client_port.Code().raw);
+            LOG_ERROR(Service_SRV, "service={} -> error 0x{:08X}", name, client_port.Code().raw);
             return;
         }
     }
-
     auto session{client_port.Unwrap()->Connect()};
     if (session.Succeeded()) {
-        LOG_DEBUG(Service_SRV, "called service={} -> session={}", name, (*session)->GetObjectId());
+        LOG_DEBUG(Service_SRV, "service={} -> session={}", name, (*session)->GetObjectId());
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
         rb.Push(session.Code());
         rb.PushMoveObjects(std::move(session).Unwrap());
     } else if (session.Code() == Kernel::ERR_MAX_CONNECTIONS_REACHED && wait_until_available) {
-        LOG_WARNING(Service_SRV, "called service={} -> ERR_MAX_CONNECTIONS_REACHED", name);
-        std::mutex mutex;
-        std::unique_lock<std::mutex> lock{mutex};
-        std::condition_variable cv;
-        cv.wait(lock, [&]() -> bool {
-            session = client_port.Unwrap()->Connect();
-            return session.Code() == Kernel::ERR_MAX_CONNECTIONS_REACHED;
-        });
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
-        rb.Push(session.Code());
-        rb.PushMoveObjects(std::move(session).Unwrap());
+        LOG_INFO(Service_SRV, "service={} -> ERR_MAX_CONNECTIONS_REACHED", name);
+        // TODO: Put the caller guest thread to sleep until this port becomes available again.
+        UNIMPLEMENTED_MSG("Unimplemented wait until port {} is available.", name);
     } else {
-        LOG_ERROR(Service_SRV, "called service={} -> error 0x{:08X}", name, session.Code().raw);
+        LOG_ERROR(Service_SRV, "service={} -> error 0x{:08X}", name, session.Code().raw);
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(session.Code());
     }
@@ -148,30 +117,26 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
 void SRV::Subscribe(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x9, 1, 0};
     u32 notification_id{rp.Pop<u32>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x{:X}", notification_id);
+    LOG_WARNING(Service_SRV, "(STUBBED) notification_id=0x{:X}", notification_id);
 }
 
 void SRV::Unsubscribe(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0xA, 1, 0};
     u32 notification_id{rp.Pop<u32>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x{:X}", notification_id);
+    LOG_WARNING(Service_SRV, "(STUBBED) notification_id=0x{:X}", notification_id);
 }
 
 void SRV::PublishToSubscriber(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0xC, 2, 0};
     u32 notification_id{rp.Pop<u32>()};
     u8 flags{rp.Pop<u8>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x{:X}, flags={}", notification_id,
-                flags);
+    LOG_WARNING(Service_SRV, "(STUBBED) notification_id=0x{:X}, flags={}", notification_id, flags);
 }
 
 void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
@@ -179,24 +144,19 @@ void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
     auto name_buf{rp.PopRaw<std::array<char, 8>>()};
     std::size_t name_len{rp.Pop<u32>()};
     u32 max_sessions{rp.Pop<u32>()};
-
     std::string name{name_buf.data(), std::min(name_len, name_buf.size())};
-
     auto port{service_manager->RegisterService(name, max_sessions)};
-
     if (port.Failed()) {
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(port.Code());
-        LOG_ERROR(Service_SRV, "called service={} -> error 0x{:08X}", name, port.Code().raw);
+        LOG_ERROR(Service_SRV, "service={} -> error 0x{:08X}", name, port.Code().raw);
         return;
     }
-
     auto it{get_service_handle_delayed_map.find(name)};
     if (it != get_service_handle_delayed_map.end()) {
         it->second->Signal();
         get_service_handle_delayed_map.erase(it);
     }
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMoveObjects(port.Unwrap());

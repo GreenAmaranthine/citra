@@ -69,11 +69,6 @@
          <widget class="QComboBox" name="resolution_factor_combobox">
           <item>
            <property name="text">
-            <string>Auto (Window Size)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
             <string>Native (400x240)</string>
            </property>
           </item>

@@ -46,10 +46,10 @@ constexpr ResultCode ERR_REGS_INVALID_SIZE(ErrorDescription::InvalidSize, ErrorM
                                            ErrorLevel::Usage); // 0xE0E02BEC
 
 /// Maximum number of threads that can be registered at the same time in the GSP module.
-constexpr u32 MaxGSPThreads = 4;
+constexpr u32 MaxGSPThreads{4};
 
 /// Thread ids currently in use by the sessions connected to the GSPGPU service.
-static std::array<bool, MaxGSPThreads> used_thread_ids = {false, false, false, false};
+static std::array<bool, MaxGSPThreads> used_thread_ids{false, false, false, false};
 
 static u32 GetUnusedThreadId() {
     for (u32 id{}; id < MaxGSPThreads; ++id) {
@@ -308,49 +308,38 @@ void GSP_GPU::FlushDataCache(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_GSP, "(STUBBED) called, address=0x{:08X}, size=0x{:08X}, process={}", address,
-              size, process->process_id);
+    LOG_DEBUG(Service_GSP, "(STUBBED) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
+              process->process_id);
 }
 
 void GSP_GPU::SetAxiConfigQoSMode(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x10, 1, 0};
     u32 mode{rp.Pop<u32>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
-    LOG_DEBUG(Service_GSP, "(STUBBED) called, mode=0x{:08X}", mode);
+    LOG_DEBUG(Service_GSP, "(STUBBED) mode=0x{:08X}", mode);
 }
 
 void GSP_GPU::RegisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x13, 1, 2};
     u32 flags{rp.Pop<u32>()};
-
     auto interrupt_event{rp.PopObject<Kernel::Event>()};
-
     // TODO: return right error code instead of asserting
     ASSERT_MSG((interrupt_event != nullptr), "handle is not valid!");
-
     interrupt_event->SetName("GSP_GSP_GPU::interrupt_event");
-
     SessionData* session_data{GetSessionData(ctx.Session())};
     session_data->interrupt_event = std::move(interrupt_event);
     session_data->registered = true;
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
-
     if (first_initialization) {
         // This specific code is required for a successful initialization, rather than 0
         first_initialization = false;
         rb.Push(RESULT_FIRST_INITIALIZATION);
-    } else {
+    } else
         rb.Push(RESULT_SUCCESS);
-    }
-
     rb.Push(session_data->thread_id);
     rb.PushCopyObjects(shared_memory);
-
-    LOG_DEBUG(Service_GSP, "called, flags=0x{:08X}", flags);
+    LOG_DEBUG(Service_GSP, "flags=0x{:08X}", flags);
 }
 
 void GSP_GPU::UnregisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
@@ -676,8 +665,8 @@ void GSP_GPU::StoreDataCache(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_GSP, "(STUBBED) called, address=0x{:08X}, size=0x{:08X}, process={}", address,
-              size, process->process_id);
+    LOG_DEBUG(Service_GSP, "(STUBBED) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
+              process->process_id);
 }
 
 void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
@@ -697,7 +686,7 @@ void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_GSP, "(STUBBED) called");
+    LOG_DEBUG(Service_GSP, "(STUBBED)");
 }
 
 SessionData* GSP_GPU::FindRegisteredThreadData(u32 thread_id) {

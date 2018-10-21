@@ -110,7 +110,7 @@ void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
 
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_NFC, "called, type={}", static_cast<int>(type));
+    LOG_DEBUG(Service_NFC, "type={}", static_cast<int>(type));
 }
 
 void Module::Interface::Shutdown(Kernel::HLERequestContext& ctx) {
@@ -127,21 +127,21 @@ void Module::Interface::Shutdown(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_NFC, "called, param={}", param);
+    LOG_DEBUG(Service_NFC, "param={}", param);
 }
 
 void Module::Interface::StartCommunication(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x03, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_NFC, "called");
+    LOG_DEBUG(Service_NFC, "stubbed");
 }
 
 void Module::Interface::StopCommunication(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x04, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_NFC, "called");
+    LOG_DEBUG(Service_NFC, "stubbed");
 }
 
 void Module::Interface::StartTagScanning(Kernel::HLERequestContext& ctx) {
@@ -160,7 +160,7 @@ void Module::Interface::StartTagScanning(Kernel::HLERequestContext& ctx) {
 
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_NFC, "called, in_val={:04x}", in_val);
+    LOG_DEBUG(Service_NFC, "in_val={:04x}", in_val);
 }
 
 void Module::Interface::GetTagInfo(Kernel::HLERequestContext& ctx) {
@@ -345,16 +345,14 @@ void Module::Interface::GetTagState(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x0D, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushEnum(nfc->tag_state.load());
-
-    LOG_DEBUG(Service_NFC, "called, tag_state={}", static_cast<int>(nfc->tag_state.load()));
+    LOG_DEBUG(Service_NFC, "tag_state={}", static_cast<int>(nfc->tag_state.load()));
 }
 
 void Module::Interface::CommunicationGetStatus(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x0F, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushEnum(nfc->status);
-
-    LOG_DEBUG(Service_NFC, "called, status={}", static_cast<int>(nfc->status));
+    LOG_DEBUG(Service_NFC, "status={}", static_cast<int>(nfc->status));
 }
 
 void Module::Interface::InitializeWriteAppData(Kernel::HLERequestContext& ctx) {
@@ -387,7 +385,7 @@ void Module::Interface::InitializeWriteAppData(Kernel::HLERequestContext& ctx) {
 
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_NFC, "called, app_id={}, size={}", app_id, size);
+    LOG_DEBUG(Service_NFC, "app_id={}, size={}", app_id, size);
 }
 
 void Module::Interface::UpdateStoredAmiiboData(Kernel::HLERequestContext& ctx) {
@@ -409,7 +407,7 @@ void Module::Interface::UpdateStoredAmiiboData(Kernel::HLERequestContext& ctx) {
     nfc->UpdateAmiiboData();
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_NFC, "(STUBBED) called");
+    LOG_WARNING(Service_NFC, "(STUBBED)");
 }
 
 void Module::Interface::GetAppDataInitStruct(Kernel::HLERequestContext& ctx) {
@@ -449,7 +447,7 @@ void Module::Interface::OpenAppData(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(result);
 
-    LOG_DEBUG(Service_NFC, "called, app_id=0x{:09X}", app_id);
+    LOG_DEBUG(Service_NFC, "app_id=0x{:09X}", app_id);
 }
 
 void Module::Interface::ReadAppData(Kernel::HLERequestContext& ctx) {
@@ -473,7 +471,7 @@ void Module::Interface::ReadAppData(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(buffer, 0);
 
-    LOG_DEBUG(Service_NFC, "called, size={}", size);
+    LOG_DEBUG(Service_NFC, "size={}", size);
 }
 
 void Module::Interface::WriteAppData(Kernel::HLERequestContext& ctx) {
@@ -496,7 +494,7 @@ void Module::Interface::WriteAppData(Kernel::HLERequestContext& ctx) {
 
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_NFC, "called, size={}, write_struct.id", size,
+    LOG_DEBUG(Service_NFC, "size={}, write_struct.id", size,
               Common::ArrayToString(write_struct.id.data(), write_struct.id.size()),
               write_struct.id_size);
 }

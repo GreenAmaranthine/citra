@@ -98,22 +98,16 @@ static QString AnalogToText(const Common::ParamPackage& param, const std::string
 ConfigureInput::ConfigureInput(QWidget* parent)
     : QWidget{parent}, ui{std::make_unique<Ui::ConfigureInput>()},
       timeout_timer{std::make_unique<QTimer>()}, poll_timer{std::make_unique<QTimer>()} {
-
     ui->setupUi(this);
     setFocusPolicy(Qt::ClickFocus);
-
-    for (int i{}; i < Settings::values.profiles.size(); ++i) {
+    for (int i{}; i < Settings::values.profiles.size(); ++i)
         ui->profile->addItem(QString::fromStdString(Settings::values.profiles[i].name));
-    }
-
     ui->profile->setCurrentIndex(Settings::values.profile);
-
     button_map = {
         ui->buttonA,        ui->buttonB,        ui->buttonX,         ui->buttonY,  ui->buttonDpadUp,
         ui->buttonDpadDown, ui->buttonDpadLeft, ui->buttonDpadRight, ui->buttonL,  ui->buttonR,
         ui->buttonStart,    ui->buttonSelect,   ui->buttonZL,        ui->buttonZR, ui->buttonHome,
     };
-
     analog_map_buttons = {{
         {
             ui->buttonCircleUp,
@@ -130,9 +124,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
             nullptr,
         },
     }};
-
     analog_map_stick = {ui->buttonCircleAnalog, ui->buttonCStickAnalog};
-
     for (int button_id{}; button_id < Settings::NativeButton::NumButtons; button_id++) {
         if (!button_map[button_id])
             continue;

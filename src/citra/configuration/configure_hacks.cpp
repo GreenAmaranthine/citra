@@ -10,13 +10,10 @@
 ConfigureHacks::ConfigureHacks(QWidget* parent)
     : QWidget{parent}, ui{std::make_unique<Ui::ConfigureHacks>()} {
     ui->setupUi(this);
-
     setConfiguration();
-
     ui->toggle_priority_boost->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     ui->toggle_bos->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     ui->toggle_force_memory_mode_7->setEnabled(!Core::System::GetInstance().IsPoweredOn());
-
     connect(ui->combo_ticks_mode,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
             [&](int index) { ui->spinbox_ticks->setEnabled(index == 2); });
@@ -42,6 +39,6 @@ void ConfigureHacks::applyConfiguration() {
     Settings::values.force_memory_mode_7 = ui->toggle_force_memory_mode_7->isChecked();
 
     if (Core::System::GetInstance().IsPoweredOn()) {
-        Core::GetCPU().SyncSettings();
+        Core::CPU().SyncSettings();
     }
 }

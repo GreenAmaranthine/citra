@@ -15,7 +15,6 @@ Config::Config() {
     qt_config_loc = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "qt-config.ini";
     FileUtil::CreateFullPath(qt_config_loc);
     qt_config = new QSettings(QString::fromStdString(qt_config_loc), QSettings::IniFormat);
-
     Reload();
 }
 
@@ -69,7 +68,6 @@ void Config::ReadValues() {
         static_cast<u8>(qt_config->value("n_wifi_link_level", 0).toInt());
     Settings::values.n_state = static_cast<u8>(qt_config->value("n_state", 0).toInt());
     qt_config->endGroup();
-
     qt_config->beginGroup("Controls");
     int size{qt_config->beginReadArray("profiles")};
     for (int p{}; p < size; ++p) {
@@ -86,7 +84,6 @@ void Config::ReadValues() {
             if (profile.buttons[i].empty())
                 profile.buttons[i] = default_param;
         }
-
         for (int i{}; i < Settings::NativeAnalog::NumAnalogs; ++i) {
             std::string default_param{InputCommon::GenerateAnalogParamFromKeys(
                 default_analogs[i][0], default_analogs[i][1], default_analogs[i][2],
@@ -99,7 +96,6 @@ void Config::ReadValues() {
             if (profile.analogs[i].empty())
                 profile.analogs[i] = default_param;
         }
-
         profile.motion_device =
             qt_config
                 ->value("motion_device",
@@ -108,7 +104,6 @@ void Config::ReadValues() {
                 .toStdString();
         profile.touch_device =
             qt_config->value("touch_device", "engine:emu_window").toString().toStdString();
-
         profile.udp_input_address =
             qt_config->value("udp_input_address", InputCommon::CemuhookUDP::DEFAULT_ADDR)
                 .toString()
@@ -168,20 +163,17 @@ void Config::ReadValues() {
     }
     Settings::LoadProfile(Settings::values.profile);
     qt_config->endGroup();
-
     qt_config->beginGroup("Core");
     Settings::values.keyboard_mode =
         static_cast<Settings::KeyboardMode>(qt_config->value("keyboard_mode", 1).toInt());
     Settings::values.enable_ns_launch = qt_config->value("enable_ns_launch", false).toBool();
     qt_config->endGroup();
-
     qt_config->beginGroup("LLE");
     for (const auto& service_module : Service::service_module_map) {
         bool use_lle{qt_config->value(QString::fromStdString(service_module.name), false).toBool()};
         Settings::values.lle_modules.emplace(service_module.name, use_lle);
     }
     qt_config->endGroup();
-
     qt_config->beginGroup("Renderer");
 #ifdef __APPLE__
     // Hardware shader is broken on macOS thanks to poor drivers.
@@ -194,8 +186,10 @@ void Config::ReadValues() {
     Settings::values.shaders_accurate_gs = qt_config->value("shaders_accurate_gs", true).toBool();
     Settings::values.shaders_accurate_mul =
         qt_config->value("shaders_accurate_mul", false).toBool();
-    Settings::values.resolution_factor =
-        static_cast<u16>(qt_config->value("resolution_factor", 1).toInt());
+    u16 resolution_factor{static_cast<u16>(qt_config->value("resolution_factor", 1).toInt())};
+    if (resolution_factor == 0)
+        resolution_factor = 1;
+    Settings::values.resolution_factor = resolution_factor;
     Settings::values.use_frame_limit = qt_config->value("use_frame_limit", true).toBool();
     Settings::values.frame_limit = qt_config->value("frame_limit", 100).toInt();
     Settings::values.bg_red = qt_config->value("bg_red", 0.0).toFloat();
@@ -208,7 +202,6 @@ void Config::ReadValues() {
     Settings::values.min_vertices_per_thread =
         qt_config->value("min_vertices_per_thread", 10).toInt();
     qt_config->endGroup();
-
     qt_config->beginGroup("Layout");
     Settings::values.layout_option =
         static_cast<Settings::LayoutOption>(qt_config->value("layout_option").toInt());
@@ -223,7 +216,6 @@ void Config::ReadValues() {
     Settings::values.custom_bottom_right = qt_config->value("custom_bottom_right", 360).toInt();
     Settings::values.custom_bottom_bottom = qt_config->value("custom_bottom_bottom", 480).toInt();
     qt_config->endGroup();
-
     qt_config->beginGroup("Audio");
     Settings::values.enable_audio_stretching =
         qt_config->value("enable_audio_stretching", true).toBool();
@@ -232,7 +224,6 @@ void Config::ReadValues() {
     Settings::values.input_device =
         qt_config->value("input_device", "auto").toString().toStdString();
     qt_config->endGroup();
-
     using namespace Service::CAM;
     qt_config->beginGroup("Camera");
     Settings::values.camera_name[OuterRightCamera] =
@@ -253,13 +244,11 @@ void Config::ReadValues() {
     Settings::values.camera_flip[OuterLeftCamera] =
         qt_config->value("camera_outer_left_flip", 0).toInt();
     qt_config->endGroup();
-
     qt_config->beginGroup("Data Storage");
     Settings::values.use_virtual_sd = qt_config->value("use_virtual_sd", true).toBool();
     Settings::values.nand_dir = qt_config->value("nand_dir", "").toString().toStdString();
     Settings::values.sdmc_dir = qt_config->value("sdmc_dir", "").toString().toStdString();
     qt_config->endGroup();
-
     qt_config->beginGroup("System");
     Settings::values.region_value =
         qt_config->value("region_value", Settings::REGION_VALUE_AUTO_SELECT).toInt();
@@ -267,18 +256,15 @@ void Config::ReadValues() {
         qt_config->value("init_clock", static_cast<u32>(Settings::InitClock::SystemTime)).toInt());
     Settings::values.init_time = qt_config->value("init_time", 946681277ULL).toULongLong();
     qt_config->endGroup();
-
     qt_config->beginGroup("Miscellaneous");
     Settings::values.log_filter = qt_config->value("log_filter", "*:Info").toString().toStdString();
     qt_config->endGroup();
-
     qt_config->beginGroup("WebService");
     Settings::values.web_api_url =
         qt_config->value("web_api_url", "https://api.citra-emu.org").toString().toStdString();
     Settings::values.citra_username = qt_config->value("citra_username").toString().toStdString();
     Settings::values.citra_token = qt_config->value("citra_token").toString().toStdString();
     qt_config->endGroup();
-
     qt_config->beginGroup("Hacks");
     Settings::values.priority_boost = qt_config->value("priority_boost", false).toBool();
     Settings::values.ticks_mode =
@@ -288,10 +274,8 @@ void Config::ReadValues() {
     Settings::values.force_memory_mode_7 = qt_config->value("force_memory_mode_7", false).toBool();
     Settings::values.disable_mh_3d = qt_config->value("disable_mh_3d", false).toBool();
     qt_config->endGroup();
-
     qt_config->beginGroup("UI");
     UISettings::values.theme = qt_config->value("theme", UISettings::themes[0].second).toString();
-
     qt_config->beginGroup("UILayout");
     UISettings::values.geometry = qt_config->value("geometry").toByteArray();
     UISettings::values.state = qt_config->value("state").toByteArray();
@@ -299,29 +283,21 @@ void Config::ReadValues() {
     UISettings::values.gamelist_header_state =
         qt_config->value("gameListHeaderState").toByteArray();
     qt_config->endGroup();
-
     qt_config->beginGroup("GameList");
     int icon_size{qt_config->value("iconSize", 2).toInt()};
-    if (icon_size < 0 || icon_size > 2) {
+    if (icon_size < 0 || icon_size > 2)
         icon_size = 2;
-    }
     UISettings::values.game_list_icon_size = UISettings::GameListIconSize{icon_size};
-
     int row_1{qt_config->value("row1", 2).toInt()};
-    if (row_1 < 0 || row_1 > 4) {
+    if (row_1 < 0 || row_1 > 4)
         row_1 = 2;
-    }
     UISettings::values.game_list_row_1 = UISettings::GameListText{row_1};
-
     int row_2{qt_config->value("row2", 0).toInt()};
-    if (row_2 < -1 || row_2 > 4) {
+    if (row_2 < -1 || row_2 > 4)
         row_2 = 0;
-    }
     UISettings::values.game_list_row_2 = UISettings::GameListText{row_2};
-
     UISettings::values.game_list_hide_no_icon = qt_config->value("hideNoIcon", false).toBool();
     qt_config->endGroup();
-
     qt_config->beginGroup("Paths");
     size = qt_config->beginReadArray("gamedirs");
     for (int i{}; i < size; ++i) {
@@ -344,7 +320,6 @@ void Config::ReadValues() {
     }
     UISettings::values.recent_files = qt_config->value("recentFiles").toStringList();
     qt_config->endGroup();
-
     qt_config->beginGroup("Shortcuts");
     QStringList groups{qt_config->childGroups()};
     for (const auto& group : groups) {
@@ -361,13 +336,11 @@ void Config::ReadValues() {
         qt_config->endGroup();
     }
     qt_config->endGroup();
-
     UISettings::values.single_window_mode = qt_config->value("singleWindowMode", true).toBool();
     UISettings::values.fullscreen = qt_config->value("fullscreen", false).toBool();
     UISettings::values.show_filter_bar = qt_config->value("showFilterBar", true).toBool();
     UISettings::values.show_status_bar = qt_config->value("showStatusBar", true).toBool();
     UISettings::values.show_console = qt_config->value("showConsole", false).toBool();
-
     qt_config->beginGroup("Multiplayer");
     UISettings::values.nickname = qt_config->value("nickname", "").toString();
     UISettings::values.ip = qt_config->value("ip", "").toString();
@@ -377,13 +350,11 @@ void Config::ReadValues() {
     UISettings::values.room_port = qt_config->value("room_port", "24872").toString();
     bool ok;
     UISettings::values.host_type = qt_config->value("host_type", 0).toUInt(&ok);
-    if (!ok) {
+    if (!ok)
         UISettings::values.host_type = 0;
-    }
     UISettings::values.max_player = qt_config->value("max_player", 8).toUInt();
     UISettings::values.game_id = qt_config->value("game_id", 0).toULongLong();
     qt_config->endGroup();
-
     qt_config->endGroup();
 }
 
@@ -399,7 +370,6 @@ void Config::SaveValues() {
     qt_config->setValue("n_wifi_link_level", Settings::values.n_wifi_link_level);
     qt_config->setValue("n_state", Settings::values.n_state);
     qt_config->endGroup();
-
     qt_config->beginGroup("Controls");
     qt_config->beginWriteArray("profiles");
     for (int p{}; p < Settings::values.profiles.size(); ++p) {
@@ -423,18 +393,15 @@ void Config::SaveValues() {
     qt_config->endArray();
     qt_config->setValue("profile", Settings::values.profile);
     qt_config->endGroup();
-
     qt_config->beginGroup("Core");
     qt_config->setValue("keyboard_mode", static_cast<int>(Settings::values.keyboard_mode));
     qt_config->setValue("enable_ns_launch", Settings::values.enable_ns_launch);
     qt_config->endGroup();
-
     qt_config->beginGroup("LLE");
     for (const auto& service_module : Settings::values.lle_modules) {
         qt_config->setValue(QString::fromStdString(service_module.first), service_module.second);
     }
     qt_config->endGroup();
-
     qt_config->beginGroup("Renderer");
     qt_config->setValue("use_hw_shader", Settings::values.use_hw_shader);
     qt_config->setValue("shaders_accurate_gs", Settings::values.shaders_accurate_gs);
@@ -452,7 +419,6 @@ void Config::SaveValues() {
     qt_config->setValue("screen_refresh_rate", Settings::values.screen_refresh_rate);
     qt_config->setValue("min_vertices_per_thread", Settings::values.min_vertices_per_thread);
     qt_config->endGroup();
-
     qt_config->beginGroup("Layout");
     qt_config->setValue("layout_option", static_cast<int>(Settings::values.layout_option));
     qt_config->setValue("swap_screen", Settings::values.swap_screen);
@@ -466,13 +432,11 @@ void Config::SaveValues() {
     qt_config->setValue("custom_bottom_right", Settings::values.custom_bottom_right);
     qt_config->setValue("custom_bottom_bottom", Settings::values.custom_bottom_bottom);
     qt_config->endGroup();
-
     qt_config->beginGroup("Audio");
     qt_config->setValue("enable_audio_stretching", Settings::values.enable_audio_stretching);
     qt_config->setValue("output_device", QString::fromStdString(Settings::values.output_device));
     qt_config->setValue("input_device", QString::fromStdString(Settings::values.input_device));
     qt_config->endGroup();
-
     using namespace Service::CAM;
     qt_config->beginGroup("Camera");
     qt_config->setValue("camera_outer_right_name",
@@ -491,29 +455,24 @@ void Config::SaveValues() {
                         QString::fromStdString(Settings::values.camera_config[OuterLeftCamera]));
     qt_config->setValue("camera_outer_left_flip", Settings::values.camera_flip[OuterLeftCamera]);
     qt_config->endGroup();
-
     qt_config->beginGroup("Data Storage");
     qt_config->setValue("use_virtual_sd", Settings::values.use_virtual_sd);
     qt_config->setValue("nand_dir", QString::fromStdString(Settings::values.nand_dir));
     qt_config->setValue("sdmc_dir", QString::fromStdString(Settings::values.sdmc_dir));
     qt_config->endGroup();
-
     qt_config->beginGroup("System");
     qt_config->setValue("region_value", Settings::values.region_value);
     qt_config->setValue("init_clock", static_cast<u32>(Settings::values.init_clock));
     qt_config->setValue("init_time", static_cast<unsigned long long>(Settings::values.init_time));
     qt_config->endGroup();
-
     qt_config->beginGroup("Miscellaneous");
     qt_config->setValue("log_filter", QString::fromStdString(Settings::values.log_filter));
     qt_config->endGroup();
-
     qt_config->beginGroup("WebService");
     qt_config->setValue("web_api_url", QString::fromStdString(Settings::values.web_api_url));
     qt_config->setValue("citra_username", QString::fromStdString(Settings::values.citra_username));
     qt_config->setValue("citra_token", QString::fromStdString(Settings::values.citra_token));
     qt_config->endGroup();
-
     qt_config->beginGroup("Hacks");
     qt_config->setValue("priority_boost", Settings::values.priority_boost);
     qt_config->setValue("ticks_mode", static_cast<int>(Settings::values.ticks_mode));
@@ -522,26 +481,22 @@ void Config::SaveValues() {
     qt_config->setValue("force_memory_mode_7", Settings::values.force_memory_mode_7);
     qt_config->setValue("disable_mh_3d", Settings::values.disable_mh_3d);
     qt_config->endGroup();
-
     qt_config->beginGroup("UI");
     qt_config->setValue("theme", UISettings::values.theme);
     qt_config->setValue("screenshot_resolution_factor",
                         UISettings::values.screenshot_resolution_factor);
-
     qt_config->beginGroup("UILayout");
     qt_config->setValue("geometry", UISettings::values.geometry);
     qt_config->setValue("state", UISettings::values.state);
     qt_config->setValue("geometryScreens", UISettings::values.screens_geometry);
     qt_config->setValue("gameListHeaderState", UISettings::values.gamelist_header_state);
     qt_config->endGroup();
-
     qt_config->beginGroup("GameList");
     qt_config->setValue("iconSize", static_cast<int>(UISettings::values.game_list_icon_size));
     qt_config->setValue("row1", static_cast<int>(UISettings::values.game_list_row_1));
     qt_config->setValue("row2", static_cast<int>(UISettings::values.game_list_row_2));
     qt_config->setValue("hideNoIcon", UISettings::values.game_list_hide_no_icon);
     qt_config->endGroup();
-
     qt_config->beginGroup("Paths");
     qt_config->beginWriteArray("gamedirs");
     for (int i{}; i < UISettings::values.game_dirs.size(); ++i) {
@@ -554,20 +509,17 @@ void Config::SaveValues() {
     qt_config->endArray();
     qt_config->setValue("recentFiles", UISettings::values.recent_files);
     qt_config->endGroup();
-
     qt_config->beginGroup("Shortcuts");
     for (auto shortcut : UISettings::values.shortcuts) {
         qt_config->setValue(shortcut.first + "/KeySeq", shortcut.second.first);
         qt_config->setValue(shortcut.first + "/Context", shortcut.second.second);
     }
     qt_config->endGroup();
-
     qt_config->setValue("singleWindowMode", UISettings::values.single_window_mode);
     qt_config->setValue("fullscreen", UISettings::values.fullscreen);
     qt_config->setValue("showFilterBar", UISettings::values.show_filter_bar);
     qt_config->setValue("showStatusBar", UISettings::values.show_status_bar);
     qt_config->setValue("showConsole", UISettings::values.show_console);
-
     qt_config->beginGroup("Multiplayer");
     qt_config->setValue("nickname", UISettings::values.nickname);
     qt_config->setValue("ip", UISettings::values.ip);
@@ -579,7 +531,6 @@ void Config::SaveValues() {
     qt_config->setValue("max_player", UISettings::values.max_player);
     qt_config->setValue("game_id", UISettings::values.game_id);
     qt_config->endGroup();
-
     qt_config->endGroup();
 }
 
@@ -594,6 +545,5 @@ void Config::Save() {
 
 Config::~Config() {
     Save();
-
     delete qt_config;
 }

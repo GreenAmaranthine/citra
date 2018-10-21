@@ -687,7 +687,7 @@ void Module::Interface::DeleteContents(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(content_ids_in);
-    LOG_WARNING(Service_AM, "(STUBBED) called, media_type={}, title_id=0x{:016x}, content_count={}",
+    LOG_WARNING(Service_AM, "(STUBBED) media_type={}, title_id=0x{:016x}, content_count={}",
                 media_type, title_id, content_count);
 }
 
@@ -939,7 +939,7 @@ void Module::Interface::GetDLCContentInfoCount(Kernel::HLERequestContext& ctx) {
         rb.Push<u32>(static_cast<u32>(tmd.GetContentCount()));
     } else {
         rb.Push<u32>(1); // Number of content infos plus one
-        LOG_WARNING(Service_AM, "(STUBBED) called media_type={}, title_id=0x{:016x}",
+        LOG_WARNING(Service_AM, "(STUBBED) media_type={}, title_id=0x{:016x}",
                     static_cast<u32>(media_type), title_id);
     }
 }
@@ -950,14 +950,14 @@ void Module::Interface::DeleteTicket(Kernel::HLERequestContext& ctx) {
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_AM, "(STUBBED) called title_id=0x{:016x}", title_id);
+    LOG_WARNING(Service_AM, "(STUBBED) title_id=0x{:016x}", title_id);
 }
 
 void Module::Interface::GetNumTickets(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x0008, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
-    LOG_WARNING(Service_AM, "(STUBBED) called");
+    LOG_WARNING(Service_AM, "(STUBBED)");
 }
 
 void Module::Interface::GetTicketList(Kernel::HLERequestContext& ctx) {
@@ -982,7 +982,7 @@ void Module::Interface::QueryAvailableTitleDatabase(Kernel::HLERequestContext& c
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(true);
 
-    LOG_WARNING(Service_AM, "(STUBBED) called, media_type={}", media_type);
+    LOG_WARNING(Service_AM, "(STUBBED) media_type={}", media_type);
 }
 
 void Module::Interface::CheckContentRights(Kernel::HLERequestContext& ctx) {
@@ -1039,7 +1039,7 @@ void Module::Interface::BeginImportProgram(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS); // No error
     rb.PushCopyObjects(file->Connect());
 
-    LOG_WARNING(Service_AM, "(STUBBED) called, media_type={}", static_cast<u32>(media_type));
+    LOG_WARNING(Service_AM, "(STUBBED) media_type={}", static_cast<u32>(media_type));
 }
 
 void Module::Interface::BeginImportProgramTemporarily(Kernel::HLERequestContext& ctx) {
@@ -1064,7 +1064,7 @@ void Module::Interface::BeginImportProgramTemporarily(Kernel::HLERequestContext&
     rb.Push(RESULT_SUCCESS); // No error
     rb.PushCopyObjects(file->Connect());
 
-    LOG_WARNING(Service_AM, "(STUBBED) called");
+    LOG_WARNING(Service_AM, "(STUBBED)");
 }
 
 void Module::Interface::EndImportProgram(Kernel::HLERequestContext& ctx) {

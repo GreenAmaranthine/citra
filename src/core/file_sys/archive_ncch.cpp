@@ -69,23 +69,18 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         LOG_ERROR(Service_FS, "Path need to be Binary");
         return ERROR_INVALID_PATH;
     }
-
     std::vector<u8> binary{path.AsBinary()};
     if (binary.size() != sizeof(NCCHFilePath)) {
         LOG_ERROR(Service_FS, "Wrong path size {}", binary.size());
         return ERROR_INVALID_PATH;
     }
-
     NCCHFilePath openfile_path;
     std::memcpy(&openfile_path, binary.data(), sizeof(NCCHFilePath));
-
     std::string file_path{
         Service::AM::GetTitleContentPath(media_type, title_id, openfile_path.content_index)};
-    auto ncch_container{NCCHContainer(file_path)};
-
+    NCCHContainer ncch_container{file_path};
     Loader::ResultStatus result;
     std::unique_ptr<FileBackend> file;
-
     // NCCH RomFS
     if (openfile_path.filepath_type == NCCHFilePathType::RomFS) {
         std::shared_ptr<RomFSReader> romfs_file;
@@ -95,7 +90,6 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
     } else if (openfile_path.filepath_type == NCCHFilePathType::Code ||
                openfile_path.filepath_type == NCCHFilePathType::ExeFS) {
         std::vector<u8> buffer;
-
         // Load NCCH .code or icon/banner/logo
         result = ncch_container.LoadSectionExeFS(openfile_path.exefs_filepath.data(), buffer);
         std::unique_ptr<DelayGenerator> delay_generator{std::make_unique<ExeFSDelayGenerator>()};
@@ -105,24 +99,19 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
                   static_cast<u32>(openfile_path.filepath_type));
         result = Loader::ResultStatus::Error;
     }
-
     if (result != Loader::ResultStatus::Success) {
         // High Title ID of the archive: The category (https://3dbrew.org/wiki/Title_list).
         constexpr u32 shared_data_archive{0x0004009B};
         constexpr u32 system_data_archive{0x000400DB};
-
         // Low Title IDs.
         constexpr u32 mii_data{0x00010202};
         constexpr u32 region_manifest{0x00010402};
         constexpr u32 ng_word_list{0x00010302};
         constexpr u32 shared_font{0x00014002};
-
         u32 high{static_cast<u32>(title_id >> 32)};
         u32 low{static_cast<u32>(title_id & 0xFFFFFFFF)};
-
         LOG_DEBUG(Service_FS, "Full Path: {}. Category: 0x{:X}. Path: 0x{:X}.", path.DebugStr(),
                   high, low);
-
         std::vector<u8> archive_data;
         if (high == shared_data_archive) {
             if (low == mii_data) {
@@ -151,7 +140,6 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
                     std::vector<u8>(std::begin(BAD_WORD_LIST_DATA), std::end(BAD_WORD_LIST_DATA));
             }
         }
-
         if (!archive_data.empty()) {
             u64 romfs_offset{};
             u64 romfs_size{archive_data.size()};
@@ -232,14 +220,12 @@ NCCHFile::NCCHFile(std::vector<u8> buffer, std::unique_ptr<DelayGenerator> delay
 
 ResultVal<std::size_t> NCCHFile::Read(const u64 offset, const std::size_t length,
                                       u8* buffer) const {
-    LOG_TRACE(Service_FS, "called offset={}, length={}", offset, length);
+    LOG_TRACE(Service_FS, "offset={}, length={}", offset, length);
     std::size_t length_left{static_cast<std::size_t>(data_size - offset)};
     std::size_t read_length{static_cast<std::size_t>(std::min(length, length_left))};
-
     std::size_t available_size{static_cast<std::size_t>(file_buffer.size() - offset)};
     std::size_t copy_size{std::min(length, available_size)};
     std::memcpy(buffer, file_buffer.data() + offset, copy_size);
-
     return MakeResult<std::size_t>(copy_size);
 }
 
@@ -266,16 +252,13 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_NCCH::Open(const Path&
         LOG_ERROR(Service_FS, "Path need to be Binary");
         return ERROR_INVALID_PATH;
     }
-
     std::vector<u8> binary{path.AsBinary()};
     if (binary.size() != sizeof(NCCHArchivePath)) {
         LOG_ERROR(Service_FS, "Wrong path size {}", binary.size());
         return ERROR_INVALID_PATH;
     }
-
-    NCCHArchivePath open_path{};
+    NCCHArchivePath open_path;
     std::memcpy(&open_path, binary.data(), sizeof(NCCHArchivePath));
-
     auto archive{std::make_unique<NCCHArchive>(
         open_path.tid, static_cast<Service::FS::MediaType>(open_path.media_type & 0xFF))};
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));

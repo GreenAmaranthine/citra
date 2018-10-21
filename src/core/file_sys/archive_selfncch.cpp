@@ -38,12 +38,10 @@ public:
             LOG_ERROR(Service_FS, "offset must be zero!");
             return ERROR_UNSUPPORTED_OPEN_FLAGS;
         }
-
         if (length != data->size()) {
             LOG_ERROR(Service_FS, "size must match the file size!");
             return ERROR_INCORRECT_EXEFS_READ_SIZE;
         }
-
         std::memcpy(buffer, data->data(), data->size());
         return MakeResult<std::size_t>(data->size());
     }
@@ -90,13 +88,13 @@ public:
             return ERROR_INVALID_PATH;
         }
 
-        std::vector<u8> binary = path.AsBinary();
+        std::vector<u8> binary{path.AsBinary()};
         if (binary.size() != sizeof(SelfNCCHFilePath)) {
             LOG_ERROR(Service_FS, "Wrong path size {}", binary.size());
             return ERROR_INVALID_PATH;
         }
 
-        SelfNCCHFilePath file_path{};
+        SelfNCCHFilePath file_path;
         std::memcpy(&file_path, binary.data(), sizeof(SelfNCCHFilePath));
 
         switch (file_path.type) {
@@ -248,28 +246,26 @@ void ArchiveFactory_SelfNCCH::Register(Loader::AppLoader& app_loader) {
 
     NCCHData& data{ncch_data[program_id]};
 
-    std::shared_ptr<RomFSReader> romfs_file_{};
-    if (Loader::ResultStatus::Success == app_loader.ReadRomFS(romfs_file_)) {
-        data.romfs_file = std::move(romfs_file_);
+    std::shared_ptr<RomFSReader> romfs_file;
+    if (app_loader.ReadRomFS(romfs_file) == Loader::ResultStatus::Success) {
+        data.romfs_file = std::move(romfs_file);
     }
 
-    std::shared_ptr<RomFSReader> update_romfs_file{};
-    if (Loader::ResultStatus::Success == app_loader.ReadUpdateRomFS(update_romfs_file)) {
+    std::shared_ptr<RomFSReader> update_romfs_file;
+    if (app_loader.ReadUpdateRomFS(update_romfs_file) == Loader::ResultStatus::Success) {
         data.update_romfs_file = std::move(update_romfs_file);
     }
 
-    std::vector<u8> buffer{};
-
-    if (Loader::ResultStatus::Success == app_loader.ReadIcon(buffer))
+    std::vector<u8> buffer;
+    if (app_loader.ReadIcon(buffer) == Loader::ResultStatus::Success) {
         data.icon = std::make_shared<std::vector<u8>>(std::move(buffer));
-
-    buffer.clear();
-    if (Loader::ResultStatus::Success == app_loader.ReadLogo(buffer))
+    }
+    if (app_loader.ReadLogo(buffer) == Loader::ResultStatus::Success) {
         data.logo = std::make_shared<std::vector<u8>>(std::move(buffer));
-
-    buffer.clear();
-    if (Loader::ResultStatus::Success == app_loader.ReadBanner(buffer))
+    }
+    if (app_loader.ReadBanner(buffer) == Loader::ResultStatus::Success) {
         data.banner = std::make_shared<std::vector<u8>>(std::move(buffer));
+    }
 }
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SelfNCCH::Open(const Path& path) {

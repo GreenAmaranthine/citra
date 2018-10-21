@@ -19,7 +19,7 @@ enum class PacketType {
     MotionState,
     CircleState,
     SetResolution,
-    SetGame,
+    SetApplication,
     SetOverrideControls,
     Pause,
     Resume,

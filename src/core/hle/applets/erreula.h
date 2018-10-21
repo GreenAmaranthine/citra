@@ -37,7 +37,7 @@ struct ErrEulaConfig {
     u32 error_code;
     u16 upper_screen_flag;
     u16 use_language;
-    char16_t error_text[1900];
+    std::array<u16, 1900> error_text;
     bool home_button;
     bool software_reset;
     bool app_jump;

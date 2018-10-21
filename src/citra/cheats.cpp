@@ -592,33 +592,33 @@ void ModifyAddressDialog::OnOkClicked() {
     case 0: { // u32
         u32 value{new_value.toUInt(nullptr, 10)};
         Memory::Write32(address, value);
-        Core::GetCPU().InvalidateCacheRange(address, sizeof(u32));
+        Core::CPU().InvalidateCacheRange(address, sizeof(u32));
         break;
     }
     case 1: { // u16
         u16 value{new_value.toUShort(nullptr, 10)};
         Memory::Write16(address, value);
-        Core::GetCPU().InvalidateCacheRange(address, sizeof(u16));
+        Core::CPU().InvalidateCacheRange(address, sizeof(u16));
         break;
     }
     case 2: { // u8
         u8 value{static_cast<u8>(new_value.toUShort(nullptr, 10))};
         Memory::Write8(address, value);
-        Core::GetCPU().InvalidateCacheRange(address, sizeof(u8));
+        Core::CPU().InvalidateCacheRange(address, sizeof(u8));
         break;
     }
     case 3: { // float
         float value{new_value.toFloat()};
         u32 converted{IeeeFloatToHex(value).toUInt(nullptr, 16)};
         Memory::Write32(address, converted);
-        Core::GetCPU().InvalidateCacheRange(address, sizeof(u32));
+        Core::CPU().InvalidateCacheRange(address, sizeof(u32));
         break;
     }
     case 4: { // double
         double value{new_value.toDouble()};
         u64 converted{DoubleToHexString(value).toULongLong(nullptr, 10)};
         Memory::Write64(address, converted);
-        Core::GetCPU().InvalidateCacheRange(address, sizeof(u64));
+        Core::CPU().InvalidateCacheRange(address, sizeof(u64));
         break;
     }
     }

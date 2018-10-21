@@ -15,7 +15,7 @@
 namespace HLE {
 
 static inline u64 Param(int n) {
-    return Core::GetCPU().GetReg(n);
+    return Core::CPU().GetReg(n);
 }
 
 /**
@@ -23,7 +23,7 @@ static inline u64 Param(int n) {
  * @param res Result to return
  */
 static inline void FuncReturn(u32 res) {
-    Core::GetCPU().SetReg(0, res);
+    Core::CPU().SetReg(0, res);
 }
 
 /**
@@ -32,8 +32,8 @@ static inline void FuncReturn(u32 res) {
  * @todo Verify that this function is correct
  */
 static inline void FuncReturn64(u64 res) {
-    Core::GetCPU().SetReg(0, (u32)(res & 0xFFFFFFFF));
-    Core::GetCPU().SetReg(1, (u32)((res >> 32) & 0xFFFFFFFF));
+    Core::CPU().SetReg(0, (u32)(res & 0xFFFFFFFF));
+    Core::CPU().SetReg(1, (u32)((res >> 32) & 0xFFFFFFFF));
 }
 
 // Function wrappers that return type ResultCode
@@ -47,7 +47,7 @@ template <ResultCode func(u32*, u32, u32, u32, u32, u32)>
 void Wrap() {
     u32 param_1{};
     u32 retval{func(&param_1, Param(0), Param(1), Param(2), Param(3), Param(4)).raw};
-    Core::GetCPU().SetReg(1, param_1);
+    Core::CPU().SetReg(1, param_1);
     FuncReturn(retval);
 }
 
@@ -55,7 +55,7 @@ template <ResultCode func(u32*, u32, u32, u32, u32, s32)>
 void Wrap() {
     u32 param_1{};
     u32 retval{func(&param_1, Param(0), Param(1), Param(2), Param(3), Param(4)).raw};
-    Core::GetCPU().SetReg(1, param_1);
+    Core::CPU().SetReg(1, param_1);
     FuncReturn(retval);
 }
 
@@ -66,7 +66,7 @@ void Wrap() {
         func(&param_1, Param(1), (s32)Param(2), (Param(3) != 0), (((s64)Param(4) << 32) | Param(0)))
             .raw};
 
-    Core::GetCPU().SetReg(1, (u32)param_1);
+    Core::CPU().SetReg(1, (u32)param_1);
     FuncReturn(retval);
 }
 
@@ -75,7 +75,7 @@ void Wrap() {
     s32 param_1{};
     u32 retval{func(&param_1, Param(1), (s32)Param(2), Param(3)).raw};
 
-    Core::GetCPU().SetReg(1, (u32)param_1);
+    Core::CPU().SetReg(1, (u32)param_1);
     FuncReturn(retval);
 }
 
@@ -89,7 +89,7 @@ template <ResultCode func(u32*)>
 void Wrap() {
     u32 param_1{};
     u32 retval{func(&param_1).raw};
-    Core::GetCPU().SetReg(1, param_1);
+    Core::CPU().SetReg(1, param_1);
     FuncReturn(retval);
 }
 
@@ -105,11 +105,11 @@ void Wrap() {
     Kernel::MemoryInfo memory_info{};
     Kernel::PageInfo page_info{};
     u32 retval{func(&memory_info, &page_info, Param(2)).raw};
-    Core::GetCPU().SetReg(1, memory_info.base_address);
-    Core::GetCPU().SetReg(2, memory_info.size);
-    Core::GetCPU().SetReg(3, memory_info.permission);
-    Core::GetCPU().SetReg(4, memory_info.state);
-    Core::GetCPU().SetReg(5, page_info.flags);
+    Core::CPU().SetReg(1, memory_info.base_address);
+    Core::CPU().SetReg(2, memory_info.size);
+    Core::CPU().SetReg(3, memory_info.permission);
+    Core::CPU().SetReg(4, memory_info.state);
+    Core::CPU().SetReg(5, page_info.flags);
     FuncReturn(retval);
 }
 
@@ -118,11 +118,11 @@ void Wrap() {
     Kernel::MemoryInfo memory_info{};
     Kernel::PageInfo page_info{};
     u32 retval{func(&memory_info, &page_info, Param(2), Param(3)).raw};
-    Core::GetCPU().SetReg(1, memory_info.base_address);
-    Core::GetCPU().SetReg(2, memory_info.size);
-    Core::GetCPU().SetReg(3, memory_info.permission);
-    Core::GetCPU().SetReg(4, memory_info.state);
-    Core::GetCPU().SetReg(5, page_info.flags);
+    Core::CPU().SetReg(1, memory_info.base_address);
+    Core::CPU().SetReg(2, memory_info.size);
+    Core::CPU().SetReg(3, memory_info.permission);
+    Core::CPU().SetReg(4, memory_info.state);
+    Core::CPU().SetReg(5, page_info.flags);
     FuncReturn(retval);
 }
 
@@ -130,7 +130,7 @@ template <ResultCode func(s32*, u32)>
 void Wrap() {
     s32 param_1{};
     u32 retval{func(&param_1, Param(1)).raw};
-    Core::GetCPU().SetReg(1, param_1);
+    Core::CPU().SetReg(1, param_1);
     FuncReturn(retval);
 }
 
@@ -143,7 +143,7 @@ template <ResultCode func(u32*, u32)>
 void Wrap() {
     u32 param_1{};
     u32 retval{func(&param_1, Param(1)).raw};
-    Core::GetCPU().SetReg(1, param_1);
+    Core::CPU().SetReg(1, param_1);
     FuncReturn(retval);
 }
 
@@ -156,7 +156,7 @@ template <ResultCode func(u32*, s32, s32)>
 void Wrap() {
     u32 param_1{};
     u32 retval{func(&param_1, Param(1), Param(2)).raw};
-    Core::GetCPU().SetReg(1, param_1);
+    Core::CPU().SetReg(1, param_1);
     FuncReturn(retval);
 }
 
@@ -164,7 +164,7 @@ template <ResultCode func(s32*, u32, s32)>
 void Wrap() {
     s32 param_1{};
     u32 retval{func(&param_1, Param(1), Param(2)).raw};
-    Core::GetCPU().SetReg(1, param_1);
+    Core::CPU().SetReg(1, param_1);
     FuncReturn(retval);
 }
 
@@ -172,8 +172,8 @@ template <ResultCode func(s64*, u32, s32)>
 void Wrap() {
     s64 param_1{};
     u32 retval{func(&param_1, Param(1), Param(2)).raw};
-    Core::GetCPU().SetReg(1, (u32)param_1);
-    Core::GetCPU().SetReg(2, (u32)(param_1 >> 32));
+    Core::CPU().SetReg(1, (u32)param_1);
+    Core::CPU().SetReg(2, (u32)(param_1 >> 32));
     FuncReturn(retval);
 }
 
@@ -182,7 +182,7 @@ void Wrap() {
     u32 param_1{};
     // The last parameter is passed in R0 instead of R4
     u32 retval{func(&param_1, Param(1), Param(2), Param(3), Param(0)).raw};
-    Core::GetCPU().SetReg(1, param_1);
+    Core::CPU().SetReg(1, param_1);
     FuncReturn(retval);
 }
 
@@ -197,8 +197,8 @@ template <ResultCode func(s64*, Kernel::Handle, u32)>
 void Wrap() {
     s64 param_1{};
     u32 retval{func(&param_1, Param(1), Param(2)).raw};
-    Core::GetCPU().SetReg(1, (u32)param_1);
-    Core::GetCPU().SetReg(2, (u32)(param_1 >> 32));
+    Core::CPU().SetReg(1, (u32)param_1);
+    Core::CPU().SetReg(2, (u32)(param_1 >> 32));
     FuncReturn(retval);
 }
 
@@ -212,8 +212,8 @@ void Wrap() {
     Kernel::Handle param_1{};
     Kernel::Handle param_2{};
     u32 retval{func(&param_1, &param_2, Param(2), Param(3)).raw};
-    Core::GetCPU().SetReg(1, param_1);
-    Core::GetCPU().SetReg(2, param_2);
+    Core::CPU().SetReg(1, param_1);
+    Core::CPU().SetReg(2, param_2);
     FuncReturn(retval);
 }
 
@@ -222,8 +222,8 @@ void Wrap() {
     Kernel::Handle param_1{};
     Kernel::Handle param_2{};
     u32 retval{func(&param_1, &param_2).raw};
-    Core::GetCPU().SetReg(1, param_1);
-    Core::GetCPU().SetReg(2, param_2);
+    Core::CPU().SetReg(1, param_1);
+    Core::CPU().SetReg(2, param_2);
     FuncReturn(retval);
 }
 
@@ -243,7 +243,7 @@ template <ResultCode func(Kernel::Handle*, Kernel::Handle, u32)>
 void Wrap() {
     Kernel::Handle out_handle{};
     u32 retval{func(&out_handle, Param(2), Param(3)).raw};
-    Core::GetCPU().SetReg(1, out_handle);
+    Core::CPU().SetReg(1, out_handle);
     FuncReturn(retval);
 }
 

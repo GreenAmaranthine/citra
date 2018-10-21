@@ -270,8 +270,10 @@ void RasterizerFlushAndInvalidateRegion(PAddr start, u32 size);
 enum class FlushMode {
     /// Write back modified surfaces to RAM
     Flush,
+
     /// Remove region from the cache
     Invalidate,
+
     /// Write back modified surfaces to RAM, and also remove them from the cache
     FlushAndInvalidate,
 };

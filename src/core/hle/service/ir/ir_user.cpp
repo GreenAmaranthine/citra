@@ -81,10 +81,8 @@ public:
     bool Put(const std::vector<u8>& packet) {
         if (info.packet_count == max_packet_count)
             return false;
-
         u32 write_offset;
-
-        // finds free space offset in data buffer
+        // Finds free space offset in data buffer
         if (info.packet_count == 0) {
             write_offset = 0;
             if (packet.size() > max_data_size)
@@ -98,17 +96,14 @@ public:
             if (packet.size() > free_space)
                 return false;
         }
-
-        // writes packet info
+        // Writes packet info
         PacketInfo packet_info{write_offset, static_cast<u32>(packet.size())};
         SetPacketInfo(info.end_index, packet_info);
-
-        // writes packet data
+        // Writes packet data
         for (std::size_t i{}; i < packet.size(); ++i) {
             *GetDataBufferPointer((write_offset + i) % max_data_size) = packet[i];
         }
-
-        // updates buffer info
+        // Updates buffer info
         info.end_index++;
         info.end_index %= max_packet_count;
         info.packet_count++;
@@ -124,7 +119,6 @@ public:
     bool Release(u32 count) {
         if (info.packet_count < count)
             return false;
-
         info.packet_count -= count;
         info.begin_index += count;
         info.begin_index %= max_packet_count;
@@ -167,9 +161,8 @@ private:
     }
 
     void UpdateBufferInfo() {
-        if (info_offset) {
+        if (info_offset)
             std::memcpy(shared_memory->GetPointer(info_offset), &info, sizeof(info));
-        }
     }
 
     BufferInfo info{0, 0, 0, 0};
@@ -182,21 +175,17 @@ private:
 
 /// Wraps the payload into packet and puts it to the receive buffer
 void IR_USER::PutToReceive(const std::vector<u8>& payload) {
-    LOG_TRACE(Service_IR, "called, data={}", Common::ArrayToString(payload.data(), payload.size()));
+    LOG_TRACE(Service_IR, "data={}", Common::ArrayToString(payload.data(), payload.size()));
     std::size_t size{payload.size()};
-
     std::vector<u8> packet;
-
     // Builds packet header. For the format info:
     // https://www.3dbrew.org/wiki/IRUSER_Shared_Memory#Packet_structure
-
-    // fixed value
+    // Fixed value
     packet.push_back(0xA5);
-    // destination network ID
+    // Destination network ID
     u8 network_id{*(shared_memory->GetPointer(offsetof(SharedMemoryHeader, network_id)))};
     packet.push_back(network_id);
-
-    // puts the size info.
+    // Puts the size info.
     // The highest bit of the first byte is unknown, which is set to zero here. The second highest
     // bit is a flag that determines whether the size info is in extended form. If the packet size
     // can be represent within 6 bits, the short form (1 byte) of size info is chosen, the size is
@@ -213,18 +202,14 @@ void IR_USER::PutToReceive(const std::vector<u8>& payload) {
     } else {
         ASSERT(false);
     }
-
-    // puts the payload
+    // Puts the payload
     packet.insert(packet.end(), payload.begin(), payload.end());
-
-    // calculates CRC and puts to the end
+    // Calculates CRC and puts to the end
     packet.push_back(boost::crc<8, 0x07, 0, 0, false, false>(packet.data(), packet.size()));
-
-    if (receive_buffer->Put(packet)) {
+    if (receive_buffer->Put(packet))
         receive_event->Signal();
-    } else {
+    else
         LOG_ERROR(Service_IR, "receive buffer is full!");
-    }
 }
 
 void IR_USER::InitializeIrNopShared(Kernel::HLERequestContext& ctx) {
@@ -236,21 +221,16 @@ void IR_USER::InitializeIrNopShared(Kernel::HLERequestContext& ctx) {
     const u32 send_buff_packet_count{rp.Pop<u32>()};
     const u8 baud_rate{rp.Pop<u8>()};
     shared_memory = rp.PopObject<Kernel::SharedMemory>();
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-
     shared_memory->name = "IR_USER: shared memory";
-
     receive_buffer = std::make_unique<BufferManager>(shared_memory, 0x10, 0x20,
                                                      recv_buff_packet_count, recv_buff_size);
     SharedMemoryHeader shared_memory_init{};
     shared_memory_init.initialized = 1;
     std::memcpy(shared_memory->GetPointer(), &shared_memory_init, sizeof(SharedMemoryHeader));
-
     rb.Push(RESULT_SUCCESS);
-
     LOG_INFO(Service_IR,
-             "called, shared_buff_size={}, recv_buff_size={}, "
+             "shared_buff_size={}, recv_buff_size={}, "
              "recv_buff_packet_count={}, send_buff_size={}, "
              "send_buff_packet_count={}, baud_rate={}",
              shared_buff_size, recv_buff_size, recv_buff_packet_count, send_buff_size,
@@ -260,7 +240,6 @@ void IR_USER::InitializeIrNopShared(Kernel::HLERequestContext& ctx) {
 void IR_USER::RequireConnection(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x06, 1, 0};
     const u8 device_id{rp.Pop<u8>()};
-
     u8* shared_memory_ptr{shared_memory->GetPointer()};
     if (device_id == 1) {
         // These values are observed on a New 3DS. The meaning of them is unclear.
@@ -268,7 +247,6 @@ void IR_USER::RequireConnection(Kernel::HLERequestContext& ctx) {
         shared_memory_ptr[offsetof(SharedMemoryHeader, connection_status)] = 2;
         shared_memory_ptr[offsetof(SharedMemoryHeader, connection_role)] = 2;
         shared_memory_ptr[offsetof(SharedMemoryHeader, connected)] = 1;
-
         connected_device = extra_hid.get();
         connected_device->OnConnect();
         conn_status_event->Signal();
@@ -277,10 +255,8 @@ void IR_USER::RequireConnection(Kernel::HLERequestContext& ctx) {
         shared_memory_ptr[offsetof(SharedMemoryHeader, connection_status)] = 1;
         shared_memory_ptr[offsetof(SharedMemoryHeader, trying_to_connect_status)] = 2;
     }
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_IR, "device_id={}", device_id);
 }
 
@@ -302,14 +278,11 @@ void IR_USER::Disconnect(Kernel::HLERequestContext& ctx) {
         connected_device = nullptr;
         conn_status_event->Signal();
     }
-
     u8* shared_memory_ptr{shared_memory->GetPointer()};
     shared_memory_ptr[offsetof(SharedMemoryHeader, connection_status)] = 0;
     shared_memory_ptr[offsetof(SharedMemoryHeader, connected)] = 0;
-
     IPC::ResponseBuilder rb{ctx, 0x09, 1, 0};
     rb.Push(RESULT_SUCCESS);
-
     LOG_INFO(Service_IR, "called");
 }
 
@@ -317,7 +290,6 @@ void IR_USER::GetConnectionStatusEvent(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x0C, 1, 2};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(conn_status_event);
-
     LOG_INFO(Service_IR, "called");
 }
 
@@ -326,13 +298,10 @@ void IR_USER::FinalizeIrNop(Kernel::HLERequestContext& ctx) {
         connected_device->OnDisconnect();
         connected_device = nullptr;
     }
-
     shared_memory = nullptr;
     receive_buffer = nullptr;
-
     IPC::ResponseBuilder rb{ctx, 0x02, 1, 0};
     rb.Push(RESULT_SUCCESS);
-
     LOG_INFO(Service_IR, "called");
 }
 
@@ -341,7 +310,6 @@ void IR_USER::SendIrNop(Kernel::HLERequestContext& ctx) {
     const u32 size{rp.Pop<u32>()};
     std::vector<u8> buffer{rp.PopStaticBuffer()};
     ASSERT(size == buffer.size());
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     if (connected_device) {
         connected_device->OnReceive(buffer);
@@ -352,16 +320,13 @@ void IR_USER::SendIrNop(Kernel::HLERequestContext& ctx) {
         rb.Push(ResultCode(static_cast<ErrorDescription>(13), ErrorModule::IR,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
     }
-
-    LOG_TRACE(Service_IR, "called, data={}", Common::ArrayToString(buffer.data(), size));
+    LOG_TRACE(Service_IR, "data={}", Common::ArrayToString(buffer.data(), size));
 }
 
 void IR_USER::ReleaseReceivedData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x19, 1, 0};
     u32 count{rp.Pop<u32>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-
     if (receive_buffer->Release(count)) {
         rb.Push(RESULT_SUCCESS);
     } else {
@@ -369,8 +334,7 @@ void IR_USER::ReleaseReceivedData(Kernel::HLERequestContext& ctx) {
         rb.Push(ResultCode(ErrorDescription::NoData, ErrorModule::IR, ErrorSummary::NotFound,
                            ErrorLevel::Status));
     }
-
-    LOG_TRACE(Service_IR, "called, count={}", count);
+    LOG_TRACE(Service_IR, "count={}", count);
 }
 
 IR_USER::IR_USER() : ServiceFramework{"ir:USER", 1} {
@@ -403,21 +367,17 @@ IR_USER::IR_USER() : ServiceFramework{"ir:USER", 1} {
         {0x001A0040, nullptr, "SetOwnMachineId"},
     };
     RegisterHandlers(functions);
-
     using namespace Kernel;
-
     conn_status_event = Event::Create(ResetType::OneShot, "IR:ConnectionStatusEvent");
     send_event = Event::Create(ResetType::OneShot, "IR:SendEvent");
     receive_event = Event::Create(ResetType::OneShot, "IR:ReceiveEvent");
-
     extra_hid =
         std::make_unique<ExtraHID>([this](const std::vector<u8>& data) { PutToReceive(data); });
 }
 
 IR_USER::~IR_USER() {
-    if (connected_device) {
+    if (connected_device)
         connected_device->OnDisconnect();
-    }
 }
 
 void IR_USER::ReloadInputDevices() {

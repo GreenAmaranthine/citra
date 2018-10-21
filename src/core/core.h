@@ -12,14 +12,12 @@
 #include "common/common_types.h"
 #include "core/hle/applets/erreula.h"
 #include "core/hle/applets/swkbd.h"
-#include "core/hle/service/fs/archive.h"
-#include "core/hle/service/nfc/nfc.h"
 #include "core/hle/shared_page.h"
 #include "core/loader/loader.h"
 #include "core/memory.h"
 #include "core/perf_stats.h"
 
-class CPU;
+class Cpu;
 class Frontend;
 
 namespace AudioCore {
@@ -83,25 +81,14 @@ public:
     /// Shutdown the emulated system.
     void Shutdown();
 
-    /// Shutdown and then load
-    void Jump();
+    /// Restart the running application.
+    void Restart();
 
-    /// Request jump of the system
-    void RequestJump(u64 title_id, Service::FS::MediaType media_type) {
-        jump_requested = true;
-        jump_tid = title_id;
-        jump_media = media_type;
-    }
+    /// Sets the running application's path. if path is empty, shutdowns the system.
+    void SetApplication(const std::string& path);
 
-    /// Request shutdown of the system
-    void RequestShutdown() {
-        shutdown_requested = true;
-    }
-
-    void SetGame(const std::string& path) {
-        shutdown_requested = true;
-        set_game_file_path = path;
-    }
+    /// Closes the running application.
+    void CloseApplication();
 
     /**
      * Load an executable application.
@@ -110,7 +97,6 @@ public:
      * @returns ResultStatus code, indicating if the operation succeeded.
      */
     ResultStatus Load(Frontend& frontend, const std::string& filepath);
-    ResultStatus Load(const std::string& filepath);
 
     /**
      * Indicates if the emulated system is powered on (all subsystems initialized and able to run an
@@ -130,7 +116,7 @@ public:
      * Gets a reference to the emulated CPU.
      * @returns A reference to the emulated CPU.
      */
-    CPU& GetCPU() {
+    Cpu& CPU() {
         return *cpu_core;
     }
 
@@ -206,7 +192,11 @@ public:
         return running.load(std::memory_order::memory_order_relaxed);
     }
 
-    std::string set_game_file_path;
+    std::string GetFilePath() const {
+        return m_filepath;
+    }
+
+    std::string set_application_file_path;
 
 private:
     /**
@@ -224,7 +214,7 @@ private:
     std::unique_ptr<Loader::AppLoader> app_loader;
 
     /// ARM11 CPU core
-    std::unique_ptr<CPU> cpu_core;
+    std::unique_ptr<Cpu> cpu_core;
 
     /// DSP core
     std::unique_ptr<AudioCore::DspHle> dsp_core;
@@ -250,10 +240,7 @@ private:
 
     Frontend* m_frontend;
     std::string m_filepath;
-    u64 jump_tid;
-    Service::FS::MediaType jump_media;
 
-    std::atomic_bool jump_requested;
     std::atomic_bool shutdown_requested;
     std::atomic_bool sleep_mode_enabled;
     std::atomic_bool running;
@@ -261,8 +248,8 @@ private:
     std::condition_variable running_cv;
 };
 
-inline CPU& GetCPU() {
-    return System::GetInstance().GetCPU();
+inline Cpu& CPU() {
+    return System::GetInstance().CPU();
 }
 
 inline AudioCore::DspHle& DSP() {

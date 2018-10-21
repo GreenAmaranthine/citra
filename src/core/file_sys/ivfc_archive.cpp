@@ -87,7 +87,7 @@ IVFCFile::IVFCFile(std::shared_ptr<RomFSReader> file,
 
 ResultVal<std::size_t> IVFCFile::Read(const u64 offset, const std::size_t length,
                                       u8* buffer) const {
-    LOG_TRACE(Service_FS, "called offset={}, length={}", offset, length);
+    LOG_TRACE(Service_FS, "offset={}, length={}", offset, length);
     return MakeResult<std::size_t>(romfs_file->ReadFile(offset, length, buffer));
 }
 
@@ -115,9 +115,8 @@ IVFCFileInMemory::IVFCFileInMemory(std::vector<u8> bytes, u64 offset, u64 size,
 
 ResultVal<std::size_t> IVFCFileInMemory::Read(const u64 offset, const std::size_t length,
                                               u8* buffer) const {
-    LOG_TRACE(Service_FS, "called offset={}, length={}", offset, length);
+    LOG_TRACE(Service_FS, "offset={}, length={}", offset, length);
     std::size_t read_length{(std::size_t)std::min((u64)length, data_size - offset)};
-
     std::memcpy(buffer, romfs_file.data() + data_offset + offset, read_length);
     return MakeResult<std::size_t>(read_length);
 }

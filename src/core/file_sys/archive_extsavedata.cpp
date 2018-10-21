@@ -87,27 +87,21 @@ public:
 
     ResultVal<std::unique_ptr<FileBackend>> OpenFile(const Path& path,
                                                      const Mode& mode) const override {
-        LOG_DEBUG(Service_FS, "called path={} mode={:01X}", path.DebugStr(), mode.hex);
-
+        LOG_DEBUG(Service_FS, "path={} mode={:01X}", path.DebugStr(), mode.hex);
         const PathParser path_parser{path};
-
         if (!path_parser.IsValid()) {
             LOG_ERROR(Service_FS, "Invalid path {}", path.DebugStr());
             return ERROR_INVALID_PATH;
         }
-
         if (mode.hex == 0) {
             LOG_ERROR(Service_FS, "Empty open mode");
             return ERROR_UNSUPPORTED_OPEN_FLAGS;
         }
-
         if (mode.create_flag) {
             LOG_ERROR(Service_FS, "Create flag is not supported");
             return ERROR_UNSUPPORTED_OPEN_FLAGS;
         }
-
         const auto full_path{path_parser.BuildHostPath(mount_point)};
-
         switch (path_parser.GetHostStatus(mount_point)) {
         case PathParser::InvalidMountPoint:
             LOG_ERROR(Service_FS, "Invalid mount point {}", mount_point);
@@ -125,13 +119,11 @@ public:
         case PathParser::FileFound:
             break; // Expected 'success' case
         }
-
         FileUtil::IOFile file{full_path, "r+b"};
         if (!file.IsOpen()) {
             LOG_ERROR(Service_FS, "Unknown error opening {}", full_path);
             return ERROR_FILE_NOT_FOUND;
         }
-
         Mode rwmode{};
         rwmode.write_flag.Assign(1);
         rwmode.read_flag.Assign(1);
@@ -161,24 +153,20 @@ static_assert(sizeof(ExtSaveDataArchivePath) == 12, "Incorrect path size");
 
 std::string GetExtSaveDataPath(const std::string& mount_point, const Path& path) {
     std::vector<u8> vec_data{path.AsBinary()};
-
     ExtSaveDataArchivePath path_data{};
     std::memcpy(&path_data, vec_data.data(), sizeof(path_data));
-
     return fmt::format("{}{:08X}/{:08X}/", mount_point, path_data.save_high, path_data.save_low);
 }
 
 std::string GetExtDataContainerPath(const std::string& mount_point, bool shared) {
     if (shared)
         return fmt::format("{}data/{}/extdata/", mount_point, SYSTEM_CID);
-
     return fmt::format("{}Nintendo 3DS/{}/{}/extdata/", mount_point, SYSTEM_CID, SDCARD_CID);
 }
 
 std::string GetExtDataPathFromId(const std::string& mount_point, u64 extdata_id) {
     u32 high{static_cast<u32>(extdata_id >> 32)};
     u32 low{static_cast<u32>(extdata_id & 0xFFFFFFFF)};
-
     return fmt::format("{}{:08x}/{:08x}/", GetExtDataContainerPath(mount_point, false), high, low);
 }
 
@@ -187,33 +175,27 @@ Path ConstructExtDataBinaryPath(u32 media_type, u32 high, u32 low) {
     path.media_type = media_type;
     path.save_high = high;
     path.save_low = low;
-
     std::vector<u8> binary_path(sizeof(path));
     std::memcpy(binary_path.data(), &path, binary_path.size());
-
     return {binary_path};
 }
 
 ArchiveFactory_ExtSaveData::ArchiveFactory_ExtSaveData(const std::string& mount_location,
                                                        bool shared)
-    : shared(shared), mount_point(GetExtDataContainerPath(mount_location, shared)) {
+    : shared{shared}, mount_point{GetExtDataContainerPath(mount_location, shared)} {
     LOG_DEBUG(Service_FS, "Directory {} set as base for ExtSaveData.", mount_point);
 }
 
 Path ArchiveFactory_ExtSaveData::GetCorrectedPath(const Path& path) {
     if (!shared)
         return path;
-
-    ExtSaveDataArchivePath new_path{};
+    ExtSaveDataArchivePath new_path;
     std::memcpy(&new_path, path.AsBinary().data(), sizeof(new_path));
-
     // The FS module overwrites the high value of the saveid when dealing with the SharedExtSaveData
     // archive.
     new_path.save_high = SharedExtDataHigh;
-
     std::vector<u8> binary_data(sizeof(new_path));
     std::memcpy(binary_data.data(), &new_path, binary_data.size());
-
     return {binary_data};
 }
 
@@ -222,11 +204,10 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(cons
     if (!FileUtil::Exists(fullpath)) {
         // TODO: Verify the archive behavior of SharedExtSaveData compared to ExtSaveData.
         // ExtSaveData seems to return FS_NotFound (120) when the archive doesn't exist.
-        if (!shared) {
+        if (!shared)
             return ERR_NOT_FOUND_INVALID_STATE;
-        } else {
+        else
             return ERR_NOT_FORMATTED;
-        }
     }
     auto archive{std::make_unique<ExtSaveDataArchive>(fullpath)};
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
@@ -235,22 +216,18 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(cons
 ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path,
                                               const FileSys::ArchiveFormatInfo& format_info) {
     auto corrected_path{GetCorrectedPath(path)};
-
     // These folders are always created with the ExtSaveData
     std::string user_path{GetExtSaveDataPath(mount_point, corrected_path) + "user/"};
     std::string boss_path{GetExtSaveDataPath(mount_point, corrected_path) + "boss/"};
     FileUtil::CreateFullPath(user_path);
     FileUtil::CreateFullPath(boss_path);
-
     // Write the format metadata
     std::string metadata_path{GetExtSaveDataPath(mount_point, corrected_path) + "metadata"};
     FileUtil::IOFile file{metadata_path, "wb"};
-
     if (!file.IsOpen()) {
         // TODO: Find the correct error code
         return ResultCode(-1);
     }
-
     file.WriteBytes(&format_info, sizeof(format_info));
     return RESULT_SUCCESS;
 }
@@ -258,13 +235,11 @@ ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path,
 ResultVal<ArchiveFormatInfo> ArchiveFactory_ExtSaveData::GetFormatInfo(const Path& path) const {
     std::string metadata_path{GetExtSaveDataPath(mount_point, path) + "metadata"};
     FileUtil::IOFile file{metadata_path, "rb"};
-
     if (!file.IsOpen()) {
         LOG_ERROR(Service_FS, "Could not open metadata information for archive");
         // TODO: Verify error code
         return ERR_NOT_FORMATTED;
     }
-
     ArchiveFormatInfo info;
     file.ReadBytes(&info, sizeof(info));
     return MakeResult<ArchiveFormatInfo>(info);

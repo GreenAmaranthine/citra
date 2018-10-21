@@ -116,6 +116,7 @@ struct SurfaceParams {
         assert(static_cast<std::size_t>(format) < bpp_table.size());
         return bpp_table[static_cast<std::size_t>(format)];
     }
+
     unsigned int GetFormatBpp() const {
         return GetFormatBpp(pixel_format);
     }
@@ -166,31 +167,22 @@ struct SurfaceParams {
     }
 
     static constexpr SurfaceType GetFormatType(PixelFormat pixel_format) {
-        if ((unsigned int)pixel_format < 5) {
+        if ((unsigned int)pixel_format < 5)
             return SurfaceType::Color;
-        }
-
-        if ((unsigned int)pixel_format < 14) {
+        if ((unsigned int)pixel_format < 14)
             return SurfaceType::Texture;
-        }
-
-        if (pixel_format == PixelFormat::D16 || pixel_format == PixelFormat::D24) {
+        if (pixel_format == PixelFormat::D16 || pixel_format == PixelFormat::D24)
             return SurfaceType::Depth;
-        }
-
-        if (pixel_format == PixelFormat::D24S8) {
+        if (pixel_format == PixelFormat::D24S8)
             return SurfaceType::DepthStencil;
-        }
-
         return SurfaceType::Invalid;
     }
 
     /// Update the params "size", "end" and "type" from the already set "addr", "width", "height"
     /// and "pixel_format"
     void UpdateParams() {
-        if (stride == 0) {
+        if (stride == 0)
             stride = width;
-        }
         type = GetFormatType(pixel_format);
         size = !is_tiled ? BytesInPixels(stride * (height - 1) + width)
                          : BytesInPixels(stride * 8 * (height / 8 - 1) + width * 8);

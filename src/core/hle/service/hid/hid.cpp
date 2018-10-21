@@ -94,7 +94,7 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     state.start.Assign(buttons[Start - BUTTON_HID_BEGIN]->GetStatus());
     state.select.Assign(buttons[Select - BUTTON_HID_BEGIN]->GetStatus());
     if (button_home->GetStatus())
-        Core::System::GetInstance().RequestShutdown();
+        Core::System::GetInstance().CloseApplication();
 
     // Get current circle pad position and update circle pad direction
     s16 circle_pad_x{}, circle_pad_y{};
@@ -357,7 +357,7 @@ void Module::Interface::GetGyroscopeLowCalibrateParam(Kernel::HLERequestContext&
     };
     rb.PushRaw(param);
 
-    LOG_WARNING(Service_HID, "(STUBBED) called");
+    LOG_WARNING(Service_HID, "(STUBBED)");
 }
 
 void Module::Interface::GetSoundVolume(Kernel::HLERequestContext& ctx) {

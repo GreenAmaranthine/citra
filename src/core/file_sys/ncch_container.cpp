@@ -376,7 +376,7 @@ Loader::ResultStatus NCCHContainer::LoadOverrides() {
             is_tainted = true;
             has_exefs = true;
         } else {
-            exefs_file = FileUtil::IOFile(filepath, "rb");
+            exefs_file = FileUtil::IOFile{filepath, "rb"};
         }
     } else if (FileUtil::Exists(exefsdir_override) && FileUtil::IsDirectory(exefsdir_override)) {
         is_tainted = true;
@@ -425,6 +425,7 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
         return Loader::ResultStatus::Error;
 
     LOG_DEBUG(Service_FS, "{} sections:", kMaxSections);
+
     // Iterate through the ExeFs archive until we find a section with the specified name...
     for (unsigned section_number{}; section_number < kMaxSections; section_number++) {
         const auto& section{exefs_header.section[section_number]};
@@ -452,7 +453,7 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
 
             if (std::strcmp(section.name, ".code") == 0 && is_compressed) {
                 // Section is compressed, read compressed .code section...
-                std::unique_ptr<u8[]> temp_buffer{};
+                std::unique_ptr<u8[]> temp_buffer;
                 try {
                     temp_buffer.reset(new u8[section.size]);
                 } catch (std::bad_alloc&) {
@@ -476,10 +477,10 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
                 buffer.resize(section.size);
                 if (exefs_file.ReadBytes(&buffer[0], section.size) != section.size)
                     return Loader::ResultStatus::Error;
-                if (is_encrypted) {
+                if (is_encrypted)
                     dec.ProcessData(&buffer[0], &buffer[0], section.size);
-                }
             }
+
             return Loader::ResultStatus::Success;
         }
     }
@@ -488,7 +489,7 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
 
 Loader::ResultStatus NCCHContainer::LoadOverrideExeFSSection(const char* name,
                                                              std::vector<u8>& buffer) {
-    std::string override_name{};
+    std::string override_name;
 
     // Map our section name to the extracted equivalent
     if (!std::strcmp(name, ".code"))
@@ -598,8 +599,8 @@ Loader::ResultStatus NCCHContainer::ReadExtdataId(u64& extdata_id) {
 
     if (exheader_header.arm11_system_local_caps.storage_info.other_attributes >> 1) {
         // Using extended save data access
-        // There would be multiple possible extdata IDs in this case. The best we can do for now is
-        // guessing that the first one would be the main save.
+        // There would be multiple possible extdata IDs in this case. The best we can do for now
+        // is guessing that the first one would be the main save.
         if (exheader_header.arm11_system_local_caps.storage_info.storage_accessible_unique_ids) {
             // Prefer the IDs specified in storage_accessible_unique_ids
             extdata_id =

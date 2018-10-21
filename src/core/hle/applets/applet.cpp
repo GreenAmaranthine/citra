@@ -36,7 +36,7 @@ namespace HLE::Applets {
 static std::unordered_map<Service::APT::AppletId, std::shared_ptr<Applet>> applets;
 
 /// The CoreTiming event identifier for the Applet update callback.
-static CoreTiming::EventType* applet_update_event{};
+static CoreTiming::EventType* applet_update_event;
 
 /// The interval at which the Applet update callback will be called, 16.6ms
 static const u64 applet_update_interval_us{16666};
@@ -66,7 +66,6 @@ ResultCode Applet::Create(Service::APT::AppletId id,
         return ResultCode(ErrorDescription::NotFound, ErrorModule::Applet,
                           ErrorSummary::NotSupported, ErrorLevel::Permanent);
     }
-
     return RESULT_SUCCESS;
 }
 
@@ -82,9 +81,7 @@ static void AppletUpdateEvent(u64 applet_id, s64 cycles_late) {
     Service::APT::AppletId id{static_cast<Service::APT::AppletId>(applet_id)};
     std::shared_ptr<Applet> applet{Applet::Get(id)};
     ASSERT_MSG(applet != nullptr, "Applet doesn't exist! applet_id={:08X}", static_cast<u32>(id));
-
     applet->Update();
-
     // If the applet is still running after the last update, reschedule the event
     if (applet->IsRunning()) {
         CoreTiming::ScheduleEvent(usToCycles(applet_update_interval_us) - cycles_late,
@@ -99,7 +96,6 @@ ResultCode Applet::Start(const Service::APT::AppletStartupParameter& parameter) 
     ResultCode result{StartImpl(parameter)};
     if (result.IsError())
         return result;
-
     // Schedule the update event
     CoreTiming::ScheduleEvent(usToCycles(applet_update_interval_us), applet_update_event,
                               static_cast<u64>(id));
@@ -111,16 +107,15 @@ bool Applet::IsRunning() const {
 }
 
 void Applet::SendParameter(const Service::APT::MessageParameter& parameter) {
-    if (auto locked{manager.lock()}) {
+    if (auto locked{manager.lock()})
         locked->CancelAndSendParameter(parameter);
-    } else {
-        LOG_ERROR(Applet, "called after destructing applet manager");
-    }
+    else
+        LOG_ERROR(Applet, "after destructing applet manager");
 }
 
 bool IsLibraryAppletRunning() {
     // Check the applets map for instances of any applet
-    for (auto itr = applets.begin(); itr != applets.end(); ++itr)
+    for (auto itr{applets.begin()}; itr != applets.end(); ++itr)
         if (itr->second != nullptr)
             return true;
     return false;

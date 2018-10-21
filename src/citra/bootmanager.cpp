@@ -167,7 +167,7 @@ void Screens::keyReleaseEvent(QKeyEvent* event) {
 
 void Screens::mousePressEvent(QMouseEvent* event) {
     if (event->source() == Qt::MouseEventSynthesizedBySystem)
-        return; // touch input is handled in TouchBeginEvent
+        return; // Touch input is handled in TouchBeginEvent
 
     auto pos{event->pos()};
     if (event->button() == Qt::LeftButton) {
@@ -180,7 +180,7 @@ void Screens::mousePressEvent(QMouseEvent* event) {
 
 void Screens::mouseMoveEvent(QMouseEvent* event) {
     if (event->source() == Qt::MouseEventSynthesizedBySystem)
-        return; // touch input is handled in TouchUpdateEvent
+        return; // Touch input is handled in TouchUpdateEvent
 
     auto pos{event->pos()};
     const auto [x, y]{ScaleTouch(pos)};
@@ -190,8 +190,7 @@ void Screens::mouseMoveEvent(QMouseEvent* event) {
 
 void Screens::mouseReleaseEvent(QMouseEvent* event) {
     if (event->source() == Qt::MouseEventSynthesizedBySystem)
-        return; // touch input is handled in TouchEndEvent
-
+        return; // Touch input is handled in TouchEndEvent
     if (event->button() == Qt::LeftButton)
         TouchReleased();
     else if (event->button() == Qt::RightButton)
@@ -207,17 +206,14 @@ void Screens::TouchBeginEvent(const QTouchEvent* event) {
 void Screens::TouchUpdateEvent(const QTouchEvent* event) {
     QPointF pos;
     int active_points{};
-
-    // average all active touch points
+    // Average all active touch points
     for (const auto tp : event->touchPoints()) {
         if (tp.state() & (Qt::TouchPointPressed | Qt::TouchPointMoved | Qt::TouchPointStationary)) {
             active_points++;
             pos += tp.pos();
         }
     }
-
     pos /= active_points;
-
     const auto [x, y]{ScaleTouch(pos)};
     TouchMoved(x, y);
 }
@@ -237,7 +233,6 @@ bool Screens::event(QEvent* event) {
         TouchEndEvent();
         return true;
     }
-
     return QWidget::event(event);
 }
 
@@ -247,44 +242,32 @@ void Screens::focusOutEvent(QFocusEvent* event) {
 }
 
 void Screens::InitRenderTarget() {
-    if (child) {
+    if (child)
         delete child;
-    }
-
-    if (layout()) {
+    if (layout())
         delete layout();
-    }
-
     // TODO: One of these flags might be interesting: WA_OpaquePaintEvent, WA_NoBackground,
     // WA_DontShowOnScreen, WA_DeleteOnClose
     QGLFormat fmt;
     fmt.setVersion(3, 3);
     fmt.setProfile(QGLFormat::CoreProfile);
     fmt.setSwapInterval(false);
-
     // Requests a forward-compatible context, which is required to get a 3.2+ context on macOS
     fmt.setOption(QGL::NoDeprecatedFunctions);
-
     child = new GGLWidgetInternal(fmt, this);
     QBoxLayout* layout{new QHBoxLayout(this)};
-
     resize(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
     layout->addWidget(child);
     layout->setMargin(0);
     setLayout(layout);
-
     setMinimumSize(400, 480);
-
     OnFramebufferSizeChanged();
-
     BackupGeometry();
 }
 
 void Screens::CaptureScreenshot(u16 res_scale, const QString& screenshot_path) {
-    if (!res_scale) {
-        res_scale = VideoCore::GetResolutionScaleFactor();
-    }
-
+    if (!res_scale)
+        res_scale = Settings::values.resolution_factor;
     const Layout::FramebufferLayout layout{Layout::FrameLayoutFromResolutionScale(res_scale)};
     screenshot_image = QImage(QSize(layout.width, layout.height), QImage::Format_RGB32);
     VideoCore::RequestScreenshot(screenshot_image.bits(),

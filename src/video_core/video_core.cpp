@@ -4,7 +4,6 @@
 
 #include <memory>
 #include "common/logging/log.h"
-#include "core/settings.h"
 #include "video_core/pica.h"
 #include "video_core/renderer/renderer.h"
 #include "video_core/video_core.h"
@@ -43,9 +42,7 @@ Core::System::ResultStatus Init(Frontend& frontend) {
 /// Shutdown the video core
 void Shutdown() {
     Pica::Shutdown();
-
     g_renderer.reset();
-
     LOG_DEBUG(Render, "shutdown OK");
 }
 
@@ -59,12 +56,6 @@ void RequestScreenshot(void* data, std::function<void()> callback,
     g_screenshot_complete_callback = std::move(callback);
     g_screenshot_framebuffer_layout = layout;
     g_renderer_screenshot_requested = true;
-}
-
-u16 GetResolutionScaleFactor() {
-    return !Settings::values.resolution_factor
-               ? Core::System::GetInstance().GetFrontend().GetFramebufferLayout().GetScalingRatio()
-               : Settings::values.resolution_factor;
 }
 
 } // namespace VideoCore

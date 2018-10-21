@@ -58,14 +58,14 @@ void NS_S::LaunchTitle(Kernel::HLERequestContext& ctx) {
 }
 
 void NS_S::ShutdownAsync(Kernel::HLERequestContext& ctx) {
-    Core::System::GetInstance().RequestShutdown();
+    Core::System::GetInstance().CloseApplication();
 
     IPC::ResponseBuilder rb{ctx, 0xE, 1, 0};
     rb.Push(RESULT_SUCCESS);
 }
 
 void NS_S::RebootSystemClean(Kernel::HLERequestContext& ctx) {
-    Core::System::GetInstance().RequestJump(0, FS::MediaType::NAND);
+    Core::System::GetInstance().Restart();
 
     IPC::ResponseBuilder rb{ctx, 0x16, 1, 0};
     rb.Push(RESULT_SUCCESS);

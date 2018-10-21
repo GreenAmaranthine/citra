@@ -10,7 +10,6 @@
 #include <QLabel>
 #include <QMainWindow>
 #include <QTimer>
-#include "citra/swkbd.h"
 #include "common/announce_multiplayer_room.h"
 #include "core/core.h"
 #include "core/hle/applets/erreula.h"
@@ -66,7 +65,7 @@ signals:
     void EmulationStopping();
 
     void UpdateProgress(std::size_t written, std::size_t total);
-    void CIAInstallReport(Service::AM::InstallStatus status, QString filepath);
+    void CIAInstallReport(Service::AM::InstallStatus status, const QString& filepath);
     void CIAInstallFinished();
 
     // Signal that tells widgets to update icons to use the current theme
@@ -93,8 +92,8 @@ private:
     void ConnectWidgetEvents();
     void ConnectMenuEvents();
 
-    bool LoadROM(const QString& filename);
-    void BootGame(const QString& filename);
+    bool LoadROM(const std::string& filename);
+    void BootApplication(const std::string& filename);
     void ShutdownGame();
 
     /**
@@ -133,17 +132,17 @@ private slots:
     void OnStopGame();
 
     /// Called when user selects a game in the game list widget.
-    void OnGameListLoadFile(QString game_path);
+    void OnGameListLoadFile(const QString& path);
 
     void OnGameListOpenFolder(u64 program_id, GameListOpenTarget target);
-    void OnGameListOpenDirectory(QString path);
+    void OnGameListOpenDirectory(const QString& path);
     void OnGameListAddDirectory();
     void OnGameListShowList(bool show);
     void OnMenuLoadFile();
     void OnMenuInstallCIA();
     void OnMenuAddSeed();
     void OnUpdateProgress(std::size_t written, std::size_t total);
-    void OnCIAInstallReport(Service::AM::InstallStatus status, QString filepath);
+    void OnCIAInstallReport(Service::AM::InstallStatus status, const QString& filepath);
     void OnCIAInstallFinished();
     void OnMenuRecentFile();
     void OnOpenConfiguration();
@@ -171,7 +170,7 @@ private slots:
     void OnCaptureScreenshot();
     void OnCoreError(Core::System::ResultStatus, const std::string&);
 
-    /// Called when user selects Help->About Citra
+    /// Called when user selects Help -> About Citra
     void OnMenuAboutCitra();
 
 private:
@@ -188,11 +187,11 @@ private:
     GameListPlaceholder* game_list_placeholder;
 
     // Status bar elements
-    QProgressBar* progress_bar{};
-    QLabel* message_label{};
-    QLabel* emu_speed_label{};
-    QLabel* game_fps_label{};
-    QLabel* emu_frametime_label{};
+    QProgressBar* progress_bar;
+    QLabel* message_label;
+    QLabel* emu_speed_label;
+    QLabel* game_fps_label;
+    QLabel* emu_frametime_label;
 
     QTimer status_bar_update_timer;
     QTimer movie_play_timer;
@@ -205,11 +204,8 @@ private:
 
     std::unique_ptr<EmuThread> emu_thread;
 
-    // The title of the game currently running
-    QString game_title;
-
-    // The path to the game currently running
-    QString game_path;
+    // The short title of the game currently running
+    std::string short_title;
 
     // Movie
     bool movie_record_on_start{};
@@ -220,9 +216,6 @@ private:
     std::mutex applet_mutex;
     std::condition_variable applet_cv;
 
-    // HLE Qt Applets
-    std::unique_ptr<SoftwareKeyboardDialog> swkbd;
-
     std::shared_ptr<ControlPanel> control_panel;
     std::shared_ptr<CheatDialog> cheats_window;
 
@@ -230,6 +223,8 @@ private:
 
     // Stores default icon theme search paths for the platform
     QStringList default_theme_paths;
+
+    Core::System& system{Core::System::GetInstance()};
 
 protected:
     void dropEvent(QDropEvent* event) override;

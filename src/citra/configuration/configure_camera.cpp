@@ -199,18 +199,14 @@ void ConfigureCamera::startPreviewing() {
     previewing_camera->SetFormat(Service::CAM::OutputFormat::RGB565);
     previewing_camera->SetFrameRate(Service::CAM::FrameRate::Rate_30);
     previewing_camera->StartCapture();
-
     timer_id = startTimer(1000 / 30);
 }
 
 void ConfigureCamera::stopPreviewing() {
     ui->preview_box->setHidden(true);
     ui->preview_button->setHidden(false);
-
-    if (previewing_camera) {
+    if (previewing_camera)
         previewing_camera->StopCapture();
-    }
-
     if (timer_id != 0) {
         killTimer(timer_id);
         timer_id = 0;

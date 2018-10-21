@@ -28,7 +28,7 @@ static std::unordered_map<u64, u64> custom_ticks_map{{
 
 class UserCallbacks final : public Dynarmic::A32::UserCallbacks {
 public:
-    explicit UserCallbacks(CPU& parent) : parent{parent} {
+    explicit UserCallbacks(Cpu& parent) : parent{parent} {
         SyncSettings();
     }
 
@@ -120,7 +120,7 @@ public:
     }
 
 private:
-    CPU& parent;
+    Cpu& parent;
     u64 custom_ticks{};
     bool use_custom_ticks{};
 };
@@ -188,44 +188,44 @@ void ThreadContext::SetFpexc(u32 value) {
     fpexc = value;
 }
 
-CPU::CPU() : cb{std::make_unique<UserCallbacks>(*this)} {
+Cpu::Cpu() : cb{std::make_unique<UserCallbacks>(*this)} {
     state = std::make_shared<State>();
     PageTableChanged();
 }
 
-CPU::~CPU() = default;
+Cpu::~Cpu() = default;
 
-void CPU::Run() {
+void Cpu::Run() {
     ASSERT(Memory::GetCurrentPageTable() == current_page_table);
 
     jit->Run();
 }
 
-void CPU::SetPC(u32 pc) {
+void Cpu::SetPC(u32 pc) {
     jit->Regs()[15] = pc;
 }
 
-u32 CPU::GetPC() const {
+u32 Cpu::GetPC() const {
     return jit->Regs()[15];
 }
 
-u32 CPU::GetReg(int index) const {
+u32 Cpu::GetReg(int index) const {
     return jit->Regs()[index];
 }
 
-void CPU::SetReg(int index, u32 value) {
+void Cpu::SetReg(int index, u32 value) {
     jit->Regs()[index] = value;
 }
 
-u32 CPU::GetVFPReg(int index) const {
+u32 Cpu::GetVFPReg(int index) const {
     return jit->ExtRegs()[index];
 }
 
-void CPU::SetVFPReg(int index, u32 value) {
+void Cpu::SetVFPReg(int index, u32 value) {
     jit->ExtRegs()[index] = value;
 }
 
-u32 CPU::GetVFPSystemReg(VFPSystemRegister reg) const {
+u32 Cpu::GetVFPSystemReg(VFPSystemRegister reg) const {
     if (reg == VFP_FPSCR) {
         return jit->Fpscr();
     }
@@ -234,7 +234,7 @@ u32 CPU::GetVFPSystemReg(VFPSystemRegister reg) const {
     return state->vfp[reg];
 }
 
-void CPU::SetVFPSystemReg(VFPSystemRegister reg, u32 value) {
+void Cpu::SetVFPSystemReg(VFPSystemRegister reg, u32 value) {
     if (reg == VFP_FPSCR) {
         jit->SetFpscr(value);
     }
@@ -243,27 +243,27 @@ void CPU::SetVFPSystemReg(VFPSystemRegister reg, u32 value) {
     state->vfp[reg] = value;
 }
 
-u32 CPU::GetCPSR() const {
+u32 Cpu::GetCPSR() const {
     return jit->Cpsr();
 }
 
-void CPU::SetCPSR(u32 cpsr) {
+void Cpu::SetCPSR(u32 cpsr) {
     jit->SetCpsr(cpsr);
 }
 
-u32 CPU::GetCP15Register(CP15Register reg) {
+u32 Cpu::GetCP15Register(CP15Register reg) {
     return state->cp15[reg];
 }
 
-void CPU::SetCP15Register(CP15Register reg, u32 value) {
+void Cpu::SetCP15Register(CP15Register reg, u32 value) {
     state->cp15[reg] = value;
 }
 
-std::unique_ptr<ThreadContext> CPU::NewContext() const {
+std::unique_ptr<ThreadContext> Cpu::NewContext() const {
     return std::make_unique<ThreadContext>();
 }
 
-void CPU::SaveContext(const std::unique_ptr<ThreadContext>& arg) {
+void Cpu::SaveContext(const std::unique_ptr<ThreadContext>& arg) {
     ThreadContext* ctx{dynamic_cast<ThreadContext*>(arg.get())};
     ASSERT(ctx);
 
@@ -271,7 +271,7 @@ void CPU::SaveContext(const std::unique_ptr<ThreadContext>& arg) {
     ctx->fpexc = state->vfp[VFP_FPEXC];
 }
 
-void CPU::LoadContext(const std::unique_ptr<ThreadContext>& arg) {
+void Cpu::LoadContext(const std::unique_ptr<ThreadContext>& arg) {
     const ThreadContext* ctx{dynamic_cast<ThreadContext*>(arg.get())};
     ASSERT(ctx);
 
@@ -279,17 +279,17 @@ void CPU::LoadContext(const std::unique_ptr<ThreadContext>& arg) {
     state->vfp[VFP_FPEXC] = ctx->fpexc;
 }
 
-void CPU::PrepareReschedule() {
+void Cpu::PrepareReschedule() {
     if (jit->IsExecuting()) {
         jit->HaltExecution();
     }
 }
 
-void CPU::InvalidateCacheRange(u32 start_address, std::size_t length) {
+void Cpu::InvalidateCacheRange(u32 start_address, std::size_t length) {
     jit->InvalidateCacheRange(start_address, length);
 }
 
-void CPU::PageTableChanged() {
+void Cpu::PageTableChanged() {
     current_page_table = Memory::GetCurrentPageTable();
 
     auto iter{jits.find(current_page_table)};
@@ -303,11 +303,11 @@ void CPU::PageTableChanged() {
     jits.emplace(current_page_table, std::move(new_jit));
 }
 
-void CPU::SyncSettings() {
+void Cpu::SyncSettings() {
     cb->SyncSettings();
 }
 
-std::unique_ptr<Dynarmic::A32::Jit> CPU::MakeJit() {
+std::unique_ptr<Dynarmic::A32::Jit> Cpu::MakeJit() {
     Dynarmic::A32::UserConfig config;
     config.callbacks = cb.get();
     config.page_table = &current_page_table->pointers;

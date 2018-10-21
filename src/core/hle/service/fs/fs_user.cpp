@@ -224,7 +224,7 @@ void FS_USER::CreateFile(Kernel::HLERequestContext& ctx) {
 
     FileSys::Path file_path{filename_type, filename};
 
-    LOG_DEBUG(Service_FS, "called, type={}, attributes={}, size={:x}, data={}",
+    LOG_DEBUG(Service_FS, "type={}, attributes={}, size={:x}, data={}",
               static_cast<u32>(filename_type), attributes, file_size, file_path.DebugStr());
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
@@ -266,11 +266,10 @@ void FS_USER::RenameDirectory(Kernel::HLERequestContext& ctx) {
     FileSys::Path src_dir_path{src_dirname_type, src_dirname};
     FileSys::Path dest_dir_path{dest_dirname_type, dest_dirname};
 
-    LOG_DEBUG(
-        Service_FS,
-        "called, src_type={}, src_size={}, src_data={}, dest_type={}, dest_size={}, dest_data={}",
-        static_cast<u32>(src_dirname_type), src_dirname_size, src_dir_path.DebugStr(),
-        static_cast<u32>(dest_dirname_type), dest_dirname_size, dest_dir_path.DebugStr());
+    LOG_DEBUG(Service_FS,
+              "src_type={}, src_size={}, src_data={}, dest_type={}, dest_size={}, dest_data={}",
+              static_cast<u32>(src_dirname_type), src_dirname_size, src_dir_path.DebugStr(),
+              static_cast<u32>(dest_dirname_type), dest_dirname_size, dest_dir_path.DebugStr());
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RenameDirectoryBetweenArchives(src_archive_handle, src_dir_path, dest_archive_handle,
@@ -287,8 +286,8 @@ void FS_USER::OpenDirectory(Kernel::HLERequestContext& ctx) {
 
     FileSys::Path dir_path{dirname_type, dirname};
 
-    LOG_DEBUG(Service_FS, "called, type={}, size={}, data={}", static_cast<u32>(dirname_type),
-              dirname_size, dir_path.DebugStr());
+    LOG_DEBUG(Service_FS, "type={}, size={}, data={}", static_cast<u32>(dirname_type), dirname_size,
+              dir_path.DebugStr());
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     ResultVal<std::shared_ptr<Directory>> dir_res{
@@ -434,7 +433,7 @@ void FS_USER::GetCardType(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(0); // CTR card = 0, TWL card = 1
 
-    LOG_WARNING(Service_FS, "(STUBBED) called");
+    LOG_WARNING(Service_FS, "(STUBBED)");
 }
 
 void FS_USER::DeleteSdmcRoot(Kernel::HLERequestContext& ctx) {
@@ -474,7 +473,7 @@ void FS_USER::CreateExtSaveData(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(icon_buffer);
 
     LOG_DEBUG(Service_FS,
-              "called, savedata_high={:08X} savedata_low={:08X} unknown={:08X} "
+              "savedata_high={:08X} savedata_low={:08X} unknown={:08X} "
               "files={:08X} directories={:08X} size_limit={:016x} icon_size={:08X}",
               save_high, save_low, unknown, directories, files, size_limit, icon_size);
 }
@@ -489,9 +488,8 @@ void FS_USER::DeleteExtSaveData(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(Service::FS::DeleteExtSaveData(media_type, save_high, save_low));
 
-    LOG_DEBUG(Service_FS,
-              "called, save_low={:08X} save_high={:08X} media_type={:08X} unknown={:08X}", save_low,
-              save_high, static_cast<u32>(media_type), unknown);
+    LOG_DEBUG(Service_FS, "save_low={:08X} save_high={:08X} media_type={:08X} unknown={:08X}",
+              save_low, save_high, static_cast<u32>(media_type), unknown);
 }
 
 void FS_USER::CardSlotIsInserted(Kernel::HLERequestContext& ctx) {
@@ -546,7 +544,7 @@ void FS_USER::CreateLegacySystemSaveData(Kernel::HLERequestContext& ctx) {
     bool duplicate{rp.Pop<bool>()};
 
     LOG_WARNING(Service_FS,
-                "(STUBBED) called, savedata_id={:08X}, total_size={:08X}, block_size={:08X}, "
+                "(STUBBED) savedata_id={:08X}, total_size={:08X}, block_size={:08X}, "
                 "directories={}, "
                 "files={}, directory_buckets={}, file_buckets={}, duplicate={}",
                 savedata_id, total_size, block_size, directories, files, directory_buckets,
@@ -562,7 +560,7 @@ void FS_USER::InitializeWithSdkVersion(Kernel::HLERequestContext& ctx) {
     const u32 version{rp.Pop<u32>()};
     rp.PopPID();
 
-    LOG_WARNING(Service_FS, "(STUBBED) called, version: 0x{:08X}", version);
+    LOG_WARNING(Service_FS, "(STUBBED) version: 0x{:08X}", version);
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
@@ -576,7 +574,7 @@ void FS_USER::SetPriority(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_FS, "called, priority=0x{:X}", priority);
+    LOG_DEBUG(Service_FS, "priority=0x{:X}", priority);
 }
 
 void FS_USER::GetPriority(Kernel::HLERequestContext& ctx) {
@@ -588,14 +586,14 @@ void FS_USER::GetPriority(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(priority);
 
-    LOG_DEBUG(Service_FS, "called, priority=0x{:X}", priority);
+    LOG_DEBUG(Service_FS, "priority=0x{:X}", priority);
 }
 
 void FS_USER::GetArchiveResource(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x849, 1, 0};
     u32 system_media_type{rp.Pop<u32>()};
 
-    LOG_WARNING(Service_FS, "(STUBBED) called, system_media_type=0x{:08X}", system_media_type);
+    LOG_WARNING(Service_FS, "(STUBBED) system_media_type=0x{:08X}", system_media_type);
 
     IPC::ResponseBuilder rb{rp.MakeBuilder(5, 0)};
     rb.Push(RESULT_SUCCESS);
@@ -691,7 +689,7 @@ void FS_USER::ObsoletedCreateExtSaveData(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(icon_buffer);
 
     LOG_DEBUG(Service_FS,
-              "called, savedata_high={:08X}, savedata_low={:08X}, "
+              "savedata_high={:08X}, savedata_low={:08X}, "
               "icon_size={:08X}, directories={:08X}, files={:08X}",
               save_high, save_low, icon_size, directories, files);
 }
@@ -704,7 +702,7 @@ void FS_USER::ObsoletedDeleteExtSaveData(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(Service::FS::DeleteExtSaveData(media_type, 0, save_low));
 
-    LOG_DEBUG(Service_FS, "called, save_low={:08X}, media_type={:08X}", save_low,
+    LOG_DEBUG(Service_FS, "save_low={:08X}, media_type={:08X}", save_low,
               static_cast<u32>(media_type));
 }
 
@@ -753,7 +751,7 @@ void FS_USER::SetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 
     LOG_WARNING(Service_FS,
-                "(STUBBED) called, value=0x{:016X}, secure_value_slot=0x{:08X} "
+                "(STUBBED) value=0x{:016X}, secure_value_slot=0x{:08X} "
                 "unique_id=0x{:08X}, title_variation=0x{:02X}",
                 value, secure_value_slot, unique_id, title_variation);
 }
@@ -766,7 +764,7 @@ void FS_USER::GetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     u8 title_variation{rp.Pop<u8>()};
 
     LOG_WARNING(Service_FS,
-                "(STUBBED) called, secure_value_slot=0x{:08X}, unique_id=0x{:08X}, "
+                "(STUBBED) secure_value_slot=0x{:08X}, unique_id=0x{:08X}, "
                 "title_variation=0x{:02X}",
                 secure_value_slot, unique_id, title_variation);
 
@@ -794,7 +792,7 @@ void FS_USER::GetThisSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     rb.Push<bool>(false); // indicates that the secure value doesn't exist
     rb.Push<u64>(0);      // the secure value
 
-    LOG_WARNING(Service_FS, "(STUBBED) called, secure_value_slot={}", secure_value_slot);
+    LOG_WARNING(Service_FS, "(STUBBED) secure_value_slot={}", secure_value_slot);
 }
 
 void FS_USER::EnumerateExtSaveData(Kernel::HLERequestContext& ctx) {

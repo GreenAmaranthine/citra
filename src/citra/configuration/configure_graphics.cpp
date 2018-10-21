@@ -15,17 +15,12 @@
 
 ConfigureGraphics::ConfigureGraphics(QWidget* parent)
     : QWidget{parent}, ui{std::make_unique<Ui::ConfigureGraphics>()} {
-
     ui->setupUi(this);
-
     setConfiguration();
-
     ui->frame_limit->setEnabled(Settings::values.use_frame_limit);
     connect(ui->toggle_frame_limit, &QCheckBox::stateChanged, ui->frame_limit,
             &QSpinBox::setEnabled);
-
     ui->layoutBox->setEnabled(!Settings::values.custom_layout);
-
     connect(ui->layout_bg, &QPushButton::clicked, this, [this] {
         QColor new_color{QColorDialog::getColor(bg_color, this)};
         if (new_color.isValid()) {
@@ -34,11 +29,9 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
                 QString("QPushButton { background-color: %1 }").arg(bg_color.name()));
         }
     });
-
     ui->hw_shader_group->setEnabled(ui->toggle_hw_shader->isChecked());
     connect(ui->toggle_hw_shader, &QCheckBox::stateChanged, ui->hw_shader_group,
             &QWidget::setEnabled);
-
 #ifdef __APPLE__
     connect(ui->toggle_hw_shader, &QCheckBox::stateChanged, this, [this](int state) {
         if (state == Qt::Checked) {
@@ -51,7 +44,6 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
         }
     });
 #endif
-
     if (!Settings::values.enable_clear_cache) {
         ui->clear_cache_secs->setEnabled(false);
         ui->clear_cache_secs->setToolTip("enable_clear_cache is disabled.");
@@ -64,7 +56,7 @@ void ConfigureGraphics::setConfiguration() {
     ui->toggle_hw_shader->setChecked(Settings::values.use_hw_shader);
     ui->toggle_accurate_gs->setChecked(Settings::values.shaders_accurate_gs);
     ui->toggle_accurate_mul->setChecked(Settings::values.shaders_accurate_mul);
-    ui->resolution_factor_combobox->setCurrentIndex(Settings::values.resolution_factor);
+    ui->resolution_factor_combobox->setCurrentIndex(Settings::values.resolution_factor - 1);
     ui->toggle_frame_limit->setChecked(Settings::values.use_frame_limit);
     ui->frame_limit->setValue(Settings::values.frame_limit);
     ui->layout_combobox->setCurrentIndex(static_cast<int>(Settings::values.layout_option));
@@ -83,7 +75,7 @@ void ConfigureGraphics::applyConfiguration() {
     Settings::values.shaders_accurate_gs = ui->toggle_accurate_gs->isChecked();
     Settings::values.shaders_accurate_mul = ui->toggle_accurate_mul->isChecked();
     Settings::values.resolution_factor =
-        static_cast<u16>(ui->resolution_factor_combobox->currentIndex());
+        static_cast<u16>(ui->resolution_factor_combobox->currentIndex() + 1);
     Settings::values.use_frame_limit = ui->toggle_frame_limit->isChecked();
     Settings::values.frame_limit = ui->frame_limit->value();
     Settings::values.bg_red = bg_color.redF();

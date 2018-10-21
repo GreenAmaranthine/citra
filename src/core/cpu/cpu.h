@@ -39,16 +39,16 @@ public:
     void SetFpexc(u32 value);
 
 private:
-    friend class CPU;
+    friend class Cpu;
 
-    Dynarmic::A32::Context* ctx{};
+    Dynarmic::A32::Context* ctx;
     u32 fpexc{};
 };
 
-class CPU {
+class Cpu {
 public:
-    explicit CPU();
-    ~CPU();
+    explicit Cpu();
+    ~Cpu();
 
     void Run();
 

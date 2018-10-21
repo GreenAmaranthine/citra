@@ -59,7 +59,7 @@ void Module::Interface::GetPedometerState(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(ptm->pedometer_is_counting);
 
-    LOG_WARNING(Service_PTM, "(STUBBED) called");
+    LOG_WARNING(Service_PTM, "(STUBBED)");
 }
 
 void Module::Interface::GetStepHistory(Kernel::HLERequestContext& ctx) {
@@ -80,8 +80,7 @@ void Module::Interface::GetStepHistory(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(buffer);
 
-    LOG_WARNING(Service_PTM, "(STUBBED) called, from time(raw): 0x{:X}, for {} hours", start_time,
-                hours);
+    LOG_WARNING(Service_PTM, "(STUBBED) from time(raw): 0x{:X}, for {} hours", start_time, hours);
 }
 
 void Module::Interface::GetTotalStepCount(Kernel::HLERequestContext& ctx) {
@@ -91,7 +90,7 @@ void Module::Interface::GetTotalStepCount(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
 
-    LOG_WARNING(Service_PTM, "(STUBBED) called");
+    LOG_WARNING(Service_PTM, "(STUBBED)");
 }
 
 void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
@@ -101,7 +100,7 @@ void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(false);
 
-    LOG_WARNING(Service_PTM, "(STUBBED) called");
+    LOG_WARNING(Service_PTM, "(STUBBED)");
 }
 
 void CheckNew3DS(IPC::ResponseBuilder& rb) {
@@ -115,7 +114,7 @@ void Module::Interface::ConfigureNew3DSCPU(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(Kernel::KernelSetState(static_cast<u32>(Kernel::KernelSetStateType::ConfigureNew3DSCPU),
                                    value, 0, 0));
-    LOG_WARNING(Service_PTM, "(STUBBED) called");
+    LOG_WARNING(Service_PTM, "(STUBBED)");
 }
 
 void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {

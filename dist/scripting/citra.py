@@ -16,7 +16,7 @@ class RequestType(enum.IntEnum):
     MotionState = 5,
     CircleState = 6,
     SetResolution = 7,
-    SetGame = 8,
+    SetApplication = 8,
     SetOverrideControls = 9,
     Pause = 10,
     Resume = 11,
@@ -165,11 +165,11 @@ class Citra:
         self.socket.send(request)
         self.socket.recv()
 
-    def set_game(self, path):
+    def set_application(self, path):
         request_data = struct.pack("II", 0, 0)
         request_data += str.encode(path)
         request, request_id = self._generate_header(
-            RequestType.SetGame, len(request_data))
+            RequestType.SetApplication, len(request_data))
         request += request_data
         self.socket.send(request)
         self.socket.recv()

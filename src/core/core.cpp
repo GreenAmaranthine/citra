@@ -14,7 +14,6 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/thread.h"
-#include "core/hle/service/am/am.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/fs_user.h"
 #include "core/hle/service/service.h"
@@ -37,9 +36,8 @@ namespace Core {
 
 System::ResultStatus System::RunLoop() {
     status = ResultStatus::Success;
-    if (!cpu_core) {
+    if (!cpu_core)
         return ResultStatus::ErrorNotInitialized;
-    }
     if (!running.load(std::memory_order::memory_order_relaxed)) {
         std::unique_lock<std::mutex> lock{running_mutex};
         running_cv.wait(lock);
@@ -47,7 +45,7 @@ System::ResultStatus System::RunLoop() {
     if (!dsp_core->IsOutputAllowed()) {
         // Draw black screens to the emulator window
         VideoCore::g_renderer->SwapBuffers();
-        // Sleep for a frame or the PC would overheat
+        // Sleep for one frame or the PC would overheat
         std::this_thread::sleep_for(std::chrono::milliseconds{16});
         return ResultStatus::Success;
     }
@@ -62,32 +60,26 @@ System::ResultStatus System::RunLoop() {
         CoreTiming::Advance();
         cpu_core->Run();
     }
-
     HW::Update();
     Reschedule();
-
-    if (jump_requested.exchange(false)) {
-        Jump();
-    } else if (shutdown_requested.exchange(false)) {
+    if (shutdown_requested.exchange(false)) {
         return ResultStatus::ShutdownRequested;
     }
     return status;
 }
 
 System::ResultStatus System::Load(Frontend& frontend, const std::string& filepath) {
+    LOG_INFO(Log, "LOAD {}", filepath);
     app_loader = Loader::GetLoader(filepath);
-
     if (!app_loader) {
         LOG_CRITICAL(Core, "Failed to obtain loader for {}!", filepath);
         return ResultStatus::ErrorGetLoader;
     }
     std::pair<std::optional<u32>, Loader::ResultStatus> system_mode{
         app_loader->LoadKernelSystemMode()};
-
     if (system_mode.second != Loader::ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to determine system mode (Error {})!",
                      static_cast<int>(system_mode.second));
-
         switch (system_mode.second) {
         case Loader::ResultStatus::ErrorEncrypted:
             return ResultStatus::ErrorLoader_ErrorEncrypted;
@@ -97,21 +89,18 @@ System::ResultStatus System::Load(Frontend& frontend, const std::string& filepat
             return ResultStatus::ErrorSystemMode;
         }
     }
-
     ASSERT(system_mode.first);
     ResultStatus init_result{Init(frontend, *system_mode.first)};
     if (init_result != ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to initialize system (Error {})!",
                      static_cast<u32>(init_result));
-        System::Shutdown();
+        Shutdown();
         return init_result;
     }
-
     const Loader::ResultStatus load_result{app_loader->Load(Kernel::g_current_process)};
-    if (Loader::ResultStatus::Success != load_result) {
+    if (load_result != Loader::ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to load ROM (Error {})!", static_cast<u32>(load_result));
-        System::Shutdown();
-
+        Shutdown();
         switch (load_result) {
         case Loader::ResultStatus::ErrorEncrypted:
             return ResultStatus::ErrorLoader_ErrorEncrypted;
@@ -127,10 +116,6 @@ System::ResultStatus System::Load(Frontend& frontend, const std::string& filepat
     return status;
 }
 
-System::ResultStatus System::Load(const std::string& filepath) {
-    return Load(*m_frontend, filepath);
-}
-
 void System::PrepareReschedule() {
     cpu_core->PrepareReschedule();
     reschedule_pending = true;
@@ -141,10 +126,8 @@ PerfStats::Results System::GetAndResetPerfStats() {
 }
 
 void System::Reschedule() {
-    if (!reschedule_pending) {
+    if (!reschedule_pending)
         return;
-    }
-
     reschedule_pending = false;
     Kernel::Reschedule();
 }
@@ -154,19 +137,14 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
 
     CoreTiming::Init();
 
-    cpu_core = std::make_unique<CPU>();
-
+    cpu_core = std::make_unique<Cpu>();
     dsp_core = std::make_unique<AudioCore::DspHle>();
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching);
-
 #ifdef ENABLE_SCRIPTING
     rpc_server = std::make_unique<RPC::RPCServer>();
 #endif
-
     service_manager = std::make_shared<Service::SM::ServiceManager>();
     shared_page_handler = std::make_shared<SharedPage::Handler>();
-
-    jump_requested = false;
     shutdown_requested = false;
     sleep_mode_enabled = false;
 
@@ -174,6 +152,7 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     Service::FS::ArchiveInit();
     Service::FS::InstallInterfaces(*service_manager);
     Service::CFG::InstallInterfaces(*service_manager);
+
     HW::Init();
     Kernel::Init(system_mode);
     Service::Init(service_manager);
@@ -191,7 +170,6 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     perf_stats.BeginSystemFrame();
 
     SetRunning(true);
-
     return ResultStatus::Success;
 }
 
@@ -227,23 +205,24 @@ void System::Shutdown() {
     CoreTiming::Shutdown();
     app_loader.reset();
     Memory::InvalidateAreaCache();
-
     if (auto member{Network::GetRoomMember().lock()}) {
         Network::GameInfo game_info{};
         member->SendGameInfo(game_info);
     }
-
     LOG_DEBUG(Core, "Shutdown OK");
 }
 
-void System::Jump() {
-    Shutdown();
-    if (jump_tid == 0) {
-        Load(m_filepath);
-        return;
-    }
-    std::string path{Service::AM::GetTitleContentPath(jump_media, jump_tid)};
-    Load(path);
+void System::Restart() {
+    SetApplication(m_filepath);
+}
+
+void System::SetApplication(const std::string& path) {
+    shutdown_requested = true;
+    set_application_file_path = path;
+}
+
+void System::CloseApplication() {
+    SetApplication("");
 }
 
 } // namespace Core

@@ -66,7 +66,6 @@ struct ScreenRectVertex {
         tex_coord[0] = u;
         tex_coord[1] = v;
     }
-
     GLfloat position[2];
     GLfloat tex_coord[2];
 };
@@ -79,14 +78,12 @@ struct ScreenRectVertex {
  * by a 3x2 matrix.
  */
 static std::array<GLfloat, 6> MakeOrthographicMatrix(const float width, const float height) {
-    std::array<GLfloat, 6> matrix{}; // Laid out in column-major order
-
+    std::array<GLfloat, 6> matrix; // Laid out in column-major order
     // clang-format off
     matrix[0] = 2.f / width; matrix[2] = 0.f;           matrix[4] = -1.f;
     matrix[1] = 0.f;         matrix[3] = -2.f / height; matrix[5] = 1.f;
     // Last matrix row is implicitly assumed to be [0, 0, 1].
     // clang-format on
-
     return matrix;
 }
 
@@ -102,22 +99,18 @@ void Renderer::SwapBuffers() {
     // Maintain the rasterizer's OpenGLState as a priority
     OpenGLState prev_state{OpenGLState::GetCurState()};
     state.Apply();
-
     for (int i : {0, 1, 2}) {
         int fb_id{i == 2 ? 1 : 0};
         const auto& framebuffer{GPU::g_regs.framebuffer_config[fb_id]};
-
         // Main LCD (0): 0x1ED02204, Sub LCD (1): 0x1ED02A04
         u32 lcd_color_addr{static_cast<u32>((fb_id == 0) ? LCD_REG_INDEX(color_fill_top)
                                                          : LCD_REG_INDEX(color_fill_bottom))};
         lcd_color_addr = HW::VADDR_LCD + 4 * lcd_color_addr;
         LCD::Regs::ColorFill color_fill;
         LCD::Read(color_fill.raw, lcd_color_addr);
-
         if (color_fill.is_enabled) {
             LoadColorToActiveGLTexture(color_fill.color_r, color_fill.color_g, color_fill.color_b,
                                        screen_infos[i].texture);
-
             // Resize the texture in case the framebuffer size has changed
             screen_infos[i].texture.width = 1;
             screen_infos[i].texture.height = 1;
@@ -131,13 +124,11 @@ void Renderer::SwapBuffers() {
                 ConfigureFramebufferTexture(screen_infos[i].texture, framebuffer);
             }
             LoadFBToScreenInfo(framebuffer, screen_infos[i], i == 1);
-
             // Resize the texture in case the framebuffer size has changed
             screen_infos[i].texture.width = framebuffer.width;
             screen_infos[i].texture.height = framebuffer.height;
         }
     }
-
     if (VideoCore::g_renderer_screenshot_requested) {
         // Draw this frame to the screenshot framebuffer
         screenshot_framebuffer.Create();
@@ -145,41 +136,30 @@ void Renderer::SwapBuffers() {
         GLuint old_draw_fb{state.draw.draw_framebuffer};
         state.draw.read_framebuffer = state.draw.draw_framebuffer = screenshot_framebuffer.handle;
         state.Apply();
-
         Layout::FramebufferLayout layout{VideoCore::g_screenshot_framebuffer_layout};
-
         GLuint renderbuffer;
         glGenRenderbuffers(1, &renderbuffer);
         glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB8, layout.width, layout.height);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER,
                                   renderbuffer);
-
         DrawScreens(layout);
-
         glReadPixels(0, 0, layout.width, layout.height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
                      VideoCore::g_screenshot_bits);
-
         screenshot_framebuffer.Release();
         state.draw.read_framebuffer = old_read_fb;
         state.draw.draw_framebuffer = old_draw_fb;
         state.Apply();
         glDeleteRenderbuffers(1, &renderbuffer);
-
         VideoCore::g_screenshot_complete_callback();
         VideoCore::g_renderer_screenshot_requested = false;
     }
-
     DrawScreens(frontend.GetFramebufferLayout());
-
     Core::System::GetInstance().perf_stats.EndSystemFrame();
-
     // Swap buffers
     frontend.SwapBuffers();
-
     Core::System::GetInstance().frame_limiter.DoFrameLimiting(CoreTiming::GetGlobalTimeUs());
     Core::System::GetInstance().perf_stats.BeginSystemFrame();
-
     prev_state.Apply();
 }
 
@@ -188,45 +168,33 @@ void Renderer::SwapBuffers() {
  */
 void Renderer::LoadFBToScreenInfo(const GPU::Regs::FramebufferConfig& framebuffer,
                                   ScreenInfo& screen_info, bool right_eye) {
-
     if (framebuffer.address_right1 == 0 || framebuffer.address_right2 == 0)
         right_eye = false;
-
     const PAddr framebuffer_addr{
         framebuffer.active_fb == 0
             ? (!right_eye ? framebuffer.address_left1 : framebuffer.address_right1)
             : (!right_eye ? framebuffer.address_left2 : framebuffer.address_right2)};
-
     LOG_TRACE(Render, "0x{:08x} bytes from 0x{:08x}({:x}{}), fmt {}",
               framebuffer.stride * framebuffer.height, framebuffer_addr, (int)framebuffer.width,
               (int)framebuffer.height, (int)framebuffer.format);
-
     int bpp{GPU::Regs::BytesPerPixel(framebuffer.color_format)};
     std::size_t pixel_stride{framebuffer.stride / bpp};
-
     // OpenGL only supports specifying a stride in units of pixels, not bytes, unfortunately
     ASSERT(pixel_stride * bpp == framebuffer.stride);
-
     // Ensure no bad interactions with GL_UNPACK_ALIGNMENT, which by default
     // only allows rows to have a memory alignement of 4.
     ASSERT(pixel_stride % 4 == 0);
-
     if (!rasterizer->AccelerateDisplay(framebuffer, framebuffer_addr,
                                        static_cast<u32>(pixel_stride), screen_info)) {
         // Reset the screen info's display texture to its own permanent texture
         screen_info.display_texture = screen_info.texture.resource.handle;
         screen_info.display_texcoords = MathUtil::Rectangle<float>(0.f, 0.f, 1.f, 1.f);
-
         Memory::RasterizerFlushRegion(framebuffer_addr, framebuffer.stride * framebuffer.height);
-
         const u8* framebuffer_data{Memory::GetPhysicalPointer(framebuffer_addr)};
-
         state.texture_units[0].texture_2d = screen_info.texture.resource.handle;
         state.Apply();
-
         glActiveTexture(GL_TEXTURE0);
         glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint)pixel_stride);
-
         // Update existing texture
         // TODO: Test what happens on hardware when you change the framebuffer dimensions so that
         //       they differ from the LCD resolution.
@@ -235,9 +203,7 @@ void Renderer::LoadFBToScreenInfo(const GPU::Regs::FramebufferConfig& framebuffe
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer.width, framebuffer.height,
                         screen_info.texture.gl_format, screen_info.texture.gl_type,
                         framebuffer_data);
-
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-
         state.texture_units[0].texture_2d = 0;
         state.Apply();
     }
@@ -251,13 +217,10 @@ void Renderer::LoadColorToActiveGLTexture(u8 color_r, u8 color_g, u8 color_b,
                                           const TextureInfo& texture) {
     state.texture_units[0].texture_2d = texture.resource.handle;
     state.Apply();
-
     glActiveTexture(GL_TEXTURE0);
     u8 framebuffer_data[3] = {color_r, color_g, color_b};
-
     // Update existing texture
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, framebuffer_data);
-
     state.texture_units[0].texture_2d = 0;
     state.Apply();
 }
@@ -274,18 +237,14 @@ void Renderer::InitOpenGLObjects() {
     uniform_color_texture = glGetUniformLocation(shader.handle, "color_texture");
     attrib_position = glGetAttribLocation(shader.handle, "vert_position");
     attrib_tex_coord = glGetAttribLocation(shader.handle, "vert_tex_coord");
-
     // Generate VBO handle for drawing
     vertex_buffer.Create();
-
     // Generate VAO
     vertex_array.Create();
-
     state.draw.vertex_array = vertex_array.handle;
     state.draw.vertex_buffer = vertex_buffer.handle;
     state.draw.uniform_buffer = 0;
     state.Apply();
-
     // Attach vertex data to VAO
     glBufferData(GL_ARRAY_BUFFER, sizeof(ScreenRectVertex) * 4, nullptr, GL_STREAM_DRAW);
     glVertexAttribPointer(attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof(ScreenRectVertex),
@@ -294,27 +253,21 @@ void Renderer::InitOpenGLObjects() {
                           (GLvoid*)offsetof(ScreenRectVertex, tex_coord));
     glEnableVertexAttribArray(attrib_position);
     glEnableVertexAttribArray(attrib_tex_coord);
-
     // Allocate textures for each screen
     for (auto& screen_info : screen_infos) {
         screen_info.texture.resource.Create();
-
         // Allocation of storage is deferred until the first frame, when we
         // know the framebuffer size.
-
         state.texture_units[0].texture_2d = screen_info.texture.resource.handle;
         state.Apply();
-
         glActiveTexture(GL_TEXTURE0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
         screen_info.display_texture = screen_info.texture.resource.handle;
     }
-
     state.texture_units[0].texture_2d = 0;
     state.Apply();
 }
@@ -323,18 +276,15 @@ void Renderer::ConfigureFramebufferTexture(TextureInfo& texture,
                                            const GPU::Regs::FramebufferConfig& framebuffer) {
     GPU::Regs::PixelFormat format{framebuffer.color_format};
     GLint internal_format{};
-
     texture.format = format;
     texture.width = framebuffer.width;
     texture.height = framebuffer.height;
-
     switch (format) {
     case GPU::Regs::PixelFormat::RGBA8:
         internal_format = GL_RGBA;
         texture.gl_format = GL_RGBA;
         texture.gl_type = GL_UNSIGNED_INT_8_8_8_8;
         break;
-
     case GPU::Regs::PixelFormat::RGB8:
         // This pixel format uses BGR since GL_UNSIGNED_BYTE specifies byte-order, unlike every
         // specific OpenGL type used in this function using native-endian (that is, little-endian
@@ -344,36 +294,29 @@ void Renderer::ConfigureFramebufferTexture(TextureInfo& texture,
         texture.gl_format = GL_BGR;
         texture.gl_type = GL_UNSIGNED_BYTE;
         break;
-
     case GPU::Regs::PixelFormat::RGB565:
         internal_format = GL_RGB;
         texture.gl_format = GL_RGB;
         texture.gl_type = GL_UNSIGNED_SHORT_5_6_5;
         break;
-
     case GPU::Regs::PixelFormat::RGB5A1:
         internal_format = GL_RGBA;
         texture.gl_format = GL_RGBA;
         texture.gl_type = GL_UNSIGNED_SHORT_5_5_5_1;
         break;
-
     case GPU::Regs::PixelFormat::RGBA4:
         internal_format = GL_RGBA;
         texture.gl_format = GL_RGBA;
         texture.gl_type = GL_UNSIGNED_SHORT_4_4_4_4;
         break;
-
     default:
         UNIMPLEMENTED();
     }
-
     state.texture_units[0].texture_2d = texture.resource.handle;
     state.Apply();
-
     glActiveTexture(GL_TEXTURE0);
     glTexImage2D(GL_TEXTURE_2D, 0, internal_format, texture.width, texture.height, 0,
                  texture.gl_format, texture.gl_type, nullptr);
-
     state.texture_units[0].texture_2d = 0;
     state.Apply();
 }
@@ -384,21 +327,17 @@ void Renderer::ConfigureFramebufferTexture(TextureInfo& texture,
  */
 void Renderer::DrawSingleScreenRotated(const ScreenInfo& screen_info, float x, float y, float w,
                                        float h) {
-    auto& texcoords = screen_info.display_texcoords;
-
+    auto& texcoords{screen_info.display_texcoords};
     std::array<ScreenRectVertex, 4> vertices = {{
         ScreenRectVertex(x, y, texcoords.bottom, texcoords.left),
         ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.right),
         ScreenRectVertex(x, y + h, texcoords.top, texcoords.left),
         ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.right),
     }};
-
     state.texture_units[0].texture_2d = screen_info.display_texture;
     state.Apply();
-
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices.data());
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
     state.texture_units[0].texture_2d = 0;
     state.Apply();
 }
@@ -407,34 +346,28 @@ void Renderer::DrawSingleScreenRotated(const ScreenInfo& screen_info, float x, f
  * Draws the emulated screens to the emulator window.
  */
 void Renderer::DrawScreens(const Layout::FramebufferLayout& layout) {
-    if (VideoCore::g_renderer_bg_color_update_requested.exchange(false)) {
-        // Update background color before drawing
+    // Update background color before drawing if the user changed it
+    if (VideoCore::g_renderer_bg_color_update_requested.exchange(false))
         glClearColor(Settings::values.bg_red, Settings::values.bg_green, Settings::values.bg_blue,
                      0.0f);
-    }
-
     const auto& top_screen{layout.top_screen};
     const auto& bottom_screen{layout.bottom_screen};
-
     glViewport(0, 0, layout.width, layout.height);
     glClear(GL_COLOR_BUFFER_BIT);
-
     // Set projection matrix
     std::array<GLfloat, 6> ortho_matrix{
         MakeOrthographicMatrix((float)layout.width, (float)layout.height)};
     glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
-
     // Bind texture in Texture Unit 0
     glActiveTexture(GL_TEXTURE0);
     glUniform1i(uniform_color_texture, 0);
-
     if (Core::System::GetInstance().IsSleepModeEnabled())
         return;
     if (layout.top_screen_enabled) {
-        if (Settings::values.disable_mh_3d || Settings::values.factor_3d == 0) {
+        if (Settings::values.disable_mh_3d || Settings::values.factor_3d == 0)
             DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left, (float)top_screen.top,
                                     (float)top_screen.GetWidth(), (float)top_screen.GetHeight());
-        } else {
+        else {
             DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left / 2,
                                     (float)top_screen.top, (float)top_screen.GetWidth() / 2,
                                     (float)top_screen.GetHeight());
@@ -445,11 +378,11 @@ void Renderer::DrawScreens(const Layout::FramebufferLayout& layout) {
         }
     }
     if (layout.bottom_screen_enabled) {
-        if (Settings::values.disable_mh_3d || Settings::values.factor_3d == 0) {
+        if (Settings::values.disable_mh_3d || Settings::values.factor_3d == 0)
             DrawSingleScreenRotated(screen_infos[2], (float)bottom_screen.left,
                                     (float)bottom_screen.top, (float)bottom_screen.GetWidth(),
                                     (float)bottom_screen.GetHeight());
-        } else {
+        else {
             DrawSingleScreenRotated(screen_infos[2], (float)bottom_screen.left / 2,
                                     (float)bottom_screen.top, (float)bottom_screen.GetWidth() / 2,
                                     (float)bottom_screen.GetHeight());
@@ -517,30 +450,21 @@ static void APIENTRY DebugHandler(GLenum source, GLenum type, GLuint id, GLenum 
 /// Initialize the renderer
 Core::System::ResultStatus Renderer::Init() {
     frontend.MakeCurrent();
-
     if (GLAD_GL_KHR_debug) {
         glEnable(GL_DEBUG_OUTPUT);
         glDebugMessageCallback(DebugHandler, nullptr);
     }
-
     const char* gl_version{reinterpret_cast<char const*>(glGetString(GL_VERSION))};
     const char* gpu_vendor{reinterpret_cast<char const*>(glGetString(GL_VENDOR))};
     const char* gpu_model{reinterpret_cast<char const*>(glGetString(GL_RENDERER))};
-
     LOG_INFO(Render, "GL_VERSION: {}", gl_version);
     LOG_INFO(Render, "GL_VENDOR: {}", gpu_vendor);
     LOG_INFO(Render, "GL_RENDERER: {}", gpu_model);
-
-    if (gpu_vendor == "GDI Generic") {
+    if (gpu_vendor == "GDI Generic")
         return Core::System::ResultStatus::ErrorVideoCore_ErrorGenericDrivers;
-    }
-
-    if (!GLAD_GL_VERSION_3_3) {
+    if (!GLAD_GL_VERSION_3_3)
         return Core::System::ResultStatus::ErrorVideoCore_ErrorBelowGL33;
-    }
-
     InitOpenGLObjects();
-
     return Core::System::ResultStatus::Success;
 }
 

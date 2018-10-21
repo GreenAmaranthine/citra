@@ -92,13 +92,11 @@ void Module::CompletionEventCallBack(u64 port_id, s64) {
             trim_width = port.x1 - port.x0;
             trim_height = port.y1 - port.y0;
         }
-
         u32 trim_size{static_cast<u32>((port.x1 - port.x0) * (port.y1 - port.y0) * 2)};
         if (port.dest_size != trim_size) {
             LOG_ERROR(Service_CAM, "The destination size ({}) doesn't match the source ({})!",
                       port.dest_size, trim_size);
         }
-
         const u32 src_offset{static_cast<u32>(port.y0 * original_width + port.x0)};
         const u16* src_ptr{buffer.data() + src_offset};
         // Note: src_size_left is int because it can be negative if the buffer size doesn't match.
@@ -107,12 +105,10 @@ void Module::CompletionEventCallBack(u64 port_id, s64) {
         // Note: dest_size_left and line_bytes are int to match the type of src_size_left.
         int dest_size_left{static_cast<int>(port.dest_size)};
         const int line_bytes{static_cast<int>(trim_width * sizeof(u16))};
-
         for (u32 y{}; y < trim_height; ++y) {
             int copy_length{std::min({line_bytes, dest_size_left, src_size_left})};
-            if (copy_length <= 0) {
+            if (copy_length <= 0)
                 break;
-            }
             Memory::WriteBlock(*port.dest_process, dest_ptr, src_ptr, copy_length);
             dest_ptr += copy_length;
             dest_size_left -= copy_length;
@@ -121,14 +117,12 @@ void Module::CompletionEventCallBack(u64 port_id, s64) {
         }
     } else {
         std::size_t buffer_size{buffer.size() * sizeof(u16)};
-        if (port.dest_size != buffer_size) {
+        if (port.dest_size != buffer_size)
             LOG_ERROR(Service_CAM, "The destination size ({}) doesn't match the source ({})!",
                       port.dest_size, buffer_size);
-        }
         Memory::WriteBlock(*port.dest_process, port.dest, buffer.data(),
                            std::min<std::size_t>(port.dest_size, buffer_size));
     }
-
     port.is_receiving = false;
     port.completion_event->Signal();
 }
@@ -136,8 +130,7 @@ void Module::CompletionEventCallBack(u64 port_id, s64) {
 void Module::StartReceiving(int port_id) {
     PortConfig& port{ports[port_id]};
     port.is_receiving = true;
-
-    // launches a capture task asynchronously
+    // Launches a capture task asynchronously
     CameraConfig& camera{cameras[port.camera_id]};
     port.capture_result = std::async(std::launch::async, [&camera, &port, this] {
         if (is_camera_reload_pending.exchange(false)) {
@@ -148,8 +141,7 @@ void Module::StartReceiving(int port_id) {
         }
         return camera.impl->ReceiveFrame();
     });
-
-    // schedules a completion event according to the frame rate. The event will block on the
+    // Schedules a completion event according to the frame rate. The event will block on the
     // capture task if it is not finished within the expected time
     CoreTiming::ScheduleEvent(
         msToCycles(LATENCY_BY_FRAME_RATE[static_cast<int>(camera.frame_rate)]),
@@ -201,9 +193,7 @@ Module::Interface::~Interface() = default;
 void Module::Interface::StartCapture(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x01, 1, 0};
     const PortSet port_select{rp.Pop<u8>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-
     if (port_select.IsValid()) {
         for (int i : port_select) {
             if (!cam->ports[i].is_busy) {
@@ -219,42 +209,36 @@ void Module::Interface::StartCapture(Kernel::HLERequestContext& ctx) {
                         cam->StartReceiving(i);
                     }
                 }
-            } else {
+            } else
                 LOG_WARNING(Service_CAM, "port {} already started", i);
-            }
         }
         rb.Push(RESULT_SUCCESS);
     } else {
         LOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
-
-    LOG_DEBUG(Service_CAM, "called, port_select={}", port_select.m_val);
+    LOG_DEBUG(Service_CAM, "port_select={}", port_select.m_val);
 }
 
 void Module::Interface::StopCapture(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x02, 1, 0};
     const PortSet port_select{rp.Pop<u8>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-
     if (port_select.IsValid()) {
         for (int i : port_select) {
             if (cam->ports[i].is_busy) {
                 cam->CancelReceiving(i);
                 cam->cameras[cam->ports[i].camera_id].impl->StopCapture();
                 cam->ports[i].is_busy = false;
-            } else {
+            } else
                 LOG_WARNING(Service_CAM, "port {} already stopped", i);
-            }
         }
         rb.Push(RESULT_SUCCESS);
     } else {
         LOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
-
-    LOG_DEBUG(Service_CAM, "called, port_select={}", port_select.m_val);
+    LOG_DEBUG(Service_CAM, "port_select={}", port_select.m_val);
 }
 
 void Module::Interface::IsBusy(Kernel::HLERequestContext& ctx) {
@@ -277,23 +261,20 @@ void Module::Interface::IsBusy(Kernel::HLERequestContext& ctx) {
         rb.Skip(1, false);
     }
 
-    LOG_DEBUG(Service_CAM, "called, port_select={}", port_select.m_val);
+    LOG_DEBUG(Service_CAM, "port_select={}", port_select.m_val);
 }
 
 void Module::Interface::ClearBuffer(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x04, 1, 0};
     const PortSet port_select{rp.Pop<u8>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
-    LOG_WARNING(Service_CAM, "(STUBBED) called, port_select={}", port_select.m_val);
+    LOG_WARNING(Service_CAM, "(STUBBED) port_select={}", port_select.m_val);
 }
 
 void Module::Interface::GetVsyncInterruptEvent(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x05, 1, 0};
     const PortSet port_select{rp.Pop<u8>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     if (port_select.IsSingle()) {
         int port{*port_select.begin()};
@@ -304,14 +285,12 @@ void Module::Interface::GetVsyncInterruptEvent(Kernel::HLERequestContext& ctx) {
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.PushCopyObjects<Kernel::Object>(nullptr);
     }
-
-    LOG_WARNING(Service_CAM, "(STUBBED) called, port_select={}", port_select.m_val);
+    LOG_WARNING(Service_CAM, "(STUBBED) port_select={}", port_select.m_val);
 }
 
 void Module::Interface::GetBufferErrorInterruptEvent(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x06, 1, 0};
     const PortSet port_select{rp.Pop<u8>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     if (port_select.IsSingle()) {
         int port{*port_select.begin()};
@@ -322,8 +301,7 @@ void Module::Interface::GetBufferErrorInterruptEvent(Kernel::HLERequestContext& 
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.PushCopyObjects<Kernel::Object>(nullptr);
     }
-
-    LOG_WARNING(Service_CAM, "(STUBBED) called, port_select={}", port_select.m_val);
+    LOG_WARNING(Service_CAM, "(STUBBED) port_select={}", port_select.m_val);
 }
 
 void Module::Interface::SetReceiving(Kernel::HLERequestContext& ctx) {
@@ -333,7 +311,6 @@ void Module::Interface::SetReceiving(Kernel::HLERequestContext& ctx) {
     const u32 image_size{rp.Pop<u32>()};
     const u16 trans_unit{rp.Pop<u16>()};
     auto process{rp.PopObject<Kernel::Process>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     if (port_select.IsSingle()) {
         int port_id{*port_select.begin()};
@@ -343,13 +320,10 @@ void Module::Interface::SetReceiving(Kernel::HLERequestContext& ctx) {
         port.dest_process = process.get();
         port.dest = dest;
         port.dest_size = image_size;
-
-        if (port.is_busy) {
+        if (port.is_busy)
             cam->StartReceiving(port_id);
-        } else {
+        else
             port.is_pending_receiving = true;
-        }
-
         rb.Push(RESULT_SUCCESS);
         rb.PushCopyObjects(port.completion_event);
     } else {
@@ -357,15 +331,13 @@ void Module::Interface::SetReceiving(Kernel::HLERequestContext& ctx) {
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.PushCopyObjects<Kernel::Object>(nullptr);
     }
-
-    LOG_DEBUG(Service_CAM, "called, addr=0x{:X}, port_select={}, image_size={}, trans_unit={}",
-              dest, port_select.m_val, image_size, trans_unit);
+    LOG_DEBUG(Service_CAM, "addr=0x{:X}, port_select={}, image_size={}, trans_unit={}", dest,
+              port_select.m_val, image_size, trans_unit);
 }
 
 void Module::Interface::IsFinishedReceiving(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x08, 1, 0};
     const PortSet port_select{rp.Pop<u8>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     if (port_select.IsSingle()) {
         int port{*port_select.begin()};
@@ -377,8 +349,7 @@ void Module::Interface::IsFinishedReceiving(Kernel::HLERequestContext& ctx) {
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.Skip(1, false);
     }
-
-    LOG_DEBUG(Service_CAM, "called, port_select={}", port_select.m_val);
+    LOG_DEBUG(Service_CAM, "port_select={}", port_select.m_val);
 }
 
 void Module::Interface::SetTransferLines(Kernel::HLERequestContext& ctx) {
@@ -387,19 +358,16 @@ void Module::Interface::SetTransferLines(Kernel::HLERequestContext& ctx) {
     const u16 transfer_lines{rp.Pop<u16>()};
     const u16 width{rp.Pop<u16>()};
     const u16 height{rp.Pop<u16>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     if (port_select.IsValid()) {
-        for (int i : port_select) {
+        for (int i : port_select)
             cam->ports[i].transfer_bytes = transfer_lines * width * 2;
-        }
         rb.Push(RESULT_SUCCESS);
     } else {
         LOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
-
-    LOG_WARNING(Service_CAM, "(STUBBED) called, port_select={}, lines={}, width={}, height={}",
+    LOG_WARNING(Service_CAM, "(STUBBED) port_select={}, lines={}, width={}, height={}",
                 port_select.m_val, transfer_lines, width, height);
 }
 
@@ -407,9 +375,7 @@ void Module::Interface::GetMaxLines(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0A, 2, 0};
     const u16 width{rp.Pop<u16>()};
     const u16 height{rp.Pop<u16>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
-
     // Note: the result of the algorithm below are hwtested with width < 640 and with height < 480
     constexpr u32 MIN_TRANSFER_UNIT{256};
     constexpr u32 MAX_BUFFER_SIZE{2560};
@@ -432,8 +398,7 @@ void Module::Interface::GetMaxLines(Kernel::HLERequestContext& ctx) {
         rb.Push(result);
         rb.Push(lines);
     }
-
-    LOG_DEBUG(Service_CAM, "called, width={}, height={}", width, height);
+    LOG_DEBUG(Service_CAM, "width={}, height={}", width, height);
 }
 
 void Module::Interface::SetTransferBytes(Kernel::HLERequestContext& ctx) {
@@ -442,26 +407,22 @@ void Module::Interface::SetTransferBytes(Kernel::HLERequestContext& ctx) {
     const u16 transfer_bytes{rp.Pop<u16>()};
     const u16 width{rp.Pop<u16>()};
     const u16 height{rp.Pop<u16>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     if (port_select.IsValid()) {
-        for (int i : port_select) {
+        for (int i : port_select)
             cam->ports[i].transfer_bytes = transfer_bytes;
-        }
         rb.Push(RESULT_SUCCESS);
     } else {
         LOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
-
-    LOG_WARNING(Service_CAM, "(STUBBED) called, port_select={}, bytes={}, width={}, height={}",
+    LOG_WARNING(Service_CAM, "(STUBBED) port_select={}, bytes={}, width={}, height={}",
                 port_select.m_val, transfer_bytes, width, height);
 }
 
 void Module::Interface::GetTransferBytes(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0C, 1, 0};
     const PortSet port_select{rp.Pop<u8>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     if (port_select.IsSingle()) {
         int port{*port_select.begin()};
@@ -472,17 +433,14 @@ void Module::Interface::GetTransferBytes(Kernel::HLERequestContext& ctx) {
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.Skip(1, false);
     }
-
-    LOG_WARNING(Service_CAM, "(STUBBED) called, port_select={}", port_select.m_val);
+    LOG_WARNING(Service_CAM, "(STUBBED) port_select={}", port_select.m_val);
 }
 
 void Module::Interface::GetMaxBytes(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0D, 2, 0};
     const u16 width{rp.Pop<u16>()};
     const u16 height{rp.Pop<u16>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
-
     // Note: the result of the algorithm below are hwtested with width < 640 and with height < 480
     constexpr u32 MIN_TRANSFER_UNIT{256};
     constexpr u32 MAX_BUFFER_SIZE{2560};
@@ -491,41 +449,33 @@ void Module::Interface::GetMaxBytes(Kernel::HLERequestContext& ctx) {
         rb.Skip(1, false);
     } else {
         u32 bytes{MAX_BUFFER_SIZE};
-
-        while (width * height * 2 % bytes != 0) {
+        while (width * height * 2 % bytes != 0)
             bytes -= MIN_TRANSFER_UNIT;
-        }
-
         rb.Push(RESULT_SUCCESS);
         rb.Push(bytes);
     }
-
-    LOG_DEBUG(Service_CAM, "called, width={}, height={}", width, height);
+    LOG_DEBUG(Service_CAM, "width={}, height={}", width, height);
 }
 
 void Module::Interface::SetTrimming(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0E, 2, 0};
     const PortSet port_select{rp.Pop<u8>()};
     const bool trim{rp.Pop<bool>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     if (port_select.IsValid()) {
-        for (int i : port_select) {
+        for (int i : port_select)
             cam->ports[i].is_trimming = trim;
-        }
         rb.Push(RESULT_SUCCESS);
     } else {
         LOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
-
-    LOG_DEBUG(Service_CAM, "called, port_select={}, trim={}", port_select.m_val, trim);
+    LOG_DEBUG(Service_CAM, "port_select={}, trim={}", port_select.m_val, trim);
 }
 
 void Module::Interface::IsTrimming(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0F, 1, 0};
     const PortSet port_select{rp.Pop<u8>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     if (port_select.IsSingle()) {
         int port{*port_select.begin()};
@@ -536,8 +486,7 @@ void Module::Interface::IsTrimming(Kernel::HLERequestContext& ctx) {
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.Skip(1, false);
     }
-
-    LOG_DEBUG(Service_CAM, "called, port_select={}", port_select.m_val);
+    LOG_DEBUG(Service_CAM, "port_select={}", port_select.m_val);
 }
 
 void Module::Interface::SetTrimmingParams(Kernel::HLERequestContext& ctx) {
@@ -547,7 +496,6 @@ void Module::Interface::SetTrimmingParams(Kernel::HLERequestContext& ctx) {
     const u16 y0{rp.Pop<u16>()};
     const u16 x1{rp.Pop<u16>()};
     const u16 y1{rp.Pop<u16>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     if (port_select.IsValid()) {
         for (int i : port_select) {
@@ -561,15 +509,13 @@ void Module::Interface::SetTrimmingParams(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
-
-    LOG_DEBUG(Service_CAM, "called, port_select={}, x0={}, y0={}, x1={}, y1={}", port_select.m_val,
-              x0, y0, x1, y1);
+    LOG_DEBUG(Service_CAM, "port_select={}, x0={}, y0={}, x1={}, y1={}", port_select.m_val, x0, y0,
+              x1, y1);
 }
 
 void Module::Interface::GetTrimmingParams(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x11, 1, 0};
     const PortSet port_select{rp.Pop<u8>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(5, 0)};
     if (port_select.IsSingle()) {
         int port{*port_select.begin()};
@@ -583,8 +529,7 @@ void Module::Interface::GetTrimmingParams(Kernel::HLERequestContext& ctx) {
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.Skip(4, false);
     }
-
-    LOG_DEBUG(Service_CAM, "called, port_select={}", port_select.m_val);
+    LOG_DEBUG(Service_CAM, "port_select={}", port_select.m_val);
 }
 
 void Module::Interface::SetTrimmingParamsCenter(Kernel::HLERequestContext& ctx) {
@@ -594,7 +539,6 @@ void Module::Interface::SetTrimmingParamsCenter(Kernel::HLERequestContext& ctx) 
     const u16 trim_h{rp.Pop<u16>()};
     const u16 cam_w{rp.Pop<u16>()};
     const u16 cam_h{rp.Pop<u16>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     if (port_select.IsValid()) {
         for (int i : port_select) {
@@ -608,15 +552,13 @@ void Module::Interface::SetTrimmingParamsCenter(Kernel::HLERequestContext& ctx) 
         LOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
-
-    LOG_DEBUG(Service_CAM, "called, port_select={}, trim_w={}, trim_h={}, cam_w={}, cam_h={}",
+    LOG_DEBUG(Service_CAM, "port_select={}, trim_w={}, trim_h={}, cam_w={}, cam_h={}",
               port_select.m_val, trim_w, trim_h, cam_w, cam_h);
 }
 
 void Module::Interface::Activate(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x13, 1, 0};
-    const CameraSet camera_select(rp.Pop<u8>());
-
+    const CameraSet camera_select{rp.Pop<u8>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     if (camera_select.IsValid()) {
         if (camera_select.m_val == 0) { // deactive all
@@ -633,15 +575,12 @@ void Module::Interface::Activate(Kernel::HLERequestContext& ctx) {
             LOG_ERROR(Service_CAM, "camera 0 and 1 can't be both activated");
             rb.Push(ERROR_INVALID_ENUM_VALUE);
         } else {
-            if (camera_select[0]) {
+            if (camera_select[0])
                 cam->ActivatePort(0, 0);
-            } else if (camera_select[1]) {
+            else if (camera_select[1])
                 cam->ActivatePort(0, 1);
-            }
-
-            if (camera_select[2]) {
+            if (camera_select[2])
                 cam->ActivatePort(1, 2);
-            }
             rb.Push(RESULT_SUCCESS);
         }
     } else {
@@ -649,20 +588,19 @@ void Module::Interface::Activate(Kernel::HLERequestContext& ctx) {
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_DEBUG(Service_CAM, "called, camera_select={}", camera_select.m_val);
+    LOG_DEBUG(Service_CAM, "camera_select={}", camera_select.m_val);
 }
 
 void Module::Interface::SwitchContext(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x14, 2, 0};
-    const CameraSet camera_select(rp.Pop<u8>());
-    const ContextSet context_select(rp.Pop<u8>());
-
+    const CameraSet camera_select{rp.Pop<u8>()};
+    const ContextSet context_select{rp.Pop<u8>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     if (camera_select.IsValid() && context_select.IsSingle()) {
-        int context = *context_select.begin();
+        int context{*context_select.begin()};
         for (int camera : camera_select) {
             cam->cameras[camera].current_context = context;
-            const ContextConfig& context_config = cam->cameras[camera].contexts[context];
+            const ContextConfig& context_config{cam->cameras[camera].contexts[context]};
             cam->cameras[camera].impl->SetFlip(context_config.flip);
             cam->cameras[camera].impl->SetEffect(context_config.effect);
             cam->cameras[camera].impl->SetFormat(context_config.format);
@@ -674,8 +612,7 @@ void Module::Interface::SwitchContext(Kernel::HLERequestContext& ctx) {
                   context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
-
-    LOG_DEBUG(Service_CAM, "called, camera_select={}, context_select={}", camera_select.m_val,
+    LOG_DEBUG(Service_CAM, "camera_select={}, context_select={}", camera_select.m_val,
               context_select.m_val);
 }
 
@@ -684,15 +621,13 @@ void Module::Interface::FlipImage(Kernel::HLERequestContext& ctx) {
     const CameraSet camera_select{rp.Pop<u8>()};
     const Flip flip{static_cast<Flip>(rp.Pop<u8>())};
     const ContextSet context_select{rp.Pop<u8>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     if (camera_select.IsValid() && context_select.IsValid()) {
         for (int camera : camera_select) {
             for (int context : context_select) {
                 cam->cameras[camera].contexts[context].flip = flip;
-                if (cam->cameras[camera].current_context == context) {
+                if (cam->cameras[camera].current_context == context)
                     cam->cameras[camera].impl->SetFlip(flip);
-                }
             }
         }
         rb.Push(RESULT_SUCCESS);
@@ -701,9 +636,8 @@ void Module::Interface::FlipImage(Kernel::HLERequestContext& ctx) {
                   context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
-
-    LOG_DEBUG(Service_CAM, "called, camera_select={}, flip={}, context_select={}",
-              camera_select.m_val, static_cast<int>(flip), context_select.m_val);
+    LOG_DEBUG(Service_CAM, "camera_select={}, flip={}, context_select={}", camera_select.m_val,
+              static_cast<int>(flip), context_select.m_val);
 }
 
 void Module::Interface::SetDetailSize(Kernel::HLERequestContext& ctx) {
@@ -717,15 +651,13 @@ void Module::Interface::SetDetailSize(Kernel::HLERequestContext& ctx) {
     resolution.crop_x1 = rp.Pop<u16>();
     resolution.crop_y1 = rp.Pop<u16>();
     const ContextSet context_select{rp.Pop<u8>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     if (camera_select.IsValid() && context_select.IsValid()) {
         for (int camera : camera_select) {
             for (int context : context_select) {
                 cam->cameras[camera].contexts[context].resolution = resolution;
-                if (cam->cameras[camera].current_context == context) {
+                if (cam->cameras[camera].current_context == context)
                     cam->cameras[camera].impl->SetResolution(resolution);
-                }
             }
         }
         rb.Push(RESULT_SUCCESS);
@@ -734,9 +666,8 @@ void Module::Interface::SetDetailSize(Kernel::HLERequestContext& ctx) {
                   context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
-
     LOG_DEBUG(Service_CAM,
-              "called, camera_select={}, width={}, height={}, crop_x0={}, crop_y0={}, "
+              "camera_select={}, width={}, height={}, crop_x0={}, crop_y0={}, "
               "crop_x1={}, crop_y1={}, context_select={}",
               camera_select.m_val, resolution.width, resolution.height, resolution.crop_x0,
               resolution.crop_y0, resolution.crop_x1, resolution.crop_y1, context_select.m_val);
@@ -747,15 +678,13 @@ void Module::Interface::SetSize(Kernel::HLERequestContext& ctx) {
     const CameraSet camera_select{rp.Pop<u8>()};
     const u8 size{rp.Pop<u8>()};
     const ContextSet context_select{rp.Pop<u8>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     if (camera_select.IsValid() && context_select.IsValid()) {
         for (int camera : camera_select) {
             for (int context : context_select) {
                 cam->cameras[camera].contexts[context].resolution = PRESET_RESOLUTION[size];
-                if (cam->cameras[camera].current_context == context) {
+                if (cam->cameras[camera].current_context == context)
                     cam->cameras[camera].impl->SetResolution(PRESET_RESOLUTION[size]);
-                }
             }
         }
         rb.Push(RESULT_SUCCESS);
@@ -764,16 +693,14 @@ void Module::Interface::SetSize(Kernel::HLERequestContext& ctx) {
                   context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
-
-    LOG_DEBUG(Service_CAM, "called, camera_select={}, size={}, context_select={}",
-              camera_select.m_val, size, context_select.m_val);
+    LOG_DEBUG(Service_CAM, "camera_select={}, size={}, context_select={}", camera_select.m_val,
+              size, context_select.m_val);
 }
 
 void Module::Interface::SetFrameRate(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x20, 2, 0};
     const CameraSet camera_select{rp.Pop<u8>()};
     const FrameRate frame_rate{static_cast<FrameRate>(rp.Pop<u8>())};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     if (camera_select.IsValid()) {
         for (int camera : camera_select) {
@@ -785,9 +712,8 @@ void Module::Interface::SetFrameRate(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_CAM, "invalid camera_select={}", camera_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
-
-    LOG_WARNING(Service_CAM, "(STUBBED) called, camera_select={}, frame_rate={}",
-                camera_select.m_val, static_cast<int>(frame_rate));
+    LOG_WARNING(Service_CAM, "(STUBBED) camera_select={}, frame_rate={}", camera_select.m_val,
+                static_cast<int>(frame_rate));
 }
 
 void Module::Interface::SetEffect(Kernel::HLERequestContext& ctx) {
@@ -795,15 +721,13 @@ void Module::Interface::SetEffect(Kernel::HLERequestContext& ctx) {
     const CameraSet camera_select{rp.Pop<u8>()};
     const Effect effect{static_cast<Effect>(rp.Pop<u8>())};
     const ContextSet context_select{rp.Pop<u8>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     if (camera_select.IsValid() && context_select.IsValid()) {
         for (int camera : camera_select) {
             for (int context : context_select) {
                 cam->cameras[camera].contexts[context].effect = effect;
-                if (cam->cameras[camera].current_context == context) {
+                if (cam->cameras[camera].current_context == context)
                     cam->cameras[camera].impl->SetEffect(effect);
-                }
             }
         }
         rb.Push(RESULT_SUCCESS);
@@ -812,9 +736,8 @@ void Module::Interface::SetEffect(Kernel::HLERequestContext& ctx) {
                   context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
-
-    LOG_DEBUG(Service_CAM, "called, camera_select={}, effect={}, context_select={}",
-              camera_select.m_val, static_cast<int>(effect), context_select.m_val);
+    LOG_DEBUG(Service_CAM, "camera_select={}, effect={}, context_select={}", camera_select.m_val,
+              static_cast<int>(effect), context_select.m_val);
 }
 
 void Module::Interface::SetOutputFormat(Kernel::HLERequestContext& ctx) {
@@ -828,9 +751,8 @@ void Module::Interface::SetOutputFormat(Kernel::HLERequestContext& ctx) {
         for (int camera : camera_select) {
             for (int context : context_select) {
                 cam->cameras[camera].contexts[context].format = format;
-                if (cam->cameras[camera].current_context == context) {
+                if (cam->cameras[camera].current_context == context)
                     cam->cameras[camera].impl->SetFormat(format);
-                }
             }
         }
         rb.Push(RESULT_SUCCESS);
@@ -839,26 +761,22 @@ void Module::Interface::SetOutputFormat(Kernel::HLERequestContext& ctx) {
                   context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
-
-    LOG_DEBUG(Service_CAM, "called, camera_select={}, format={}, context_select={}",
-              camera_select.m_val, static_cast<int>(format), context_select.m_val);
+    LOG_DEBUG(Service_CAM, "camera_select={}, format={}, context_select={}", camera_select.m_val,
+              static_cast<int>(format), context_select.m_val);
 }
 
 void Module::Interface::SynchronizeVsyncTiming(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x29, 2, 0};
     const u8 camera_select1{rp.Pop<u8>()};
     const u8 camera_select2{rp.Pop<u8>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
-    LOG_WARNING(Service_CAM, "(STUBBED) called, camera_select1={}, camera_select2={}",
-                camera_select1, camera_select2);
+    LOG_WARNING(Service_CAM, "(STUBBED) camera_select1={}, camera_select2={}", camera_select1,
+                camera_select2);
 }
 
 void Module::Interface::GetStereoCameraCalibrationData(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x2B, 17, 0};
-
     // Default values taken from yuriks' 3DS. Valid data is required here or games using the
     // calibration get stuck in an infinite CPU loop.
     StereoCameraCalibrationData data{};
@@ -875,30 +793,24 @@ void Module::Interface::GetStereoCameraCalibrationData(Kernel::HLERequestContext
     data.distanceCameras = 35.0f;
     data.imageWidth = 640;
     data.imageHeight = 480;
-
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(data);
-
     LOG_TRACE(Service_CAM, "called");
 }
 
 void Module::Interface::SetPackageParameterWithoutContext(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x33, 11, 0};
-
     PackageParameterWithoutContext package;
     rp.PopRaw(package);
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
-    LOG_WARNING(Service_CAM, "(STUBBED) called");
+    LOG_WARNING(Service_CAM, "(STUBBED)");
 }
 
 template <typename PackageParameterType>
 ResultCode Module::SetPackageParameter(const PackageParameterType& package) {
     const CameraSet camera_select{package.camera_select};
     const ContextSet context_select{package.context_select};
-
     if (camera_select.IsValid() && context_select.IsValid()) {
         for (int camera_id : camera_select) {
             CameraConfig& camera{cameras[camera_id]};
@@ -928,27 +840,21 @@ Resolution PackageParameterWithContext::GetResolution() const {
 
 void Module::Interface::SetPackageParameterWithContext(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x34, 5, 0};
-
     PackageParameterWithContext package;
     rp.PopRaw(package);
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     ResultCode result{cam->SetPackageParameter(package)};
     rb.Push(result);
-
     LOG_DEBUG(Service_CAM, "called");
 }
 
 void Module::Interface::SetPackageParameterWithContextDetail(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x35, 7, 0};
-
     PackageParameterWithContextDetail package;
     rp.PopRaw(package);
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     ResultCode result{cam->SetPackageParameter(package)};
     rb.Push(result);
-
     LOG_DEBUG(Service_CAM, "called");
 }
 
@@ -956,18 +862,15 @@ void Module::Interface::GetSuitableY2rStandardCoefficient(Kernel::HLERequestCont
     IPC::ResponseBuilder rb{ctx, 0x36, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
-
-    LOG_WARNING(Service_CAM, "(STUBBED) called");
+    LOG_WARNING(Service_CAM, "(STUBBED)");
 }
 
 void Module::Interface::PlayShutterSound(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x38, 1, 0};
     u8 sound_id{rp.Pop<u8>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
-    LOG_WARNING(Service_CAM, "(STUBBED) called, sound_id={}", sound_id);
+    LOG_WARNING(Service_CAM, "(STUBBED) sound_id={}", sound_id);
 }
 
 void Module::Interface::DriverInitialize(Kernel::HLERequestContext& ctx) {
@@ -980,33 +883,25 @@ void Module::Interface::DriverInitialize(Kernel::HLERequestContext& ctx) {
             context.flip = camera_id == 1 ? Flip::Horizontal : Flip::None;
             context.effect = Effect::None;
             context.format = OutputFormat::YUV422;
-            context.resolution =
-                context_id == 0 ? PRESET_RESOLUTION[5 /*DS_LCD*/] : PRESET_RESOLUTION[0 /*VGA*/];
+            context.resolution = context_id == 0 ? PRESET_RESOLUTION[5 /* DS_LCD */]
+                                                 : PRESET_RESOLUTION[0 /* VGA */];
         }
         cam->LoadCameraImplementation(camera, camera_id);
     }
-
-    for (PortConfig& port : cam->ports) {
+    for (PortConfig& port : cam->ports)
         port.Clear();
-    }
-
     IPC::ResponseBuilder rb{ctx, 0x39, 1, 0};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_CAM, "called");
 }
 
 void Module::Interface::DriverFinalize(Kernel::HLERequestContext& ctx) {
     cam->CancelReceiving(0);
     cam->CancelReceiving(1);
-
-    for (CameraConfig& camera : cam->cameras) {
+    for (CameraConfig& camera : cam->cameras)
         camera.impl = nullptr;
-    }
-
     IPC::ResponseBuilder rb{ctx, 0x3A, 1, 0};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_CAM, "called");
 }
 
@@ -1048,7 +943,6 @@ void ReloadCameraDevices() {
     if (!system.IsPoweredOn()) {
         return;
     }
-
     auto u{system.ServiceManager().GetService<CAM_U>("cam:u")};
     auto cam{u->GetModule()};
     cam->ReloadCameraDevices();

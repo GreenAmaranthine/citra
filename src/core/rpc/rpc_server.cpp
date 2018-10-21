@@ -39,7 +39,7 @@ void RPCServer::HandleWriteMemory(Packet& packet, u32 address, const u8* data, u
     // Note: Memory write occurs asynchronously from the state of the emulator
     Memory::WriteBlock(address, data, data_size);
     // If the memory happens to be executable code, make sure the changes become visible
-    Core::GetCPU().InvalidateCacheRange(address, data_size);
+    Core::CPU().InvalidateCacheRange(address, data_size);
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
@@ -75,8 +75,8 @@ void RPCServer::HandleSetResolution(Packet& packet, u16 resolution) {
     packet.SendReply();
 }
 
-void RPCServer::HandleSetGame(Packet& packet, const std::string& path) {
-    Core::System::GetInstance().SetGame(path);
+void RPCServer::HandleSetApplication(Packet& packet, const std::string& path) {
+    Core::System::GetInstance().SetApplication(path);
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
@@ -101,7 +101,7 @@ void RPCServer::HandleResume(Packet& packet) {
 }
 
 void RPCServer::HandleRestart(Packet& packet) {
-    Core::System::GetInstance().RequestJump(0, Service::FS::MediaType::NAND);
+    Core::System::GetInstance().Restart();
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
@@ -169,7 +169,7 @@ bool RPCServer::ValidatePacket(const PacketHeader& packet_header) {
         case PacketType::MotionState:
         case PacketType::CircleState:
         case PacketType::SetResolution:
-        case PacketType::SetGame:
+        case PacketType::SetApplication:
         case PacketType::SetOverrideControls:
         case PacketType::Pause:
         case PacketType::Resume:
@@ -276,12 +276,12 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
             success = true;
             break;
         }
-        case PacketType::SetGame: {
+        case PacketType::SetApplication: {
             const u8* data{request_packet->GetPacketData().data() + (sizeof(u32) * 2)};
             std::string path;
             path.resize(request_packet->GetPacketDataSize() - (sizeof(u32) * 2));
             std::memcpy(&path[0], data, request_packet->GetPacketDataSize() - (sizeof(u32) * 2));
-            HandleSetGame(*request_packet, path);
+            HandleSetApplication(*request_packet, path);
             success = true;
             break;
         }

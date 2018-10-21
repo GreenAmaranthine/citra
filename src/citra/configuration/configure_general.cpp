@@ -15,14 +15,11 @@
 
 ConfigureGeneral::ConfigureGeneral(QWidget* parent)
     : QWidget{parent}, ui{std::make_unique<Ui::ConfigureGeneral>()} {
-
     ui->setupUi(this);
-
 #ifndef _WIN32
     ui->toggle_console->setText("Enable logging to console");
     ui->toggle_console->setToolTip(QString());
 #endif
-
     setConfiguration();
 }
 
