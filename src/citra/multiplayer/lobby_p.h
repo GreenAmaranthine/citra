@@ -196,7 +196,7 @@ public:
             return LobbyItem::data(role);
         }
         auto members = data(MemberListRole).toList();
-        QString out{};
+        QString out;
         bool first{true};
         for (const auto& member : members) {
             if (!first)

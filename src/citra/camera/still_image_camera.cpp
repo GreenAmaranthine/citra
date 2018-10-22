@@ -36,7 +36,7 @@ const std::string StillImageCameraFactory::GetFilePath() const {
         return last_path;
     }
     QList<QByteArray> types{QImageReader::supportedImageFormats()};
-    QList<QString> temp_filters{};
+    QList<QString> temp_filters;
     for (QByteArray type : types) {
         temp_filters << QString("*." + QString(type));
     }

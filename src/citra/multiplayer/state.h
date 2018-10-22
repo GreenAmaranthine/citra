@@ -62,10 +62,10 @@ private:
     HostRoomWindow* host_room{};
     ClientRoomWindow* client_room{};
     DirectConnectWindow* direct_connect{};
-    ClickableLabel* status_icon{};
-    QStandardItemModel* game_list_model{};
-    QAction* leave_room{};
-    QAction* show_room{};
+    ClickableLabel* status_icon;
+    QStandardItemModel* game_list_model;
+    QAction* leave_room;
+    QAction* show_room;
     std::shared_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
     Network::RoomMember::State current_state{Network::RoomMember::State::Uninitialized};
     Network::RoomMember::CallbackHandle<Network::RoomMember::State> state_callback_handle;

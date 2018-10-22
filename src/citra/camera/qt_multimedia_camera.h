@@ -87,7 +87,7 @@ public:
 
 private:
     std::unique_ptr<QCamera> camera;
-    QtCameraSurface camera_surface{};
+    QtCameraSurface camera_surface;
     QCameraViewfinderSettings settings;
     bool started{};
 

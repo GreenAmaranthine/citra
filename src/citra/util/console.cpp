@@ -23,16 +23,14 @@ void ToggleConsole() {
 
 #ifdef _WIN32
     FILE* temp{};
-    if (UISettings::values.show_console) {
+    if (UISettings::values.show_console)
         if (AllocConsole()) {
             // The first parameter for freopen_s is a out parameter, so we can just ignore it
             freopen_s(&temp, "CONIN$", "r", stdin);
             freopen_s(&temp, "CONOUT$", "w", stdout);
             freopen_s(&temp, "CONOUT$", "w", stderr);
             Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
-        }
-    } else {
-        if (FreeConsole()) {
+        } else if (FreeConsole()) {
             // In order to close the console, we have to also detach the streams on it.
             // Just redirect them to NUL if there is no console window
             Log::RemoveBackend(Log::ColorConsoleBackend::Name());
@@ -40,13 +38,11 @@ void ToggleConsole() {
             freopen_s(&temp, "NUL", "w", stdout);
             freopen_s(&temp, "NUL", "w", stderr);
         }
-    }
 #else
-    if (UISettings::values.show_console) {
+    if (UISettings::values.show_console)
         Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
-    } else {
+    else
         Log::RemoveBackend(Log::ColorConsoleBackend::Name());
-    }
 #endif
 }
 } // namespace Util

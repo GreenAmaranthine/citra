@@ -43,24 +43,22 @@ Sink::Sink(std::string target_device_name) : impl{std::make_unique<Impl>()} {
     params.prefs = CUBEB_STREAM_PREF_NONE;
 
     u32 minimum_latency{100 * impl->sample_rate / 1000}; // Firefox default
-    if (cubeb_get_min_latency(impl->ctx, &params, &minimum_latency) != CUBEB_OK) {
+    if (cubeb_get_min_latency(impl->ctx, &params, &minimum_latency) != CUBEB_OK)
         LOG_CRITICAL(Audio, "Error getting minimum latency");
-    }
 
     cubeb_devid output_device{};
     if (target_device_name != "auto" && !target_device_name.empty()) {
         cubeb_device_collection collection;
-        if (cubeb_enumerate_devices(impl->ctx, CUBEB_DEVICE_TYPE_OUTPUT, &collection) != CUBEB_OK) {
-            LOG_WARNING(Audio, "Audio output device enumeration not supported");
-        } else {
+        if (cubeb_enumerate_devices(impl->ctx, CUBEB_DEVICE_TYPE_OUTPUT, &collection) != CUBEB_OK)
+            LOG_WARNING(Audio, "Output device enumeration not supported");
+        else {
             const auto collection_end{collection.device + collection.count};
             const auto device{
                 std::find_if(collection.device, collection_end, [&](const cubeb_device_info& info) {
                     return target_device_name == info.friendly_name;
                 })};
-            if (device != collection_end) {
+            if (device != collection_end)
                 output_device = device->devid;
-            }
             cubeb_device_collection_destroy(impl->ctx, &collection);
         }
     }
@@ -72,20 +70,20 @@ Sink::Sink(std::string target_device_name) : impl{std::make_unique<Impl>()} {
         switch (stream_err) {
         case CUBEB_ERROR:
         default:
-            LOG_CRITICAL(Audio, "Error initializing cubeb stream ({})", stream_err);
+            LOG_ERROR(Audio, "Error initializing cubeb stream ({})", stream_err);
             break;
         case CUBEB_ERROR_INVALID_FORMAT:
-            LOG_CRITICAL(Audio, "Invalid format when initializing cubeb stream");
+            LOG_ERROR(Audio, "Invalid format when initializing cubeb stream");
             break;
         case CUBEB_ERROR_DEVICE_UNAVAILABLE:
-            LOG_CRITICAL(Audio, "Device unavailable when initializing cubeb stream");
+            LOG_ERROR(Audio, "Device unavailable when initializing cubeb stream");
             break;
         }
         return;
     }
 
     if (cubeb_stream_start(impl->stream) != CUBEB_OK) {
-        LOG_CRITICAL(Audio, "Error starting cubeb stream");
+        LOG_ERROR(Audio, "Error starting cubeb stream");
         return;
     }
 }

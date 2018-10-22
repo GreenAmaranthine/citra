@@ -33,7 +33,7 @@ CalibrationConfigurationDialog::CalibrationConfigurationDialog(QWidget* parent,
     job = std::move(std::make_unique<CalibrationConfigurationJob>(
         host, port, pad_index, client_id,
         [this](CalibrationConfigurationJob::Status status) {
-            QString text{};
+            QString text;
             switch (status) {
             case CalibrationConfigurationJob::Status::Ready:
                 text = "Touch the top left corner <br>of your touchpad.";

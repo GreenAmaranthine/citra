@@ -68,9 +68,8 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
         return;
     }
 
-    if (ui->mii->count() > static_cast<int>(config.initially_selected_mii_index)) {
+    if (ui->mii->count() > static_cast<int>(config.initially_selected_mii_index))
         ui->mii->setCurrentIndex(static_cast<int>(config.initially_selected_mii_index));
-    }
 
     connect(ui->cancel, &QPushButton::released, this, [&] {
         result.return_code = 1;

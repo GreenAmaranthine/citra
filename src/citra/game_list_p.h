@@ -391,18 +391,18 @@ private:
         explicit KeyReleaseEater(GameList* gamelist);
 
     private:
-        GameList* gamelist{};
-        QString edit_filter_text_old{};
+        GameList* gamelist;
+        QString edit_filter_text_old;
 
     protected:
         // EventFilter in order to process systemkeys while editing the searchfield
         bool eventFilter(QObject* obj, QEvent* event) override;
     };
 
-    QHBoxLayout* layout_filter{};
-    QTreeView* tree_view{};
-    QLabel* label_filter{};
-    QLineEdit* edit_filter{};
-    QLabel* label_filter_result{};
-    QToolButton* button_filter_close{};
+    QHBoxLayout* layout_filter;
+    QTreeView* tree_view;
+    QLabel* label_filter;
+    QLineEdit* edit_filter;
+    QLabel* label_filter_result;
+    QToolButton* button_filter_close;
 };

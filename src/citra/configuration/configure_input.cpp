@@ -50,45 +50,39 @@ static void SetAnalogButton(const Common::ParamPackage& input_param,
 }
 
 static QString ButtonToText(const Common::ParamPackage& param) {
-    if (!param.Has("engine")) {
+    if (!param.Has("engine"))
         return "[not set]";
-    } else if (param.Get("engine", "") == "keyboard") {
+    else if (param.Get("engine", "") == "keyboard")
         return getKeyName(param.Get("code", 0));
-    } else if (param.Get("engine", "") == "sdl") {
-        if (param.Has("hat")) {
+    else if (param.Get("engine", "") == "sdl") {
+        if (param.Has("hat"))
             return QString("Hat %1 %2")
                 .arg(QString::fromStdString(param.Get("hat", "")),
                      QString::fromStdString(param.Get("direction", "")));
-        }
-        if (param.Has("axis")) {
+        if (param.Has("axis"))
             return QString("Axis %1%2")
                 .arg(QString::fromStdString(param.Get("axis", "")),
                      QString::fromStdString(param.Get("direction", "")));
-        }
-        if (param.Has("button")) {
+        if (param.Has("button"))
             return QString("Button %1").arg(QString::fromStdString(param.Get("button", "")));
-        }
         return QString();
-    } else {
+    } else
         return "[unknown]";
-    }
 };
 
 static QString AnalogToText(const Common::ParamPackage& param, const std::string& dir) {
-    if (!param.Has("engine")) {
+    if (!param.Has("engine"))
         return "[not set]";
-    } else if (param.Get("engine", "") == "analog_from_button") {
+    else if (param.Get("engine", "") == "analog_from_button")
         return ButtonToText(Common::ParamPackage{param.Get(dir, "")});
-    } else if (param.Get("engine", "") == "sdl") {
-        if (dir == "modifier") {
+    else if (param.Get("engine", "") == "sdl") {
+        if (dir == "modifier")
             return "[unused]";
-        }
 
-        if (dir == "left" || dir == "right") {
+        if (dir == "left" || dir == "right")
             return QString("Axis %1").arg(QString::fromStdString(param.Get("axis_x", "")));
-        } else if (dir == "up" || dir == "down") {
+        else if (dir == "up" || dir == "down")
             return QString("Axis %1").arg(QString::fromStdString(param.Get("axis_y", "")));
-        }
         return QString();
     } else {
         return "[unknown]";
@@ -140,7 +134,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
         });
         connect(button_map[button_id], &QPushButton::customContextMenuRequested,
                 [=](const QPoint& menu_location) {
-                    QMenu context_menu{};
+                    QMenu context_menu;
                     QAction* clear_action{context_menu.addAction("Clear")};
                     QAction* restore_default_action{context_menu.addAction("Restore Default")};
 
@@ -179,7 +173,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
             });
             connect(analog_map_buttons[analog_id][sub_button_id],
                     &QPushButton::customContextMenuRequested, [=](const QPoint& menu_location) {
-                        QMenu context_menu{};
+                        QMenu context_menu;
                         QAction* clear_action{context_menu.addAction("Clear")};
                         QAction* restore_default_action{context_menu.addAction("Restore Default")};
 

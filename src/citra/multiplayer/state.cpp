@@ -44,11 +44,9 @@ MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* game_lis
 }
 
 MultiplayerState::~MultiplayerState() {
-    if (state_callback_handle) {
-        if (auto member{Network::GetRoomMember().lock()}) {
+    if (state_callback_handle)
+        if (auto member{Network::GetRoomMember().lock()})
             member->Unbind(state_callback_handle);
-        }
-    }
 }
 
 void MultiplayerState::Close() {

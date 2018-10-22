@@ -36,10 +36,9 @@ std::size_t TimeStretcher::Process(const s16* in, std::size_t num_in, s16* out,
     const double max_latency{0.25}; // seconds
     const double max_backlog{sample_rate * max_latency};
     const double backlog_fullness{sound_touch->numSamples() / max_backlog};
-    if (backlog_fullness > 4.0) {
+    if (backlog_fullness > 4.0)
         // Too many samples in backlog: Don't push anymore on
         num_in = 0;
-    }
 
     // We ideally want the backlog to be about 50% full.
     // This gives some headroom both ways to prevent underflow and overflow.

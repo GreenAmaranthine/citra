@@ -116,9 +116,8 @@ void GameListSearchField::clear() {
 }
 
 void GameListSearchField::setFocus() {
-    if (edit_filter->isVisible()) {
+    if (edit_filter->isVisible())
         edit_filter->setFocus();
-    }
 }
 
 GameListSearchField::GameListSearchField(GameList* parent) : QWidget{parent} {
@@ -225,9 +224,8 @@ void GameList::onTextChanged(const QString& newText) {
                     (file_programid.count() == 16 && edit_filter_text.contains(file_programid))) {
                     tree_view->setRowHidden(j, folder_index, false);
                     ++result_count;
-                } else {
+                } else
                     tree_view->setRowHidden(j, folder_index, true);
-                }
                 search_field->setFilterResult(result_count, childrenTotal);
             }
         }
@@ -329,13 +327,12 @@ void GameList::setFilterVisible(bool visibility) {
 }
 
 void GameList::setDirectoryWatcherEnabled(bool enabled) {
-    if (enabled) {
+    if (enabled)
         connect(watcher, &QFileSystemWatcher::directoryChanged, this,
                 &GameList::RefreshGameDirectory, Qt::UniqueConnection);
-    } else {
+    else
         disconnect(watcher, &QFileSystemWatcher::directoryChanged, this,
                    &GameList::RefreshGameDirectory);
-    }
 }
 
 void GameList::clearFilter() {
@@ -395,9 +392,9 @@ bool GameList::isEmpty() {
 }
 
 void GameList::DonePopulating(QStringList watch_list) {
-    if (isEmpty()) {
+    if (isEmpty())
         emit ShowList(false);
-    } else {
+    else {
         item_model->sort(COLUMN_NAME);
         item_model->invisibleRootItem()->appendRow(new GameListAddDir());
         emit ShowList(true);
@@ -405,9 +402,8 @@ void GameList::DonePopulating(QStringList watch_list) {
 
     // Clear out the old directories to watch for changes and add the new ones
     auto watch_dirs{watcher->directories()};
-    if (!watch_dirs.isEmpty()) {
+    if (!watch_dirs.isEmpty())
         watcher->removePaths(watch_dirs);
-    }
     // Workaround: Add the watch paths in chunks to allow the gui to refresh
     // This prevents the UI from stalling when a large number of watch paths are added
     // Also artificially caps the watcher to a certain number of directories
@@ -423,14 +419,12 @@ void GameList::DonePopulating(QStringList watch_list) {
     int childrenTotal{};
     for (int i{}; i < folderCount; ++i) {
         int childrenCount{item_model->item(i, 0)->rowCount()};
-        for (int j{}; j < childrenCount; ++j) {
+        for (int j{}; j < childrenCount; ++j)
             ++childrenTotal;
-        }
     }
     search_field->setFilterResult(childrenTotal, childrenTotal);
-    if (childrenTotal > 0) {
+    if (childrenTotal > 0)
         search_field->setFocus();
-    }
 }
 
 void GameList::PopupContextMenu(const QPoint& menu_location) {
@@ -445,7 +439,7 @@ void GameList::PopupContextMenu(const QPoint& menu_location) {
     if (!parent)
         parent = item_model->invisibleRootItem();
     QStandardItem* child{parent->child(row, COLUMN_NAME)};
-    QMenu context_menu{};
+    QMenu context_menu;
     switch (static_cast<GameListItemType>(child->type())) {
     case GameListItemType::Game:
         AddGamePopup(context_menu, child);

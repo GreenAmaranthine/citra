@@ -1250,6 +1250,8 @@ void GMainWindow::OnSDMCCustom() {
 }
 
 void GMainWindow::OnLoadAmiibo() {
+    if (!system.IsPoweredOn())
+        return;
     OnPauseGame();
     const QString file_filter{QString("Amiibo File") + " (*.bin);;" + "All Files (*.*)"};
     const QString filename{QFileDialog::getOpenFileName(this, "Load Amiibo", ".", file_filter)};
@@ -1262,6 +1264,8 @@ void GMainWindow::OnLoadAmiibo() {
 }
 
 void GMainWindow::OnRemoveAmiibo() {
+    if (!system.IsPoweredOn())
+        return;
     auto nfc{system.ServiceManager().GetService<Service::NFC::Module::Interface>("nfc:u")};
     nfc->RemoveAmiibo();
     ui.action_Remove_Amiibo->setEnabled(false);

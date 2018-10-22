@@ -6,12 +6,12 @@
 #include "citra/ui_settings.h"
 #include "ui_configure_ui.h"
 
-ConfigureUi::ConfigureUi(QWidget* parent) : QWidget(parent), ui(new Ui::ConfigureUi) {
+ConfigureUi::ConfigureUi(QWidget* parent)
+    : QWidget(parent), ui{std::make_unique<Ui::ConfigureUi>()} {
     ui->setupUi(this);
 
-    for (const auto& theme : UISettings::themes) {
+    for (const auto& theme : UISettings::themes)
         ui->theme_combobox->addItem(theme.first, theme.second);
-    }
 
     setConfiguration();
 }

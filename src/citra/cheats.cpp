@@ -113,7 +113,7 @@ void CheatDialog::LoadCheats() {
 void CheatDialog::OnSave() {
     bool error{};
     QString error_message{"The following cheats are empty:\n\n%1"};
-    QStringList empty_cheat_names{};
+    QStringList empty_cheat_names;
     for (auto& cheat : cheats) {
         if (cheat.GetCheatLines().empty()) {
             empty_cheat_names.append(QString::fromStdString(cheat.GetName()));
@@ -146,7 +146,7 @@ void CheatDialog::OnRowSelected(int row, int column) {
     ui->textLines->setEnabled(true);
     const auto& current_cheat{cheats[row]};
 
-    std::vector<std::string> lines{};
+    std::vector<std::string> lines;
     for (const auto& line : current_cheat.GetCheatLines())
         lines.push_back(line.cheat_line);
     ui->textLines->setPlainText(QString::fromStdString(Common::Join(lines, "\n")));
@@ -159,7 +159,7 @@ void CheatDialog::OnLinesChanged() {
     if (selection_changing)
         return;
     QString lines{ui->textLines->toPlainText()};
-    std::vector<std::string> lines_vec{};
+    std::vector<std::string> lines_vec;
     Common::SplitString(lines.toStdString(), '\n', lines_vec);
     auto new_lines{std::vector<CheatCore::CheatLine>()};
     for (const auto& line : lines_vec) {
@@ -177,7 +177,7 @@ void CheatDialog::OnCheckChanged(int state) {
 void CheatDialog::OnDelete() {
     QItemSelectionModel* selectionModel{ui->tableCheats->selectionModel()};
     QModelIndexList selected{selectionModel->selectedRows()};
-    std::vector<int> rows{};
+    std::vector<int> rows;
     for (int i{selected.count() - 1}; i >= 0; i--) {
         QModelIndex index{selected.at(i)};
         int row{index.row()};

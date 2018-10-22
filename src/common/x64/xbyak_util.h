@@ -35,9 +35,9 @@ template <typename T>
 inline void CallFarFunction(Xbyak::CodeGenerator& code, const T f) {
     static_assert(std::is_pointer<T>(), "Argument must be a (function) pointer.");
     std::size_t addr = reinterpret_cast<std::size_t>(f);
-    if (IsWithin2G(code, addr)) {
+    if (IsWithin2G(code, addr))
         code.call(f);
-    } else {
+    else {
         // ABI_RETURN is a safe temp register to use before a call
         code.mov(ABI_RETURN, addr);
         code.call(ABI_RETURN);
