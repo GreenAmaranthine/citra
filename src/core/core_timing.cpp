@@ -65,8 +65,6 @@ static s64 idled_cycles;
 // don't change slice_length and downcount.
 static bool is_global_timer_sane;
 
-static EventType* ev_lost;
-
 static void EmptyTimedCallback(u64 userdata, s64 cyclesLate) {}
 
 EventType* RegisterEvent(const std::string& name, TimedCallback callback) {
@@ -100,7 +98,6 @@ void Init() {
     is_global_timer_sane = true;
 
     event_fifo_id = 0;
-    ev_lost = RegisterEvent("_lost_event", &EmptyTimedCallback);
 }
 
 void Shutdown() {

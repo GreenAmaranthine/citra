@@ -72,7 +72,6 @@ System::ResultStatus System::RunLoop() {
 }
 
 System::ResultStatus System::Load(Frontend& frontend, const std::string& filepath) {
-    LOG_INFO(Log, "LOAD {}", filepath);
     app_loader = Loader::GetLoader(filepath);
     if (!app_loader) {
         LOG_CRITICAL(Core, "Failed to obtain loader for {}!", filepath);
