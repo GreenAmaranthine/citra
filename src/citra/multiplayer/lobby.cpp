@@ -77,7 +77,7 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     connect(&room_list_watcher, &QFutureWatcher<AnnounceMultiplayerRoom::RoomList>::finished, this,
             &Lobby::OnRefreshLobby);
 
-    // manually start a refresh when the window is opening
+    // Manually start a refresh when the window is opening
     // TODO: if this refresh is slow for people with bad internet, then don't do it as
     // part of the constructor, but offload the refresh until after the window shown. perhaps emit a
     // refreshroomlist signal from places that open the lobby
@@ -85,7 +85,7 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
 }
 
 QString Lobby::PasswordPrompt() {
-    bool ok;
+    bool ok{};
     const QString text{QInputDialog::getText(this, "Password Required to Join",
                                              "Password:", QLineEdit::Password, "", &ok)};
     return ok ? text : QString();
@@ -99,20 +99,17 @@ void Lobby::OnExpandRoom(const QModelIndex& index) {
 void Lobby::OnJoinRoom(const QModelIndex& source) {
     if (const auto member{Network::GetRoomMember().lock()}) {
         // Prevent the user from trying to join a room while they are already joining.
-        if (member->GetState() == Network::RoomMember::State::Joining) {
+        if (member->GetState() == Network::RoomMember::State::Joining)
             return;
-        } else if (member->GetState() == Network::RoomMember::State::Joined) {
+        else if (member->GetState() == Network::RoomMember::State::Joined)
             // And ask if they want to leave the room if they are already in one.
-            if (!NetworkMessage::WarnDisconnect()) {
+            if (!NetworkMessage::WarnDisconnect())
                 return;
-            }
-        }
     }
     QModelIndex index{source};
     // If the user double clicks on a child row (aka the player list) then use the parent instead
-    if (source.parent() != QModelIndex()) {
+    if (source.parent() != QModelIndex())
         index = source.parent();
-    }
     if (!ui->nickname->hasAcceptableInput()) {
         NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID);
         return;
@@ -122,9 +119,8 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
     QModelIndex password_index{proxy->index(index.row(), Column::ROOM_NAME)};
     bool has_password{proxy->data(password_index, LobbyItemName::PasswordRole).toBool()};
     const std::string password{has_password ? PasswordPrompt().toStdString() : ""};
-    if (has_password && password.empty()) {
+    if (has_password && password.empty())
         return;
-    }
 
     QModelIndex connection_index{proxy->index(index.row(), Column::HOST)};
     const std::string nickname{ui->nickname->text().toStdString()};
@@ -179,9 +175,8 @@ void Lobby::OnRefreshLobby() {
         for (int r{}; r < game_list->rowCount(); ++r) {
             auto index{game_list->index(r, 0)};
             auto game_id{game_list->data(index, GameListItemPath::ProgramIdRole).toULongLong()};
-            if (game_id != 0 && room.preferred_game_id == game_id) {
+            if (game_id != 0 && room.preferred_game_id == game_id)
                 smdh_icon = game_list->data(index, Qt::DecorationRole).value<QPixmap>();
-            }
         }
 
         QList<QVariant> members;
@@ -234,24 +229,22 @@ LobbyFilterProxyModel::LobbyFilterProxyModel(QWidget* parent, QStandardItemModel
 bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const {
     // Prioritize filters by fastest to compute
 
-    // pass over any child rows (aka row that shows the players in the room)
-    if (sourceParent != QModelIndex()) {
+    // Pass over any child rows (aka row that shows the players in the room)
+    if (sourceParent != QModelIndex())
         return true;
-    }
 
-    // filter by filled rooms
+    // Filter by filled rooms
     if (filter_full) {
         QModelIndex member_list{sourceModel()->index(sourceRow, Column::MEMBER, sourceParent)};
         int player_count{
             sourceModel()->data(member_list, LobbyItemMemberList::MemberListRole).toList().size()};
         int max_players{
             sourceModel()->data(member_list, LobbyItemMemberList::MaxPlayerRole).toInt()};
-        if (player_count >= max_players) {
+        if (player_count >= max_players)
             return false;
-        }
     }
 
-    // filter by search parameters
+    // Filter by search parameters
     if (!filter_search.isEmpty()) {
         QModelIndex game_name{sourceModel()->index(sourceRow, Column::GAME_NAME, sourceParent)};
         QModelIndex room_name{sourceModel()->index(sourceRow, Column::ROOM_NAME, sourceParent)};
@@ -268,23 +261,20 @@ bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& s
                                 ->data(host_name, LobbyItemHost::HostUsernameRole)
                                 .toString()
                                 .contains(filter_search, filterCaseSensitivity())};
-        if (!preferred_game_match && !room_name_match && !username_match) {
+        if (!preferred_game_match && !room_name_match && !username_match)
             return false;
-        }
     }
 
-    // filter by game owned
+    // Filter by game owned
     if (filter_owned) {
         QModelIndex game_name{sourceModel()->index(sourceRow, Column::GAME_NAME, sourceParent)};
         QList<QModelIndex> owned_games;
-        for (int r{}; r < game_list->rowCount(); ++r) {
+        for (int r{}; r < game_list->rowCount(); ++r)
             owned_games.append(QModelIndex(game_list->index(r, 0)));
-        }
         auto current_id{sourceModel()->data(game_name, LobbyItemGame::TitleIDRole).toLongLong()};
-        if (current_id == 0) {
+        if (current_id == 0)
             // TODO: homebrew often doesn't have a game id and this hides them
             return false;
-        }
         bool owned{};
         for (const auto& game : owned_games) {
             auto game_id{game_list->data(game, GameListItemPath::ProgramIdRole).toLongLong()};
@@ -292,9 +282,8 @@ bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& s
                 owned = true;
             }
         }
-        if (!owned) {
+        if (!owned)
             return false;
-        }
     }
 
     return true;

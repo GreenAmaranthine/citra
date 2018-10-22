@@ -276,6 +276,10 @@ void Config::ReadValues() {
     qt_config->endGroup();
     qt_config->beginGroup("UI");
     UISettings::values.theme = qt_config->value("theme", UISettings::themes[0].second).toString();
+    u16 screenshot_resolution_factor{
+        static_cast<u16>(qt_config->value("screenshot_resolution_factor", 1).toInt())};
+    if (screenshot_resolution_factor == 0)
+        screenshot_resolution_factor = 1;
     qt_config->beginGroup("UILayout");
     UISettings::values.geometry = qt_config->value("geometry").toByteArray();
     UISettings::values.state = qt_config->value("state").toByteArray();
@@ -302,14 +306,14 @@ void Config::ReadValues() {
     size = qt_config->beginReadArray("gamedirs");
     for (int i{}; i < size; ++i) {
         qt_config->setArrayIndex(i);
-        UISettings::GameDir game_dir{};
+        UISettings::GameDir game_dir;
         game_dir.path = qt_config->value("path").toString();
         game_dir.deep_scan = qt_config->value("deep_scan", false).toBool();
         game_dir.expanded = qt_config->value("expanded", true).toBool();
         UISettings::values.game_dirs.append(game_dir);
     }
     qt_config->endArray();
-    // create NAND and SD card directories if empty, these are not removable through the UI
+    // Create NAND and SD card directories if empty, these aren't removable through the UI
     if (UISettings::values.game_dirs.isEmpty()) {
         UISettings::GameDir game_dir{};
         game_dir.path = "INSTALLED";
@@ -327,10 +331,10 @@ void Config::ReadValues() {
         QStringList hotkeys{qt_config->childGroups()};
         for (const auto& hotkey : hotkeys) {
             qt_config->beginGroup(hotkey);
-            UISettings::values.shortcuts.emplace_back(UISettings::Shortcut(
+            UISettings::values.shortcuts.emplace_back(UISettings::Shortcut{
                 group + "/" + hotkey,
-                UISettings::ContextualShortcut(qt_config->value("KeySeq").toString(),
-                                               qt_config->value("Context").toInt())));
+                UISettings::ContextualShortcut{qt_config->value("KeySeq").toString(),
+                                               qt_config->value("Context").toInt()}});
             qt_config->endGroup();
         }
         qt_config->endGroup();
@@ -348,7 +352,7 @@ void Config::ReadValues() {
     UISettings::values.room_nickname = qt_config->value("room_nickname", "").toString();
     UISettings::values.room_name = qt_config->value("room_name", "").toString();
     UISettings::values.room_port = qt_config->value("room_port", "24872").toString();
-    bool ok;
+    bool ok{};
     UISettings::values.host_type = qt_config->value("host_type", 0).toUInt(&ok);
     if (!ok)
         UISettings::values.host_type = 0;
@@ -510,7 +514,7 @@ void Config::SaveValues() {
     qt_config->setValue("recentFiles", UISettings::values.recent_files);
     qt_config->endGroup();
     qt_config->beginGroup("Shortcuts");
-    for (auto shortcut : UISettings::values.shortcuts) {
+    for (const auto& shortcut : UISettings::values.shortcuts) {
         qt_config->setValue(shortcut.first + "/KeySeq", shortcut.second.first);
         qt_config->setValue(shortcut.first + "/Context", shortcut.second.second);
     }

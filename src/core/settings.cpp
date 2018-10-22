@@ -60,7 +60,7 @@ void LogSettings() {
     LogSetting("Renderer_UseHwShader", Settings::values.use_hw_shader);
     LogSetting("Renderer_ShadersAccurateGs", Settings::values.shaders_accurate_gs);
     LogSetting("Renderer_ShadersAccurateMul", Settings::values.shaders_accurate_mul);
-    LogSetting("Renderer_UseResolutionFactor", Settings::values.resolution_factor);
+    LogSetting("Renderer_ResolutionFactor", Settings::values.resolution_factor);
     LogSetting("Renderer_UseFrameLimit", Settings::values.use_frame_limit);
     LogSetting("Renderer_FrameLimit", Settings::values.frame_limit);
     LogSetting("Renderer_EnableClearCache", Settings::values.enable_clear_cache);
@@ -69,12 +69,11 @@ void LogSettings() {
     LogSetting("Layout_LayoutOption", static_cast<int>(Settings::values.layout_option));
     LogSetting("Layout_SwapScreen", Settings::values.swap_screen);
     bool using_lle_modules{};
-    for (const auto& module : Settings::values.lle_modules) {
+    for (const auto& module : Settings::values.lle_modules)
         if (module.second) {
             using_lle_modules = true;
             break;
         }
-    }
     LogSetting("LLE_UsingLLEModules", using_lle_modules);
     LogSetting("Audio_EnableAudioStretching", Settings::values.enable_audio_stretching);
     LogSetting("Audio_OutputDevice", Settings::values.output_device);
