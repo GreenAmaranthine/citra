@@ -4,7 +4,6 @@
 
 #include <string>
 #include <QMessageBox>
-#include <boost/crc.hpp>
 #include "citra/mii_selector.h"
 #include "common/file_util.h"
 #include "core/file_sys/archive_extsavedata.h"
@@ -79,9 +78,6 @@ MiiSelectorDialog::MiiSelectorDialog(QWidget* parent, const HLE::Applets::MiiCon
     connect(ui->confirm, &QPushButton::released, this, [&] {
         auto mii{miis.at(ui->mii->currentIndex())};
         std::memcpy(result.selected_mii_data.data(), mii.data(), mii.size());
-        result.mii_data_checksum = boost::crc<16, 0x1021, 0, 0, false, false>(
-            result.selected_mii_data.data(),
-            result.selected_mii_data.size() + sizeof(result.pad52));
         result.selected_guest_mii_index = 0xFFFFFFFF;
         close();
     });

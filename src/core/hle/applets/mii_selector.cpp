@@ -5,6 +5,7 @@
 #include <condition_variable>
 #include <cstring>
 #include <mutex>
+#include <boost/crc.hpp>
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/hle/applets/mii_selector.h"
@@ -66,6 +67,9 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
         std::unique_lock<std::mutex> lock{m};
         std::condition_variable cv;
         cv.wait(lock, [&open]() -> bool { return !open; });
+        result.mii_data_checksum = boost::crc<16, 0x1021, 0, 0, false, false>(
+            result.selected_mii_data.data(),
+            result.selected_mii_data.size() + sizeof(result.pad52));
     }
 
     // Let the application know that we're closing
