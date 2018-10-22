@@ -51,8 +51,10 @@ static std::unordered_map<std::string, EventType> event_types;
 // erase arbitrary events (RemoveEvent()) regardless of the queue order. These aren't accomodated
 // by the standard adaptor class.
 static std::vector<Event> event_queue;
+
 static u64 event_fifo_id;
-// the queue for storing the events from other threads threadsafe until they will be added
+
+// The queue for storing the events from other threads threadsafe until they will be added
 // to the event_queue by the emu thread
 static Common::MPSCQueue<Event, false> ts_queue;
 
@@ -65,8 +67,6 @@ static s64 idled_cycles;
 // don't change slice_length and downcount.
 static bool is_global_timer_sane;
 
-static void EmptyTimedCallback(u64 userdata, s64 cyclesLate) {}
-
 EventType* RegisterEvent(const std::string& name, TimedCallback callback) {
     // Check for existing type with same name.
     // We want event type names to remain unique so that we can use them for serialization.
@@ -75,13 +75,13 @@ EventType* RegisterEvent(const std::string& name, TimedCallback callback) {
                "during Init to avoid breaking save states.",
                name);
     auto info{event_types.emplace(name, EventType{callback, nullptr})};
-    EventType* event_type = &info.first->second;
+    EventType* event_type{&info.first->second};
     event_type->name = &info.first->first;
     return event_type;
 }
 
 void UnregisterAllEvents() {
-    ASSERT_MSG(event_queue.empty(), "Cannot unregister events with events pending");
+    ASSERT_MSG(event_queue.empty(), "Can't unregister events with events pending");
     event_types.clear();
 }
 
@@ -110,9 +110,8 @@ void Shutdown() {
 // it from any other thread, you are doing something evil
 u64 GetTicks() {
     u64 ticks{static_cast<u64>(global_timer)};
-    if (!is_global_timer_sane) {
+    if (!is_global_timer_sane)
         ticks += slice_length - downcount;
-    }
     return ticks;
 }
 
@@ -133,9 +132,8 @@ void ScheduleEvent(s64 cycles_into_future, const EventType* event_type, u64 user
     s64 timeout{static_cast<s64>(GetTicks()) + cycles_into_future};
 
     // If this event needs to be scheduled before the next advance(), force one early
-    if (!is_global_timer_sane) {
+    if (!is_global_timer_sane)
         ForceExceptionCheck(cycles_into_future);
-    }
 
     event_queue.emplace_back(Event{timeout, event_fifo_id++, userdata, event_type});
     std::push_heap(event_queue.begin(), event_queue.end(), std::greater<>());
@@ -208,10 +206,9 @@ void Advance() {
     is_global_timer_sane = false;
 
     // Still events left (scheduled in the future)
-    if (!event_queue.empty()) {
+    if (!event_queue.empty())
         slice_length = static_cast<int>(
             std::min<s64>(event_queue.front().time - global_timer, MAX_SLICE_LENGTH));
-    }
 
     downcount = slice_length;
 }
