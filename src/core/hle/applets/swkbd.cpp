@@ -25,83 +25,62 @@ namespace HLE::Applets {
 ValidationError ValidateFilters(const SoftwareKeyboardConfig& config, const std::string& input) {
     if ((config.filter_flags & SoftwareKeyboardFilter_Digits) == SoftwareKeyboardFilter_Digits) {
         int digits_count{};
-        for (const char c : input) {
-            if (std::isdigit(static_cast<int>(c))) {
+        for (const char c : input)
+            if (std::isdigit(static_cast<int>(c)))
                 ++digits_count;
-            }
-        }
-        if (digits_count > 0 && config.max_digits == 0) {
+        if (digits_count > 0 && config.max_digits == 0)
             return ValidationError::DigitNotAllowed;
-        }
-        if (digits_count > config.max_digits) {
+        if (digits_count > config.max_digits)
             return ValidationError::MaxLengthExceeded;
-        }
     }
-    if ((config.filter_flags & SoftwareKeyboardFilter_At) == SoftwareKeyboardFilter_At) {
-        if (input.find('@') != std::string::npos) {
+    if ((config.filter_flags & SoftwareKeyboardFilter_At) == SoftwareKeyboardFilter_At)
+        if (input.find('@') != std::string::npos)
             return ValidationError::AtSignNotAllowed;
-        }
-    }
-    if ((config.filter_flags & SoftwareKeyboardFilter_Percent) == SoftwareKeyboardFilter_Percent) {
-        if (input.find('%') != std::string::npos) {
+    if ((config.filter_flags & SoftwareKeyboardFilter_Percent) == SoftwareKeyboardFilter_Percent)
+        if (input.find('%') != std::string::npos)
             return ValidationError::PercentNotAllowed;
-        }
-    }
     if ((config.filter_flags & SoftwareKeyboardFilter_Backslash) ==
-        SoftwareKeyboardFilter_Backslash) {
-        if (input.find('\\') != std::string::npos) {
+        SoftwareKeyboardFilter_Backslash)
+        if (input.find('\\') != std::string::npos)
             return ValidationError::BackslashNotAllowed;
-        }
-    }
     if ((config.filter_flags & SoftwareKeyboardFilter_Profanity) ==
-        SoftwareKeyboardFilter_Profanity) {
+        SoftwareKeyboardFilter_Profanity)
         // TODO: check the profanity filter
-        LOG_INFO(Applet_Swkbd, "App requested swkbd profanity filter, but it's not implemented.");
-    }
-    if ((config.filter_flags & SoftwareKeyboardFilter_Callback) ==
-        SoftwareKeyboardFilter_Callback) {
+        UNIMPLEMENTED();
+    if ((config.filter_flags & SoftwareKeyboardFilter_Callback) == SoftwareKeyboardFilter_Callback)
         // TODO: check the callback
-        LOG_INFO(Applet_Swkbd, "App requested a swkbd callback, but it's not implemented.");
-    }
+        UNIMPLEMENTED();
     return ValidationError::None;
 }
 
 ValidationError ValidateInput(const SoftwareKeyboardConfig& config, const std::string& input) {
     ValidationError error;
-    if ((error = ValidateFilters(config, input)) != ValidationError::None) {
+    if ((error = ValidateFilters(config, input)) != ValidationError::None)
         return error;
-    }
-    if (input.size() > config.max_text_length) {
+    if (input.size() > config.max_text_length)
         return ValidationError::MaxLengthExceeded;
-    }
-    if (!config.multiline && (input.find('\n') != std::string::npos)) {
+    if (!config.multiline && (input.find('\n') != std::string::npos))
         return ValidationError::NewLineNotAllowed;
-    }
     bool is_blank{
         std::all_of(input.begin(), input.end(), [](unsigned char c) { return std::isspace(c); })};
     switch (config.valid_input) {
     case SoftwareKeyboardValidInput::FixedLen:
-        if (input.size() != config.max_text_length) {
+        if (input.size() != config.max_text_length)
             return ValidationError::FixedLengthRequired;
-        }
         break;
     case SoftwareKeyboardValidInput::NotEmptyNotBlank:
-        if (is_blank) {
+        if (is_blank)
             return ValidationError::BlankInputNotAllowed;
-        }
-        if (input.empty()) {
+        if (input.empty())
             return ValidationError::EmptyInputNotAllowed;
-        }
         break;
     case SoftwareKeyboardValidInput::NotBlank:
-        if (is_blank) {
+        if (is_blank)
             return ValidationError::BlankInputNotAllowed;
-        }
         break;
     case SoftwareKeyboardValidInput::NotEmpty:
-        if (input.empty()) {
+        if (input.empty())
             return ValidationError::EmptyInputNotAllowed;
-        }
         break;
     case SoftwareKeyboardValidInput::Anything:
         break;
@@ -129,19 +108,16 @@ ValidationError ValidateButton(const SoftwareKeyboardConfig& config, u8 button) 
     case SoftwareKeyboardButtonConfig::NoButton:
         return ValidationError::None;
     case SoftwareKeyboardButtonConfig::SingleButton:
-        if (button != 0) {
+        if (button != 0)
             return ValidationError::ButtonOutOfRange;
-        }
         break;
     case SoftwareKeyboardButtonConfig::DualButton:
-        if (button > 1) {
+        if (button > 1)
             return ValidationError::ButtonOutOfRange;
-        }
         break;
     case SoftwareKeyboardButtonConfig::TripleButton:
-        if (button > 2) {
+        if (button > 2)
             return ValidationError::ButtonOutOfRange;
-        }
         break;
     default:
         UNREACHABLE();
@@ -209,9 +185,8 @@ void SoftwareKeyboard::Update() {
         std::cout << "Software Keyboard" << std::endl;
         // Display hint text
         std::u16string hint{reinterpret_cast<char16_t*>(config.hint_text.data())};
-        if (!hint.empty()) {
+        if (!hint.empty())
             std::cout << "Hint text: " << Common::UTF16ToUTF8(hint) << std::endl;
-        }
         ValidationError error{ValidationError::ButtonOutOfRange};
         auto ValidateInputString{[&]() -> bool {
             ValidationError error{ValidateInput(config, input)};
@@ -241,7 +216,7 @@ void SoftwareKeyboard::Update() {
                               << std::endl;
                     break;
                 case ValidationError::InputNotNumber:
-                    std::cout << "All characters must be numbers." << std::endl;
+                    std::cout << "All characters must be digits." << std::endl;
                     break;
                 case ValidationError::MaxLengthExceeded:
                     std::cout << fmt::format("Input is longer than the maximum length. Max: {}",
@@ -273,12 +248,11 @@ void SoftwareKeyboard::Update() {
             // Apps are allowed to set custom text to display on the button
             std::u16string custom_button_text{
                 reinterpret_cast<char16_t*>(config.buttons_text[i].data())};
-            if (custom_button_text.empty()) {
+            if (custom_button_text.empty())
                 // Use the system default text for that button
                 button_text = default_button_text[num_buttons][i];
-            } else {
+            else
                 button_text = Common::UTF16ToUTF8(custom_button_text);
-            }
 
             option_text += "\t(" + std::to_string(i) + ") " + button_text + "\t";
         }
@@ -289,11 +263,10 @@ void SoftwareKeyboard::Update() {
             try {
                 u32 num{static_cast<u32>(std::stoul(option))};
                 valid = ValidateButton(config, static_cast<u8>(num)) == ValidationError::None;
-                if (!valid) {
+                if (!valid)
                     std::cout << fmt::format("Please choose a number between 0 and {}",
                                              static_cast<u32>(config.num_buttons_m1))
                               << std::endl;
-                }
             } catch (const std::invalid_argument&) {
                 std::cout << "Unable to parse input as a number." << std::endl;
             } catch (const std::out_of_range&) {

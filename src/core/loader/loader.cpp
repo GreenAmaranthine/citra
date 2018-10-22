@@ -133,7 +133,7 @@ std::unique_ptr<AppLoader> GetLoader(const std::string& filename) {
 
     if (type != filename_type) {
         LOG_WARNING(Loader, "File {} has a different type than its extension.", filename);
-        if (FileType::Unknown == type)
+        if (type == FileType::Unknown)
             type = filename_type;
     }
 
