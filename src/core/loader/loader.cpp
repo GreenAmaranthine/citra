@@ -125,7 +125,7 @@ std::unique_ptr<AppLoader> GetLoader(const std::string& filename) {
         return nullptr;
     }
 
-    std::string filename_filename{}, filename_extension{};
+    std::string filename_filename, filename_extension;
     Common::SplitPath(filename, nullptr, &filename_filename, &filename_extension);
 
     FileType type{IdentifyFile(file)};

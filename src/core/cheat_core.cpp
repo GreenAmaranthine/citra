@@ -63,9 +63,9 @@ std::vector<Cheat> Engine::ReadFileContents() {
     std::vector<std::string> lines;
     Common::SplitString(contents, '\n', lines);
 
-    std::vector<CheatLine> cheat_lines{};
-    std::vector<Cheat> cheats{};
-    std::string name{};
+    std::vector<CheatLine> cheat_lines;
+    std::vector<Cheat> cheats;
+    std::string name;
     bool enabled{};
     for (std::size_t i{}; i < lines.size(); i++) {
         std::string current_line{lines[i]};
