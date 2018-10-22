@@ -208,7 +208,7 @@ bool CreateFullPath(const std::string& full_path) {
         // Find next sub path
         position = full_path.find(DIR_SEP_CHR, position);
 
-        // we're done, yay!
+        // We're done, yay!
         if (position == full_path.npos)
             return true;
 

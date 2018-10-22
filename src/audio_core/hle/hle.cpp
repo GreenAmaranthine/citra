@@ -132,7 +132,7 @@ std::vector<u8> DspHle::Impl::PipeRead(DspPipe pipe_number, u32 length) {
     return ret;
 }
 
-size_t DspHle::Impl::GetPipeReadableSize(DspPipe pipe_number) const {
+std::size_t DspHle::Impl::GetPipeReadableSize(DspPipe pipe_number) const {
     const std::size_t pipe_index{static_cast<std::size_t>(pipe_number)};
 
     if (pipe_index >= num_dsp_pipe) {
@@ -269,21 +269,19 @@ void DspHle::Impl::AudioPipeWriteStructAddresses() {
     }
 }
 
-size_t DspHle::Impl::CurrentRegionIndex() const {
+std::size_t DspHle::Impl::CurrentRegionIndex() const {
     // The region with the higher frame counter is chosen unless there is wraparound.
     // This function only returns a 0 or 1.
     const u16 frame_counter_0{dsp_memory.region_0.frame_counter};
     const u16 frame_counter_1{dsp_memory.region_1.frame_counter};
 
-    if (frame_counter_0 == 0xFFFFu && frame_counter_1 != 0xFFFEu) {
+    if (frame_counter_0 == 0xFFFFu && frame_counter_1 != 0xFFFEu)
         // Wraparound has occurred.
         return 1;
-    }
 
-    if (frame_counter_1 == 0xFFFFu && frame_counter_0 != 0xFFFEu) {
+    if (frame_counter_1 == 0xFFFFu && frame_counter_0 != 0xFFFEu)
         // Wraparound has occurred.
         return 0;
-    }
 
     return (frame_counter_0 > frame_counter_1) ? 0 : 1;
 }
@@ -380,7 +378,7 @@ std::vector<u8> DspHle::PipeRead(DspPipe pipe_number, u32 length) {
     return impl->PipeRead(pipe_number, length);
 }
 
-size_t DspHle::GetPipeReadableSize(DspPipe pipe_number) const {
+std::size_t DspHle::GetPipeReadableSize(DspPipe pipe_number) const {
     return impl->GetPipeReadableSize(pipe_number);
 }
 
@@ -407,9 +405,8 @@ void DspHle::EnableStretching(bool enable) {
     if (perform_time_stretching == enable)
         return;
 
-    if (!enable) {
+    if (!enable)
         flushing_time_stretcher = true;
-    }
     perform_time_stretching = enable;
 }
 
@@ -420,29 +417,26 @@ void DspHle::OutputFrame(const StereoFrame16& frame) {
     fifo.Push(frame.data(), frame.size());
 }
 
-void DspHle::OutputCallback(s16* buffer, size_t num_frames) {
-    size_t frames_written{};
+void DspHle::OutputCallback(s16* buffer, std::size_t num_frames) {
+    std::size_t frames_written{};
     if (perform_time_stretching) {
         const std::vector<s16> in{fifo.Pop()};
-        const size_t num_in{in.size() / 2};
+        const std::size_t num_in{in.size() / 2};
         frames_written = time_stretcher.Process(in.data(), num_in, buffer, num_frames);
     } else if (flushing_time_stretcher) {
         time_stretcher.Flush();
         frames_written = time_stretcher.Process(nullptr, 0, buffer, num_frames);
         frames_written += fifo.Pop(buffer, num_frames - frames_written);
         flushing_time_stretcher = false;
-    } else {
+    } else
         frames_written = fifo.Pop(buffer, num_frames);
-    }
 
-    if (frames_written > 0) {
+    if (frames_written > 0)
         std::memcpy(&last_frame[0], buffer + 2 * (frames_written - 1), 2 * sizeof(s16));
-    }
 
     // Hold last emitted frame; this prevents popping.
-    for (size_t i{frames_written}; i < num_frames; i++) {
+    for (std::size_t i{frames_written}; i < num_frames; i++)
         std::memcpy(buffer + 2 * i, &last_frame[0], 2 * sizeof(s16));
-    }
 
     // Implementation of the hardware volume slider with a dynamic range of 60 dB
     const float linear_volume{std::clamp(Settings::values.volume, 0.0f, 1.0f)};

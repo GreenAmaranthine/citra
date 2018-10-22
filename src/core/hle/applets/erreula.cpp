@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <condition_variable>
+#include <mutex>
 #include "common/string_util.h"
 #include "core/core.h"
 #include "core/hle/applets/erreula.h"
@@ -56,7 +58,12 @@ ResultCode ErrEula::StartImpl(const Service::APT::AppletStartupParameter& parame
 }
 
 void ErrEula::Update() {
-    cb(config);
+    bool open{};
+    cb(config, open);
+    std::mutex m;
+    std::unique_lock<std::mutex> lock{m};
+    std::condition_variable cv;
+    cv.wait(lock, [&open]() -> bool { return !open; });
     Finalize();
 }
 

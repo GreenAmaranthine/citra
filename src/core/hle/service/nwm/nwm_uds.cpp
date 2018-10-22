@@ -426,7 +426,7 @@ void SendAssociationResponseFrame(const MacAddress& address) {
         }
         assoc_response.channel = network_channel;
         // TODO: This will cause multiple clients to end up with the same association id, but
-        // we're not using that for anything.
+        // We're not using that for anything.
         u16 association_id{1};
         assoc_response.data = GenerateAssocResponseFrame(AssocStatus::Successful, association_id,
                                                          network_info.network_id);

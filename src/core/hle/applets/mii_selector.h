@@ -70,7 +70,7 @@ public:
     ResultCode StartImpl(const Service::APT::AppletStartupParameter& parameter) override;
     void Update() override;
 
-    static inline std::function<void(const MiiConfig&, MiiResult&)> cb;
+    static inline std::function<void(const MiiConfig&, MiiResult&, bool&)> cb;
 
 private:
     /// This SharedMemory will be created when we receive the LibAppJustStarted message.

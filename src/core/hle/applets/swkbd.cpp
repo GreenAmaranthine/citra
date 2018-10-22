@@ -5,8 +5,10 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <condition_variable>
 #include <cstring>
 #include <iostream>
+#include <mutex>
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
@@ -316,10 +318,13 @@ void SoftwareKeyboard::Update() {
         break;
     }
     case Settings::KeyboardMode::Qt: {
-        if (!cb)
-            UNREACHABLE_MSG("Qt keyboard callback is nullptr");
         std::u16string text;
-        cb(config, text);
+        bool open{};
+        cb(config, text, open);
+        std::mutex m;
+        std::unique_lock<std::mutex> lock{m};
+        std::condition_variable cv;
+        cv.wait(lock, [&open]() -> bool { return !open; });
         std::memcpy(text_memory->GetPointer(), text.c_str(), text.length() * sizeof(char16_t));
         Finalize();
         break;

@@ -4,9 +4,7 @@
 
 #pragma once
 
-#include <condition_variable>
 #include <memory>
-#include <mutex>
 #include <QLabel>
 #include <QMainWindow>
 #include <QTimer>
@@ -169,11 +167,11 @@ private:
     void UpdateStatusBar();
     void SetupUIStrings();
 
-    Q_INVOKABLE void ErrEulaCallback(HLE::Applets::ErrEulaConfig& config);
+    Q_INVOKABLE void ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& open);
     Q_INVOKABLE void SwkbdCallback(HLE::Applets::SoftwareKeyboardConfig& config,
-                                   std::u16string& text);
+                                   std::u16string& text, bool& open);
     Q_INVOKABLE void MiiSelectorCallback(const HLE::Applets::MiiConfig& config,
-                                         HLE::Applets::MiiResult& result);
+                                         HLE::Applets::MiiResult& result, bool& open);
     Q_INVOKABLE void Update3D();
     Q_INVOKABLE void UpdateFrameAdvancingCallback();
     Q_INVOKABLE void UpdateControlPanelNetwork();
@@ -207,12 +205,6 @@ private:
     // Movie
     bool movie_record_on_start{};
     QString movie_record_path;
-
-    // Variables used to pause the application when a Qt applet is open.
-    // TODO: get rid of these variables
-    bool applet_open{};
-    std::mutex applet_mutex;
-    std::condition_variable applet_cv;
 
     std::shared_ptr<ControlPanel> control_panel;
     std::shared_ptr<CheatDialog> cheats_window;

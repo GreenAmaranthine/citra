@@ -650,33 +650,21 @@ void GMainWindow::BootApplication(const std::string& filename) {
 
     OnStartGame();
 
-    HLE::Applets::ErrEula::cb = [this](HLE::Applets::ErrEulaConfig& config) {
-        applet_open = true;
-        ErrEulaCallback(config);
-        std::unique_lock<std::mutex> lock{applet_mutex};
-        applet_cv.wait(lock, [&] { return !applet_open; });
+    HLE::Applets::ErrEula::cb = [this](HLE::Applets::ErrEulaConfig& config, bool& open) {
+        ErrEulaCallback(config, open);
     };
 
     HLE::Applets::SoftwareKeyboard::cb = [this](HLE::Applets::SoftwareKeyboardConfig& config,
-                                                std::u16string& text) {
-        applet_open = true;
-        SwkbdCallback(config, text);
-        std::unique_lock<std::mutex> lock{applet_mutex};
-        applet_cv.wait(lock, [&] { return !applet_open; });
-    };
+                                                std::u16string& text,
+                                                bool& open) { SwkbdCallback(config, text, open); };
 
     HLE::Applets::MiiSelector::cb = [this](const HLE::Applets::MiiConfig& config,
-                                           HLE::Applets::MiiResult& result) {
-        applet_open = true;
-        MiiSelectorCallback(config, result);
-        std::unique_lock<std::mutex> lock{applet_mutex};
-        applet_cv.wait(lock, [&] { return !applet_open; });
+                                           HLE::Applets::MiiResult& result, bool& open) {
+        MiiSelectorCallback(config, result, open);
     };
 
     SharedPage::Handler::update_3d = [this] { Update3D(); };
-
     RPC::RPCServer::cb_update_frame_advancing = [this] { UpdateFrameAdvancingCallback(); };
-
     Service::NWM::NWM_EXT::update_control_panel = [this] { UpdateControlPanelNetwork(); };
 }
 
@@ -747,13 +735,12 @@ void GMainWindow::StoreRecentFile(const QString& filename) {
     UpdateRecentFiles();
 }
 
-void GMainWindow::ErrEulaCallback(HLE::Applets::ErrEulaConfig& config) {
+void GMainWindow::ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& open) {
     if (QThread::currentThread() != thread()) {
         QMetaObject::invokeMethod(this, "ErrEulaCallback", Qt::BlockingQueuedConnection,
-                                  Q_ARG(HLE::Applets::ErrEulaConfig&, config));
+                                  Q_ARG(HLE::Applets::ErrEulaConfig&, config), Q_ARG(bool, open));
         return;
     }
-    std::unique_lock<std::mutex> lock{applet_mutex};
     switch (config.error_type) {
     case HLE::Applets::ErrEulaErrorType::ErrorCode:
         QMessageBox::critical(
@@ -783,35 +770,33 @@ void GMainWindow::ErrEulaCallback(HLE::Applets::ErrEulaConfig& config) {
         break;
     }
     config.return_code = HLE::Applets::ErrEulaResult::Success;
-    applet_open = false;
+    open = false;
 }
 
-void GMainWindow::SwkbdCallback(HLE::Applets::SoftwareKeyboardConfig& config,
-                                std::u16string& text) {
+void GMainWindow::SwkbdCallback(HLE::Applets::SoftwareKeyboardConfig& config, std::u16string& text,
+                                bool& open) {
     if (QThread::currentThread() != thread()) {
         QMetaObject::invokeMethod(this, "SwkbdCallback", Qt::BlockingQueuedConnection,
                                   Q_ARG(HLE::Applets::SoftwareKeyboardConfig&, config),
-                                  Q_ARG(std::u16string&, text));
+                                  Q_ARG(std::u16string&, text), Q_ARG(bool&, open));
         return;
     }
-    std::unique_lock<std::mutex> lock{applet_mutex};
     SoftwareKeyboardDialog dialog{this, config, text};
     dialog.exec();
-    applet_open = false;
+    open = false;
 }
 
 void GMainWindow::MiiSelectorCallback(const HLE::Applets::MiiConfig& config,
-                                      HLE::Applets::MiiResult& result) {
+                                      HLE::Applets::MiiResult& result, bool& open) {
     if (QThread::currentThread() != thread()) {
         QMetaObject::invokeMethod(this, "MiiSelectorCallback", Qt::BlockingQueuedConnection,
                                   Q_ARG(const HLE::Applets::MiiConfig&, config),
-                                  Q_ARG(HLE::Applets::MiiResult&, result));
+                                  Q_ARG(HLE::Applets::MiiResult&, result), Q_ARG(bool&, open));
         return;
     }
-    std::unique_lock<std::mutex> lock{applet_mutex};
     MiiSelectorDialog dialog{this, config, result};
     dialog.exec();
-    applet_open = false;
+    open = false;
 }
 
 void GMainWindow::Update3D() {

@@ -53,7 +53,7 @@ std::optional<Type> Validate(u8* data, std::size_t size) {
     // and also verify that the packet info mentions the correct size. Since the spec includes the
     // type of the packet as part of the data, we need to include it in size calculations here
     // ie: payload_length == sizeof(T) + sizeof(Type)
-    const std::size_t data_len = GetSizeOfResponseType(header.type);
+    const std::size_t data_len{GetSizeOfResponseType(header.type)};
     if (header.payload_length != data_len + sizeof(Type) || size < data_len + sizeof(Header)) {
         LOG_ERROR(
             Input,
@@ -64,7 +64,7 @@ std::optional<Type> Validate(u8* data, std::size_t size) {
 
     const u32 crc32 = header.crc;
     boost::crc_32_type result;
-    // zero out the crc in the buffer and then run the crc against it
+    // Zero out the crc in the buffer and then run the crc against it
     std::memset(&data[offsetof(Header, crc)], 0, sizeof(u32_le));
 
     result.process_bytes(data, data_len + sizeof(Header));

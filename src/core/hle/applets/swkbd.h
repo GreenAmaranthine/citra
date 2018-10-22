@@ -248,7 +248,8 @@ public:
      */
     void Finalize();
 
-    static inline std::function<void(HLE::Applets::SoftwareKeyboardConfig&, std::u16string&)> cb;
+    static inline std::function<void(HLE::Applets::SoftwareKeyboardConfig&, std::u16string&, bool&)>
+        cb;
 
 private:
     /// This SharedMemory will be created when we receive the LibAppJustStarted message.

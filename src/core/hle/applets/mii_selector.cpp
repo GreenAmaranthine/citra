@@ -2,7 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <condition_variable>
 #include <cstring>
+#include <mutex>
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/hle/applets/mii_selector.h"
@@ -55,10 +57,15 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
     std::memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
 
     MiiResult result{};
-    if (config.magic_value != MiiSelectorMagic) {
+    if (config.magic_value != MiiSelectorMagic)
         result.return_code = 1;
-    } else {
-        cb(config, result);
+    else {
+        bool open{};
+        cb(config, result, open);
+        std::mutex m;
+        std::unique_lock<std::mutex> lock{m};
+        std::condition_variable cv;
+        cv.wait(lock, [&open]() -> bool { return !open; });
     }
 
     // Let the application know that we're closing

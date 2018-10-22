@@ -241,7 +241,7 @@ std::vector<u8> GenerateNintendoFirstEncryptedDataTag(const NetworkInfo& network
     const std::size_t payload_size{
         std::min<std::size_t>(EncryptedDataSizeCutoff, nodes.size() * sizeof(NodeInfo))};
 
-    EncryptedDataTag tag{};
+    EncryptedDataTag tag;
     tag.header.tag_id = static_cast<u8>(TagId::VendorSpecific);
     tag.header.length = static_cast<u8>(sizeof(tag) - sizeof(TagHeader) + payload_size);
     tag.oui_type = static_cast<u8>(NintendoTagId::EncryptedData0);
@@ -273,7 +273,7 @@ std::vector<u8> GenerateNintendoSecondEncryptedDataTag(const NetworkInfo& networ
     const std::size_t payload_size{nodes.size() * sizeof(NodeInfo) - EncryptedDataSizeCutoff};
     const std::size_t tag_length{sizeof(EncryptedDataTag) - sizeof(TagHeader) + payload_size};
 
-    EncryptedDataTag tag{};
+    EncryptedDataTag tag;
     tag.header.tag_id = static_cast<u8>(TagId::VendorSpecific);
     tag.header.length = static_cast<u8>(tag_length);
     tag.oui_type = static_cast<u8>(NintendoTagId::EncryptedData1);

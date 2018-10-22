@@ -59,7 +59,7 @@ public:
     void Update() override;
     void Finalize();
 
-    static inline std::function<void(HLE::Applets::ErrEulaConfig&)> cb;
+    static inline std::function<void(HLE::Applets::ErrEulaConfig&, bool&)> cb;
 
 private:
     /// This SharedMemory will be created when we receive the LibAppJustStarted message.
