@@ -27,7 +27,7 @@ void Module::Interface::GetMyPresence(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x08, 1, 2};
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(buffer, 0);
-    LOG_WARNING(Service_FRD, "(stubbed)");
+    LOG_WARNING(Service_FRD, "stubbed");
 }
 
 void Module::Interface::GetFriendKeyList(Kernel::HLERequestContext& ctx) {
@@ -71,7 +71,7 @@ void Module::Interface::GetMyFriendKey(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x5, 5, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(frd->my_friend_key);
-    LOG_WARNING(Service_FRD, "(stubbed)");
+    LOG_WARNING(Service_FRD, "stubbed");
 }
 
 void Module::Interface::GetMyScreenName(Kernel::HLERequestContext& ctx) {
@@ -83,7 +83,7 @@ void Module::Interface::GetMyScreenName(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x9, 7, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(screen_name);
-    LOG_WARNING(Service_FRD, "(stubbed)");
+    LOG_WARNING(Service_FRD, "stubbed");
 }
 
 void Module::Interface::UnscrambleLocalFriendCode(Kernel::HLERequestContext& ctx) {
@@ -112,7 +112,7 @@ void Module::Interface::UnscrambleLocalFriendCode(Kernel::HLERequestContext& ctx
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(unscrambled_friend_codes, 0);
-    LOG_WARNING(Service_FRD, "(stubbed)");
+    LOG_WARNING(Service_FRD, "stubbed");
 }
 
 void Module::Interface::SetClientSdkVersion(Kernel::HLERequestContext& ctx) {

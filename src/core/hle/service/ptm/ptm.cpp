@@ -55,7 +55,7 @@ void Module::Interface::GetPedometerState(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(ptm->pedometer_is_counting);
-    LOG_WARNING(Service_PTM, "(stubbed)");
+    LOG_WARNING(Service_PTM, "stubbed");
 }
 
 void Module::Interface::GetStepHistory(Kernel::HLERequestContext& ctx) {
@@ -81,7 +81,7 @@ void Module::Interface::GetTotalStepCount(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
-    LOG_WARNING(Service_PTM, "(stubbed)");
+    LOG_WARNING(Service_PTM, "stubbed");
 }
 
 void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
@@ -89,7 +89,7 @@ void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(false);
-    LOG_WARNING(Service_PTM, "(stubbed)");
+    LOG_WARNING(Service_PTM, "stubbed");
 }
 
 void CheckNew3DS(IPC::ResponseBuilder& rb) {
@@ -103,7 +103,7 @@ void Module::Interface::ConfigureNew3DSCPU(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(Kernel::KernelSetState(static_cast<u32>(Kernel::KernelSetStateType::ConfigureNew3DSCPU),
                                    value, 0, 0));
-    LOG_WARNING(Service_PTM, "(stubbed)");
+    LOG_WARNING(Service_PTM, "stubbed");
 }
 
 void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {

@@ -34,7 +34,7 @@ void SRV::RegisterClient(Kernel::HLERequestContext& ctx) {
     u32 caller_pid{rp.Pop<u32>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_SRV, "(stubbed)");
+    LOG_WARNING(Service_SRV, "stubbed");
 }
 
 void SRV::EnableNotification(Kernel::HLERequestContext& ctx) {
@@ -43,7 +43,7 @@ void SRV::EnableNotification(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x2, 1, 2};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(notification_semaphore);
-    LOG_WARNING(Service_SRV, "(stubbed)");
+    LOG_WARNING(Service_SRV, "stubbed");
 }
 
 void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {

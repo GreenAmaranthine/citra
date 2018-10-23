@@ -36,13 +36,13 @@ void Module::Interface::SetStorageInfo(Kernel::HLERequestContext& ctx) {
 void Module::Interface::UnregisterStorage(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x03, 1, 0};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_BOSS, "(stubbed)");
+    LOG_WARNING(Service_BOSS, "stubbed");
 }
 
 void Module::Interface::GetStorageInfo(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x04, 1, 0};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_BOSS, "(stubbed)");
+    LOG_WARNING(Service_BOSS, "stubbed");
 }
 
 void Module::Interface::RegisterPrivateRootCa(Kernel::HLERequestContext& ctx) {
@@ -52,7 +52,7 @@ void Module::Interface::RegisterPrivateRootCa(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(buffer);
-    LOG_WARNING(Service_BOSS, "(stubbed)");
+    LOG_WARNING(Service_BOSS, "stubbed");
 }
 
 void Module::Interface::RegisterPrivateClientCert(Kernel::HLERequestContext& ctx) {
@@ -81,7 +81,7 @@ void Module::Interface::RegisterNewArrivalEvent(Kernel::HLERequestContext& ctx) 
     const auto event{rp.PopObject<Kernel::Event>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_BOSS, "(stubbed)");
+    LOG_WARNING(Service_BOSS, "stubbed");
 }
 
 void Module::Interface::SetOptoutFlag(Kernel::HLERequestContext& ctx) {
@@ -137,7 +137,7 @@ void Module::Interface::ReconfigureTask(Kernel::HLERequestContext& ctx) {
 void Module::Interface::GetTaskIdList(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x0E, 1, 0};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_BOSS, "(stubbed)");
+    LOG_WARNING(Service_BOSS, "stubbed");
 }
 
 void Module::Interface::GetStepIdList(Kernel::HLERequestContext& ctx) {
@@ -343,7 +343,7 @@ void Module::Interface::GetTaskFinishHandle(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x1F, 1, 2};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects<Kernel::Event>(boss->task_finish_event);
-    LOG_WARNING(Service_BOSS, "(stubbed)");
+    LOG_WARNING(Service_BOSS, "stubbed");
 }
 
 void Module::Interface::GetTaskState(Kernel::HLERequestContext& ctx) {
@@ -537,7 +537,7 @@ void Module::Interface::GetStorageEntryInfo(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0); // stub 0 (32bit value)
     rb.Push<u16>(0); // stub 0 (16bit value)
-    LOG_WARNING(Service_BOSS, "(stubbed)");
+    LOG_WARNING(Service_BOSS, "stubbed");
 }
 
 void Module::Interface::SetStorageOption(Kernel::HLERequestContext& ctx) {
@@ -561,7 +561,7 @@ void Module::Interface::GetStorageOption(Kernel::HLERequestContext& ctx) {
     rb.Push<u8>(0);  // stub 0 (8bit value)
     rb.Push<u16>(0); // stub 0 (16bit value)
     rb.Push<u16>(0); // stub 0 (16bit value)
-    LOG_WARNING(Service_BOSS, "(stubbed)");
+    LOG_WARNING(Service_BOSS, "stubbed");
 }
 
 void Module::Interface::StartBgImmediate(Kernel::HLERequestContext& ctx) {

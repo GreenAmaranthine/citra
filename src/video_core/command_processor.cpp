@@ -82,17 +82,17 @@ static void WriteUniformFloatReg(ShaderRegs& config, Shader::ShaderSetup& setup,
         (float_regs_counter >= 3 && !uniform_setup.IsFloat32())) {
         float_regs_counter = 0;
 
-        auto& uniform{setup.uniforms.f[uniform_setup.index]};
+        auto& uniform = setup.uniforms.f[uniform_setup.index];
 
         if (uniform_setup.index >= 96)
             LOG_ERROR(HW_GPU, "Invalid {} float uniform index {}", GetShaderSetupTypeName(setup),
                       (int)uniform_setup.index);
         else {
             // NOTE: The destination component order indeed is "backwards"
-            if (uniform_setup.IsFloat32()) {
+            if (uniform_setup.IsFloat32())
                 for (auto i : {0, 1, 2, 3})
                     uniform[3 - i] = float24::FromFloat32(*(float*)(&uniform_write_buffer[i]));
-            } else {
+            else {
                 // TODO: Untested
                 uniform.w = float24::FromRaw(uniform_write_buffer[0] >> 8);
                 uniform.z = float24::FromRaw(((uniform_write_buffer[0] & 0xFF) << 16) |
@@ -213,7 +213,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
                     // Send to vertex shader
                     Shader::UnitState shader_unit;
-                    Shader::AttributeBuffer output;
+                    Shader::AttributeBuffer output{};
 
                     shader_unit.LoadInput(regs.vs, immediate_input);
                     shader_engine->Run(g_state.vs, shader_unit);
@@ -346,19 +346,21 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 unsigned int vertex{VertexIndex(index)};
                 auto& cached_vertex{vs_output[is_indexed ? vertex : index]};
 
-                if (is_indexed)
+                if (is_indexed) {
                     if (!single_thread) {
                         // Try locking this vertex
                         if (cached_vertex.lock.test_and_set(std::memory_order_acquire))
                             // Another thread is processing this vertex
                             continue;
                         else if (batch_id == cached_vertex.batch.load(std::memory_order_acquire)) {
-                            // Vertex is not being processed and is from the correct batch so unlock
+                            // Vertex isn't being processed and it's from the correct batch so
+                            // unlock
                             cached_vertex.lock.clear(std::memory_order_release);
                             continue;
                         }
                     } else if (batch_id == cached_vertex.batch.load(std::memory_order_relaxed))
                         continue;
+                }
                 Shader::AttributeBuffer attribute_buffer;
                 Shader::AttributeBuffer& output_attr{use_gs ? cached_vertex.output_attr
                                                             : attribute_buffer};
@@ -418,13 +420,13 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 g_state.geometry_pipeline.SubmitVertex(cached_vertex.output_attr);
             else
                 primitive_assembler.SubmitVertex(cached_vertex.output_vertex);
-
-            for (auto& future : futures)
-                future.get();
-
-            VideoCore::g_renderer->GetRasterizer()->DrawTriangles();
-            break;
         }
+
+        for (auto& future : futures)
+            future.get();
+
+        VideoCore::g_renderer->GetRasterizer()->DrawTriangles();
+        break;
     }
 
     case PICA_REG_INDEX(gs.bool_uniforms):

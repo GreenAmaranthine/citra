@@ -37,7 +37,7 @@ void NIM_U::CheckSysUpdateAvailable(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(false); // No update available
 
-    LOG_WARNING(Service_NIM, "(stubbed)");
+    LOG_WARNING(Service_NIM, "stubbed");
 }
 
 } // namespace Service::NIM

@@ -12,7 +12,7 @@ void NEWS_S::GetTotalNotifications(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
 
-    LOG_WARNING(Service_NEWS, "(stubbed)");
+    LOG_WARNING(Service_NEWS, "stubbed");
 }
 
 void NEWS_S::SetInfoLEDPattern(Kernel::HLERequestContext& ctx) {

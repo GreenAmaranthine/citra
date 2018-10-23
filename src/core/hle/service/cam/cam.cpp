@@ -804,7 +804,7 @@ void Module::Interface::SetPackageParameterWithoutContext(Kernel::HLERequestCont
     rp.PopRaw(package);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_CAM, "(stubbed)");
+    LOG_WARNING(Service_CAM, "stubbed");
 }
 
 template <typename PackageParameterType>
@@ -862,7 +862,7 @@ void Module::Interface::GetSuitableY2rStandardCoefficient(Kernel::HLERequestCont
     IPC::ResponseBuilder rb{ctx, 0x36, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
-    LOG_WARNING(Service_CAM, "(stubbed)");
+    LOG_WARNING(Service_CAM, "stubbed");
 }
 
 void Module::Interface::PlayShutterSound(Kernel::HLERequestContext& ctx) {

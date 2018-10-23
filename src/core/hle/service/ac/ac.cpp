@@ -25,7 +25,7 @@ void Module::Interface::CreateDefaultConfig(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x1, 1, 2};
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(std::move(buffer), 0);
-    LOG_WARNING(Service_AC, "(stubbed)");
+    LOG_WARNING(Service_AC, "stubbed");
 }
 
 void Module::Interface::ConnectAsync(Kernel::HLERequestContext& ctx) {
@@ -39,7 +39,7 @@ void Module::Interface::ConnectAsync(Kernel::HLERequestContext& ctx) {
     }
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_AC, "(stubbed)");
+    LOG_WARNING(Service_AC, "stubbed");
 }
 
 void Module::Interface::GetConnectResult(Kernel::HLERequestContext& ctx) {
@@ -69,7 +69,7 @@ void Module::Interface::GetCloseResult(Kernel::HLERequestContext& ctx) {
     rp.Skip(2, false); // ProcessId descriptor
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_AC, "(stubbed)");
+    LOG_WARNING(Service_AC, "stubbed");
 }
 
 void Module::Interface::GetWifiStatus(Kernel::HLERequestContext& ctx) {
@@ -84,7 +84,7 @@ void Module::Interface::GetInfraPriority(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0); // Infra Priority, default 0
-    LOG_WARNING(Service_AC, "(stubbed)");
+    LOG_WARNING(Service_AC, "stubbed");
 }
 
 void Module::Interface::SetRequestEulaVersion(Kernel::HLERequestContext& ctx) {
@@ -107,14 +107,14 @@ void Module::Interface::RegisterDisconnectEvent(Kernel::HLERequestContext& ctx) 
         ac->disconnect_event->SetName("AC:disconnect_event");
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_AC, "(stubbed)");
+    LOG_WARNING(Service_AC, "stubbed");
 }
 
 void Module::Interface::GetConnectingSsidLength(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x35, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(static_cast<u32>(ac->connected_network_name.length()));
-    LOG_WARNING(Service_AC, "(stubbed)");
+    LOG_WARNING(Service_AC, "stubbed");
 }
 
 void Module::Interface::IsConnected(Kernel::HLERequestContext& ctx) {

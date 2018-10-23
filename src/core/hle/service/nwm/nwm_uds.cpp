@@ -834,7 +834,7 @@ void NWM_UDS::UpdateNetworkAttribute(Kernel::HLERequestContext& ctx) {
     rp.Skip(2, false);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_NWM, "(stubbed)");
+    LOG_WARNING(Service_NWM, "stubbed");
 }
 
 void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {

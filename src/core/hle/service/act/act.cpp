@@ -36,7 +36,7 @@ void Module::Interface::GetErrorCode(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(error_code); // TODO: convert
-    LOG_WARNING(Service_ACT, "(stubbed)");
+    LOG_WARNING(Service_ACT, "stubbed");
 }
 
 void Module::Interface::GetAccountDataBlock(Kernel::HLERequestContext& ctx) {

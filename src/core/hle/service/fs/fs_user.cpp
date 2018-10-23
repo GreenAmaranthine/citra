@@ -383,7 +383,7 @@ void FS_USER::GetCardType(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x813, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(0); // CTR card = 0, TWL card = 1
-    LOG_WARNING(Service_FS, "(stubbed)");
+    LOG_WARNING(Service_FS, "stubbed");
 }
 
 void FS_USER::DeleteSdmcRoot(Kernel::HLERequestContext& ctx) {

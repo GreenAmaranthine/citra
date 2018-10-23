@@ -38,7 +38,7 @@ void CSND_SND::Shutdown(Kernel::HLERequestContext& ctx) {
         shared_memory = nullptr;
     IPC::ResponseBuilder rb{ctx, 0x02, 1, 0};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_CSND, "(stubbed)");
+    LOG_WARNING(Service_CSND, "stubbed");
 }
 
 void CSND_SND::ExecuteCommands(Kernel::HLERequestContext& ctx) {
@@ -63,13 +63,13 @@ void CSND_SND::AcquireSoundChannels(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x05, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0xFFFFFF00);
-    LOG_WARNING(Service_CSND, "(stubbed)");
+    LOG_WARNING(Service_CSND, "stubbed");
 }
 
 void CSND_SND::ReleaseSoundChannels(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x06, 1, 0};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_CSND, "(stubbed)");
+    LOG_WARNING(Service_CSND, "stubbed");
 }
 
 void CSND_SND::AcquireCapUnit(Kernel::HLERequestContext& ctx) {
@@ -89,7 +89,7 @@ void CSND_SND::AcquireCapUnit(Kernel::HLERequestContext& ctx) {
         capture_units[0] = true;
         rb.Push<u32>(0);
     }
-    LOG_WARNING(Service_CSND, "(stubbed)");
+    LOG_WARNING(Service_CSND, "stubbed");
 }
 
 void CSND_SND::ReleaseCapUnit(Kernel::HLERequestContext& ctx) {
@@ -137,7 +137,7 @@ void CSND_SND::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
 void CSND_SND::Reset(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0xC, 1, 0};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_CSND, "(stubbed)");
+    LOG_WARNING(Service_CSND, "stubbed");
 }
 
 CSND_SND::CSND_SND() : ServiceFramework{"csnd:SND", 4} {

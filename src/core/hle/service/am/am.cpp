@@ -824,7 +824,7 @@ void Module::Interface::GetNumTickets(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x0008, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
-    LOG_WARNING(Service_AM, "(stubbed)");
+    LOG_WARNING(Service_AM, "stubbed");
 }
 
 void Module::Interface::GetTicketList(Kernel::HLERequestContext& ctx) {
@@ -913,7 +913,7 @@ void Module::Interface::BeginImportProgramTemporarily(Kernel::HLERequestContext&
     IPC::ResponseBuilder rb{ctx, 0x0403, 1, 2};
     rb.Push(RESULT_SUCCESS); // No error
     rb.PushCopyObjects(file->Connect());
-    LOG_WARNING(Service_AM, "(stubbed)");
+    LOG_WARNING(Service_AM, "stubbed");
 }
 
 void Module::Interface::EndImportProgram(Kernel::HLERequestContext& ctx) {

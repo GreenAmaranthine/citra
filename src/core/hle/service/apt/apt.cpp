@@ -732,7 +732,7 @@ void Module::Interface::ReplySleepQuery(Kernel::HLERequestContext& ctx) {
     QueryReply query_reply{rp.PopEnum<QueryReply>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_APT, "(stubbed)");
+    LOG_WARNING(Service_APT, "stubbed");
 }
 
 void Module::Interface::ReceiveDeliverArg(Kernel::HLERequestContext& ctx) {

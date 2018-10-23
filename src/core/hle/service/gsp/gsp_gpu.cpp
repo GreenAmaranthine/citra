@@ -604,7 +604,7 @@ void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
     }
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_DEBUG(Service_GSP, "(stubbed)");
+    LOG_DEBUG(Service_GSP, "stubbed");
 }
 
 SessionData* GSP_GPU::FindRegisteredThreadData(u32 thread_id) {

@@ -217,7 +217,7 @@ void DSP_DSP::UnloadComponent(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x12, 1, 0};
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_DSP, "(stubbed)");
+    LOG_WARNING(Service_DSP, "stubbed");
 }
 
 void DSP_DSP::FlushDataCache(Kernel::HLERequestContext& ctx) {
@@ -278,7 +278,7 @@ void DSP_DSP::GetSemaphoreEventHandle(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(semaphore_event);
     semaphore_event->Signal();
-    LOG_WARNING(Service_DSP, "(stubbed)");
+    LOG_WARNING(Service_DSP, "stubbed");
 }
 
 void DSP_DSP::SetSemaphoreMask(Kernel::HLERequestContext& ctx) {
@@ -310,7 +310,7 @@ void DSP_DSP::GetIsDspOccupied(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(0);
-    LOG_WARNING(Service_DSP, "(stubbed)");
+    LOG_WARNING(Service_DSP, "stubbed");
 }
 
 // DSP Interrupts:
