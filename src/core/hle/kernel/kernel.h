@@ -29,6 +29,7 @@ class ClientSession;
 class ServerSession;
 class ResourceLimitList;
 class SharedMemory;
+class ThreadManager;
 
 enum class ResetType {
     OneShot,
@@ -196,6 +197,9 @@ public:
     /// Adds a port to the named port table
     void AddNamedPort(std::string name, Kernel::SharedPtr<Kernel::ClientPort> port);
 
+    ThreadManager& GetThreadManager();
+    const ThreadManager& GetThreadManager() const;
+
 private:
     std::unique_ptr<ResourceLimitList> resource_limits;
     std::atomic<u32> next_object_id{};
@@ -205,6 +209,8 @@ private:
     std::vector<SharedPtr<Process>> process_list;
 
     SharedPtr<Process> current_process;
+
+    std::unique_ptr<ThreadManager> thread_manager;
 };
 
 } // namespace Kernel
