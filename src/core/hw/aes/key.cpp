@@ -126,9 +126,8 @@ void LoadBootromKeys() {
 
     const std::string filepath{FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir) + BOOTROM9};
     FileUtil::IOFile file{filepath, "rb"};
-    if (!file) {
+    if (!file)
         return;
-    }
 
     const std::size_t length{file.GetSize()};
     if (length != 65536) {
@@ -174,9 +173,8 @@ void LoadPresetKeys() {
     FileUtil::CreateFullPath(filepath); // Create path if not already created
     std::ifstream file;
     OpenFStream(file, filepath, std::ios_base::in);
-    if (!file) {
+    if (!file)
         return;
-    }
 
     while (!file.eof()) {
         std::string line;
@@ -199,11 +197,10 @@ void LoadPresetKeys() {
 
         std::size_t common_key_index;
         if (std::sscanf(name.c_str(), "common%zd", &common_key_index) == 1) {
-            if (common_key_index >= common_key_y_slots.size()) {
+            if (common_key_index >= common_key_y_slots.size())
                 LOG_ERROR(HW_AES, "Invalid common key index {}", common_key_index);
-            } else {
+            else
                 common_key_y_slots[common_key_index] = key;
-            }
             continue;
         }
 
