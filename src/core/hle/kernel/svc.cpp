@@ -203,7 +203,7 @@ static void ExitProcess() {
     ASSERT_MSG(current_process->status == ProcessStatus::Running, "Process has already exited");
     current_process->status = ProcessStatus::Exited;
     // Stop all the process threads that are currently waiting for objects.
-    auto& thread_list{GetThreadList()};
+    auto& thread_list{kernel.GetThreadManager().GetThreadList()};
     for (auto& thread : thread_list) {
         if (thread->owner_process != current_process)
             continue;

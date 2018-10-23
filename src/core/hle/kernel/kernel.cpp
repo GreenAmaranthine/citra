@@ -25,7 +25,6 @@ KernelSystem::KernelSystem(u32 system_mode) {
 
 KernelSystem::~KernelSystem() {
     named_ports.clear();
-    Kernel::ThreadingShutdown();
     Kernel::TimersShutdown();
     Kernel::MemoryShutdown();
 }
