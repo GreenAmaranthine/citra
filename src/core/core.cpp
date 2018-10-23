@@ -55,7 +55,7 @@ System::ResultStatus System::RunLoop() {
     }
     // If we don't have a currently active thread then don't execute instructions,
     // instead advance to the next event and try to yield to the next thread
-    if (!Kernel::GetCurrentThread()) {
+    if (kernel->GetThreadManager().GetCurrentThread() == nullptr) {
         LOG_TRACE(Core_ARM11, "Idling");
         CoreTiming::Idle();
         CoreTiming::Advance();
@@ -132,7 +132,7 @@ void System::Reschedule() {
     if (!reschedule_pending)
         return;
     reschedule_pending = false;
-    Kernel::Reschedule();
+    kernel->GetThreadManager().Reschedule();
 }
 
 System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {

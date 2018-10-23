@@ -86,9 +86,9 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
     if (client_port.Failed()) {
         if (wait_until_available && client_port.Code() == ERR_SERVICE_NOT_REGISTERED) {
             LOG_INFO(Service_SRV, "service={} delayed", name);
-            Kernel::SharedPtr<Kernel::Event> get_service_handle_event{
-                ctx.SleepClientThread(Kernel::GetCurrentThread(), "GetServiceHandle",
-                                      std::chrono::nanoseconds(-1), get_handle)};
+            Kernel::SharedPtr<Kernel::Event> get_service_handle_event{ctx.SleepClientThread(
+                system.Kernel().GetThreadManager().GetCurrentThread(), "GetServiceHandle",
+                std::chrono::nanoseconds(-1), get_handle)};
             get_service_handle_delayed_map[name] = std::move(get_service_handle_event);
             return;
         } else {

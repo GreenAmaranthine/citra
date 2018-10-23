@@ -163,21 +163,22 @@ void ServiceFrameworkBase::ReportUnimplementedFunction(u32* cmd_buf, const Funct
 }
 
 void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_session) {
-    u32* cmd_buf{Kernel::GetCommandBuffer()};
+    Kernel::KernelSystem& kernel{Core::System::GetInstance().Kernel()};
+    auto thread{kernel.GetThreadManager().GetCurrentThread()};
+    // TODO: avoid GetPointer
+    u32* cmd_buf{reinterpret_cast<u32*>(Memory::GetPointer(thread->GetCommandBufferAddress()))};
     u32 header_code{cmd_buf[0]};
     auto itr{handlers.find(header_code)};
     const FunctionInfoBase* info{itr == handlers.end() ? nullptr : &itr->second};
-    if (!info || !info->handler_callback)
+    if (info == nullptr || info->handler_callback == nullptr)
         return ReportUnimplementedFunction(cmd_buf, info);
-    Kernel::SharedPtr<Kernel::Process> current_process{
-        Core::System::GetInstance().Kernel().GetCurrentProcess()};
+    Kernel::SharedPtr<Kernel::Process> current_process = kernel.GetCurrentProcess();
     // TODO: The kernel should be the one handling this as part of translation after
     // everything else is migrated
     Kernel::HLERequestContext context{std::move(server_session)};
     context.PopulateFromIncomingCommandBuffer(cmd_buf, *current_process);
     LOG_TRACE(Service, "{}", MakeFunctionString(info->name, GetServiceName().c_str(), cmd_buf));
     handler_invoker(this, info->handler_callback, context);
-    auto thread{Kernel::GetCurrentThread()};
     ASSERT(thread->status == Kernel::ThreadStatus::Running ||
            thread->status == Kernel::ThreadStatus::WaitHleEvent);
     // Only write the response immediately if the thread is still running. If the HLE handler put

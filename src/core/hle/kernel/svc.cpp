@@ -197,7 +197,8 @@ static ResultCode UnmapProcessMemory(Handle process, u32 start_addr, u32 size) {
 }
 
 static void ExitProcess() {
-    SharedPtr<Process> current_process{Core::System::GetInstance().Kernel().GetCurrentProcess()};
+    auto& kernel{Core::System::GetInstance().Kernel()};
+    SharedPtr<Process> current_process{kernel.GetCurrentProcess()};
     LOG_INFO(Kernel_SVC, "Process {} exiting", current_process->process_id);
     ASSERT_MSG(current_process->status == ProcessStatus::Running, "Process has already exited");
     current_process->status = ProcessStatus::Exited;
@@ -206,7 +207,7 @@ static void ExitProcess() {
     for (auto& thread : thread_list) {
         if (thread->owner_process != current_process)
             continue;
-        if (thread == GetCurrentThread())
+        if (thread == kernel.GetThreadManager().GetCurrentThread())
             continue;
         // TODO: When are the other running/ready threads terminated?
         ASSERT_MSG(thread->status == ThreadStatus::WaitSynchAny ||
@@ -215,7 +216,7 @@ static void ExitProcess() {
         thread->Stop();
     }
     // Kill the current thread
-    GetCurrentThread()->Stop();
+    kernel.GetThreadManager().GetCurrentThread()->Stop();
     Core::System::GetInstance().PrepareReschedule();
 }
 
@@ -268,9 +269,9 @@ static ResultCode ConnectToPort(Handle* out_handle, VAddr port_name_address) {
     if (port_name.size() > PortNameMaxLength)
         return ERR_PORT_NAME_TOO_LONG;
     LOG_TRACE(Kernel_SVC, "port_name={}", port_name);
-    const auto named_ports{Core::System::GetInstance().Kernel().named_ports};
-    auto it{named_ports.find(port_name)};
-    if (it == named_ports.end()) {
+    auto& kernel{Core::System::GetInstance().Kernel()};
+    auto it{kernel.named_ports.find(port_name)};
+    if (it == kernel.named_ports.end()) {
         LOG_WARNING(Kernel_SVC, "tried to connect to unknown port: {}", port_name);
         return ERR_NOT_FOUND;
     }
@@ -285,14 +286,15 @@ static ResultCode ConnectToPort(Handle* out_handle, VAddr port_name_address) {
 
 /// Makes a blocking IPC call to an OS service.
 static ResultCode SendSyncRequest(Handle handle) {
+    auto& system{Core::System::GetInstance()};
+    auto& kernel{system.Kernel()};
     SharedPtr<ClientSession> session{
-        Core::System::GetInstance().Kernel().GetCurrentProcess()->handle_table.Get<ClientSession>(
-            handle)};
-    if (!session)
+        kernel.GetCurrentProcess()->handle_table.Get<ClientSession>(handle)};
+    if (session == nullptr)
         return ERR_INVALID_HANDLE;
     LOG_TRACE(Kernel_SVC, "handle=0x{:08X}({})", handle, session->GetName());
-    Core::System::GetInstance().PrepareReschedule();
-    return session->SendSyncRequest(GetCurrentThread());
+    system.PrepareReschedule();
+    return session->SendSyncRequest(kernel.GetThreadManager().GetCurrentThread());
 }
 
 /// Opens a process
@@ -327,10 +329,10 @@ static ResultCode CloseHandle(Handle handle) {
 
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
 static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
-    auto object{
-        Core::System::GetInstance().Kernel().GetCurrentProcess()->handle_table.Get<WaitObject>(
-            handle)};
-    Thread* thread{GetCurrentThread()};
+    auto& system{Core::System::GetInstance()};
+    auto& kernel{system.Kernel()};
+    auto object{kernel.GetCurrentProcess()->handle_table.Get<WaitObject>(handle)};
+    Thread* thread{kernel.GetThreadManager().GetCurrentThread()};
     if (!object)
         return ERR_INVALID_HANDLE;
     LOG_TRACE(Kernel_SVC, "handle=0x{:08X}({}:{}), nanoseconds={}", handle, object->GetTypeName(),
@@ -355,7 +357,7 @@ static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
             // WaitSynchronization1 doesn't have an output index like WaitSynchronizationN, so we
             // don't have to do anything else here.
         };
-        Core::System::GetInstance().PrepareReschedule();
+        system.PrepareReschedule();
         // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread
         // resumes due to a signal in its wait objects.
         // Otherwise we retain the default value of timeout.
@@ -368,7 +370,9 @@ static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
 /// Wait for the given handles to synchronize, timeout after the specified nanoseconds
 static ResultCode WaitSynchronizationN(s32* out, VAddr handles_address, s32 handle_count,
                                        bool wait_all, s64 nano_seconds) {
-    Thread* thread{GetCurrentThread()};
+    auto& system{Core::System::GetInstance()};
+    auto& kernel{system.Kernel()};
+    Thread* thread{kernel.GetThreadManager().GetCurrentThread()};
     if (!Memory::IsValidVirtualAddress(handles_address))
         return ERR_INVALID_POINTER;
     // NOTE: on real hardware, there is no nullptr check for 'out' (tested with firmware 4.4). If
@@ -381,9 +385,7 @@ static ResultCode WaitSynchronizationN(s32* out, VAddr handles_address, s32 hand
     std::vector<ObjectPtr> objects(handle_count);
     for (int i{}; i < handle_count; ++i) {
         Handle handle{Memory::Read32(handles_address + i * sizeof(Handle))};
-        auto object{
-            Core::System::GetInstance().Kernel().GetCurrentProcess()->handle_table.Get<WaitObject>(
-                handle)};
+        auto object{kernel.GetCurrentProcess()->handle_table.Get<WaitObject>(handle)};
         if (!object)
             return ERR_INVALID_HANDLE;
         objects[i] = object;
@@ -424,7 +426,7 @@ static ResultCode WaitSynchronizationN(s32* out, VAddr handles_address, s32 hand
             thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
             // The wait_all case doesn't update the output index.
         };
-        Core::System::GetInstance().PrepareReschedule();
+        system.PrepareReschedule();
         // This value gets set to -1 by default in this case, it isn't modified after this.
         *out = -1;
         // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to
@@ -470,7 +472,7 @@ static ResultCode WaitSynchronizationN(s32* out, VAddr handles_address, s32 hand
             thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
             thread->SetWaitSynchronizationOutput(thread->GetWaitObjectIndex(object.get()));
         };
-        Core::System::GetInstance().PrepareReschedule();
+        system.PrepareReschedule();
         // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to a
         // signal in one of its wait objects.
         // Otherwise we retain the default value of timeout, and -1 in the out parameter
@@ -504,12 +506,14 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
                                   Handle reply_target) {
     if (!Memory::IsValidVirtualAddress(handles_address))
         return ERR_INVALID_POINTER;
-    // Check if 'handle_count' is invalid
+    // Check if handle_count is invalid
     if (handle_count < 0)
         return ERR_OUT_OF_RANGE;
     using ObjectPtr = SharedPtr<WaitObject>;
     std::vector<ObjectPtr> objects(handle_count);
-    SharedPtr<Process> current_process{Core::System::GetInstance().Kernel().GetCurrentProcess()};
+    auto& system{Core::System::GetInstance()};
+    auto& kernel{system.Kernel()};
+    SharedPtr<Process> current_process{kernel.GetCurrentProcess()};
     for (int i{}; i < handle_count; ++i) {
         Handle handle{Memory::Read32(handles_address + i * sizeof(Handle))};
         auto object{current_process->handle_table.Get<WaitObject>(handle)};
@@ -519,8 +523,9 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
     }
     // We are also sending a command reply.
     // Do not send a reply if the command id in the command buffer is 0xFFFF.
-    u32* cmd_buff{GetCommandBuffer()};
-    IPC::Header header{cmd_buff[0]};
+    Thread* thread{kernel.GetThreadManager().GetCurrentThread()};
+    u32 cmd_buff_header{Memory::Read32(thread->GetCommandBufferAddress())};
+    IPC::Header header{cmd_buff_header};
     if (reply_target != 0 && header.command_id != 0xFFFF) {
         auto session{current_process->handle_table.Get<ServerSession>(reply_target)};
         if (!session)
@@ -534,10 +539,10 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
             *index = -1;
             return ERR_SESSION_CLOSED_BY_REMOTE;
         }
-        VAddr source_address{GetCurrentThread()->GetCommandBufferAddress()};
+        VAddr source_address{thread->GetCommandBufferAddress()};
         VAddr target_address{request_thread->GetCommandBufferAddress()};
-        ResultCode translation_result{TranslateCommandBuffer(
-            Kernel::GetCurrentThread(), request_thread, source_address, target_address, true)};
+        ResultCode translation_result{
+            TranslateCommandBuffer(thread, request_thread, source_address, target_address, true)};
         // Note: The real kernel seems to always panic if the Server->Client buffer translation
         // fails for whatever reason.
         ASSERT(translation_result.IsSuccess());
@@ -552,7 +557,6 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
             return ResultCode(0xE7E3FFFF);
         return RESULT_SUCCESS;
     }
-    auto thread{GetCurrentThread()};
     // Find the first object that is acquirable in the provided list of objects
     auto itr{std::find_if(objects.begin(), objects.end(), [thread](const ObjectPtr& object) {
         return !object->ShouldWait(thread);
@@ -565,7 +569,7 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
         if (object->GetHandleType() != HandleType::ServerSession)
             return RESULT_SUCCESS;
         auto server_session{static_cast<ServerSession*>(object)};
-        return ReceiveIPCRequest(server_session, GetCurrentThread());
+        return ReceiveIPCRequest(server_session, thread);
     }
     // No objects were ready to be acquired, prepare to suspend the thread.
     // Put the thread to sleep
@@ -588,7 +592,7 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
         thread->SetWaitSynchronizationResult(result);
         thread->SetWaitSynchronizationOutput(thread->GetWaitObjectIndex(object.get()));
     };
-    Core::System::GetInstance().PrepareReschedule();
+    system.PrepareReschedule();
     // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to a
     // signal in one of its wait objects, or to 0xC8A01836 if there was a translation error.
     // By default the index is set to -1.
@@ -598,7 +602,7 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
 
 /// Create an address arbiter (to allocate access to shared resources)
 static ResultCode CreateAddressArbiter(Handle* out_handle) {
-    KernelSystem& kernel{Core::System::GetInstance().Kernel()};
+    auto& kernel{Core::System::GetInstance().Kernel()};
     SharedPtr<AddressArbiter> arbiter{kernel.CreateAddressArbiter()};
     *out_handle = kernel.GetCurrentProcess()->handle_table.Create(std::move(arbiter));
     LOG_TRACE(Kernel_SVC, "returned handle=0x{:08X}", *out_handle);
@@ -610,15 +614,17 @@ static ResultCode ArbitrateAddress(Handle handle, u32 address, u32 type, u32 val
                                    s64 nanoseconds) {
     LOG_TRACE(Kernel_SVC, "handle=0x{:08X}, address=0x{:08X}, type=0x{:08X}, value=0x{:08X}",
               handle, address, type, value);
+    auto& system{Core::System::GetInstance()};
+    auto& kernel{system.Kernel()};
     SharedPtr<AddressArbiter> arbiter{
-        Core::System::GetInstance().Kernel().GetCurrentProcess()->handle_table.Get<AddressArbiter>(
-            handle)};
+        kernel.GetCurrentProcess()->handle_table.Get<AddressArbiter>(handle)};
     if (!arbiter)
         return ERR_INVALID_HANDLE;
-    auto res{arbiter->ArbitrateAddress(GetCurrentThread(), static_cast<ArbitrationType>(type),
-                                       address, value, nanoseconds)};
+    auto res{arbiter->ArbitrateAddress(kernel.GetThreadManager().GetCurrentThread(),
+                                       static_cast<ArbitrationType>(type), address, value,
+                                       nanoseconds)};
     // TODO: Identify in which specific cases this call should cause a reschedule.
-    Core::System::GetInstance().PrepareReschedule();
+    system.PrepareReschedule();
     return res;
 }
 
@@ -752,7 +758,7 @@ static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point
 static void ExitThread() {
     LOG_TRACE(Kernel_SVC, "pc=0x{:08X}", Core::CPU().GetPC());
 
-    ExitCurrentThread();
+    Core::System::GetInstance().Kernel().GetThreadManager().ExitCurrentThread();
     Core::System::GetInstance().PrepareReschedule();
 }
 
@@ -791,7 +797,7 @@ static ResultCode SetThreadPriority(Handle handle, u32 priority) {
 
 /// Create a mutex
 static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
-    KernelSystem& kernel{Core::System::GetInstance().Kernel()};
+    auto& kernel{Core::System::GetInstance().Kernel()};
     SharedPtr<Mutex> mutex{kernel.CreateMutex(initial_locked != 0)};
     mutex->name = fmt::format("mutex-{:08x}", Core::CPU().GetReg(14));
     *out_handle = kernel.GetCurrentProcess()->handle_table.Create(std::move(mutex));
@@ -803,11 +809,11 @@ static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
 /// Release a mutex
 static ResultCode ReleaseMutex(Handle handle) {
     LOG_TRACE(Kernel_SVC, "handle=0x{:08X}", handle);
-    SharedPtr<Mutex> mutex{
-        Core::System::GetInstance().Kernel().GetCurrentProcess()->handle_table.Get<Mutex>(handle)};
+    auto& kernel{Core::System::GetInstance().Kernel()};
+    SharedPtr<Mutex> mutex{kernel.GetCurrentProcess()->handle_table.Get<Mutex>(handle)};
     if (!mutex)
         return ERR_INVALID_HANDLE;
-    return mutex->Release(GetCurrentThread());
+    return mutex->Release(kernel.GetThreadManager().GetCurrentThread());
 }
 
 /// Get the ID of the specified process
@@ -849,7 +855,7 @@ static ResultCode GetThreadId(u32* thread_id, Handle handle) {
 
 /// Creates a semaphore
 static ResultCode CreateSemaphore(Handle* out_handle, s32 initial_count, s32 max_count) {
-    KernelSystem& kernel{Core::System::GetInstance().Kernel()};
+    auto& kernel{Core::System::GetInstance().Kernel()};
     CASCADE_RESULT(SharedPtr<Semaphore> semaphore,
                    kernel.CreateSemaphore(initial_count, max_count));
     semaphore->name = fmt::format("semaphore-{:08x}", Core::CPU().GetReg(14));
@@ -898,7 +904,7 @@ static ResultCode QueryMemory(MemoryInfo* memory_info, PageInfo* page_info, u32 
 
 /// Create an event
 static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
-    KernelSystem& kernel{Core::System::GetInstance().Kernel()};
+    auto& kernel{Core::System::GetInstance().Kernel()};
     SharedPtr<Event> evt{kernel.CreateEvent(static_cast<ResetType>(reset_type),
                                             fmt::format("event-{:08x}", Core::CPU().GetReg(14)))};
     *out_handle = kernel.GetCurrentProcess()->handle_table.Create(std::move(evt));
@@ -939,7 +945,7 @@ static ResultCode ClearEvent(Handle handle) {
 
 /// Creates a timer
 static ResultCode CreateTimer(Handle* out_handle, u32 reset_type) {
-    KernelSystem& kernel{Core::System::GetInstance().Kernel()};
+    auto& kernel{Core::System::GetInstance().Kernel()};
     SharedPtr<Timer> timer{kernel.CreateTimer(
         static_cast<ResetType>(reset_type), fmt ::format("timer-{:08x}", Core::CPU().GetReg(14)))};
     *out_handle = kernel.GetCurrentProcess()->handle_table.Create(std::move(timer));
@@ -985,14 +991,18 @@ static ResultCode CancelTimer(Handle handle) {
 /// Sleep the current thread
 static void SleepThread(s64 nanoseconds) {
     LOG_TRACE(Kernel_SVC, "nanoseconds={}", nanoseconds);
+    auto& system{Core::System::GetInstance()};
+    auto& kernel{system.Kernel()};
+    ThreadManager& thread_manager{kernel.GetThreadManager()};
     // Don't attempt to yield execution if there are no available threads to run,
     // this way we avoid a useless reschedule to the idle thread.
-    if (nanoseconds == 0 && !HaveReadyThreads())
+    if (nanoseconds == 0 && !thread_manager.HaveReadyThreads())
         return;
     // Sleep current thread and check for next thread to schedule
-    WaitCurrentThread_Sleep();
+    thread_manager.WaitCurrentThread_Sleep();
     // Create an event to wake the thread up after the specified nanosecond delay has passed
-    GetCurrentThread()->WakeAfterDelay(nanoseconds);
+    thread_manager.GetCurrentThread()->WakeAfterDelay(nanoseconds);
+
     Core::System::GetInstance().PrepareReschedule();
 }
 
@@ -1052,7 +1062,7 @@ static ResultCode CreatePort(Handle* server_port, Handle* client_port, VAddr nam
                              u32 max_sessions) {
     // TODO: Implement named ports.
     ASSERT_MSG(name_address == 0, "Named ports are currently unimplemented");
-    KernelSystem& kernel{Core::System::GetInstance().Kernel()};
+    auto& kernel{Core::System::GetInstance().Kernel()};
     SharedPtr<Process> current_process{kernel.GetCurrentProcess()};
     auto ports{kernel.CreatePortPair(max_sessions)};
     *client_port =
@@ -1077,7 +1087,7 @@ static ResultCode CreateSessionToPort(Handle* out_client_session, Handle client_
 }
 
 static ResultCode CreateSession(Handle* server_session, Handle* client_session) {
-    KernelSystem& kernel{Core::System::GetInstance().Kernel()};
+    auto& kernel{Core::System::GetInstance().Kernel()};
     auto sessions{kernel.CreateSessionPair()};
     SharedPtr<Process> current_process{kernel.GetCurrentProcess()};
     auto& server{std::get<SharedPtr<ServerSession>>(sessions)};
