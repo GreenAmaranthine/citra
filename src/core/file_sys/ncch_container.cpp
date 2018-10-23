@@ -477,31 +477,31 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
                 if (is_encrypted)
                     dec.ProcessData(&buffer[0], &buffer[0], section.size);
             }
-
-            std::string override_ips{filepath + ".exefsdir/code.ips"};
-            if (FileUtil::Exists(override_ips) && std::strcmp(name, ".code") == 0) {
+            if (std::strcmp(name, ".code") == 0) {
+                std::string override_ips{filepath + ".exefsdir/code.ips"};
                 FileUtil::IOFile ips_file{override_ips, "rb"};
-                std::size_t ips_file_size{ips_file.GetSize()};
-                if (ips_file.IsOpen()) {
-                    std::vector<u8> ips(ips_file_size);
-                    if (ips_file.ReadBytes(&ips[0], ips_file_size) == ips_file_size) {
+                if (ips_file) {
+                    std::vector<u8> ips(ips_file.GetSize());
+                    if (ips_file.ReadBytes(&ips[0], ips.size()) == ips.size()) {
                         LOG_INFO(Service_FS, "File {} patching code.bin", override_ips);
                         [&] {
                             u32 cursor{5};
                             std::size_t patch_length{ips.size() - 3};
                             std::string ips_header(ips.begin(), ips.begin() + 5);
-                            if (ips_header != "PATCH") {
-                                LOG_INFO(Service_FS, "Attempted to load invalid IPS");
+                            bool is_32{ips_header == "IPS32"};
+                            if (ips_header != "PATCH" && !is_32) {
+                                LOG_ERROR(Service_FS, "Attempted to load invalid IPS");
                                 return;
                             }
+                            int offset_size{is_32 ? 4 : 3};
                             while (cursor < patch_length) {
                                 std::string eof_check(ips.begin() + cursor,
-                                                      ips.begin() + cursor + 3);
-                                if (eof_check == "EOF")
+                                                      ips.begin() + cursor + offset_size);
+                                if (eof_check == "EOF" || eof_check == "EEOF")
                                     return;
                                 int offset{ips[cursor] << 16 | ips[cursor + 1] << 8 |
                                            ips[cursor + 2]};
-                                int length{ips[cursor + 3] << 8 | ips[cursor + 4]};
+                                int length{ips[cursor + offset_size] << 8 | ips[cursor + 4]};
                                 // Check for an rle record
                                 if (length == 0) {
                                     length = ips[cursor + 5] << 8 | ips[cursor + 6];
