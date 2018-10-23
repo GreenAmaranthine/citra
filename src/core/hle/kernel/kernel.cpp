@@ -20,12 +20,15 @@ KernelSystem::KernelSystem(u32 system_mode) {
     Kernel::MemoryInit(system_mode);
     resource_limits = std::make_unique<ResourceLimitList>(*this);
     thread_manager = std::make_unique<ThreadManager>();
-    Kernel::TimersInit();
+    timer_manager = std::make_unique<TimerManager>();
 }
 
 KernelSystem::~KernelSystem() {
+<<<<<<< HEAD
     named_ports.clear();
     Kernel::TimersShutdown();
+=======
+>>>>>>> e5b93741d... kernel/timer: add TimerManager for timer system states
     Kernel::MemoryShutdown();
 }
 
@@ -55,6 +58,14 @@ ThreadManager& KernelSystem::GetThreadManager() {
 
 const ThreadManager& KernelSystem::GetThreadManager() const {
     return *thread_manager;
+}
+
+TimerManager& KernelSystem::GetTimerManager() {
+    return *timer_manager;
+}
+
+const TimerManager& KernelSystem::GetTimerManager() const {
+    return *timer_manager;
 }
 
 } // namespace Kernel

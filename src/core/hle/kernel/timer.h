@@ -5,34 +5,62 @@
 #pragma once
 
 #include "common/common_types.h"
+#include "core/core_timing.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/wait_object.h"
 
 namespace Kernel {
+
+class TimerManager {
+public:
+    TimerManager();
+
+private:
+    /// The timer callback event, called when a timer is fired
+    void TimerCallback(u64 callback_id, s64 cycles_late);
+
+    /// The event type of the generic timer callback event
+    CoreTiming::EventType* timer_callback_event_type;
+
+    u64 next_timer_callback_id{0};
+    std::unordered_map<u64, Timer*> timer_callback_table;
+
+    friend class Timer;
+    friend class KernelSystem;
+};
+
 class Timer final : public WaitObject {
 public:
     std::string GetTypeName() const override {
         return "Timer";
     }
+
     std::string GetName() const override {
         return name;
     }
+
     static const HandleType HANDLE_TYPE{HandleType::Timer};
+
     HandleType GetHandleType() const override {
         return HANDLE_TYPE;
     }
+
     ResetType GetResetType() const {
         return reset_type;
     }
+
     u64 GetInitialDelay() const {
         return initial_delay;
     }
+
     u64 GetIntervalDelay() const {
         return interval_delay;
     }
+
     bool ShouldWait(Thread* thread) const override;
     void Acquire(Thread* thread) override;
     void WakeupAllWaitingThreads() override;
+
     /**
      * Starts the timer, with the specified initial delay and interval.
      * @param initial Delay until the timer is first fired
@@ -41,6 +69,7 @@ public:
     void Set(s64 initial, s64 interval);
     void Cancel();
     void Clear();
+
     /**
      * Signals the timer, waking up any waiting threads and rescheduling it
      * for the next interval.
@@ -63,13 +92,9 @@ private:
     /// ID used as userdata to reference this object when inserting into the CoreTiming queue.
     u64 callback_id;
 
+    TimerManager& timer_manager;
+
     friend class KernelSystem;
 };
-
-/// Initializes the required variables for timers
-void TimersInit();
-
-/// Tears down the timer variables
-void TimersShutdown();
 
 } // namespace Kernel
