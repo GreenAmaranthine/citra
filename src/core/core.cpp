@@ -15,6 +15,7 @@
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/service/cfg/cfg.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
 #include "core/hle/service/service.h"
 #include "core/hle/service/sm/sm.h"
@@ -147,11 +148,11 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
 #endif
     service_manager = std::make_shared<Service::SM::ServiceManager>();
     shared_page_handler = std::make_shared<SharedPage::Handler>();
+    archive_manager = std::make_unique<Service::FS::ArchiveManager>();
     shutdown_requested = false;
     sleep_mode_enabled = false;
 
     // Initialize FS and CFG
-    Service::FS::ArchiveInit();
     Service::FS::InstallInterfaces(*this);
     Service::CFG::InstallInterfaces(*this);
 
@@ -181,6 +182,14 @@ Service::SM::ServiceManager& System::ServiceManager() {
 
 const Service::SM::ServiceManager& System::ServiceManager() const {
     return *service_manager;
+}
+
+Service::FS::ArchiveManager& System::ArchiveManager() {
+    return *archive_manager;
+}
+
+const Service::FS::ArchiveManager& System::ArchiveManager() const {
+    return *archive_manager;
 }
 
 Frontend& System::GetFrontend() {

@@ -13,7 +13,7 @@
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "common/swap.h"
-#include "core/file_sys/archive_selfncch.h"
+#include "core/core.h"
 #include "core/file_sys/ncch_container.h"
 #include "core/file_sys/title_metadata.h"
 #include "core/hle/kernel/process.h"
@@ -165,9 +165,8 @@ ResultStatus AppLoader_NCCH::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     update_ncch.OpenFile(Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC,
                                                           ncch_program_id | UPDATE_MASK));
     result = update_ncch.Load();
-    if (result == ResultStatus::Success) {
+    if (result == ResultStatus::Success)
         overlay_ncch = &update_ncch;
-    }
 
     if (auto member{Network::GetRoomMember().lock()}) {
         Network::GameInfo game_info;
@@ -182,7 +181,7 @@ ResultStatus AppLoader_NCCH::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     if (ResultStatus::Success != result)
         return result;
 
-    Service::FS::RegisterSelfNCCH(*this);
+    Core::System::GetInstance().ArchiveManager().RegisterSelfNCCH(*this);
 
     ParseRegionLockoutInfo();
 

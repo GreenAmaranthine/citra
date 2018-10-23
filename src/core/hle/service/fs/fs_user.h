@@ -13,6 +13,14 @@ class System;
 
 namespace Service::FS {
 
+class ArchiveManager;
+
+struct ProgramInfo {
+    u64 program_id;
+    u8 media_type;
+    INSERT_PADDING_BYTES(0x7);
+};
+
 struct ExtSaveDataInfo {
     u8 media_type;
     u8 unknown;
@@ -30,7 +38,7 @@ struct SystemSaveDataInfo {
 
 class FS_USER final : public ServiceFramework<FS_USER> {
 public:
-    FS_USER();
+    explicit FS_USER(Core::System& system);
 
 private:
     void Initialize(Kernel::HLERequestContext& ctx);
@@ -82,6 +90,8 @@ private:
     void CheckUpdatedDat(Kernel::HLERequestContext& ctx);
 
     u32 priority = -1; ///< For SetPriority and GetPriority service functions
+
+    ArchiveManager& archives;
 };
 
 void InstallInterfaces(Core::System& system);

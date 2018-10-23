@@ -34,6 +34,10 @@ namespace Service::SM {
 class ServiceManager;
 } // namespace Service::SM
 
+namespace Service::FS {
+class ArchiveManager;
+} // namespace Service::FS
+
 namespace Core {
 
 class System {
@@ -140,16 +144,16 @@ public:
      */
     const Service::SM::ServiceManager& ServiceManager() const;
 
-    /**
-     * Gets a reference to the frontend.
-     * @returns A reference to the frontend.
-     */
+    /// Gets a reference to the archive manager
+    Service::FS::ArchiveManager& ArchiveManager();
+
+    /// Gets a const reference to the archive manager
+    const Service::FS::ArchiveManager& ArchiveManager() const;
+
+    // Gets a reference to the frontend.
     Frontend& GetFrontend();
 
-    /**
-     * Gets a const reference to the frontend.
-     * @returns A const reference to the frontend.
-     */
+    /// Gets a const reference to the frontend.
     const Frontend& GetFrontend() const;
 
     PerfStats perf_stats;
@@ -157,9 +161,8 @@ public:
 
     void SetStatus(ResultStatus new_status, const char* details = nullptr) {
         status = new_status;
-        if (details) {
+        if (details)
             status_details = details;
-        }
     }
 
     const std::string& GetStatusDetails() const {
@@ -227,6 +230,8 @@ private:
 
     /// Shared page
     std::shared_ptr<SharedPage::Handler> shared_page_handler;
+
+    std::unique_ptr<Service::FS::ArchiveManager> archive_manager;
 
 #ifdef ENABLE_SCRIPTING
     /// RPC server for scripting support

@@ -22,6 +22,7 @@
 #include "core/hle/service/apt/apt_u.h"
 #include "core/hle/service/apt/bcfnt/bcfnt.h"
 #include "core/hle/service/cfg/cfg.h"
+#include "core/hle/service/fs/fs_user.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/hle/service/service.h"
 #include "core/hw/aes/ccm.h"

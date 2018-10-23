@@ -222,9 +222,8 @@ void Init(std::shared_ptr<SM::ServiceManager>& sm, Core::System& system) {
 
 /// Shutdown ServiceManager
 void Shutdown() {
-    FS::ArchiveShutdown();
-
     Kernel::g_named_ports.clear();
     LOG_DEBUG(Service, "shutdown OK");
 }
+
 } // namespace Service
