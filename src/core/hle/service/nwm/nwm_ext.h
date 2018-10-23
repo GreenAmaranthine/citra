@@ -7,6 +7,10 @@
 #include <functional>
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Kernel {
 class HLERequestContext;
 } // namespace Kernel
@@ -15,13 +19,15 @@ namespace Service::NWM {
 
 class NWM_EXT final : public ServiceFramework<NWM_EXT> {
 public:
-    NWM_EXT();
+    explicit NWM_EXT(Core::System& system);
     ~NWM_EXT();
 
     static inline std::function<void()> update_control_panel;
 
 private:
     void ControlWirelessEnabled(Kernel::HLERequestContext& ctx);
+
+    Core::System& system;
 };
 
 } // namespace Service::NWM

@@ -12,6 +12,10 @@
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Kernel {
 class Event;
 } // namespace Kernel
@@ -198,11 +202,11 @@ private:
     Kernel::SharedPtr<Kernel::Event> completion_event;
     ConversionConfiguration conversion{};
     DitheringWeightParams dithering_weight_params{};
-    bool temporal_dithering_enabled = false;
-    bool transfer_end_interrupt_enabled = false;
-    bool spacial_dithering_enabled = false;
+    bool temporal_dithering_enabled{};
+    bool transfer_end_interrupt_enabled{};
+    bool spacial_dithering_enabled{};
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::Y2R

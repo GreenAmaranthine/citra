@@ -13,6 +13,10 @@ extern "C" {
 #include "nfc3d/amitool.h"
 }
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Kernel {
 class Event;
 } // namespace Kernel
@@ -103,6 +107,6 @@ private:
     Type type;
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::NFC

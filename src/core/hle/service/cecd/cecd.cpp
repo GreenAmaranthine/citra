@@ -572,23 +572,20 @@ void Module::Interface::ReadData(Kernel::HLERequestContext& ctx) {
     std::vector<u8> buffer;
     switch (info_type) {
     case CecSystemInfoType::EulaVersion:
-        buffer = Core::System::GetInstance()
-                     .ServiceManager()
+        buffer = cecd->system.ServiceManager()
                      .GetService<CFG::Module::Interface>("cfg:u")
                      ->GetModule()
                      ->GetEulaVersion();
         dest_buffer.Write(buffer.data(), 0, buffer.size());
         break;
     case CecSystemInfoType::Eula:
-        if (Core::System::GetInstance()
-                .ServiceManager()
+        if (cecd->system.ServiceManager()
                 .GetService<CFG::Module::Interface>("cfg:u")
                 ->GetModule()
-                ->GetEulaVersion() == std::vector<u8>{0x00, 0x00}) {
+                ->GetEulaVersion() == std::vector<u8>{0x00, 0x00})
             buffer = {0x00};
-        } else {
+        else
             buffer = {0x01};
-        }
         dest_buffer.Write(buffer.data(), 0, buffer.size());
         break;
     case CecSystemInfoType::ParentControl:
@@ -608,20 +605,16 @@ void Module::Interface::ReadData(Kernel::HLERequestContext& ctx) {
 void Module::Interface::Start(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0B, 1, 0};
     const CecCommand command{rp.PopEnum<CecCommand>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
     LOG_WARNING(Service_CECD, "(stubbed) command={}", cecd->GetCecCommandAsString(command));
 }
 
 void Module::Interface::Stop(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0C, 1, 0};
     const CecCommand command{rp.PopEnum<CecCommand>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
     LOG_WARNING(Service_CECD, "(stubbed) command={}", cecd->GetCecCommandAsString(command));
 }
 
@@ -669,12 +662,10 @@ void Module::Interface::OpenAndWrite(Kernel::HLERequestContext& ctx) {
     open_mode.raw = rp.Pop<u32>();
     rp.PopPID();
     auto& read_buffer{rp.PopMappedBuffer()};
-
     FileSys::Path path{cecd->GetCecDataPathTypeAsString(path_type, ncch_program_id).data()};
     FileSys::Mode mode{};
     mode.write_flag.Assign(1);
     mode.create_flag.Assign(1);
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     switch (path_type) {
     case CecDataPathType::RootDir:
@@ -692,14 +683,10 @@ void Module::Interface::OpenAndWrite(Kernel::HLERequestContext& ctx) {
             std::vector<u8> buffer(buffer_size);
             read_buffer.Read(buffer.data(), 0, buffer_size);
 
-            if (file->GetSize() != buffer_size) {
+            if (file->GetSize() != buffer_size)
                 file->SetSize(buffer_size);
-            }
-
-            if (open_mode.check) {
+            if (open_mode.check)
                 cecd->CheckAndUpdateFile(path_type, ncch_program_id, buffer);
-            }
-
             file->Write(0, buffer.size(), true, buffer.data()).Unwrap();
             file->Close();
 
@@ -880,16 +867,14 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
         std::memcpy(&mbox_list_header, file_buffer.data(), sizeof(CecMBoxListHeader));
         LOG_DEBUG(Service_CECD, "CecMBoxList: magic={:#06x}, version={:#06x}, num_boxes={:#06x}",
                   mbox_list_header.magic, mbox_list_header.version, mbox_list_header.num_boxes);
-        if (file_size != sizeof(CecMBoxListHeader)) { // 0x18C
+        if (file_size != sizeof(CecMBoxListHeader)) // 0x18C
             LOG_DEBUG(Service_CECD, "CecMBoxListHeader size is incorrect: {}", file_size);
-        }
         if (mbox_list_header.magic != 0x6868) { // 'hh'
-            if (mbox_list_header.magic == 0 || mbox_list_header.magic == 0xFFFF) {
+            if (mbox_list_header.magic == 0 || mbox_list_header.magic == 0xFFFF)
                 LOG_DEBUG(Service_CECD, "CecMBoxListHeader magic number is not set");
-            } else {
+            else
                 LOG_DEBUG(Service_CECD, "CecMBoxListHeader magic number is incorrect: {}",
                           mbox_list_header.magic);
-            }
             std::memset(&mbox_list_header, 0, sizeof(CecMBoxListHeader));
             mbox_list_header.magic = 0x6868;
         }
@@ -1226,7 +1211,7 @@ Module::SessionData::~SessionData() {
 Module::Interface::Interface(std::shared_ptr<Module> cecd, const char* name)
     : ServiceFramework{name}, cecd{std::move(cecd)} {}
 
-Module::Module() {
+Module::Module(Core::System& system) : system{system} {
     cecinfo_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "CECD::cecinfo_event");
     change_state_event =
         Kernel::Event::Create(Kernel::ResetType::OneShot, "CECD::change_state_event");
@@ -1291,8 +1276,9 @@ Module::Module() {
 
 Module::~Module() = default;
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
-    auto cecd{std::make_shared<Module>()};
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager{system.ServiceManager()};
+    auto cecd{std::make_shared<Module>(system)};
     std::make_shared<CECD_NDM>(cecd)->InstallAsService(service_manager);
     std::make_shared<CECD_S>(cecd)->InstallAsService(service_manager);
     std::make_shared<CECD_U>(cecd)->InstallAsService(service_manager);

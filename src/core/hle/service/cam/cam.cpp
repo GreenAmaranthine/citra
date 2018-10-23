@@ -940,14 +940,14 @@ void Module::LoadCameraImplementation(CameraConfig& camera, int camera_id) {
 
 void ReloadCameraDevices() {
     auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn()) {
+    if (!system.IsPoweredOn())
         return;
-    }
     auto cam{system.ServiceManager().GetService<CAM_U>("cam:u")->GetModule()};
     cam->ReloadCameraDevices();
 }
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager{system.ServiceManager()};
     auto cam{std::make_shared<Module>()};
     std::make_shared<CAM_U>(cam)->InstallAsService(service_manager);
     std::make_shared<CAM_S>(cam)->InstallAsService(service_manager);

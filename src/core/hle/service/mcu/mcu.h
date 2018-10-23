@@ -8,13 +8,19 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Service::MCU {
 
 class Module final {
 public:
+    explicit Module(Core::System& system);
+
     class Interface : public ServiceFramework<Interface> {
     public:
-        Interface(std::shared_ptr<Module> mcu, const char* name);
+        explicit Interface(std::shared_ptr<Module> mcu, const char* name);
 
         void GetBatteryLevel(Kernel::HLERequestContext& ctx, u16 id);
         void GetBatteryChargeState(Kernel::HLERequestContext& ctx);
@@ -29,8 +35,11 @@ public:
     protected:
         std::shared_ptr<Module> mcu;
     };
+
+private:
+    Core::System& system;
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::MCU

@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/core.h"
 #include "core/hle/service/cdc/cdc_chk.h"
 #include "core/hle/service/cdc/cdc_csn.h"
 #include "core/hle/service/cdc/cdc_dsp.h"
@@ -11,7 +12,8 @@
 
 namespace Service::CDC {
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager{system.ServiceManager()};
     std::make_shared<CDC_CHK>()->InstallAsService(service_manager);
     std::make_shared<CDC_CSN>()->InstallAsService(service_manager);
     std::make_shared<CDC_DSP>()->InstallAsService(service_manager);

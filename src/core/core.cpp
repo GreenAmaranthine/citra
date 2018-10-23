@@ -152,12 +152,12 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
 
     // Initialize FS and CFG
     Service::FS::ArchiveInit();
-    Service::FS::InstallInterfaces(*service_manager);
-    Service::CFG::InstallInterfaces(*service_manager);
+    Service::FS::InstallInterfaces(*this);
+    Service::CFG::InstallInterfaces(*this);
 
     HW::Init();
     Kernel::Init(system_mode);
-    Service::Init(service_manager);
+    Service::Init(service_manager, *this);
     CheatCore::Init();
 
     ResultStatus result{VideoCore::Init(frontend)};

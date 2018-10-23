@@ -9,6 +9,10 @@
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Service::DSP {
 
 class DSP_DSP final : public ServiceFramework<DSP_DSP> {
@@ -17,11 +21,11 @@ public:
     ~DSP_DSP();
 
     /// There are three types of interrupts
-    static constexpr std::size_t NUM_INTERRUPT_TYPE = 3;
+    static constexpr std::size_t NUM_INTERRUPT_TYPE{3};
     enum class InterruptType : u32 { Zero = 0, One = 1, Pipe = 2 };
 
     /// Actual service implementation only has 6 'slots' for interrupts.
-    static constexpr std::size_t max_number_of_interrupt_events = 6;
+    static constexpr std::size_t max_number_of_interrupt_events{6};
 
     /// Signal interrupt on pipe
     void SignalInterrupt(InterruptType type, AudioCore::DspPipe pipe);
@@ -61,6 +65,6 @@ private:
     std::array<Kernel::SharedPtr<Kernel::Event>, AudioCore::num_dsp_pipe> pipes = {{}};
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::DSP

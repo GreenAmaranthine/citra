@@ -7,6 +7,10 @@
 #include "core/hle/service/ldr_ro/memory_synchronizer.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Service::LDR {
 
 struct ClientSlot : public Kernel::SessionRequestHandler::SessionDataBase {
@@ -35,6 +39,6 @@ private:
     void Shutdown(Kernel::HLERequestContext& self);
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::LDR

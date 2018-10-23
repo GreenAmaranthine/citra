@@ -84,7 +84,7 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     state.start.Assign(buttons[Start - BUTTON_HID_BEGIN]->GetStatus());
     state.select.Assign(buttons[Select - BUTTON_HID_BEGIN]->GetStatus());
     if (button_home->GetStatus())
-        Core::System::GetInstance().CloseApplication();
+        system.CloseApplication();
     // Get current circle pad position and update circle pad direction
     s16 circle_pad_x, circle_pad_y;
     if (use_override_circle_pad) {
@@ -213,7 +213,7 @@ void Module::UpdateGyroscopeCallback(u64 userdata, s64 cycles_late) {
     } else {
         Math::Vec3<float> gyro;
         std::tie(std::ignore, gyro) = motion_device->GetStatus();
-        double stretch{Core::System::GetInstance().perf_stats.GetLastFrameTimeScale()};
+        double stretch{system.perf_stats.GetLastFrameTimeScale()};
         gyro *= gyroscope_coef * static_cast<float>(stretch);
         gyroscope_entry.x = static_cast<s16>(gyro.x);
         gyroscope_entry.y = static_cast<s16>(gyro.y);
@@ -314,7 +314,7 @@ std::shared_ptr<Module> Module::Interface::GetModule() {
     return hid;
 }
 
-Module::Module() {
+Module::Module(Core::System& system) : system{system} {
     using namespace Kernel;
     shared_mem =
         SharedMemory::Create(nullptr, 0x1000, MemoryPermission::ReadWrite, MemoryPermission::Read,
@@ -423,8 +423,9 @@ void SetOverrideControls(bool pad, bool touch, bool motion, bool circle) {
     hid->SetOverrideControls(pad, touch, motion, circle);
 }
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
-    auto hid{std::make_shared<Module>()};
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager{system.ServiceManager()};
+    auto hid{std::make_shared<Module>(system)};
     std::make_shared<User>(hid)->InstallAsService(service_manager);
     std::make_shared<Spvr>(hid)->InstallAsService(service_manager);
 }

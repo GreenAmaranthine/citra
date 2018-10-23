@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/alignment.h"
+#include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/csnd/csnd_snd.h"
@@ -11,7 +12,7 @@ namespace Service::CSND {
 
 void CSND_SND::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x01, 5, 0};
-    const u32 size = Common::AlignUp(rp.Pop<u32>(), Memory::PAGE_SIZE);
+    const u32 size{Common::AlignUp(rp.Pop<u32>(), Memory::PAGE_SIZE)};
     const u32 offset0{rp.Pop<u32>()};
     const u32 offset1{rp.Pop<u32>()};
     const u32 offset2{rp.Pop<u32>()};
@@ -157,7 +158,8 @@ CSND_SND::CSND_SND() : ServiceFramework{"csnd:SND", 4} {
     RegisterHandlers(functions);
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager{system.ServiceManager()};
     std::make_shared<CSND_SND>()->InstallAsService(service_manager);
 }
 

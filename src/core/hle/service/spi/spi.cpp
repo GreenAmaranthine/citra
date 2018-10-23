@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/core.h"
 #include "core/hle/service/spi/spi_cd2.h"
 #include "core/hle/service/spi/spi_cs2.h"
 #include "core/hle/service/spi/spi_cs3.h"
@@ -18,7 +19,8 @@ Module::Interface::Interface(std::shared_ptr<Module> spi, const char* name)
 
 Module::Interface::~Interface() = default;
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager{system.ServiceManager()};
     auto spi{std::make_shared<Module>()};
     std::make_shared<SPI_CD2>(spi)->InstallAsService(service_manager);
     std::make_shared<SPI_CS2>(spi)->InstallAsService(service_manager);

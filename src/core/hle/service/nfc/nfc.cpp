@@ -4,6 +4,7 @@
 
 #include "common/file_util.h"
 #include "common/string_util.h"
+#include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/process.h"
@@ -603,7 +604,8 @@ void Module::UpdateAmiiboData() {
     file.WriteBytes(encrypted_data.data(), encrypted_data.size());
 }
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager{system.ServiceManager()};
     auto nfc{std::make_shared<Module>()};
     std::make_shared<NFC_M>(nfc)->InstallAsService(service_manager);
     std::make_shared<NFC_U>(nfc)->InstallAsService(service_manager);

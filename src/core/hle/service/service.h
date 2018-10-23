@@ -14,6 +14,10 @@
 #include "core/hle/kernel/object.h"
 #include "core/hle/service/sm/sm.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Kernel {
 class ClientPort;
 class ServerPort;
@@ -55,6 +59,7 @@ public:
 
     /// Creates a port pair and registers this service with the given ServiceManager.
     void InstallAsService(SM::ServiceManager& service_manager);
+
     /// Creates a port pair and registers it on the kernel's global port registry.
     void InstallAsNamedPort();
 
@@ -86,6 +91,7 @@ private:
 
     /// Identifier string used to connect to the service.
     std::string service_name;
+
     /// Maximum number of concurrent sessions that this service can handle.
     u32 max_sessions;
 
@@ -181,7 +187,7 @@ private:
 };
 
 /// Initialize ServiceManager
-void Init(std::shared_ptr<SM::ServiceManager>& sm);
+void Init(std::shared_ptr<SM::ServiceManager>& sm, Core::System& system);
 
 /// Shutdown ServiceManager
 void Shutdown();
@@ -189,7 +195,7 @@ void Shutdown();
 struct ServiceModuleInfo {
     std::string name;
     u64 title_id;
-    std::function<void(SM::ServiceManager&)> init_function;
+    std::function<void(Core::System& system)> init_function;
 };
 extern const std::array<ServiceModuleInfo, 38> service_module_map;
 

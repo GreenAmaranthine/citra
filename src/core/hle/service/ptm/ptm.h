@@ -10,6 +10,10 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Service::PTM {
 
 /// Id of the SharedExtData archive used by the PTM process
@@ -44,7 +48,7 @@ void CheckNew3DS(IPC::ResponseBuilder& rb);
 
 class Module final {
 public:
-    Module();
+    explicit Module(Core::System& system);
 
     class Interface : public ServiceFramework<Interface> {
     public:
@@ -68,6 +72,8 @@ public:
 
 private:
     bool pedometer_is_counting{};
+
+    Core::System& system;
 };
 
 /**
@@ -76,6 +82,6 @@ private:
  */
 void SetPlayCoins(u16 play_coins);
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::PTM

@@ -7,17 +7,24 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Service::NS {
 
 /// Interface to "ns:s" service
 class NS_S final : public ServiceFramework<NS_S> {
 public:
-    NS_S();
+    explicit NS_S(Core::System& system);
     ~NS_S();
 
     void LaunchTitle(Kernel::HLERequestContext& ctx);
     void ShutdownAsync(Kernel::HLERequestContext& ctx);
     void RebootSystemClean(Kernel::HLERequestContext& ctx);
+
+private:
+    Core::System& system;
 };
 
 } // namespace Service::NS

@@ -8,6 +8,6 @@
 
 namespace Service::NIM {
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::NIM

@@ -9,6 +9,10 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Kernel {
 class Event;
 } // namespace Kernel
@@ -54,6 +58,6 @@ protected:
     std::string connected_network_name{"3ds"};
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::AC

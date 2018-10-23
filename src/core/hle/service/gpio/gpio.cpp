@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/core.h"
 #include "core/hle/service/gpio/gpio_cdc.h"
 #include "core/hle/service/gpio/gpio_hid.h"
 #include "core/hle/service/gpio/gpio_ir.h"
@@ -20,7 +21,8 @@ Module::Interface::Interface(std::shared_ptr<Module> gpio, const char* name)
 
 Module::Interface::~Interface() = default;
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager{system.ServiceManager()};
     auto gpio{std::make_shared<Module>()};
     std::make_shared<GPIO_CDC>(gpio)->InstallAsService(service_manager);
     std::make_shared<GPIO_HID>(gpio)->InstallAsService(service_manager);

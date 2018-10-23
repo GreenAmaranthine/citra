@@ -12,6 +12,10 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Kernel {
 class Mutex;
 class SharedMemory;
@@ -59,7 +63,7 @@ enum class ScreencapPostPermission : u32 {
 
 class Module final {
 public:
-    Module();
+    explicit Module(Core::System& system);
     ~Module();
 
     class Interface : public ServiceFramework<Interface> {
@@ -143,8 +147,10 @@ private:
     bool application_restart{};
     u64 jump_tid;
     FS::MediaType jump_media;
+
+    Core::System& system;
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::APT

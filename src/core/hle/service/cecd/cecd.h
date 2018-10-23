@@ -10,6 +10,10 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace FileSys {
 class ArchiveBackend;
 class FileBackend;
@@ -19,7 +23,7 @@ namespace Service::CECD {
 
 class Module final {
 public:
-    Module();
+    explicit Module(Core::System& system);
     ~Module();
 
     enum class CecCommand : u32 {
@@ -300,9 +304,11 @@ private:
 
     Kernel::SharedPtr<Kernel::Event> cecinfo_event;
     Kernel::SharedPtr<Kernel::Event> change_state_event;
+
+    Core::System& system;
 };
 
 /// Initialize CECD service(s)
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::CECD

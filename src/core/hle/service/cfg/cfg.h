@@ -11,6 +11,10 @@
 #include "common/common_types.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace FileSys {
 class ArchiveBackend;
 } // namespace FileSys
@@ -309,7 +313,7 @@ private:
     u32 preferred_region_code{};
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 bool IsNewModeEnabled();
 
 } // namespace Service::CFG

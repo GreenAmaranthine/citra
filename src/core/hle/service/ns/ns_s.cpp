@@ -6,7 +6,7 @@
 
 namespace Service::NS {
 
-NS_S::NS_S() : ServiceFramework{"ns:s", 2} {
+NS_S::NS_S(Core::System& system) : ServiceFramework{"ns:s", 2}, system{system} {
     static const FunctionInfo functions[]{
         {0x000100C0, nullptr, "LaunchFIRM"},
         {0x000200C0, &NS_S::LaunchTitle, "LaunchTitle"},

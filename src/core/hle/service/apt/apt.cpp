@@ -103,8 +103,7 @@ static u32 DecompressLZ11(const u8* in, u8* out) {
 
 bool Module::LoadSharedFont() {
     u8 font_region_code;
-    switch (Core::System::GetInstance()
-                .ServiceManager()
+    switch (system.ServiceManager()
                 .GetService<Service::CFG::Module::Interface>("cfg:u")
                 ->GetModule()
                 ->GetRegionValue()) {
@@ -359,8 +358,7 @@ void Module::Interface::StartApplication(Kernel::HLERequestContext& ctx) {
     argument_source = Kernel::g_current_process->codeset->program_id;
     hmac = rp.PopStaticBuffer();
     hmac.resize(hmac_size);
-    Core::System::GetInstance().SetApplication(
-        AM::GetTitleContentPath(apt->jump_media, apt->jump_tid));
+    apt->system.SetApplication(AM::GetTitleContentPath(apt->jump_media, apt->jump_tid));
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS); // No error
     LOG_DEBUG(Service_APT, "parameter_size={:#010X}, hmac_size={:#010X}, paused={}", parameter_size,
@@ -454,7 +452,7 @@ void Module::Interface::CloseApplication(Kernel::HLERequestContext& ctx) {
     Kernel::SharedPtr<Kernel::Object> object{rp.PopGenericObject()};
     std::vector<u8> buffer{rp.PopStaticBuffer()};
     LOG_DEBUG(Service_APT, "called");
-    Core::System::GetInstance().CloseApplication();
+    apt->system.CloseApplication();
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
@@ -477,13 +475,11 @@ void Module::Interface::DoApplicationJump(Kernel::HLERequestContext& ctx) {
     argument.resize(parameter_size);
     argument_source = Kernel::g_current_process->codeset->program_id;
     hmac = rp.PopStaticBuffer();
-    if (apt->application_restart) {
+    if (apt->application_restart)
         // Restart system
-        Core::System::GetInstance().Restart();
-    } else {
-        Core::System::GetInstance().SetApplication(
-            AM::GetTitleContentPath(apt->jump_media, apt->jump_tid));
-    }
+        apt->system.Restart();
+    else
+        apt->system.SetApplication(AM::GetTitleContentPath(apt->jump_media, apt->jump_tid));
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
@@ -781,7 +777,7 @@ Module::Interface::Interface(std::shared_ptr<Module> apt, const char* name, u32 
 
 Module::Interface::~Interface() = default;
 
-Module::Module() {
+Module::Module(Core::System& system) : system{system} {
     applet_manager = std::make_shared<AppletManager>();
     using Kernel::MemoryPermission;
     shared_font_mem =
@@ -797,8 +793,9 @@ Module::Module() {
 
 Module::~Module() {}
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
-    auto apt{std::make_shared<Module>()};
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager{system.ServiceManager()};
+    auto apt{std::make_shared<Module>(system)};
     std::make_shared<APT_U>(apt)->InstallAsService(service_manager);
     std::make_shared<APT_S>(apt)->InstallAsService(service_manager);
     std::make_shared<APT_A>(apt)->InstallAsService(service_manager);

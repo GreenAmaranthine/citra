@@ -7,6 +7,10 @@
 #include "common/common_types.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Service::ACT {
 
 enum class BlkID : u32 {
@@ -66,6 +70,8 @@ struct InfoBlock {
 
 class Module final {
 public:
+    explicit Module(Core::System& system);
+
     class Interface : public ServiceFramework<Interface> {
     public:
         Interface(std::shared_ptr<Module> act, const char* name);
@@ -78,8 +84,11 @@ public:
     private:
         std::shared_ptr<Module> act;
     };
+
+private:
+    Core::System& system;
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::ACT

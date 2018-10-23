@@ -10,6 +10,7 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/scope_exit.h"
+#include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/result.h"
@@ -868,7 +869,8 @@ void Module::Interface::SetSockOpt(Kernel::HLERequestContext& ctx) {
     rb.Push(err);
 }
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager{system.ServiceManager()};
     auto soc{std::make_shared<Module>()};
     std::make_shared<SOC_U>(soc)->InstallAsService(service_manager);
     std::make_shared<SOC_P>(soc)->InstallAsService(service_manager);

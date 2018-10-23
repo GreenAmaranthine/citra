@@ -18,6 +18,10 @@
 #include "core/input.h"
 #include "core/settings.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Kernel {
 class Event;
 class SharedMemory;
@@ -198,7 +202,7 @@ DirectionState GetStickDirectionState(s16 circle_pad_x, s16 circle_pad_y);
 
 class Module final {
 public:
-    Module();
+    explicit Module(Core::System& system);
 
     class Interface : public ServiceFramework<Interface> {
     public:
@@ -278,9 +282,11 @@ private:
     s16 override_motion_yaw{};
     s16 override_circle_x{};
     s16 override_circle_y{};
+
+    Core::System& system;
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 /// Reload input devices. Used when input configuration changed
 void ReloadInputDevices();

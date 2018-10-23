@@ -610,12 +610,10 @@ void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
 SessionData* GSP_GPU::FindRegisteredThreadData(u32 thread_id) {
     for (auto& session_info : connected_sessions) {
         SessionData* data{static_cast<SessionData*>(session_info.data.get())};
-        if (!data->registered) {
+        if (!data->registered)
             continue;
-        }
-        if (data->thread_id == thread_id) {
+        if (data->thread_id == thread_id)
             return data;
-        }
     }
     return nullptr;
 }

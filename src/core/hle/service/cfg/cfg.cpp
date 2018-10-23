@@ -10,6 +10,7 @@
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "common/swap.h"
+#include "core/core.h"
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/file_backend.h"
@@ -359,7 +360,7 @@ void Module::Interface::SetLocalFriendCodeSeedSignature(Kernel::HLERequestContex
     u32 buffer_size{rp.Pop<u32>()};
     auto& buffer{rp.PopMappedBuffer()};
     auto [exists, lfcs]{PS::GetLocalFriendCodeSeedTuple()};
-    buffer.Read(lfcs.signature, 0, buffer_size);
+    buffer.Read(lfcs.signature.data(), 0, buffer_size);
     const std::string path{fmt::format("{}/LocalFriendCodeSeed_B",
                                        FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir))};
     FileUtil::CreateFullPath(path);
@@ -373,9 +374,8 @@ void Module::Interface::DeleteCreateNANDLocalFriendCodeSeed(Kernel::HLERequestCo
     IPC::ResponseBuilder rb{ctx, 0x080D, 1, 0};
     const std::string path{fmt::format("{}/LocalFriendCodeSeed_B",
                                        FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir))};
-    if (FileUtil::Exists(path)) {
+    if (FileUtil::Exists(path))
         FileUtil::Delete(path);
-    }
     rb.Push(RESULT_SUCCESS);
 }
 
@@ -770,7 +770,8 @@ u64 Module::GetConsoleUniqueId() {
     return console_id_le;
 }
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager{system.ServiceManager()};
     auto cfg{std::make_shared<Module>()};
     std::make_shared<CFG_I>(cfg)->InstallAsService(service_manager);
     std::make_shared<CFG_S>(cfg)->InstallAsService(service_manager);

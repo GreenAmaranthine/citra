@@ -3,31 +3,28 @@
 // Refer to the license.txt file included.
 
 #include <vector>
+#include "core/core.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/gsp/gsp.h"
 
 namespace Service::GSP {
 
-static std::weak_ptr<GSP_GPU> gsp_gpu;
-
 FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index) {
-    auto gpu{gsp_gpu.lock()};
+    auto gpu{Core::System::GetInstance().ServiceManager().GetService<GSP_GPU>("gsp::Gpu")};
     ASSERT(gpu != nullptr);
     return gpu->GetFrameBufferInfo(thread_id, screen_index);
 }
 
 void SignalInterrupt(InterruptId interrupt_id) {
-    auto gpu{gsp_gpu.lock()};
+    auto gpu{Core::System::GetInstance().ServiceManager().GetService<GSP_GPU>("gsp::Gpu")};
     ASSERT(gpu != nullptr);
     return gpu->SignalInterrupt(interrupt_id);
 }
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
-    auto gpu{std::make_shared<GSP_GPU>()};
-    gpu->InstallAsService(service_manager);
-    gsp_gpu = gpu;
-
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager{system.ServiceManager()};
+    std::make_shared<GSP_GPU>()->InstallAsService(service_manager);
     std::make_shared<GSP_LCD>()->InstallAsService(service_manager);
 }
 

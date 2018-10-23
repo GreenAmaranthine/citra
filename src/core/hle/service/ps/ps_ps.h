@@ -4,14 +4,19 @@
 
 #pragma once
 
+#include <array>
 #include <tuple>
 #include "core/hle/service/service.h"
+
+namespace Core {
+class System;
+} // namespace Core
 
 namespace Service::PS {
 
 struct LocalFriendCodeSeed {
-    u8 signature[0x100];
-    u8 unknown[0x8];
+    std::array<u8, 0x100> signature;
+    INSERT_PADDING_BYTES(0x8);
     u64_le seed;
 };
 
@@ -40,7 +45,7 @@ private:
 };
 
 /// Initializes the PS_PS Service
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 std::tuple<bool, LocalFriendCodeSeed> GetLocalFriendCodeSeedTuple();
 

@@ -33,7 +33,7 @@ void Module::Interface::GetAdapterState(Kernel::HLERequestContext& ctx) {
 void Module::Interface::GetShellState(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x6, 2, 0};
     rb.Push(RESULT_SUCCESS);
-    rb.Push(!Core::System::GetInstance().IsSleepModeEnabled());
+    rb.Push(!ptm->system.IsSleepModeEnabled());
 }
 
 void Module::Interface::GetBatteryLevel(Kernel::HLERequestContext& ctx) {
@@ -94,7 +94,7 @@ void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
 
 void CheckNew3DS(IPC::ResponseBuilder& rb) {
     rb.Push(RESULT_SUCCESS);
-    rb.Push(Service::CFG::IsNewModeEnabled());
+    rb.Push(CFG::IsNewModeEnabled());
 }
 
 void Module::Interface::ConfigureNew3DSCPU(Kernel::HLERequestContext& ctx) {
@@ -111,7 +111,7 @@ void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
     PTM::CheckNew3DS(rb);
 }
 
-Module::Module() {
+Module::Module(Core::System& system) : system{system} {
     std::string nand_directory{
         FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir + "/")};
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory{nand_directory, true};
@@ -168,8 +168,9 @@ void SetPlayCoins(u16 play_coins) {
 Module::Interface::Interface(std::shared_ptr<Module> ptm, const char* name, u32 max_session)
     : ServiceFramework{name, max_session}, ptm{std::move(ptm)} {}
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
-    auto ptm{std::make_shared<Module>()};
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager{system.ServiceManager()};
+    auto ptm{std::make_shared<Module>(system)};
     std::make_shared<PTM_Gets>(ptm)->InstallAsService(service_manager);
     std::make_shared<PTM_Play>(ptm)->InstallAsService(service_manager);
     std::make_shared<PTM_Sets>(ptm)->InstallAsService(service_manager);

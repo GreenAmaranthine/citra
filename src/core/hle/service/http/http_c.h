@@ -14,6 +14,10 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Service::HTTP {
 
 enum class RequestMethod : u8 {
@@ -261,6 +265,6 @@ private:
     std::array<DefaultRootCert, 11> default_root_certs;
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::HTTP

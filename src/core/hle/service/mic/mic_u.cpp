@@ -359,16 +359,15 @@ void MIC_U::ReloadDevice() {
     impl->ReloadDevice();
 }
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager{system.ServiceManager()};
     std::make_shared<MIC_U>()->InstallAsService(service_manager);
 }
 
 void ReloadDevice() {
     auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn()) {
+    if (!system.IsPoweredOn())
         return;
-    }
-
     auto mic{system.ServiceManager().GetService<MIC_U>("mic:u")};
     mic->ReloadDevice();
 }

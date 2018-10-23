@@ -12,19 +12,17 @@
 namespace Service::SM {
 
 static ResultCode ValidateServiceName(const std::string& name) {
-    if (name.size() <= 0 || name.size() > 8) {
+    if (name.size() <= 0 || name.size() > 8)
         return ERR_INVALID_NAME_SIZE;
-    }
-    if (name.find('\0') != std::string::npos) {
+    if (name.find('\0') != std::string::npos)
         return ERR_NAME_CONTAINS_NUL;
-    }
     return RESULT_SUCCESS;
 }
 
 void ServiceManager::InstallInterfaces(std::shared_ptr<ServiceManager> self) {
     ASSERT(self->srv_interface.expired());
 
-    auto srv = std::make_shared<SRV>(self);
+    auto srv{std::make_shared<SRV>(self)};
     srv->InstallAsNamedPort();
     self->srv_interface = srv;
 }
@@ -48,9 +46,8 @@ ResultVal<Kernel::SharedPtr<Kernel::ClientPort>> ServiceManager::GetServicePort(
 
     CASCADE_CODE(ValidateServiceName(name));
     auto it{registered_services.find(name)};
-    if (it == registered_services.end()) {
+    if (it == registered_services.end())
         return ERR_SERVICE_NOT_REGISTERED;
-    }
 
     return MakeResult<Kernel::SharedPtr<Kernel::ClientPort>>(it->second);
 }

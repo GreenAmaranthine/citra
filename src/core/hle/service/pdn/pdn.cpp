@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/core.h"
 #include "core/hle/service/pdn/pdn.h"
 #include "core/hle/service/pdn/pdn_c.h"
 #include "core/hle/service/pdn/pdn_d.h"
@@ -11,7 +12,8 @@
 
 namespace Service::PDN {
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager{system.ServiceManager()};
     std::make_shared<PDN_C>()->InstallAsService(service_manager);
     std::make_shared<PDN_D>()->InstallAsService(service_manager);
     std::make_shared<PDN_G>()->InstallAsService(service_manager);

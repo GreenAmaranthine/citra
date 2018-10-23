@@ -11,7 +11,7 @@
 
 namespace Service::NWM {
 
-NWM_EXT::NWM_EXT() : ServiceFramework{"nwm::EXT"} {
+NWM_EXT::NWM_EXT(Core::System& system) : ServiceFramework{"nwm::EXT"}, system{system} {
     static const FunctionInfo functions[]{
         {0x00080040, &NWM_EXT::ControlWirelessEnabled, "ControlWirelessEnabled"},
     };
@@ -23,29 +23,23 @@ NWM_EXT::~NWM_EXT() = default;
 void NWM_EXT::ControlWirelessEnabled(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0008, 1, 0};
     u8 enabled{rp.Pop<u8>()};
-
     ResultCode result{RESULT_SUCCESS};
-
     switch (enabled) {
     case 0: { // Enable
-        if (Core::System::GetInstance().GetSharedPageHandler()->GetNetworkState() ==
+        if (system.GetSharedPageHandler()->GetNetworkState() ==
             SharedPage::NetworkState::Internet) {
             result =
                 ResultCode(13, ErrorModule::NWM, ErrorSummary::InvalidState, ErrorLevel::Status);
             break;
         }
-
         Settings::values.n_wifi_status = Service::CFG::IsNewModeEnabled() ? 2 : 1;
         Settings::values.n_wifi_link_level = 3;
         Settings::values.n_state = 2;
-        Core::System::GetInstance().GetSharedPageHandler()->SetWifiLinkLevel(
-            SharedPage::WifiLinkLevel::Best);
-        Core::System::GetInstance().GetSharedPageHandler()->SetNetworkState(
-            SharedPage::NetworkState::Internet);
+        system.GetSharedPageHandler()->SetWifiLinkLevel(SharedPage::WifiLinkLevel::Best);
+        system.GetSharedPageHandler()->SetNetworkState(SharedPage::NetworkState::Internet);
         update_control_panel();
         break;
     }
-
     case 1: { // Disable
         if (Core::System::GetInstance().GetSharedPageHandler()->GetNetworkState() !=
             SharedPage::NetworkState::Internet) {
@@ -56,20 +50,16 @@ void NWM_EXT::ControlWirelessEnabled(Kernel::HLERequestContext& ctx) {
         Settings::values.n_wifi_status = 0;
         Settings::values.n_wifi_link_level = 0;
         Settings::values.n_state = 7;
-        Core::System::GetInstance().GetSharedPageHandler()->SetWifiLinkLevel(
-            SharedPage::WifiLinkLevel::Off);
-        Core::System::GetInstance().GetSharedPageHandler()->SetNetworkState(
-            SharedPage::NetworkState::Disabled);
+        system.GetSharedPageHandler()->SetWifiLinkLevel(SharedPage::WifiLinkLevel::Off);
+        system.GetSharedPageHandler()->SetNetworkState(SharedPage::NetworkState::Disabled);
         update_control_panel();
         break;
     }
-
     default: {
         LOG_ERROR(Service_NWM, "Invalid enabled value {}", enabled);
         break;
     }
     }
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(result);
 }

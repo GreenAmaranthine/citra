@@ -7,6 +7,10 @@
 #include <array>
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Service::NDM {
 
 class NDM_U final : public ServiceFramework<NDM_U> {
@@ -87,6 +91,6 @@ private:
     bool daemon_lock_enabled{};
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::NDM

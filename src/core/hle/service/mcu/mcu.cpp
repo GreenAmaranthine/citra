@@ -39,16 +39,13 @@ void Module::Interface::GetBatteryChargeState(Kernel::HLERequestContext& ctx) {
 void Module::Interface::Set3DLEDState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0009, 1, 0};
     u8 state{rp.Pop<u8>()};
-
     if (!Settings::values.disable_mh_3d) {
-        if (state == 0) {
+        if (state == 0)
             Settings::values.factor_3d = 0;
-        } else {
+        else
             Settings::values.factor_3d = 100;
-        }
-        Core::System::GetInstance().GetSharedPageHandler()->Update3DSettings();
+        mcu->system.GetSharedPageHandler()->Update3DSettings();
     }
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
@@ -63,8 +60,11 @@ void Module::Interface::GetSoundVolume(Kernel::HLERequestContext& ctx) {
 Module::Interface::Interface(std::shared_ptr<Module> mcu, const char* name)
     : ServiceFramework{name, 1}, mcu{std::move(mcu)} {}
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
-    auto mcu{std::make_shared<Module>()};
+Module::Module(Core::System& system) : system{system} {}
+
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager{system.ServiceManager()};
+    auto mcu{std::make_shared<Module>(system)};
     std::make_shared<CAM>(mcu)->InstallAsService(service_manager);
     std::make_shared<CDC>(mcu)->InstallAsService(service_manager);
     std::make_shared<GPU>(mcu)->InstallAsService(service_manager);

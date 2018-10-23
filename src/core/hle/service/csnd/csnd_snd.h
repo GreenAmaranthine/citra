@@ -8,6 +8,10 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Service::CSND {
 
 class CSND_SND final : public ServiceFramework<CSND_SND> {
@@ -30,7 +34,7 @@ private:
     void Reset(Kernel::HLERequestContext& ctx);
 
     struct Type0Command {
-        // command id and next command offset
+        // Command id and next command offset
         u32 command_id;
         u32 finished;
         u32 flags;
@@ -38,14 +42,14 @@ private:
     };
     static_assert(sizeof(Type0Command) == 0x20, "Type0Command structure size is wrong");
 
-    Kernel::SharedPtr<Kernel::Mutex> mutex{};
-    Kernel::SharedPtr<Kernel::SharedMemory> shared_memory{};
+    Kernel::SharedPtr<Kernel::Mutex> mutex;
+    Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
 
     static constexpr u32 MaxCaptureUnits{2};
-    std::array<bool, MaxCaptureUnits> capture_units = {false, false};
+    std::array<bool, MaxCaptureUnits> capture_units{false, false};
 };
 
 /// Initializes the CSND_SND Service
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::CSND

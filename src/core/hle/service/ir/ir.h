@@ -4,15 +4,15 @@
 
 #pragma once
 
-namespace SM {
-class ServiceManager;
-} // namespace SM
+namespace Core {
+class System;
+} // namespace Core
 
 namespace Service::IR {
 
 /// Reload input devices. Used when input configuration changed
 void ReloadInputDevices();
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::IR

@@ -13,6 +13,10 @@
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Camera {
 class CameraInterface;
 } // namespace Camera
@@ -360,6 +364,6 @@ private:
 /// Reload camera devices. Used when input configuration changed
 void ReloadCameraDevices();
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::CAM

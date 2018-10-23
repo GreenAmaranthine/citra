@@ -47,8 +47,7 @@ void Module::Interface::GetAccountDataBlock(Kernel::HLERequestContext& ctx) {
     auto& buffer{rp.PopMappedBuffer()};
     switch (id) {
     case BlkID::NNID: {
-        std::string nnid{Common::UTF16ToUTF8(Core::System::GetInstance()
-                                                 .ServiceManager()
+        std::string nnid{Common::UTF16ToUTF8(act->system.ServiceManager()
                                                  .GetService<CFG::Module::Interface>("cfg:u")
                                                  ->GetModule()
                                                  ->GetUsername())};
@@ -63,8 +62,7 @@ void Module::Interface::GetAccountDataBlock(Kernel::HLERequestContext& ctx) {
         break;
     }
     case BlkID::U16MiiName: {
-        std::u16string username{Core::System::GetInstance()
-                                    .ServiceManager()
+        std::u16string username{act->system.ServiceManager()
                                     .GetService<CFG::Module::Interface>("cfg:u")
                                     ->GetModule()
                                     ->GetUsername()};
@@ -77,8 +75,7 @@ void Module::Interface::GetAccountDataBlock(Kernel::HLERequestContext& ctx) {
         break;
     }
     case BlkID::CountryName: {
-        u8 country_code{Core::System::GetInstance()
-                            .ServiceManager()
+        u8 country_code{act->system.ServiceManager()
                             .GetService<CFG::Module::Interface>("cfg:u")
                             ->GetModule()
                             ->GetCountryCode()};
@@ -98,8 +95,7 @@ void Module::Interface::GetAccountDataBlock(Kernel::HLERequestContext& ctx) {
     }
     case BlkID::InfoStruct: {
         InfoBlock info{};
-        std::u16string username{Core::System::GetInstance()
-                                    .ServiceManager()
+        std::u16string username{act->system.ServiceManager()
                                     .GetService<Service::CFG::Module::Interface>("cfg:u")
                                     ->GetModule()
                                     ->GetUsername()};
@@ -119,11 +115,14 @@ void Module::Interface::GetAccountDataBlock(Kernel::HLERequestContext& ctx) {
                 static_cast<u32>(id));
 }
 
+Module::Module(Core::System& system) : system{system} {}
+
 Module::Interface::Interface(std::shared_ptr<Module> act, const char* name)
     : ServiceFramework{name}, act{std::move(act)} {}
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
-    auto act{std::make_shared<Module>()};
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager{system.ServiceManager()};
+    auto act{std::make_shared<Module>(system)};
     std::make_shared<ACT_A>(act)->InstallAsService(service_manager);
     std::make_shared<ACT_U>(act)->InstallAsService(service_manager);
 }

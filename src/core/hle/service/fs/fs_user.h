@@ -7,6 +7,10 @@
 #include "common/common_types.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Service::FS {
 
 struct ExtSaveDataInfo {
@@ -80,6 +84,6 @@ private:
     u32 priority = -1; ///< For SetPriority and GetPriority service functions
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::FS
