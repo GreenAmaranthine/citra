@@ -20,7 +20,6 @@ KernelSystem::KernelSystem(u32 system_mode) {
     Kernel::MemoryInit(system_mode);
     resource_limits = std::make_unique<ResourceLimitList>(*this);
     thread_manager = std::make_unique<ThreadManager>();
-    Kernel::ThreadingInit();
     Kernel::TimersInit();
 }
 

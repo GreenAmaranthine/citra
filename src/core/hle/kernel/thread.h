@@ -10,7 +10,12 @@
 #include <boost/container/flat_set.hpp>
 #include "common/common_types.h"
 #include "common/thread_queue_list.h"
+<<<<<<< HEAD
 #include "core/cpu/cpu.h"
+=======
+#include "core/arm/arm_interface.h"
+#include "core/core_timing.h"
+>>>>>>> 7fc61920c... kernel/Thread: move thread wake up table and callback handle into the manager
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/wait_object.h"
 #include "core/hle/result.h"
@@ -56,6 +61,8 @@ enum class ThreadWakeupReason {
 
 class ThreadManager {
 public:
+    ThreadManager();
+
     /**
      * Creates a new thread ID
      * @return The new thread ID
@@ -105,12 +112,27 @@ private:
      */
     Thread* PopNextReadyThread();
 
+<<<<<<< HEAD
     /// Boost low priority threads (temporarily) that have been starved
     void PriorityBoostStarvedThreads();
 
     u32 next_thread_id{1};
+=======
+    /**
+     * Callback that will wake up the thread it was scheduled for
+     * @param thread_id The ID of the thread that's been awoken
+     * @param cycles_late The number of CPU cycles that have passed since the desired wakeup time
+     */
+    void ThreadWakeupCallback(u64 thread_id, s64 cycles_late);
+
+    u32 next_thread_id = 1;
+>>>>>>> 7fc61920c... kernel/Thread: move thread wake up table and callback handle into the manager
     SharedPtr<Thread> current_thread;
     Common::ThreadQueueList<Thread*, ThreadPrioLowest + 1> ready_queue;
+    std::unordered_map<u64, Thread*> wakeup_callback_table;
+
+    /// Event type for the thread wake up event
+    CoreTiming::EventType* ThreadWakeupEventType = nullptr;
 
     friend class Thread;
     friend class KernelSystem;
@@ -291,11 +313,6 @@ private:
  */
 SharedPtr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u32 priority,
                                   SharedPtr<Process> owner_process);
-
-/**
- * Initialize threading
- */
-void ThreadingInit();
 
 /**
  * Shutdown threading
