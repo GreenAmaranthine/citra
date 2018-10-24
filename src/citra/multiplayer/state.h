@@ -5,6 +5,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 #include <QWidget>
 #include "core/announce_multiplayer_session.h"
 #include "network/network.h"
