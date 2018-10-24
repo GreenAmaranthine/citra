@@ -26,16 +26,12 @@ Layout::FramebufferLayout g_screenshot_framebuffer_layout;
 /// Initialize the video core
 Core::System::ResultStatus Init(Frontend& frontend) {
     Pica::Init();
-
     g_renderer = std::make_unique<Renderer>(frontend);
     Core::System::ResultStatus result{g_renderer->Init()};
-
-    if (result != Core::System::ResultStatus::Success) {
-        LOG_ERROR(Render, "initialization failed !");
-    } else {
+    if (result != Core::System::ResultStatus::Success)
+        LOG_ERROR(Render, "initialization failed!");
+    else
         LOG_DEBUG(Render, "initialized OK");
-    }
-
     return result;
 }
 

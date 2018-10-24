@@ -17,22 +17,15 @@ namespace Pica {
 
 void VertexLoader::Setup(const PipelineRegs& regs) {
     ASSERT_MSG(!is_setup, "VertexLoader isn't intended to be setup more than once.");
-
     const auto& attribute_config{regs.vertex_attributes};
     num_total_attributes = attribute_config.GetNumTotalAttributes();
-
     boost::fill(vertex_attribute_sources, 0xdeadbeef);
-
-    for (int i{}; i < 16; i++) {
+    for (int i{}; i < 16; i++)
         vertex_attribute_is_default[i] = attribute_config.IsDefaultAttribute(i);
-    }
-
     // Setup attribute data from loaders
     for (int loader{}; loader < 12; ++loader) {
         const auto& loader_config{attribute_config.attribute_loaders[loader]};
-
         u32 offset{};
-
         // TODO: What happens if a loader overwrites a previous one's data?
         for (unsigned component{}; component < loader_config.component_count; ++component) {
             if (component >= 12) {
@@ -41,7 +34,6 @@ void VertexLoader::Setup(const PipelineRegs& regs) {
                           loader, component);
                 continue;
             }
-
             u32 attribute_index{loader_config.GetComponent(component)};
             if (attribute_index < 12) {
                 offset = Common::AlignUp(offset,
@@ -59,69 +51,58 @@ void VertexLoader::Setup(const PipelineRegs& regs) {
                 // respectively
                 offset = Common::AlignUp(offset, 4);
                 offset += (attribute_index - 11) * 4;
-            } else {
+            } else
                 UNREACHABLE(); // This is truly unreachable due to the number of bits for each
                                // component
-            }
         }
     }
-
     is_setup = true;
 }
 
 void VertexLoader::LoadVertex(u32 base_address, int index, int vertex,
                               Shader::AttributeBuffer& input) {
     ASSERT_MSG(is_setup, "A VertexLoader needs to be setup before loading vertices.");
-
     for (int i{}; i < num_total_attributes; ++i) {
         if (vertex_attribute_elements[i] != 0) {
             // Load per-vertex data from the loader arrays
             u32 source_addr{base_address + vertex_attribute_sources[i] +
                             vertex_attribute_strides[i] * vertex};
-
             switch (vertex_attribute_formats[i]) {
             case PipelineRegs::VertexAttributeFormat::Byte: {
                 const s8* srcdata{
                     reinterpret_cast<const s8*>(Memory::GetPhysicalPointer(source_addr))};
-                for (unsigned int comp{}; comp < vertex_attribute_elements[i]; ++comp) {
+                for (unsigned int comp{}; comp < vertex_attribute_elements[i]; ++comp)
                     input.attr[i][comp] = float24::FromFloat32(srcdata[comp]);
-                }
                 break;
             }
             case PipelineRegs::VertexAttributeFormat::UnsignedByte: {
                 const u8* srcdata{
                     reinterpret_cast<const u8*>(Memory::GetPhysicalPointer(source_addr))};
-                for (unsigned int comp{}; comp < vertex_attribute_elements[i]; ++comp) {
+                for (unsigned int comp{}; comp < vertex_attribute_elements[i]; ++comp)
                     input.attr[i][comp] = float24::FromFloat32(srcdata[comp]);
-                }
                 break;
             }
             case PipelineRegs::VertexAttributeFormat::Short: {
                 const s16* srcdata{
                     reinterpret_cast<const s16*>(Memory::GetPhysicalPointer(source_addr))};
-                for (unsigned int comp{}; comp < vertex_attribute_elements[i]; ++comp) {
+                for (unsigned int comp{}; comp < vertex_attribute_elements[i]; ++comp)
                     input.attr[i][comp] = float24::FromFloat32(srcdata[comp]);
-                }
                 break;
             }
             case PipelineRegs::VertexAttributeFormat::Float: {
                 const float* srcdata{
                     reinterpret_cast<const float*>(Memory::GetPhysicalPointer(source_addr))};
-                for (unsigned int comp{}; comp < vertex_attribute_elements[i]; ++comp) {
+                for (unsigned int comp{}; comp < vertex_attribute_elements[i]; ++comp)
                     input.attr[i][comp] = float24::FromFloat32(srcdata[comp]);
-                }
                 break;
             }
             }
-
             // Default attribute values set if array elements have < 4 components. This
             // is *not* carried over from the default attribute settings even if they're
             // enabled for this attribute.
-            for (unsigned int comp{vertex_attribute_elements[i]}; comp < 4; ++comp) {
+            for (unsigned int comp{vertex_attribute_elements[i]}; comp < 4; ++comp)
                 input.attr[i][comp] =
                     comp == 3 ? float24::FromFloat32(1.0f) : float24::FromFloat32(0.0f);
-            }
-
             LOG_TRACE(HW_GPU,
                       "Loaded {} components of attribute {:x} for vertex {:x} (index {:x}) from "
                       "0x{:08x} + 0x{:08x} + 0x{:04x}: {} {} {} {}",
