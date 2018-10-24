@@ -5,7 +5,6 @@
 #pragma once
 
 #include <string>
-#include <unordered_map>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/server_port.h"

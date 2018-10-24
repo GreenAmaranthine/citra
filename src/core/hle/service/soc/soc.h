@@ -17,7 +17,7 @@ namespace Service::SOC {
 /// Holds information about a particular socket
 struct SocketHolder {
     u32 socket_fd; ///< The socket descriptor
-    bool blocking; ///< Whether the socket is blocking or not, it is only read on Windows.
+    bool blocking; ///< Whether the socket is blocking or not, it's only read on Windows.
 };
 
 class Module final {

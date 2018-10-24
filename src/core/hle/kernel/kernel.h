@@ -7,6 +7,7 @@
 #include <atomic>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include "common/common_types.h"

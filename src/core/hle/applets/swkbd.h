@@ -51,10 +51,10 @@ enum class SoftwareKeyboardValidInput : u32 {
     NotEmpty,         ///< Empty inputs aren't accepted.
     NotEmptyNotBlank, ///< Empty or blank inputs (consisting solely of whitespace) aren't
                       /// accepted.
-    NotBlank, ///< Blank inputs (consisting solely of whitespace) aren't accepted, but empty
-              /// inputs are.
-    FixedLen, ///< The input must have a fixed length (specified by maxTextLength in
-              /// swkbdInit).
+    NotBlank,         ///< Blank inputs (consisting solely of whitespace) aren't accepted, but empty
+                      /// inputs are.
+    FixedLen,         ///< The input must have a fixed length (specified by maxTextLength in
+                      /// swkbdInit).
 };
 
 /// Keyboard password modes.

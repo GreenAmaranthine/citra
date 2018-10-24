@@ -10,7 +10,7 @@
 
 namespace Core {
 class System;
-}
+} // namespace Core
 
 namespace Kernel {
 class HLERequestContext;

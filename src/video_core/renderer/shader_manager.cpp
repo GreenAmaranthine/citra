@@ -49,17 +49,14 @@ static void SetShaderSamplerBindings(GLuint shader) {
     OpenGLState cur_state{OpenGLState::GetCurState()};
     GLuint old_program{std::exchange(cur_state.draw.shader_program, shader)};
     cur_state.Apply();
-
     // Set the texture samplers to correspond to different texture units
     SetShaderSamplerBinding(shader, "tex0", TextureUnits::PicaTexture(0));
     SetShaderSamplerBinding(shader, "tex1", TextureUnits::PicaTexture(1));
     SetShaderSamplerBinding(shader, "tex2", TextureUnits::PicaTexture(2));
     SetShaderSamplerBinding(shader, "tex_cube", TextureUnits::TextureCube);
-
     // Set the texture samplers to correspond to different lookup table texture units
     SetShaderSamplerBinding(shader, "texture_buffer_lut_rg", TextureUnits::TextureBufferLUT_RG);
     SetShaderSamplerBinding(shader, "texture_buffer_lut_rgba", TextureUnits::TextureBufferLUT_RGBA);
-
     SetShaderImageBinding(shader, "shadow_buffer", ImageUnits::ShadowBuffer);
     SetShaderImageBinding(shader, "shadow_texture_px", ImageUnits::ShadowTexturePX);
     SetShaderImageBinding(shader, "shadow_texture_nx", ImageUnits::ShadowTextureNX);
@@ -67,7 +64,6 @@ static void SetShaderSamplerBindings(GLuint shader) {
     SetShaderImageBinding(shader, "shadow_texture_ny", ImageUnits::ShadowTextureNY);
     SetShaderImageBinding(shader, "shadow_texture_pz", ImageUnits::ShadowTexturePZ);
     SetShaderImageBinding(shader, "shadow_texture_nz", ImageUnits::ShadowTextureNZ);
-
     cur_state.draw.shader_program = old_program;
     cur_state.Apply();
 }
@@ -94,17 +90,16 @@ void PicaUniformsData::SetFromRegs(const Pica::ShaderRegs& regs,
 class ShaderStage {
 public:
     explicit ShaderStage(bool separable) {
-        if (separable) {
+        if (separable)
             shader_or_program = Program();
-        } else {
+        else
             shader_or_program = Shader();
-        }
     }
 
     void Create(const char* source, GLenum type) {
-        if (shader_or_program.which() == 0) {
+        if (shader_or_program.which() == 0)
             boost::get<Shader>(shader_or_program).Create(source, type);
-        } else {
+        else {
             Shader shader;
             shader.Create(source, type);
             Program& program{boost::get<Program>(shader_or_program)};
@@ -115,11 +110,10 @@ public:
     }
 
     GLuint GetHandle() const {
-        if (shader_or_program.which() == 0) {
+        if (shader_or_program.which() == 0)
             return boost::get<Shader>(shader_or_program).handle;
-        } else {
+        else
             return boost::get<Program>(shader_or_program).handle;
-        }
     }
 
 private:
@@ -149,9 +143,8 @@ public:
     GLuint Get(const KeyConfigType& config) {
         auto [iter, new_shader]{shaders.emplace(config, ShaderStage{separable})};
         ShaderStage& cached_shader{iter->second};
-        if (new_shader) {
+        if (new_shader)
             cached_shader.Create(CodeGenerator(config, separable).c_str(), ShaderType);
-        }
         return cached_shader.GetHandle();
     }
 
@@ -315,7 +308,6 @@ void ShaderProgramManager::ApplyTo(OpenGLState& state) {
                 impl->pipeline.handle,
                 GL_VERTEX_SHADER_BIT | GL_GEOMETRY_SHADER_BIT | GL_FRAGMENT_SHADER_BIT, 0);
         }
-
         glUseProgramStages(impl->pipeline.handle, GL_VERTEX_SHADER_BIT, impl->current.vs);
         glUseProgramStages(impl->pipeline.handle, GL_GEOMETRY_SHADER_BIT, impl->current.gs);
         glUseProgramStages(impl->pipeline.handle, GL_FRAGMENT_SHADER_BIT, impl->current.fs);

@@ -27,7 +27,7 @@ class AppLoader;
 
 namespace Core {
 class System;
-}
+} // namespace Core
 
 namespace Service::FS {
 
