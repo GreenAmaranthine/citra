@@ -249,7 +249,7 @@ static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 o
 }
 
 static ResultCode UnmapMemoryBlock(Handle handle, u32 addr) {
-    LOG_TRACE(Kernel_SVC, "called memblock=0x{:08X}, addr=0x{:08X}", handle, addr);
+    LOG_TRACE(Kernel_SVC, "memblock=0x{:08X}, addr=0x{:08X}", handle, addr);
     // TODO: Return E0A01BF5 if the address isn't in the application's heap
     SharedPtr<Process> current_process{Core::System::GetInstance().Kernel().GetCurrentProcess()};
     SharedPtr<SharedMemory> shared_memory{current_process->handle_table.Get<SharedMemory>(handle)};
@@ -653,7 +653,7 @@ static void OutputDebugString(VAddr address, int len) {
 
 /// Get resource limit
 static ResultCode GetResourceLimit(Handle* resource_limit, Handle process_handle) {
-    LOG_TRACE(Kernel_SVC, "called process=0x{:08X}", process_handle);
+    LOG_TRACE(Kernel_SVC, "process=0x{:08X}", process_handle);
     SharedPtr<Process> current_process{Core::System::GetInstance().Kernel().GetCurrentProcess()};
     SharedPtr<Process> process{current_process->handle_table.Get<Process>(process_handle)};
     if (!process)
@@ -742,7 +742,7 @@ static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point
     Core::System::GetInstance().PrepareReschedule();
     LOG_TRACE(Kernel_SVC,
               "entrypoint=0x{:08X} ({}), arg=0x{:08X}, stacktop=0x{:08X}, "
-              "threadpriority=0x{:08X}, processorid=0x{:08X} : created handle=0x{:08X}",
+              "threadpriority=0x{:08X}, processorid=0x{:08X}, created handle=0x{:08X}",
               entry_point, name, arg, stack_top, priority, processor_id, *out_handle);
 
     return RESULT_SUCCESS;
@@ -795,14 +795,14 @@ static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
     SharedPtr<Mutex> mutex{kernel.CreateMutex(initial_locked != 0)};
     mutex->name = fmt::format("mutex-{:08x}", Core::CPU().GetReg(14));
     *out_handle = kernel.GetCurrentProcess()->handle_table.Create(std::move(mutex));
-    LOG_TRACE(Kernel_SVC, "called initial_locked={} : created handle=0x{:08X}",
+    LOG_TRACE(Kernel_SVC, "initial_locked={}, created handle=0x{:08X}",
               initial_locked ? "true" : "false", *out_handle);
     return RESULT_SUCCESS;
 }
 
 /// Release a mutex
 static ResultCode ReleaseMutex(Handle handle) {
-    LOG_TRACE(Kernel_SVC, "called handle=0x{:08X}", handle);
+    LOG_TRACE(Kernel_SVC, "handle=0x{:08X}", handle);
     SharedPtr<Mutex> mutex{
         Core::System::GetInstance().Kernel().GetCurrentProcess()->handle_table.Get<Mutex>(handle)};
     if (!mutex)
@@ -812,7 +812,7 @@ static ResultCode ReleaseMutex(Handle handle) {
 
 /// Get the ID of the specified process
 static ResultCode GetProcessId(u32* process_id, Handle process_handle) {
-    LOG_TRACE(Kernel_SVC, "called process=0x{:08X}", process_handle);
+    LOG_TRACE(Kernel_SVC, "process=0x{:08X}", process_handle);
     const SharedPtr<Process> process{
         Core::System::GetInstance().Kernel().GetCurrentProcess()->handle_table.Get<Process>(
             process_handle)};
@@ -824,7 +824,7 @@ static ResultCode GetProcessId(u32* process_id, Handle process_handle) {
 
 /// Get the ID of the process that owns the specified thread
 static ResultCode GetProcessIdOfThread(u32* process_id, Handle thread_handle) {
-    LOG_TRACE(Kernel_SVC, "called thread=0x{:08X}", thread_handle);
+    LOG_TRACE(Kernel_SVC, "thread=0x{:08X}", thread_handle);
     const SharedPtr<Thread> thread{
         Core::System::GetInstance().Kernel().GetCurrentProcess()->handle_table.Get<Thread>(
             thread_handle)};
@@ -838,7 +838,7 @@ static ResultCode GetProcessIdOfThread(u32* process_id, Handle thread_handle) {
 
 /// Get the ID for the specified thread.
 static ResultCode GetThreadId(u32* thread_id, Handle handle) {
-    LOG_TRACE(Kernel_SVC, "called thread=0x{:08X}", handle);
+    LOG_TRACE(Kernel_SVC, "thread=0x{:08X}", handle);
     const SharedPtr<Thread> thread{
         Core::System::GetInstance().Kernel().GetCurrentProcess()->handle_table.Get<Thread>(handle)};
     if (!thread)
@@ -854,14 +854,14 @@ static ResultCode CreateSemaphore(Handle* out_handle, s32 initial_count, s32 max
                    kernel.CreateSemaphore(initial_count, max_count));
     semaphore->name = fmt::format("semaphore-{:08x}", Core::CPU().GetReg(14));
     *out_handle = kernel.GetCurrentProcess()->handle_table.Create(std::move(semaphore));
-    LOG_TRACE(Kernel_SVC, "called initial_count={}, max_count={}, created handle=0x{:08X}",
-              initial_count, max_count, *out_handle);
+    LOG_TRACE(Kernel_SVC, "initial_count={}, max_count={}, created handle=0x{:08X}", initial_count,
+              max_count, *out_handle);
     return RESULT_SUCCESS;
 }
 
 /// Releases a certain number of slots in a semaphore
 static ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count) {
-    LOG_TRACE(Kernel_SVC, "called release_count={}, handle=0x{:08X}", release_count, handle);
+    LOG_TRACE(Kernel_SVC, "release_count={}, handle=0x{:08X}", release_count, handle);
     SharedPtr<Semaphore> semaphore{
         Core::System::GetInstance().Kernel().GetCurrentProcess()->handle_table.Get<Semaphore>(
             handle)};
@@ -902,8 +902,7 @@ static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
     SharedPtr<Event> evt{kernel.CreateEvent(static_cast<ResetType>(reset_type),
                                             fmt::format("event-{:08x}", Core::CPU().GetReg(14)))};
     *out_handle = kernel.GetCurrentProcess()->handle_table.Create(std::move(evt));
-    LOG_TRACE(Kernel_SVC, "called reset_type=0x{:08X} : created handle=0x{:08X}", reset_type,
-              *out_handle);
+    LOG_TRACE(Kernel_SVC, "reset_type=0x{:08X}, created handle=0x{:08X}", reset_type, *out_handle);
     return RESULT_SUCCESS;
 }
 
@@ -974,7 +973,7 @@ static ResultCode SetTimer(Handle handle, s64 initial, s64 interval) {
 
 /// Cancels a timer
 static ResultCode CancelTimer(Handle handle) {
-    LOG_TRACE(Kernel_SVC, "called timer=0x{:08X}", handle);
+    LOG_TRACE(Kernel_SVC, "timer=0x{:08X}", handle);
     SharedPtr<Timer> timer{
         Core::System::GetInstance().Kernel().GetCurrentProcess()->handle_table.Get<Timer>(handle)};
     if (!timer)
@@ -1062,7 +1061,7 @@ static ResultCode CreatePort(Handle* server_port, Handle* client_port, VAddr nam
     // created.
     *server_port =
         current_process->handle_table.Create(std::move(std::get<SharedPtr<ServerPort>>(ports)));
-    LOG_TRACE(Kernel_SVC, "called max_sessions={}", max_sessions);
+    LOG_TRACE(Kernel_SVC, "max_sessions={}", max_sessions);
     return RESULT_SUCCESS;
 }
 
@@ -1138,7 +1137,7 @@ static ResultCode GetSystemInfo(s64* out, u32 type, s32 param) {
 }
 
 static ResultCode GetProcessInfo(s64* out, Handle process_handle, u32 type) {
-    LOG_TRACE(Kernel_SVC, "called process=0x{:08X} type={}", process_handle, type);
+    LOG_TRACE(Kernel_SVC, "process=0x{:08X}, type={}", process_handle, type);
     SharedPtr<Process> process{
         Core::System::GetInstance().Kernel().GetCurrentProcess()->handle_table.Get<Process>(
             process_handle)};

@@ -50,25 +50,22 @@ void SRV::EnableNotification(Kernel::HLERequestContext& ctx) {
 void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x5, 4, 0};
     auto name_buf{rp.PopRaw<std::array<char, 8>>()};
-    std::size_t name_len{rp.Pop<u32>()};
+    std::size_t name_size{rp.Pop<u32>()};
     u32 flags{rp.Pop<u32>()};
     bool wait_until_available{(flags & 1) == 0};
-    if (name_len > Service::kMaxPortSize) {
+    if (name_size > Service::kMaxPortSize) {
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(ERR_INVALID_NAME_SIZE);
-        LOG_ERROR(Service_SRV, "name_len=0x{:X} -> ERR_INVALID_NAME_SIZE", name_len);
+        LOG_ERROR(Service_SRV, "(name_size=0x{:X}) invalid name size", name_size);
         return;
     }
     std::string name(name_buf.data(), name_len);
-
     // TODO: Permission checks go here
-
     auto get_handle{[name, this](Kernel::SharedPtr<Kernel::Thread> thread,
                                  Kernel::HLERequestContext& ctx,
                                  Kernel::ThreadWakeupReason reason) {
-        LOG_ERROR(Service_SRV, "called service={} wakeup", name);
+        LOG_INFO(Service_SRV, "service={} wakeup", name);
         auto client_port{system.ServiceManager().GetServicePort(name)};
-
         auto session{client_port.Unwrap()->Connect()};
         if (session.Succeeded()) {
             LOG_DEBUG(Service_SRV, "service={} -> session={}", name, (*session)->GetObjectId());
