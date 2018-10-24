@@ -38,10 +38,10 @@ add_library(video_core STATIC
     renderer/pica_to_gl.h
     shader/shader.cpp
     shader/shader.h
-    shader/shader_jit_x64.cpp
-    shader/shader_jit_x64_compiler.cpp
-    shader/shader_jit_x64.h
-    shader/shader_jit_x64_compiler.h
+    shader/engine.cpp
+    shader/engine.h
+    shader/compiler.cpp
+    shader/compiler.h
     texture/etc1.cpp
     texture/etc1.h
     texture/texture_decode.cpp

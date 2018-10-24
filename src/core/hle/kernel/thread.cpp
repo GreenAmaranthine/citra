@@ -320,7 +320,7 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
     if (needs_allocation) {
         // There are no already-allocated pages with free slots, lets allocate a new one.
         // TLS pages are allocated from the BASE region in the linear heap.
-        MemoryRegionInfo* memory_region{GetMemoryRegion(MemoryRegion::BASE)};
+        MemoryRegionInfo* memory_region{GetMemoryRegion(MemoryRegion::Base)};
         auto& linheap_memory{memory_region->linear_heap_memory};
         if (linheap_memory->size() + Memory::PAGE_SIZE > memory_region->size) {
             LOG_ERROR(Kernel_SVC,

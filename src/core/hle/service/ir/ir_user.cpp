@@ -6,6 +6,7 @@
 #include <boost/crc.hpp>
 #include "common/string_util.h"
 #include "common/swap.h"
+#include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
@@ -337,7 +338,7 @@ void IR_USER::ReleaseReceivedData(Kernel::HLERequestContext& ctx) {
     LOG_TRACE(Service_IR, "count={}", count);
 }
 
-IR_USER::IR_USER() : ServiceFramework{"ir:USER", 1} {
+IR_USER::IR_USER(Core::System& system) : ServiceFramework{"ir:USER", 1} {
     const FunctionInfo functions[]{
         {0x00010182, nullptr, "InitializeIrNop"},
         {0x00020000, &IR_USER::FinalizeIrNop, "FinalizeIrNop"},
@@ -370,7 +371,7 @@ IR_USER::IR_USER() : ServiceFramework{"ir:USER", 1} {
     conn_status_event =
         system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "IR:ConnectionStatusEvent");
     send_event = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "IR:SendEvent");
-    receive_event = Kersystem.Kernel().CreateEvent(Kernel::ResetType::OneShot, "IR:ReceiveEvent");
+    receive_event = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "IR:ReceiveEvent");
     extra_hid =
         std::make_unique<ExtraHID>([this](const std::vector<u8>& data) { PutToReceive(data); });
 }

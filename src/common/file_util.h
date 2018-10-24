@@ -174,16 +174,13 @@ public:
         static_assert(std::is_trivially_copyable<T>(),
                       "Given array doesn't consist of trivially copyable objects");
 #endif
-
         if (!IsOpen()) {
             m_good = false;
             return std::numeric_limits<std::size_t>::max();
         }
-
-        std::size_t items_read = std::fread(data, sizeof(T), length, m_file);
+        std::size_t items_read{std::fread(data, sizeof(T), length, m_file)};
         if (items_read != length)
             m_good = false;
-
         return items_read;
     }
 
@@ -195,16 +192,13 @@ public:
         static_assert(std::is_trivially_copyable<T>(),
                       "Given array doesn't consist of trivially copyable objects");
 #endif
-
         if (!IsOpen()) {
             m_good = false;
             return std::numeric_limits<std::size_t>::max();
         }
-
-        std::size_t items_written = std::fwrite(data, sizeof(T), length, m_file);
+        std::size_t items_written{std::fwrite(data, sizeof(T), length, m_file)};
         if (items_written != length)
             m_good = false;
-
         return items_written;
     }
 

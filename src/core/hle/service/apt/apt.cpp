@@ -356,7 +356,7 @@ void Module::Interface::StartApplication(Kernel::HLERequestContext& ctx) {
     u8 paused{rp.Pop<u8>()};
     argument = rp.PopStaticBuffer();
     argument.resize(parameter_size);
-    argument_source = Kernel::g_current_process->codeset->program_id;
+    argument_source = Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id;
     hmac = rp.PopStaticBuffer();
     hmac.resize(hmac_size);
     apt->system.SetApplication(AM::GetTitleContentPath(apt->jump_media, apt->jump_tid));
@@ -474,7 +474,7 @@ void Module::Interface::DoApplicationJump(Kernel::HLERequestContext& ctx) {
     u32 hmac_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x20))};
     argument = rp.PopStaticBuffer();
     argument.resize(parameter_size);
-    argument_source = Kernel::g_current_process->codeset->program_id;
+    argument_source = Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id;
     hmac = rp.PopStaticBuffer();
     if (apt->application_restart)
         // Restart system
@@ -766,7 +766,7 @@ void Module::Interface::SendDeliverArg(Kernel::HLERequestContext& ctx) {
     u32 hmac_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x20))};
     argument = rp.PopStaticBuffer();
     argument.resize(parameter_size);
-    argument_source = Kernel::g_current_process->codeset->program_id;
+    argument_source = Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id;
     hmac = rp.PopStaticBuffer();
     hmac.resize(hmac_size);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
@@ -784,7 +784,7 @@ Module::Module(Core::System& system) : system{system} {
     shared_font_mem =
         system.Kernel().CreateSharedMemory(nullptr, 0x332000, // 3272 KB
                                            MemoryPermission::ReadWrite, MemoryPermission::Read, 0,
-                                           Kernel::MemoryRegion::SYSTEM, "APT:SharedFont");
+                                           Kernel::MemoryRegion::System, "APT:SharedFont");
     lock = system.Kernel().CreateMutex(false, "APT_U:Lock");
     if (LoadSharedFont())
         shared_font_loaded = true;

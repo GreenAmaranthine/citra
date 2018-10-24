@@ -197,7 +197,7 @@ struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
 
 class GSP_GPU final : public ServiceFramework<GSP_GPU, SessionData> {
 public:
-    GSP_GPU();
+    explicit GSP_GPU(Core::System& system);
     ~GSP_GPU() = default;
 
     void ClientDisconnected(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;

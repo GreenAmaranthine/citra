@@ -10,7 +10,6 @@
 #include "video_core/regs_rasterizer.h"
 #include "video_core/regs_shader.h"
 #include "video_core/shader/shader.h"
-#include "video_core/shader/shader_jit_x64.h"
 #include "video_core/video_core.h"
 
 namespace Pica::Shader {
@@ -118,16 +117,16 @@ void GSUnitState::ConfigOutput(const ShaderRegs& config) {
     emitter.output_mask = config.output_mask;
 }
 
-static std::unique_ptr<JitX64Engine> jit_engine;
+static std::unique_ptr<ShaderEngine> engine;
 
 ShaderEngine* GetEngine() {
-    if (!jit_engine)
-        jit_engine = std::make_unique<JitX64Engine>();
-    return jit_engine.get();
+    if (!engine)
+        engine = std::make_unique<ShaderEngine>();
+    return engine.get();
 }
 
 void Shutdown() {
-    jit_engine = nullptr;
+    engine = nullptr;
 }
 
 } // namespace Pica::Shader

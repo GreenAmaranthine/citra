@@ -342,9 +342,9 @@ Kernel::SharedPtr<Kernel::Event>& DSP_DSP::GetInterruptEvent(InterruptType type,
 bool DSP_DSP::HasTooManyEventsRegistered() const {
     std::size_t number{static_cast<std::size_t>(
         std::count_if(pipes.begin(), pipes.end(), [](const auto& evt) { return evt != nullptr; }))};
-    if (interrupt_zero != nullptr)
+    if (interrupt_zero)
         number++;
-    if (interrupt_one != nullptr)
+    if (interrupt_one)
         number++;
     LOG_DEBUG(Service_DSP, "Number of events registered = {}", number);
     return number >= max_number_of_interrupt_events;

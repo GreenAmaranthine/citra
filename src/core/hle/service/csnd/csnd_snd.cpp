@@ -21,7 +21,7 @@ void CSND_SND::Initialize(Kernel::HLERequestContext& ctx) {
     mutex = system.Kernel().CreateMutex(false, "CSND:mutex");
     shared_memory = system.Kernel().CreateSharedMemory(
         nullptr, size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite, 0,
-        Kernel::MemoryRegion::BASE, "CSND:SharedMemory");
+        Kernel::MemoryRegion::Base, "CSND:SharedMemory");
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 3)};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(mutex, shared_memory);

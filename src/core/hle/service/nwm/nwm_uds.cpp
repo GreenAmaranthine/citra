@@ -566,7 +566,6 @@ static std::optional<Network::MacAddress> GetNodeMacAddress(u16 dest_node_id, u8
 }
 
 void NWM_UDS::Shutdown(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x03, 0, 0};
     if (auto member{Network::GetRoomMember().lock()})
         member->Unbind(wifi_packet_received);
     for (auto bind_node : channel_data)
@@ -574,7 +573,7 @@ void NWM_UDS::Shutdown(Kernel::HLERequestContext& ctx) {
     channel_data.clear();
     node_map.clear();
     recv_buffer_memory.reset();
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x03, 1, 0};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_NWM, "called");
 }
@@ -660,13 +659,11 @@ void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
 }
 
 void NWM_UDS::GetConnectionStatus(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0xB, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(13, 0)};
+    IPC::ResponseBuilder rb{ctx, 0xB, 13, 0};
     rb.Push(RESULT_SUCCESS);
     {
         std::lock_guard<std::mutex> lock{connection_status_mutex};
         rb.PushRaw(connection_status);
-
         // Reset the bitmask of changed nodes after each call to this
         // function to prevent falsely informing games of outstanding
         // changes in subsequent calls.
@@ -697,7 +694,6 @@ void NWM_UDS::GetNodeInformation(Kernel::HLERequestContext& ctx) {
                                ErrorSummary::WrongArgument, ErrorLevel::Status));
             return;
         }
-
         IPC::ResponseBuilder rb{rp.MakeBuilder(11, 0)};
         rb.Push(RESULT_SUCCESS);
         rb.PushRaw<NodeInfo>(*itr);
@@ -739,7 +735,6 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
     auto event{system.Kernel().CreateEvent(Kernel::ResetType::OneShot,
                                            "NWM::BindNodeEvent" + std::to_string(bind_node_id))};
     std::lock_guard<std::mutex> lock{connection_status_mutex};
-
     ASSERT(channel_data.find(data_channel) == channel_data.end());
     // TODO: Support more than one bind node per channel.
     channel_data[data_channel] = {bind_node_id, data_channel, network_node_id, event};
@@ -839,13 +834,12 @@ void NWM_UDS::UpdateNetworkAttribute(Kernel::HLERequestContext& ctx) {
 }
 
 void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x08, 0, 0};
+    IPC::ResponseBuilder rb{ctx, 0x08, 1, 0};
     // Unschedule the beacon broadcast event.
     CoreTiming::UnscheduleEvent(beacon_broadcast_event, 0);
     // Only a host can destroy
     std::lock_guard<std::mutex> lock{connection_status_mutex};
     if (connection_status.status != static_cast<u8>(NetworkStatus::ConnectedAsHost)) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrCodes::WrongStatus, ErrorModule::UDS, ErrorSummary::InvalidState,
                            ErrorLevel::Status));
         LOG_WARNING(Service_NWM, "called with status {}", connection_status.status);
@@ -858,7 +852,6 @@ void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
     connection_status.network_node_id = tmp_node_id;
     node_map.clear();
     connection_status_event->Signal();
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     for (auto bind_node : channel_data)
         bind_node.second.event->Signal();
     channel_data.clear();
@@ -867,8 +860,7 @@ void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
 }
 
 void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0xA, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    IPC::ResponseBuilder rb{ctx, 0xA, 1, 0};
     using Network::WifiPacket;
     WifiPacket deauth;
     {
@@ -1019,11 +1011,10 @@ void NWM_UDS::PullPacket(Kernel::HLERequestContext& ctx) {
 }
 
 void NWM_UDS::GetChannel(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x1A, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     std::lock_guard<std::mutex> lock{connection_status_mutex};
     bool is_connected{connection_status.status != static_cast<u32>(NetworkStatus::NotConnected)};
     u8 channel{static_cast<u8>(is_connected ? network_channel : 0)};
+    IPC::ResponseBuilder rb{ctx, 0x1A, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push(channel);
     LOG_DEBUG(Service_NWM, "called");
@@ -1139,7 +1130,7 @@ static void BeaconBroadcastCallback(u64 userdata, s64 cycles_late) {
                               beacon_broadcast_event, 0);
 }
 
-NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework{"nwm::UDS"} {
+NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework{"nwm::UDS"}, system{system} {
     static const FunctionInfo functions[]{
         {0x000102C2, nullptr, "Initialize (deprecated)"},
         {0x00020000, nullptr, "Scrap"},
@@ -1171,10 +1162,9 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework{"nwm::UDS"} {
         {0x00210080, nullptr, "SetProbeResponseParam"},
         {0x00220402, nullptr, "ScanOnConnection"},
     };
+    RegisterHandlers(functions);
     connection_status_event =
         system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "NWM::connection_status_event");
-
-    RegisterHandlers(functions);
     beacon_broadcast_event =
         CoreTiming::RegisterEvent("UDS::BeaconBroadcastCallback", BeaconBroadcastCallback);
     CryptoPP::AutoSeededRandomPool rng{};

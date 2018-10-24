@@ -335,7 +335,8 @@ bool DspHle::Impl::IsOutputAllowed() {
         return true;
     else
         return titles_output_allowed_shell_closed.count(
-                   Kernel::g_current_process->codeset->program_id) == 1 &&
+                   Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id) ==
+                   1 &&
                Settings::values.headphones_connected;
 }
 

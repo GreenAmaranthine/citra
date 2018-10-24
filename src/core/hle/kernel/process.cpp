@@ -33,7 +33,7 @@ SharedPtr<Process> KernelSystem::CreateProcess(SharedPtr<CodeSet> code_set) {
     SharedPtr<Process> process{new Process(*this)};
     process->codeset = std::move(code_set);
     process->flags.raw = 0;
-    process->flags.memory_region.Assign(MemoryRegion::APPLICATION);
+    process->flags.memory_region.Assign(MemoryRegion::Application);
     process->status = ProcessStatus::Created;
     process->process_id = ++next_process_id;
     process_list.push_back(process);
@@ -261,6 +261,10 @@ SharedPtr<Process> KernelSystem::GetProcessById(u32 process_id) const {
     if (itr == process_list.end())
         return nullptr;
     return *itr;
+}
+
+u32 KernelSystem::GetProcessListSize() const {
+    return static_cast<u32>(process_list.size());
 }
 
 } // namespace Kernel

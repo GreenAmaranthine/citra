@@ -51,9 +51,8 @@ private:
 // Specialization of DynamicObjectCast for WaitObjects
 template <>
 inline SharedPtr<WaitObject> DynamicObjectCast<WaitObject>(SharedPtr<Object> object) {
-    if (object != nullptr && object->IsWaitable()) {
+    if (object && object->IsWaitable())
         return boost::static_pointer_cast<WaitObject>(object);
-    }
     return nullptr;
 }
 } // namespace Kernel

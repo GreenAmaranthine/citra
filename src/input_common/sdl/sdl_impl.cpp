@@ -38,11 +38,10 @@ static Common::ParamPackage SDLEventToButtonParamPackage(SDLState& state, const 
 static int SDLEventWatcher(void* userdata, SDL_Event* event) {
     SDLState* sdl_state{reinterpret_cast<SDLState*>(userdata)};
     // Don't handle the event if we are configuring
-    if (sdl_state->polling) {
+    if (sdl_state->polling)
         sdl_state->event_queue.Push(*event);
-    } else {
+    else
         sdl_state->HandleGameControllerEvent(*event);
-    }
     return 0;
 }
 
@@ -121,15 +120,12 @@ public:
                         decltype(&SDL_JoystickClose) deleter = &SDL_JoystickClose) {
         sdl_joystick =
             std::unique_ptr<SDL_Joystick, decltype(&SDL_JoystickClose)>(joystick, deleter);
-        for (auto& button : state.buttons) {
+        for (auto& button : state.buttons)
             button.second = false;
-        }
-        for (auto& axis : state.axes) {
+        for (auto& axis : state.axes)
             axis.second = 0;
-        }
-        for (auto& hat : state.hats) {
+        for (auto& hat : state.hats)
             hat.second = 0;
-        }
     }
 
 private:
@@ -176,11 +172,10 @@ std::shared_ptr<SDLJoystick> SDLState::GetSDLJoystickBySDLID(SDL_JoystickID sdl_
                                  [&sdl_joystick](const std::shared_ptr<SDLJoystick>& joystick) {
                                      return sdl_joystick == joystick->GetSDLJoystick();
                                  })};
-        if (vec_it != map_it->second.end()) {
+        if (vec_it != map_it->second.end())
             // This is the common case: There is already an existing SDL_Joystick mapped to a
             // SDLJoystick. return the SDLJoystick
             return *vec_it;
-        }
         // Search for a SDLJoystick without a mapped SDL_Joystick...
         auto nullptr_it{std::find_if(map_it->second.begin(), map_it->second.end(),
                                      [](const std::shared_ptr<SDLJoystick>& joystick) {
@@ -247,27 +242,23 @@ void SDLState::CloseJoystick(SDL_Joystick* sdl_joystick) {
 void SDLState::HandleGameControllerEvent(const SDL_Event& event) {
     switch (event.type) {
     case SDL_JOYBUTTONUP: {
-        if (auto joystick{GetSDLJoystickBySDLID(event.jbutton.which)}) {
+        if (auto joystick{GetSDLJoystickBySDLID(event.jbutton.which)})
             joystick->SetButton(event.jbutton.button, false);
-        }
         break;
     }
     case SDL_JOYBUTTONDOWN: {
-        if (auto joystick{GetSDLJoystickBySDLID(event.jbutton.which)}) {
+        if (auto joystick{GetSDLJoystickBySDLID(event.jbutton.which)})
             joystick->SetButton(event.jbutton.button, true);
-        }
         break;
     }
     case SDL_JOYHATMOTION: {
-        if (auto joystick{GetSDLJoystickBySDLID(event.jhat.which)}) {
+        if (auto joystick{GetSDLJoystickBySDLID(event.jhat.which)})
             joystick->SetHat(event.jhat.hat, event.jhat.value);
-        }
         break;
     }
     case SDL_JOYAXISMOTION: {
-        if (auto joystick{GetSDLJoystickBySDLID(event.jaxis.which)}) {
+        if (auto joystick{GetSDLJoystickBySDLID(event.jaxis.which)})
             joystick->SetAxis(event.jaxis.axis, event.jaxis.value);
-        }
         break;
     }
     case SDL_JOYDEVICEREMOVED:
@@ -344,10 +335,9 @@ public:
     std::tuple<float, float> GetStatus() const override {
         auto [x, y]{joystick->GetAnalog(axis_x, axis_y)};
         const float r{std::sqrt((x * x) + (y * y))};
-        if (r > deadzone) {
+        if (r > deadzone)
             return std::make_tuple(x / r * (r - deadzone) / (1 - deadzone),
                                    y / r * (r - deadzone) / (1 - deadzone));
-        }
         return std::make_tuple<float, float>(0.0f, 0.0f);
     }
 
@@ -368,53 +358,49 @@ public:
      * @param params contains parameters for creating the device:
      *     - "guid": the guid of the joystick to bind
      *     - "port": the nth joystick of the same type to bind
-     *     - "button"(optional): the index of the button to bind
-     *     - "hat"(optional): the index of the hat to bind as direction buttons
-     *     - "axis"(optional): the index of the axis to bind
-     *     - "direction"(only used for hat): the direction name of the hat to bind. Can be "up",
+     *     - "button" (optional): the index of the button to bind
+     *     - "hat" (optional): the index of the hat to bind as direction buttons
+     *     - "axis" (optional): the index of the axis to bind
+     *     - "direction" (only used for hat): the direction name of the hat to bind. Can be "up",
      *         "down", "left" or "right"
-     *     - "threshold"(only used for axis): a float value in (-1.0, 1.0) which the button is
+     *     - "threshold" (only used for axis): a float value in (-1.0, 1.0) which the button is
      *         triggered if the axis value crosses
-     *     - "direction"(only used for axis): "+" means the button is triggered when the axis
+     *     - "direction" (only used for axis): "+" means the button is triggered when the axis
      * value is greater than the threshold; "-" means the button is triggered when the axis
      * value is smaller than the threshold
      */
     std::unique_ptr<Input::ButtonDevice> Create(const Common::ParamPackage& params) override {
         const std::string guid{params.Get("guid", "0")};
         const int port{params.Get("port", 0)};
-
         auto joystick{state.GetSDLJoystickByGUID(guid, port)};
-
         if (params.Has("hat")) {
             const int hat{params.Get("hat", 0)};
             const std::string direction_name{params.Get("direction", "")};
             Uint8 direction;
-            if (direction_name == "up") {
+            if (direction_name == "up")
                 direction = SDL_HAT_UP;
-            } else if (direction_name == "down") {
+            else if (direction_name == "down")
                 direction = SDL_HAT_DOWN;
-            } else if (direction_name == "left") {
+            else if (direction_name == "left")
                 direction = SDL_HAT_LEFT;
-            } else if (direction_name == "right") {
+            else if (direction_name == "right")
                 direction = SDL_HAT_RIGHT;
-            } else {
+            else
                 direction = 0;
-            }
             // This is necessary so accessing GetHat with hat won't crash
             joystick->SetHat(hat, SDL_HAT_CENTERED);
             return std::make_unique<SDLDirectionButton>(joystick, hat, direction);
         }
-
         if (params.Has("axis")) {
             const int axis{params.Get("axis", 0)};
             const float threshold{params.Get("threshold", 0.5f)};
             const std::string direction_name{params.Get("direction", "")};
             bool trigger_if_greater;
-            if (direction_name == "+") {
+            if (direction_name == "+")
                 trigger_if_greater = true;
-            } else if (direction_name == "-") {
+            else if (direction_name == "-")
                 trigger_if_greater = false;
-            } else {
+            else {
                 trigger_if_greater = true;
                 LOG_ERROR(Input, "Unknown direction {}", direction_name);
             }
@@ -422,7 +408,6 @@ public:
             joystick->SetAxis(axis, 0);
             return std::make_unique<SDLAxisButton>(joystick, axis, threshold, trigger_if_greater);
         }
-
         const int button{params.Get("button", 0)};
         // This is necessary so accessing GetButton with button won't crash
         joystick->SetButton(button, false);
@@ -452,9 +437,7 @@ public:
         const int axis_x{params.Get("axis_x", 0)};
         const int axis_y{params.Get("axis_y", 1)};
         float deadzone{std::clamp(params.Get("deadzone", 0.0f), 0.0f, .99f)};
-
         auto joystick{state.GetSDLJoystickByGUID(guid, port)};
-
         // This is necessary so accessing GetAxis with axis_x and axis_y won't crash
         joystick->SetAxis(axis_x, 0);
         joystick->SetAxis(axis_y, 0);
@@ -469,20 +452,16 @@ SDLState::SDLState() {
     using namespace Input;
     RegisterFactory<ButtonDevice>("sdl", std::make_shared<SDLButtonFactory>(*this));
     RegisterFactory<AnalogDevice>("sdl", std::make_shared<SDLAnalogFactory>(*this));
-
-    // If the frontend is going to manage the event loop, then we dont start one here
+    // If the frontend is going to manage the event loop, then we don't start one here
     start_thread = !SDL_WasInit(SDL_INIT_JOYSTICK);
     if (start_thread && SDL_Init(SDL_INIT_JOYSTICK) < 0) {
         LOG_CRITICAL(Input, "SDL_Init(SDL_INIT_JOYSTICK) failed with: {}", SDL_GetError());
         return;
     }
-
     if (SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1") == SDL_FALSE) {
         LOG_ERROR(Input, "Failed to set Hint for background events", SDL_GetError());
     }
-
     SDL_AddEventWatch(&SDLEventWatcher, this);
-
     initialized = true;
     if (start_thread) {
         poll_thread = std::thread([this] {
@@ -496,19 +475,16 @@ SDLState::SDLState() {
     }
     // Because the events for joystick connection happens before we have our event watcher added, we
     // can just open all the joysticks right here
-    for (int i{}; i < SDL_NumJoysticks(); ++i) {
+    for (int i{}; i < SDL_NumJoysticks(); ++i)
         InitJoystick(i);
-    }
 }
 
 SDLState::~SDLState() {
     using namespace Input;
     UnregisterFactory<ButtonDevice>("sdl");
     UnregisterFactory<AnalogDevice>("sdl");
-
     CloseJoysticks();
     SDL_DelEventWatch(&SDLEventWatcher, this);
-
     initialized = false;
     if (start_thread) {
         poll_thread.join();
@@ -518,7 +494,6 @@ SDLState::~SDLState() {
 
 Common::ParamPackage SDLEventToButtonParamPackage(SDLState& state, const SDL_Event& event) {
     Common::ParamPackage params{{{"engine", "sdl"}}};
-
     switch (event.type) {
     case SDL_JOYAXISMOTION: {
         auto joystick{state.GetSDLJoystickBySDLID(event.jaxis.which)};
@@ -596,9 +571,8 @@ public:
         while (state.event_queue.Pop(event)) {
             switch (event.type) {
             case SDL_JOYAXISMOTION:
-                if (std::abs(event.jaxis.value / 32767.0) < 0.5) {
+                if (std::abs(event.jaxis.value / 32767.0) < 0.5)
                     break;
-                }
             case SDL_JOYBUTTONUP:
             case SDL_JOYHATMOTION:
                 return SDLEventToButtonParamPackage(state, event);
@@ -614,7 +588,6 @@ public:
 
     void Start() override {
         SDLPoller::Start();
-
         // Reset stored axes
         analog_xaxis = -1;
         analog_yaxis = -1;
@@ -624,9 +597,8 @@ public:
     Common::ParamPackage GetNextInput() override {
         SDL_Event event;
         while (state.event_queue.Pop(event)) {
-            if (event.type != SDL_JOYAXISMOTION || std::abs(event.jaxis.value / 32767.0) < 0.5) {
+            if (event.type != SDL_JOYAXISMOTION || std::abs(event.jaxis.value / 32767.0) < 0.5)
                 continue;
-            }
             // An analog device needs two axes, so we need to store the axis for later and wait for
             // a second SDL event. The axes also must be from the same joystick.
             int axis{event.jaxis.axis};
@@ -634,9 +606,8 @@ public:
                 analog_xaxis = axis;
                 analog_axes_joystick = event.jaxis.which;
             } else if (analog_yaxis == -1 && analog_xaxis != axis &&
-                       analog_axes_joystick == event.jaxis.which) {
+                       analog_axes_joystick == event.jaxis.which)
                 analog_yaxis = axis;
-            }
         }
         Common::ParamPackage params;
         if (analog_xaxis != -1 && analog_yaxis != -1) {

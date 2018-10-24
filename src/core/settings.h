@@ -157,8 +157,6 @@ struct Values {
     bool use_frame_limit;
     u16 frame_limit;
     bool enable_shadows;
-    bool enable_clear_cache;
-    int clear_cache_secs;
     int screen_refresh_rate;
     int min_vertices_per_thread;
 

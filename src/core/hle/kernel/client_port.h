@@ -64,10 +64,4 @@ private:
     friend class KernelSystem;
 };
 
-/// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort SVC.
-extern std::unordered_map<std::string, SharedPtr<ClientPort>> g_named_ports;
-
-/// Adds a port to the named port table
-void AddNamedPort(std::string name, Kernel::SharedPtr<Kernel::ClientPort> port);
-
 } // namespace Kernel

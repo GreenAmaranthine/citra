@@ -49,9 +49,9 @@ enum class MemoryPermission : u32 {
 };
 
 enum class MemoryRegion : u16 {
-    APPLICATION = 1,
-    SYSTEM = 2,
-    BASE = 3,
+    Application = 1,
+    System = 2,
+    Base = 3,
 };
 
 template <typename T>
@@ -160,7 +160,7 @@ public:
                                                MemoryPermission permissions,
                                                MemoryPermission other_permissions,
                                                VAddr address = 0,
-                                               MemoryRegion region = MemoryRegion::BASE,
+                                               MemoryRegion region = MemoryRegion::Base,
                                                std::string name = "Unknown");
 
     /**
@@ -186,6 +186,14 @@ public:
 
     SharedPtr<Process> GetCurrentProcess() const;
     void SetCurrentProcess(SharedPtr<Process> process);
+
+    u32 GetProcessListSize() const;
+
+    /// Map of named ports managed which can be retrieved using the ConnectToPort SVC.
+    std::unordered_map<std::string, SharedPtr<ClientPort>> named_ports;
+
+    /// Adds a port to the named port table
+    void AddNamedPort(std::string name, Kernel::SharedPtr<Kernel::ClientPort> port);
 
 private:
     std::unique_ptr<ResourceLimitList> resource_limits;

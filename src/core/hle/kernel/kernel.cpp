@@ -15,21 +15,17 @@
 
 namespace Kernel {
 
-/// Initialize the kernel
 KernelSystem::KernelSystem(u32 system_mode) {
     ConfigMem::Init();
-
     Kernel::MemoryInit(system_mode);
-
     resource_limits = std::make_unique<ResourceLimitList>(*this);
     Kernel::ThreadingInit();
     Kernel::TimersInit();
 }
 
-/// Shutdown the kernel
 KernelSystem::~KernelSystem() {
+    named_ports.clear();
     Kernel::ThreadingShutdown();
-
     Kernel::TimersShutdown();
     Kernel::MemoryShutdown();
 }

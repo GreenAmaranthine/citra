@@ -138,44 +138,32 @@ void System::Reschedule() {
 
 System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     LOG_DEBUG(HW_Memory, "initialized OK");
-
     CoreTiming::Init();
-
+    kernel = std::make_unique<Kernel::KernelSystem>(system_mode);
     cpu_core = std::make_unique<Cpu>();
     dsp_core = std::make_unique<AudioCore::DspHle>();
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching);
 #ifdef ENABLE_SCRIPTING
     rpc_server = std::make_unique<RPC::RPCServer>();
 #endif
-
     service_manager = std::make_shared<Service::SM::ServiceManager>(*this);
     shared_page_handler = std::make_shared<SharedPage::Handler>();
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
     shutdown_requested = false;
     sleep_mode_enabled = false;
-
     // Initialize FS and CFG
     Service::FS::InstallInterfaces(*this);
     Service::CFG::InstallInterfaces(*this);
-
     HW::Init();
-    Kernel::Init(system_mode);
-    Service::Init(service_manager, *this);
-    CheatCore::Init();
-    kernel = std::make_unique<Kernel::KernelSystem>(system_mode);
     Service::Init(*this);
-
+    CheatCore::Init();
     ResultStatus result{VideoCore::Init(frontend)};
-    if (result != ResultStatus::Success) {
+    if (result != ResultStatus::Success)
         return result;
-    }
-
     LOG_DEBUG(Core, "Initialized OK");
-
     // Reset counters and set time origin to current frame
     GetAndResetPerfStats();
     perf_stats.BeginSystemFrame();
-
     SetRunning(true);
     return ResultStatus::Success;
 }
@@ -212,7 +200,6 @@ void System::Shutdown() {
     // Shutdown emulation session
     CheatCore::Shutdown();
     VideoCore::Shutdown();
-    Service::Shutdown();
     kernel.reset();
     HW::Shutdown();
 #ifdef ENABLE_SCRIPTING

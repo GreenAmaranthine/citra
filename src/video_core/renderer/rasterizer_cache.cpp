@@ -19,7 +19,6 @@
 #include "common/math_util.h"
 #include "common/scope_exit.h"
 #include "common/vector_math.h"
-#include "core/core_timing.h"
 #include "core/memory.h"
 #include "core/settings.h"
 #include "video_core/pica_state.h"
@@ -870,24 +869,9 @@ void main() {
     ASSERT(d24s8_abgr_tbo_size_u_id != -1);
     d24s8_abgr_viewport_u_id = glGetUniformLocation(d24s8_abgr_shader.handle, "viewport");
     ASSERT(d24s8_abgr_viewport_u_id != -1);
-    if (Settings::values.enable_clear_cache) {
-        g_rasterizer_cache = this;
-        cache_clear_event = CoreTiming::RegisterEvent(
-            "RasterizerCache::cache_clear_event", [](u64 userdata, s64 cycles_late) {
-                g_rasterizer_cache->Clear();
-                CoreTiming::ScheduleEvent(msToCycles(1000 * Settings::values.clear_cache_secs),
-                                          cache_clear_event);
-            });
-        CoreTiming::ScheduleEvent(msToCycles(1000 * Settings::values.clear_cache_secs),
-                                  cache_clear_event);
-    }
 }
 
 RasterizerCache::~RasterizerCache() {
-    if (Settings::values.enable_clear_cache) {
-        CoreTiming::UnscheduleEvent(cache_clear_event, 0);
-        g_rasterizer_cache = nullptr;
-    }
     Clear();
 }
 
@@ -967,14 +951,14 @@ Surface RasterizerCache::GetSurface(const SurfaceParams& params, ScaleMatch matc
             SurfaceParams find_params{params};
             Surface expandable{FindMatch<MatchFlags::Expand | MatchFlags::Invalid>(
                 surface_cache, find_params, match_res_scale)};
-            if (expandable != nullptr && expandable->res_scale > target_res_scale)
+            if (expandable && expandable->res_scale > target_res_scale)
                 target_res_scale = expandable->res_scale;
             // Keep res_scale when reinterpreting d24s8 -> rgba8
             if (params.pixel_format == PixelFormat::RGBA8) {
                 find_params.pixel_format = PixelFormat::D24S8;
                 expandable = FindMatch<MatchFlags::Expand | MatchFlags::Invalid>(
                     surface_cache, find_params, match_res_scale);
-                if (expandable != nullptr && expandable->res_scale > target_res_scale)
+                if (expandable && expandable->res_scale > target_res_scale)
                     target_res_scale = expandable->res_scale;
             }
         }
@@ -1003,7 +987,7 @@ SurfaceRect_Tuple RasterizerCache::GetSurfaceSubRect(const SurfaceParams& params
     if (!surface && match_res_scale != ScaleMatch::Ignore) {
         surface = FindMatch<MatchFlags::SubRect | MatchFlags::Invalid>(surface_cache, params,
                                                                        ScaleMatch::Ignore);
-        if (surface != nullptr) {
+        if (surface) {
             ASSERT(surface->res_scale < params.res_scale);
             SurfaceParams new_params{*surface};
             new_params.res_scale = params.res_scale;
@@ -1196,18 +1180,18 @@ SurfaceSurfaceRect_Tuple RasterizerCache::GetFramebufferSurfaces(
             "Color and depth framebuffer memory regions overlapping framebuffers not supported!");
         using_depth_fb = false;
     }
-    MathUtil::Rectangle<u32> color_rect{};
-    Surface color_surface{};
+    MathUtil::Rectangle<u32> color_rect;
+    Surface color_surface;
     if (using_color_fb)
         std::tie(color_surface, color_rect) =
             GetSurfaceSubRect(color_params, ScaleMatch::Exact, false);
-    MathUtil::Rectangle<u32> depth_rect{};
-    Surface depth_surface{};
+    MathUtil::Rectangle<u32> depth_rect;
+    Surface depth_surface;
     if (using_depth_fb)
         std::tie(depth_surface, depth_rect) =
             GetSurfaceSubRect(depth_params, ScaleMatch::Exact, false);
-    MathUtil::Rectangle<u32> fb_rect{};
-    if (color_surface != nullptr && depth_surface != nullptr) {
+    MathUtil::Rectangle<u32> fb_rect;
+    if (color_surface && depth_surface) {
         fb_rect = color_rect;
         // Color and Depth surfaces must have the same dimensions and offsets
         if (color_rect.bottom != depth_rect.bottom || color_rect.top != depth_rect.top ||
@@ -1216,17 +1200,16 @@ SurfaceSurfaceRect_Tuple RasterizerCache::GetFramebufferSurfaces(
             depth_surface = GetSurface(depth_params, ScaleMatch::Exact, false);
             fb_rect = color_surface->GetScaledRect();
         }
-    } else if (color_surface != nullptr) {
+    } else if (color_surface)
         fb_rect = color_rect;
-    } else if (depth_surface != nullptr) {
+    else if (depth_surface)
         fb_rect = depth_rect;
-    }
-    if (color_surface != nullptr) {
+    if (color_surface) {
         ValidateSurface(color_surface, boost::icl::first(color_vp_interval),
                         boost::icl::length(color_vp_interval));
         color_surface->InvalidateAllWatcher();
     }
-    if (depth_surface != nullptr) {
+    if (depth_surface) {
         ValidateSurface(depth_surface, boost::icl::first(depth_vp_interval),
                         boost::icl::length(depth_vp_interval));
         depth_surface->InvalidateAllWatcher();
@@ -1253,14 +1236,11 @@ Surface RasterizerCache::GetFillSurface(const GPU::Regs::MemoryFillConfig& confi
 }
 
 SurfaceRect_Tuple RasterizerCache::GetTexCopySurface(const SurfaceParams& params) {
-    MathUtil::Rectangle<u32> rect{};
-
+    MathUtil::Rectangle<u32> rect;
     Surface match_surface{FindMatch<MatchFlags::TexCopy | MatchFlags::Invalid>(
         surface_cache, params, ScaleMatch::Ignore)};
-
-    if (match_surface != nullptr) {
+    if (match_surface) {
         ValidateSurface(match_surface, params.addr, params.size);
-
         SurfaceParams match_subrect{};
         if (params.width != params.stride) {
             const u32 tiled_size{static_cast<u32>(match_surface->is_tiled ? 8 : 1)};
@@ -1272,98 +1252,77 @@ SurfaceRect_Tuple RasterizerCache::GetTexCopySurface(const SurfaceParams& params
             match_subrect = match_surface->FromInterval(params.GetInterval());
             ASSERT(match_subrect.GetInterval() == params.GetInterval());
         }
-
         rect = match_surface->GetScaledSubRect(match_subrect);
     }
-
     return std::make_tuple(match_surface, rect);
 }
 
 void RasterizerCache::DuplicateSurface(const Surface& src_surface, const Surface& dest_surface) {
     ASSERT(dest_surface->addr <= src_surface->addr && dest_surface->end >= src_surface->end);
-
     BlitSurfaces(src_surface, src_surface->GetScaledRect(), dest_surface,
                  dest_surface->GetScaledSubRect(*src_surface));
-
     dest_surface->invalid_regions -= src_surface->GetInterval();
     dest_surface->invalid_regions += src_surface->invalid_regions;
-
-    SurfaceRegions regions{};
-    for (auto& pair : RangeFromInterval(dirty_regions, src_surface->GetInterval())) {
-        if (pair.second == src_surface) {
+    SurfaceRegions regions;
+    for (auto& pair : RangeFromInterval(dirty_regions, src_surface->GetInterval()))
+        if (pair.second == src_surface)
             regions += pair.first;
-        }
-    }
-    for (auto& interval : regions) {
+    for (auto& interval : regions)
         dirty_regions.set({interval, dest_surface});
-    }
 }
 
 void RasterizerCache::ValidateSurface(const Surface& surface, PAddr addr, u32 size) {
     if (size == 0)
         return;
-
-    const SurfaceInterval validate_interval(addr, addr + size);
-
+    const SurfaceInterval validate_interval{addr, addr + size};
     if (surface->type == SurfaceType::Fill) {
         // Sanity check, fill surfaces will always be valid when used
         ASSERT(surface->IsRegionValid(validate_interval));
         return;
     }
-
     for (;;) {
         const auto it{surface->invalid_regions.find(validate_interval)};
         if (it == surface->invalid_regions.end())
             break;
-
         const auto interval{*it & validate_interval};
         // Look for a valid surface to copy from
         SurfaceParams params{surface->FromInterval(interval)};
-
         Surface copy_surface{
             FindMatch<MatchFlags::Copy>(surface_cache, params, ScaleMatch::Ignore, interval)};
-        if (copy_surface != nullptr) {
+        if (copy_surface) {
             SurfaceInterval copy_interval{params.GetCopyableInterval(copy_surface)};
             CopySurface(copy_surface, surface, copy_interval);
             surface->invalid_regions.erase(copy_interval);
             continue;
         }
-
         // D24S8 to RGBA8
         if (surface->pixel_format == PixelFormat::RGBA8) {
             params.pixel_format = PixelFormat::D24S8;
             Surface reinterpret_surface{
                 FindMatch<MatchFlags::Copy>(surface_cache, params, ScaleMatch::Ignore, interval)};
-            if (reinterpret_surface != nullptr) {
+            if (reinterpret_surface) {
                 ASSERT(reinterpret_surface->pixel_format == PixelFormat::D24S8);
-
                 SurfaceInterval convert_interval{params.GetCopyableInterval(reinterpret_surface)};
                 SurfaceParams convert_params{surface->FromInterval(convert_interval)};
                 auto src_rect{reinterpret_surface->GetScaledSubRect(convert_params)};
                 auto dest_rect{surface->GetScaledSubRect(convert_params)};
-
                 ConvertD24S8toABGR(reinterpret_surface->texture.handle, src_rect,
                                    surface->texture.handle, dest_rect);
-
                 surface->invalid_regions.erase(convert_interval);
                 continue;
             }
         }
-
         if (Settings::values.use_bos) {
-            // HACK HACK HACK: Ignore format reinterpretation
-            // this is a placeholder for HW texture decoding/encoding
+            // HACK: Ignore format reinterpretation
+            // This is a placeholder for HW texture decoding/encoding
             bool retry{};
-
             for (const auto& pair : RangeFromInterval(dirty_regions, interval)) {
                 surface->invalid_regions.erase(pair.first & interval);
                 retry = true;
             }
-
             if (retry)
                 continue;
         }
-
         // Load data from 3DS memory
         FlushRegion(params.addr, params.size);
         surface->LoadGLBuffer(params.addr, params.end);
@@ -1376,23 +1335,18 @@ void RasterizerCache::ValidateSurface(const Surface& surface, PAddr addr, u32 si
 void RasterizerCache::FlushRegion(PAddr addr, u32 size, Surface flush_surface) {
     if (size == 0)
         return;
-
-    const SurfaceInterval flush_interval(addr, addr + size);
-    SurfaceRegions flushed_intervals{};
-
+    const SurfaceInterval flush_interval{addr, addr + size};
+    SurfaceRegions flushed_intervals;
     for (auto& pair : RangeFromInterval(dirty_regions, flush_interval)) {
         // small sizes imply that this most likely comes from the cpu, flush the entire region
         // the point is to avoid thousands of small writes every frame if the cpu decides to access
         // that region, anything higher than 8 you're guaranteed it comes from a service
         const auto interval{size <= 8 ? pair.first : pair.first & flush_interval};
         auto& surface{pair.second};
-
-        if (flush_surface != nullptr && surface != flush_surface)
+        if (flush_surface && surface != flush_surface)
             continue;
-
         // Sanity check, this surface is the last one that marked this region dirty
         ASSERT(surface->IsRegionValid(interval));
-
         if (surface->type != SurfaceType::Fill) {
             SurfaceParams params{surface->FromInterval(interval)};
             surface->DownloadGLTexture(surface->GetSubRect(params), read_framebuffer.handle,
@@ -1419,22 +1373,18 @@ void RasterizerCache::Clear() {
 void RasterizerCache::InvalidateRegion(PAddr addr, u32 size, const Surface& region_owner) {
     if (size == 0)
         return;
-
     const SurfaceInterval invalid_interval{addr, addr + size};
-
-    if (region_owner != nullptr) {
+    if (region_owner) {
         ASSERT(region_owner->type != SurfaceType::Texture);
         ASSERT(addr >= region_owner->addr && addr + size <= region_owner->end);
         // Surfaces can't have a gap
         ASSERT(region_owner->width == region_owner->stride);
         region_owner->invalid_regions.erase(invalid_interval);
     }
-
     for (auto& pair : RangeFromInterval(surface_cache, invalid_interval)) {
         for (auto& cached_surface : pair.second) {
             if (cached_surface == region_owner)
                 continue;
-
             // If cpu is invalidating this region we want to remove it
             // to (likely) mark the memory pages as uncached
             if (region_owner && size <= 8) {
@@ -1442,34 +1392,27 @@ void RasterizerCache::InvalidateRegion(PAddr addr, u32 size, const Surface& regi
                 remove_surfaces.emplace(cached_surface);
                 continue;
             }
-
             const auto interval{cached_surface->GetInterval() & invalid_interval};
             cached_surface->invalid_regions.insert(interval);
-
             // Remove only "empty" fill surfaces to avoid destroying and recreating  textures
             if (cached_surface->type == SurfaceType::Fill &&
-                cached_surface->IsSurfaceFullyInvalid()) {
+                cached_surface->IsSurfaceFullyInvalid())
                 remove_surfaces.emplace(cached_surface);
-            }
         }
     }
-
-    if (region_owner != nullptr)
+    if (region_owner)
         dirty_regions.set({invalid_interval, region_owner});
     else
         dirty_regions.erase(invalid_interval);
-
     for (auto& remove_surface : remove_surfaces) {
         if (remove_surface == region_owner) {
             Surface expanded_surface{FindMatch<MatchFlags::SubRect | MatchFlags::Invalid>(
                 surface_cache, *region_owner, ScaleMatch::Ignore)};
             ASSERT(expanded_surface);
-
-            if ((region_owner->invalid_regions - expanded_surface->invalid_regions).empty()) {
+            if ((region_owner->invalid_regions - expanded_surface->invalid_regions).empty())
                 DuplicateSurface(region_owner, expanded_surface);
-            } else {
+            else
                 continue;
-            }
         }
         UnregisterSurface(remove_surface);
     }
@@ -1480,30 +1423,25 @@ void RasterizerCache::InvalidateRegion(PAddr addr, u32 size, const Surface& regi
 Surface RasterizerCache::CreateSurface(const SurfaceParams& params) {
     Surface surface{std::make_shared<CachedSurface>()};
     static_cast<SurfaceParams&>(*surface) = params;
-
     surface->texture.Create();
-
     surface->gl_buffer_size = 0;
     surface->invalid_regions.insert(surface->GetInterval());
     AllocateSurfaceTexture(surface->texture.handle, GetFormatTuple(surface->pixel_format),
                            surface->GetScaledWidth(), surface->GetScaledHeight());
-
     return surface;
 }
 
 void RasterizerCache::RegisterSurface(const Surface& surface) {
-    if (surface->registered) {
+    if (surface->registered)
         return;
-    }
     surface->registered = true;
     surface_cache.add({surface->GetInterval(), SurfaceSet{surface}});
     UpdatePagesCachedCount(surface->addr, surface->size, 1);
 }
 
 void RasterizerCache::UnregisterSurface(const Surface& surface) {
-    if (!surface->registered) {
+    if (!surface->registered)
         return;
-    }
     surface->registered = false;
     UpdatePagesCachedCount(surface->addr, surface->size, -1);
     surface_cache.subtract({surface->GetInterval(), SurfaceSet{surface}});
@@ -1513,21 +1451,17 @@ void RasterizerCache::UpdatePagesCachedCount(PAddr addr, u32 size, int delta) {
     const u32 num_pages{((addr + size - 1) >> Memory::PAGE_BITS) - (addr >> Memory::PAGE_BITS) + 1};
     const u32 page_start{addr >> Memory::PAGE_BITS};
     const u32 page_end{page_start + num_pages};
-
     // Interval maps will erase segments if count reaches 0, so if delta is negative we have to
     // subtract after iterating
     const auto pages_interval{PageMap::interval_type::right_open(page_start, page_end)};
     if (delta > 0)
         cached_pages.add({pages_interval, delta});
-
     for (auto& pair : RangeFromInterval(cached_pages, pages_interval)) {
         const auto interval{pair.first & pages_interval};
         const int count{pair.second};
-
         const PAddr interval_start_addr{boost::icl::first(interval) << Memory::PAGE_BITS};
         const PAddr interval_end_addr{boost::icl::last_next(interval) << Memory::PAGE_BITS};
         const u32 interval_size{interval_end_addr - interval_start_addr};
-
         if (delta > 0 && count == delta)
             Memory::RasterizerMarkRegionCached(interval_start_addr, interval_size, true);
         else if (delta < 0 && count == -delta)
@@ -1535,7 +1469,6 @@ void RasterizerCache::UpdatePagesCachedCount(PAddr addr, u32 size, int delta) {
         else
             ASSERT(count >= 0);
     }
-
     if (delta < 0)
         cached_pages.add({pages_interval, delta});
 }

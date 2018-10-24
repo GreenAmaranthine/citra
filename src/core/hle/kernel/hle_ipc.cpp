@@ -113,10 +113,10 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
                 Handle handle{src_cmdbuf[i]};
                 SharedPtr<Object> object{};
                 if (handle != 0) {
-                    object = src_table.GetGeneric(handle);
-                    ASSERT(object != nullptr); // TODO: Return error
+                    object = src_process.handle_table.GetGeneric(handle);
+                    ASSERT(object); // TODO: Return error
                     if (descriptor == IPC::DescriptorType::MoveHandle)
-                        src_table.Close(handle);
+                        src_process.handle_table.Close(handle);
                 }
                 cmd_buf[i++] = AddOutgoingHandle(std::move(object));
             }
@@ -171,7 +171,7 @@ ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf,
                 Handle handle{};
                 if (object)
                     // TODO: Figure out the proper error handling for if this fails
-                    handle = dst_process.handle_table.Create(object).Unwrap();
+                    handle = dst_process.handle_table.Create(object);
                 dst_cmdbuf[i++] = handle;
             }
             break;

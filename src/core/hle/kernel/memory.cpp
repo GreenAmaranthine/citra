@@ -86,11 +86,11 @@ void MemoryShutdown() {
 
 MemoryRegionInfo* GetMemoryRegion(MemoryRegion region) {
     switch (region) {
-    case MemoryRegion::APPLICATION:
+    case MemoryRegion::Application:
         return &memory_regions[0];
-    case MemoryRegion::SYSTEM:
+    case MemoryRegion::System:
         return &memory_regions[1];
-    case MemoryRegion::BASE:
+    case MemoryRegion::Base:
         return &memory_regions[2];
     default:
         UNREACHABLE();

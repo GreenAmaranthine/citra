@@ -20,13 +20,15 @@ using nihstro::OpCode;
 using nihstro::SwizzlePattern;
 
 namespace Pica::Shader {
+
 /// Memory allocated for each compiled shader
 constexpr std::size_t MAX_SHADER_SIZE{MAX_PROGRAM_CODE_LENGTH * 64};
+
 /// This class implements the shader JIT compiler. It recompiles a Pica shader program into x86_64
 /// code that can be executed on the host machine directly.
-class JitShader : public Xbyak::CodeGenerator {
+class Shader : public Xbyak::CodeGenerator {
 public:
-    JitShader();
+    Shader();
 
     void Run(const ShaderSetup& setup, UnitState& state, unsigned offset) const {
         program(&setup.uniforms, &state, instruction_labels[offset].getAddress());
@@ -110,4 +112,5 @@ private:
     Xbyak::Label log2_subroutine;
     Xbyak::Label exp2_subroutine;
 };
+
 } // namespace Pica::Shader

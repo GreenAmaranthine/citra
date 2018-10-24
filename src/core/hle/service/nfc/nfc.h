@@ -105,6 +105,7 @@ private:
     std::string amiibo_file;
     std::atomic_bool appdata_initialized{};
     Type type;
+    Core::System& system;
 };
 
 void InstallInterfaces(Core::System& system);

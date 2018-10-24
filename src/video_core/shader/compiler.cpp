@@ -15,8 +15,8 @@
 #include "common/x64/xbyak_util.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
+#include "video_core/shader/compiler.h"
 #include "video_core/shader/shader.h"
-#include "video_core/shader/shader_jit_x64_compiler.h"
 
 using namespace Common::X64;
 using namespace Xbyak::util;
@@ -26,73 +26,76 @@ using Xbyak::Reg64;
 using Xbyak::Xmm;
 
 namespace Pica::Shader {
-typedef void (JitShader::*JitFunction)(Instruction instr);
+
+typedef void (Shader::*JitFunction)(Instruction instr);
+
 const JitFunction instr_table[64]{
-    &JitShader::Compile_ADD,    // add
-    &JitShader::Compile_DP3,    // dp3
-    &JitShader::Compile_DP4,    // dp4
-    &JitShader::Compile_DPH,    // dph
-    nullptr,                    // unknown
-    &JitShader::Compile_EX2,    // ex2
-    &JitShader::Compile_LG2,    // lg2
-    nullptr,                    // unknown
-    &JitShader::Compile_MUL,    // mul
-    &JitShader::Compile_SGE,    // sge
-    &JitShader::Compile_SLT,    // slt
-    &JitShader::Compile_FLR,    // flr
-    &JitShader::Compile_MAX,    // max
-    &JitShader::Compile_MIN,    // min
-    &JitShader::Compile_RCP,    // rcp
-    &JitShader::Compile_RSQ,    // rsq
-    nullptr,                    // unknown
-    nullptr,                    // unknown
-    &JitShader::Compile_MOVA,   // mova
-    &JitShader::Compile_MOV,    // mov
-    nullptr,                    // unknown
-    nullptr,                    // unknown
-    nullptr,                    // unknown
-    nullptr,                    // unknown
-    &JitShader::Compile_DPH,    // dphi
-    nullptr,                    // unknown
-    &JitShader::Compile_SGE,    // sgei
-    &JitShader::Compile_SLT,    // slti
-    nullptr,                    // unknown
-    nullptr,                    // unknown
-    nullptr,                    // unknown
-    nullptr,                    // unknown
-    nullptr,                    // unknown
-    &JitShader::Compile_NOP,    // nop
-    &JitShader::Compile_END,    // end
-    &JitShader::Compile_BREAKC, // breakc
-    &JitShader::Compile_CALL,   // call
-    &JitShader::Compile_CALLC,  // callc
-    &JitShader::Compile_CALLU,  // callu
-    &JitShader::Compile_IF,     // ifu
-    &JitShader::Compile_IF,     // ifc
-    &JitShader::Compile_LOOP,   // loop
-    &JitShader::Compile_EMIT,   // emit
-    &JitShader::Compile_SETE,   // sete
-    &JitShader::Compile_JMP,    // jmpc
-    &JitShader::Compile_JMP,    // jmpu
-    &JitShader::Compile_CMP,    // cmp
-    &JitShader::Compile_CMP,    // cmp
-    &JitShader::Compile_MAD,    // madi
-    &JitShader::Compile_MAD,    // madi
-    &JitShader::Compile_MAD,    // madi
-    &JitShader::Compile_MAD,    // madi
-    &JitShader::Compile_MAD,    // madi
-    &JitShader::Compile_MAD,    // madi
-    &JitShader::Compile_MAD,    // madi
-    &JitShader::Compile_MAD,    // madi
-    &JitShader::Compile_MAD,    // mad
-    &JitShader::Compile_MAD,    // mad
-    &JitShader::Compile_MAD,    // mad
-    &JitShader::Compile_MAD,    // mad
-    &JitShader::Compile_MAD,    // mad
-    &JitShader::Compile_MAD,    // mad
-    &JitShader::Compile_MAD,    // mad
-    &JitShader::Compile_MAD,    // mad
+    &Shader::Compile_ADD,    // add
+    &Shader::Compile_DP3,    // dp3
+    &Shader::Compile_DP4,    // dp4
+    &Shader::Compile_DPH,    // dph
+    nullptr,                 // unknown
+    &Shader::Compile_EX2,    // ex2
+    &Shader::Compile_LG2,    // lg2
+    nullptr,                 // unknown
+    &Shader::Compile_MUL,    // mul
+    &Shader::Compile_SGE,    // sge
+    &Shader::Compile_SLT,    // slt
+    &Shader::Compile_FLR,    // flr
+    &Shader::Compile_MAX,    // max
+    &Shader::Compile_MIN,    // min
+    &Shader::Compile_RCP,    // rcp
+    &Shader::Compile_RSQ,    // rsq
+    nullptr,                 // unknown
+    nullptr,                 // unknown
+    &Shader::Compile_MOVA,   // mova
+    &Shader::Compile_MOV,    // mov
+    nullptr,                 // unknown
+    nullptr,                 // unknown
+    nullptr,                 // unknown
+    nullptr,                 // unknown
+    &Shader::Compile_DPH,    // dphi
+    nullptr,                 // unknown
+    &Shader::Compile_SGE,    // sgei
+    &Shader::Compile_SLT,    // slti
+    nullptr,                 // unknown
+    nullptr,                 // unknown
+    nullptr,                 // unknown
+    nullptr,                 // unknown
+    nullptr,                 // unknown
+    &Shader::Compile_NOP,    // nop
+    &Shader::Compile_END,    // end
+    &Shader::Compile_BREAKC, // breakc
+    &Shader::Compile_CALL,   // call
+    &Shader::Compile_CALLC,  // callc
+    &Shader::Compile_CALLU,  // callu
+    &Shader::Compile_IF,     // ifu
+    &Shader::Compile_IF,     // ifc
+    &Shader::Compile_LOOP,   // loop
+    &Shader::Compile_EMIT,   // emit
+    &Shader::Compile_SETE,   // sete
+    &Shader::Compile_JMP,    // jmpc
+    &Shader::Compile_JMP,    // jmpu
+    &Shader::Compile_CMP,    // cmp
+    &Shader::Compile_CMP,    // cmp
+    &Shader::Compile_MAD,    // madi
+    &Shader::Compile_MAD,    // madi
+    &Shader::Compile_MAD,    // madi
+    &Shader::Compile_MAD,    // madi
+    &Shader::Compile_MAD,    // madi
+    &Shader::Compile_MAD,    // madi
+    &Shader::Compile_MAD,    // madi
+    &Shader::Compile_MAD,    // madi
+    &Shader::Compile_MAD,    // mad
+    &Shader::Compile_MAD,    // mad
+    &Shader::Compile_MAD,    // mad
+    &Shader::Compile_MAD,    // mad
+    &Shader::Compile_MAD,    // mad
+    &Shader::Compile_MAD,    // mad
+    &Shader::Compile_MAD,    // mad
+    &Shader::Compile_MAD,    // mad
 };
+
 // State registers that must not be modified by external functions calls
 // Scratch registers, e.g., xmm1 and xmm0, have to be saved on the side if needed
 static const BitSet32 persistent_regs = BuildRegSet({
@@ -112,19 +115,24 @@ static const BitSet32 persistent_regs = BuildRegSet({
     esi,
     edi,
 });
+
 /// Raw constant for the source register selector that indicates no swizzling is performed
 constexpr u8 NO_SRC_REG_SWIZZLE{0x1b};
+
 /// Raw constant for the destination register enable mask that indicates all components are enabled
 constexpr u8 NO_DEST_REG_MASK{0xf};
+
 static void LogCritical(const char* msg) {
     LOG_CRITICAL(HW_GPU, "{}", msg);
 }
-void JitShader::Compile_Assert(bool condition, const char* msg) {
+
+void Shader::Compile_Assert(bool condition, const char* msg) {
     if (!condition) {
         mov(ABI_PARAM1, reinterpret_cast<std::size_t>(msg));
         CallFarFunction(*this, LogCritical);
     }
 }
+
 /**
  * Loads and swizzles a source register into the specified XMM register.
  * @param instr VS instruction, used for determining how to load the source register
@@ -132,8 +140,8 @@ void JitShader::Compile_Assert(bool condition, const char* msg) {
  * @param src_reg SourceRegister object corresponding to the source register to load
  * @param dest Destination XMM register to store the loaded, swizzled source register
  */
-void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg,
-                                   Xmm dest) {
+void Shader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg,
+                                Xmm dest) {
     Reg64 src_ptr;
     std::size_t src_offset;
     if (src_reg.GetRegisterType() == RegisterType::FloatUniform) {
@@ -192,7 +200,8 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
     if (negate[src_num - 1])
         xorps(dest, xmm15);
 }
-void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
+
+void Shader::Compile_DestEnable(Instruction instr, Xmm src) {
     DestRegister dest;
     unsigned operand_desc_id;
     if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MAD ||
@@ -220,7 +229,8 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
         movaps(xword[r15 + dest_offset_disp], xmm0);
     }
 }
-void JitShader::Compile_SanitizedMul(Xmm src1, Xmm src2, Xmm scratch) {
+
+void Shader::Compile_SanitizedMul(Xmm src1, Xmm src2, Xmm scratch) {
     // 0 * inf and inf * 0 in the PICA should return 0 instead of NaN. This can be implemented by
     // checking for NaNs before and after the multiplication.  If the multiplication result is NaN
     // where neither source was, this NaN was generated by a 0 * inf multiplication, and so the
@@ -236,7 +246,8 @@ void JitShader::Compile_SanitizedMul(Xmm src1, Xmm src2, Xmm scratch) {
     xorps(scratch, src2);
     andps(src1, scratch);
 }
-void JitShader::Compile_EvaluateCondition(Instruction instr) {
+
+void Shader::Compile_EvaluateCondition(Instruction instr) {
     // Note: NXOR is used below to check for equality
     switch (instr.flow_control.op) {
     case Instruction::FlowControlType::Or:
@@ -263,20 +274,24 @@ void JitShader::Compile_EvaluateCondition(Instruction instr) {
         break;
     }
 }
-void JitShader::Compile_UniformCondition(Instruction instr) {
+
+void Shader::Compile_UniformCondition(Instruction instr) {
     std::size_t offset{Uniforms::GetBoolUniformOffset(instr.flow_control.bool_uniform_id)};
     cmp(byte[r9 + offset], 0);
 }
-BitSet32 JitShader::PersistentCallerSavedRegs() {
+
+BitSet32 Shader::PersistentCallerSavedRegs() {
     return persistent_regs & ABI_ALL_CALLER_SAVED;
 }
-void JitShader::Compile_ADD(Instruction instr) {
+
+void Shader::Compile_ADD(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, xmm2);
     addps(xmm1, xmm2);
     Compile_DestEnable(instr, xmm1);
 }
-void JitShader::Compile_DP3(Instruction instr) {
+
+void Shader::Compile_DP3(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, xmm2);
     Compile_SanitizedMul(xmm1, xmm2, xmm0);
@@ -289,7 +304,8 @@ void JitShader::Compile_DP3(Instruction instr) {
     addps(xmm1, xmm3);
     Compile_DestEnable(instr, xmm1);
 }
-void JitShader::Compile_DP4(Instruction instr) {
+
+void Shader::Compile_DP4(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, xmm2);
     Compile_SanitizedMul(xmm1, xmm2, xmm0);
@@ -297,7 +313,8 @@ void JitShader::Compile_DP4(Instruction instr) {
     haddps(xmm1, xmm1);
     Compile_DestEnable(instr, xmm1);
 }
-void JitShader::Compile_DPH(Instruction instr) {
+
+void Shader::Compile_DPH(Instruction instr) {
     if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::DPHI) {
         Compile_SwizzleSrc(instr, 1, instr.common.src1i, xmm1);
         Compile_SwizzleSrc(instr, 2, instr.common.src2i, xmm2);
@@ -312,23 +329,27 @@ void JitShader::Compile_DPH(Instruction instr) {
     haddps(xmm1, xmm1);
     Compile_DestEnable(instr, xmm1);
 }
-void JitShader::Compile_EX2(Instruction instr) {
+
+void Shader::Compile_EX2(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
     call(exp2_subroutine);
     Compile_DestEnable(instr, xmm1);
 }
-void JitShader::Compile_LG2(Instruction instr) {
+
+void Shader::Compile_LG2(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
     call(log2_subroutine);
     Compile_DestEnable(instr, xmm1);
 }
-void JitShader::Compile_MUL(Instruction instr) {
+
+void Shader::Compile_MUL(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, xmm2);
     Compile_SanitizedMul(xmm1, xmm2, xmm0);
     Compile_DestEnable(instr, xmm1);
 }
-void JitShader::Compile_SGE(Instruction instr) {
+
+void Shader::Compile_SGE(Instruction instr) {
     if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::SGEI) {
         Compile_SwizzleSrc(instr, 1, instr.common.src1i, xmm1);
         Compile_SwizzleSrc(instr, 2, instr.common.src2i, xmm2);
@@ -340,7 +361,8 @@ void JitShader::Compile_SGE(Instruction instr) {
     andps(xmm2, xmm14);
     Compile_DestEnable(instr, xmm2);
 }
-void JitShader::Compile_SLT(Instruction instr) {
+
+void Shader::Compile_SLT(Instruction instr) {
     if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::SLTI) {
         Compile_SwizzleSrc(instr, 1, instr.common.src1i, xmm1);
         Compile_SwizzleSrc(instr, 2, instr.common.src2i, xmm2);
@@ -352,26 +374,30 @@ void JitShader::Compile_SLT(Instruction instr) {
     andps(xmm1, xmm14);
     Compile_DestEnable(instr, xmm1);
 }
-void JitShader::Compile_FLR(Instruction instr) {
+
+void Shader::Compile_FLR(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
     roundps(xmm1, xmm1, _MM_FROUND_FLOOR);
     Compile_DestEnable(instr, xmm1);
 }
-void JitShader::Compile_MAX(Instruction instr) {
+
+void Shader::Compile_MAX(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, xmm2);
     // SSE semantics match PICA200 ones: In case of NaN, xmm2 is returned.
     maxps(xmm1, xmm2);
     Compile_DestEnable(instr, xmm1);
 }
-void JitShader::Compile_MIN(Instruction instr) {
+
+void Shader::Compile_MIN(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, xmm2);
     // SSE semantics match PICA200 ones: In case of NaN, xmm2 is returned.
     minps(xmm1, xmm2);
     Compile_DestEnable(instr, xmm1);
 }
-void JitShader::Compile_MOVA(Instruction instr) {
+
+void Shader::Compile_MOVA(Instruction instr) {
     SwizzlePattern swiz{(*swizzle_data)[instr.common.operand_desc_id]};
     if (!swiz.DestComponentEnabled(0) && !swiz.DestComponentEnabled(1))
         return; // NoOp
@@ -405,11 +431,13 @@ void JitShader::Compile_MOVA(Instruction instr) {
         }
     }
 }
-void JitShader::Compile_MOV(Instruction instr) {
+
+void Shader::Compile_MOV(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
     Compile_DestEnable(instr, xmm1);
 }
-void JitShader::Compile_RCP(Instruction instr) {
+
+void Shader::Compile_RCP(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
     // TODO: RCPSS is a pretty rough approximation, this might cause problems if Pica
     // performs this operation more accurately. This should be checked on hardware.
@@ -417,7 +445,8 @@ void JitShader::Compile_RCP(Instruction instr) {
     shufps(xmm1, xmm1, _MM_SHUFFLE(0, 0, 0, 0)); // XYWZ -> XXXX
     Compile_DestEnable(instr, xmm1);
 }
-void JitShader::Compile_RSQ(Instruction instr) {
+
+void Shader::Compile_RSQ(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
     // TODO: RSQRTSS is a pretty rough approximation, this might cause problems if Pica
     // performs this operation more accurately. This should be checked on hardware.
@@ -425,8 +454,10 @@ void JitShader::Compile_RSQ(Instruction instr) {
     shufps(xmm1, xmm1, _MM_SHUFFLE(0, 0, 0, 0)); // XYWZ -> XXXX
     Compile_DestEnable(instr, xmm1);
 }
-void JitShader::Compile_NOP(Instruction instr) {}
-void JitShader::Compile_END(Instruction instr) {
+
+void Shader::Compile_NOP(Instruction instr) {}
+
+void Shader::Compile_END(Instruction instr) {
     // Save conditional code
     mov(byte[r15 + offsetof(UnitState, conditional_code[0])], r13.cvt8());
     mov(byte[r15 + offsetof(UnitState, conditional_code[1])], r14.cvt8());
@@ -440,7 +471,8 @@ void JitShader::Compile_END(Instruction instr) {
     ABI_PopRegistersAndAdjustStack(*this, ABI_ALL_CALLEE_SAVED, 8, 16);
     ret();
 }
-void JitShader::Compile_BREAKC(Instruction instr) {
+
+void Shader::Compile_BREAKC(Instruction instr) {
     Compile_Assert(looping, "BREAKC must be inside a LOOP");
     if (looping) {
         Compile_EvaluateCondition(instr);
@@ -448,7 +480,8 @@ void JitShader::Compile_BREAKC(Instruction instr) {
         jnz(*loop_break_label);
     }
 }
-void JitShader::Compile_CALL(Instruction instr) {
+
+void Shader::Compile_CALL(Instruction instr) {
     // Push offset of the return
     push(qword, (instr.flow_control.dest_offset + instr.flow_control.num_instructions));
     // Call the subroutine
@@ -456,21 +489,24 @@ void JitShader::Compile_CALL(Instruction instr) {
     // Skip over the return offset that's on the stack
     add(rsp, 8);
 }
-void JitShader::Compile_CALLC(Instruction instr) {
+
+void Shader::Compile_CALLC(Instruction instr) {
     Compile_EvaluateCondition(instr);
     Label b;
     jz(b);
     Compile_CALL(instr);
     L(b);
 }
-void JitShader::Compile_CALLU(Instruction instr) {
+
+void Shader::Compile_CALLU(Instruction instr) {
     Compile_UniformCondition(instr);
     Label b;
     jz(b);
     Compile_CALL(instr);
     L(b);
 }
-void JitShader::Compile_CMP(Instruction instr) {
+
+void Shader::Compile_CMP(Instruction instr) {
     using Op = Instruction::Common::CompareOpType::Op;
     Op op_x{instr.common.compare_op.x};
     Op op_y{instr.common.compare_op.y};
@@ -503,7 +539,8 @@ void JitShader::Compile_CMP(Instruction instr) {
     shr(r13.cvt32(), 31); // ignores upper 32 bits in source
     shr(r14, 63);
 }
-void JitShader::Compile_MAD(Instruction instr) {
+
+void Shader::Compile_MAD(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.mad.src1, xmm1);
     if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MADI) {
         Compile_SwizzleSrc(instr, 2, instr.mad.src2i, xmm2);
@@ -516,7 +553,8 @@ void JitShader::Compile_MAD(Instruction instr) {
     addps(xmm1, xmm3);
     Compile_DestEnable(instr, xmm1);
 }
-void JitShader::Compile_IF(Instruction instr) {
+
+void Shader::Compile_IF(Instruction instr) {
     Compile_Assert(instr.flow_control.dest_offset >= program_counter,
                    "Backwards if-statements not supported");
     Label l_else, l_endif;
@@ -540,7 +578,8 @@ void JitShader::Compile_IF(Instruction instr) {
     Compile_Block(instr.flow_control.dest_offset + instr.flow_control.num_instructions);
     L(l_endif);
 }
-void JitShader::Compile_LOOP(Instruction instr) {
+
+void Shader::Compile_LOOP(Instruction instr) {
     Compile_Assert(instr.flow_control.dest_offset >= program_counter,
                    "Backwards loops not supported");
     Compile_Assert(!looping, "Nested loops not supported");
@@ -569,7 +608,8 @@ void JitShader::Compile_LOOP(Instruction instr) {
     loop_break_label.reset();
     looping = false;
 }
-void JitShader::Compile_JMP(Instruction instr) {
+
+void Shader::Compile_JMP(Instruction instr) {
     if (instr.opcode.Value() == OpCode::Id::JMPC)
         Compile_EvaluateCondition(instr);
     else if (instr.opcode.Value() == OpCode::Id::JMPU)
@@ -584,10 +624,12 @@ void JitShader::Compile_JMP(Instruction instr) {
     else
         jnz(b, T_NEAR);
 }
+
 static void Emit(GSEmitter* emitter, Math::Vec4<float24> (*output)[16]) {
     emitter->Emit(*output);
 }
-void JitShader::Compile_EMIT(Instruction instr) {
+
+void Shader::Compile_EMIT(Instruction instr) {
     Label have_emitter, end;
     mov(rax, qword[r15 + offsetof(UnitState, emitter_ptr)]);
     test(rax, rax);
@@ -606,7 +648,8 @@ void JitShader::Compile_EMIT(Instruction instr) {
     ABI_PopRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
     L(end);
 }
-void JitShader::Compile_SETE(Instruction instr) {
+
+void Shader::Compile_SETE(Instruction instr) {
     Label have_emitter, end;
     mov(rax, qword[r15 + offsetof(UnitState, emitter_ptr)]);
     test(rax, rax);
@@ -622,11 +665,13 @@ void JitShader::Compile_SETE(Instruction instr) {
     mov(byte[rax + offsetof(GSEmitter, winding)], instr.setemit.winding);
     L(end);
 }
-void JitShader::Compile_Block(unsigned end) {
+
+void Shader::Compile_Block(unsigned end) {
     while (program_counter < end)
         Compile_NextInstr();
 }
-void JitShader::Compile_Return() {
+
+void Shader::Compile_Return() {
     // Peek return offset on the stack and check if we're at that offset
     mov(rax, qword[rsp + 8]);
     cmp(eax, (program_counter));
@@ -636,7 +681,8 @@ void JitShader::Compile_Return() {
     ret();
     L(b);
 }
-void JitShader::Compile_NextInstr() {
+
+void Shader::Compile_NextInstr() {
     if (std::binary_search(return_offsets.begin(), return_offsets.end(), program_counter))
         Compile_Return();
     L(instruction_labels[program_counter]);
@@ -651,7 +697,8 @@ void JitShader::Compile_NextInstr() {
         LOG_CRITICAL(HW_GPU, "Unhandled instruction: 0x{:02x} (0x{:08x})",
                      static_cast<u32>(instr.opcode.Value().EffectiveOpCode()), instr.hex);
 }
-void JitShader::FindReturnOffsets() {
+
+void Shader::FindReturnOffsets() {
     return_offsets.clear();
     for (std::size_t offset{}; offset < program_code->size(); ++offset) {
         Instruction instr{(*program_code)[offset]};
@@ -670,8 +717,8 @@ void JitShader::FindReturnOffsets() {
     std::sort(return_offsets.begin(), return_offsets.end());
 }
 
-void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_code_,
-                        const std::array<u32, MAX_SWIZZLE_DATA_LENGTH>* swizzle_data_) {
+void Shader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_code_,
+                     const std::array<u32, MAX_SWIZZLE_DATA_LENGTH>* swizzle_data_) {
     program_code = program_code_;
     swizzle_data = swizzle_data_;
     // Reset flow control state
@@ -719,14 +766,17 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     ASSERT_MSG(getSize() <= MAX_SHADER_SIZE, "Compiled a shader that exceeds the allocated size!");
     LOG_DEBUG(HW_GPU, "Compiled shader size={}", getSize());
 }
-JitShader::JitShader() : Xbyak::CodeGenerator{MAX_SHADER_SIZE} {
+
+Shader::Shader() : Xbyak::CodeGenerator{MAX_SHADER_SIZE} {
     CompilePrelude();
 }
-void JitShader::CompilePrelude() {
+
+void Shader::CompilePrelude() {
     log2_subroutine = CompilePrelude_Log2();
     exp2_subroutine = CompilePrelude_Exp2();
 }
-Xbyak::Label JitShader::CompilePrelude_Log2() {
+
+Xbyak::Label Shader::CompilePrelude_Log2() {
     Xbyak::Label subroutine;
     // SSE doesn't have a log instruction, thus we must approximate.
     // We perform this approximation first performaing a range reduction into the range [1.0, 2.0).
@@ -808,7 +858,7 @@ Xbyak::Label JitShader::CompilePrelude_Log2() {
     return subroutine;
 }
 
-Xbyak::Label JitShader::CompilePrelude_Exp2() {
+Xbyak::Label Shader::CompilePrelude_Exp2() {
     Xbyak::Label subroutine;
     // SSE doesn't have a exp instruction, thus we must approximate.
     // We perform this approximation first performaing a range reduction into the range [-0.5, 0.5).
@@ -869,4 +919,5 @@ Xbyak::Label JitShader::CompilePrelude_Exp2() {
     ret();
     return subroutine;
 }
+
 } // namespace Pica::Shader

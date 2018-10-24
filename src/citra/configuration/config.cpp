@@ -12,9 +12,9 @@
 
 Config::Config() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
-    qt_config_loc = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "qt-config.ini";
-    FileUtil::CreateFullPath(qt_config_loc);
-    qt_config = new QSettings(QString::fromStdString(qt_config_loc), QSettings::IniFormat);
+    std::string path{FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "qt-config.ini"};
+    FileUtil::CreateFullPath(path);
+    qt_config = new QSettings(QString::fromStdString(path), QSettings::IniFormat);
     Reload();
 }
 
@@ -196,8 +196,6 @@ void Config::ReadValues() {
     Settings::values.bg_green = qt_config->value("bg_green", 0.0).toFloat();
     Settings::values.bg_blue = qt_config->value("bg_blue", 0.0).toFloat();
     Settings::values.enable_shadows = qt_config->value("enable_shadows", true).toBool();
-    Settings::values.enable_clear_cache = qt_config->value("enable_clear_cache", false).toBool();
-    Settings::values.clear_cache_secs = qt_config->value("clear_cache_secs", 30).toInt();
     Settings::values.screen_refresh_rate = qt_config->value("screen_refresh_rate", 60).toInt();
     Settings::values.min_vertices_per_thread =
         qt_config->value("min_vertices_per_thread", 10).toInt();
@@ -413,8 +411,6 @@ void Config::SaveValues() {
     qt_config->setValue("resolution_factor", Settings::values.resolution_factor);
     qt_config->setValue("use_frame_limit", Settings::values.use_frame_limit);
     qt_config->setValue("frame_limit", Settings::values.frame_limit);
-    qt_config->setValue("enable_clear_cache", Settings::values.enable_clear_cache);
-    qt_config->setValue("clear_cache_secs", Settings::values.clear_cache_secs);
     // Cast to double because Qt's written float values aren't human-readable
     qt_config->setValue("bg_red", (double)Settings::values.bg_red);
     qt_config->setValue("bg_green", (double)Settings::values.bg_green);

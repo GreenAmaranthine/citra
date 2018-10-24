@@ -33,9 +33,11 @@ CheatDialog::CheatDialog(QWidget* parent)
     ui->tableCheats->setColumnWidth(0, 57);
     ui->tableCheats->setColumnWidth(1, 250);
     ui->tableCheats->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
-    ui->labelTitle->setText(QString("Title ID: %1")
-                                .arg(QString::fromStdString(fmt::format(
-                                    "{:016X}", Kernel::g_current_process->codeset->program_id))));
+    ui->labelTitle->setText(
+        QString("Title ID: %1")
+            .arg(QString::fromStdString(fmt::format(
+                "{:016X}",
+                Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id))));
     ui->lblTo->hide();
     ui->txtSearchTo->hide();
     ui->tableFound->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -62,7 +64,6 @@ CheatDialog::CheatDialog(QWidget* parent)
         QString rv{dialog->return_value};
         ui->tableFound->item(i.row(), 1)->setText(rv);
     });
-
     LoadCheats();
 }
 
@@ -70,9 +71,11 @@ CheatDialog::~CheatDialog() {}
 
 void CheatDialog::UpdateTitleID() {
     CheatCore::RefreshCheats();
-    ui->labelTitle->setText(QString("Title ID: %1")
-                                .arg(QString::fromStdString(fmt::format(
-                                    "{:016X}", Kernel::g_current_process->codeset->program_id))));
+    ui->labelTitle->setText(
+        QString("Title ID: %1")
+            .arg(QString::fromStdString(fmt::format(
+                "{:016X}",
+                Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id))));
     LoadCheats();
     ui->textLines->setEnabled(false);
     selection_changing = true;
@@ -92,9 +95,7 @@ void CheatDialog::UpdateTitleID() {
 
 void CheatDialog::LoadCheats() {
     cheats = CheatCore::Engine::ReadFileContents();
-
     ui->tableCheats->setRowCount(static_cast<int>(cheats.size()));
-
     for (int i{}; i < static_cast<int>(cheats.size()); i++) {
         QCheckBox* enabled{new QCheckBox()};
         enabled->setChecked(cheats[i].GetEnabled());
@@ -104,7 +105,6 @@ void CheatDialog::LoadCheats() {
         ui->tableCheats->setItem(i, 1,
                                  new QTableWidgetItem(QString::fromStdString(cheats[i].GetName())));
         enabled->setProperty("row", static_cast<int>(i));
-
         ui->tableCheats->setRowHeight(i, 23);
         connect(enabled, &QCheckBox::stateChanged, this, &CheatDialog::OnCheckChanged);
     }
@@ -124,7 +124,6 @@ void CheatDialog::OnSave() {
         QMessageBox::critical(this, "Error", error_message.arg(empty_cheat_names.join('\n')));
         return;
     }
-
     CheatCore::Engine::Save(cheats);
     CheatCore::RefreshCheats();
 }
@@ -142,15 +141,12 @@ void CheatDialog::OnRowSelected(int row, int column) {
         ui->textLines->setEnabled(false);
         return;
     }
-
     ui->textLines->setEnabled(true);
     const auto& current_cheat{cheats[row]};
-
     std::vector<std::string> lines;
     for (const auto& line : current_cheat.GetCheatLines())
         lines.push_back(line.cheat_line);
     ui->textLines->setPlainText(QString::fromStdString(Common::Join(lines, "\n")));
-
     current_row = row;
     selection_changing = false;
 }
@@ -162,9 +158,8 @@ void CheatDialog::OnLinesChanged() {
     std::vector<std::string> lines_vec;
     Common::SplitString(lines.toStdString(), '\n', lines_vec);
     auto new_lines{std::vector<CheatCore::CheatLine>()};
-    for (const auto& line : lines_vec) {
+    for (const auto& line : lines_vec)
         new_lines.emplace_back(line);
-    }
     cheats[current_row].SetCheatLines(new_lines);
 }
 
@@ -186,7 +181,6 @@ void CheatDialog::OnDelete() {
     }
     for (int row : rows)
         ui->tableCheats->removeRow(row);
-
     ui->tableCheats->clearSelection();
     OnRowSelected(-1, -1);
 }
@@ -194,10 +188,8 @@ void CheatDialog::OnDelete() {
 void CheatDialog::OnAddCheat() {
     NewCheatDialog dialog{this};
     dialog.exec();
-
-    if (!dialog.IsCheatValid()) {
+    if (!dialog.IsCheatValid())
         return;
-    }
     auto result{dialog.GetReturnValue()};
     cheats.push_back(result);
     int new_cheat_index{static_cast<int>(cheats.size() - 1)};
@@ -220,7 +212,6 @@ void CheatDialog::OnAddCheat() {
 NewCheatDialog::NewCheatDialog(QWidget* parent)
     : QDialog{parent, Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint} {
     setWindowTitle("New Cheat");
-
     QVBoxLayout* main_layout{new QVBoxLayout(this)};
     QHBoxLayout* name_panel{new QHBoxLayout()};
     QLabel* name_label{new QLabel()};
@@ -228,7 +219,6 @@ NewCheatDialog::NewCheatDialog(QWidget* parent)
     name_label->setText("Name: ");
     name_panel->addWidget(name_label);
     name_panel->addWidget(name_block);
-
     QDialogButtonBox* button_box{
         new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel)};
     connect(button_box, &QDialogButtonBox::accepted, this, [&]() {
@@ -250,13 +240,12 @@ NewCheatDialog::~NewCheatDialog() {}
 
 template <typename T>
 T Read(const VAddr addr) {
-    if (std::is_same<T, u8>::value) {
+    if (std::is_same<T, u8>::value)
         return Memory::Read8(addr);
-    } else if (std::is_same<T, u16>::value) {
+    else if (std::is_same<T, u16>::value)
         return Memory::Read16(addr);
-    } else if (std::is_same<T, u32>::value) {
+    else if (std::is_same<T, u32>::value)
         return Memory::Read32(addr);
-    }
 }
 
 QString IntToHex(int value) {
@@ -266,7 +255,7 @@ QString IntToHex(int value) {
 }
 
 int HexToInt(const QString& hex) {
-    int dec{};
+    int dec;
     std::stringstream ss;
     ss << hex.toStdString();
     ss >> std::hex >> dec;
@@ -278,9 +267,7 @@ double HexStringToDouble(const QString& hex) {
         long long i;
         double d;
     } value;
-
     value.i = std::stoll(hex.toStdString(), nullptr, 16);
-
     return value.d;
 }
 
@@ -289,12 +276,9 @@ QString DoubleToHexString(double value) {
         long long i;
         double d;
     };
-
     d = value;
-
     std::ostringstream oss;
     oss << std::hex << std::setfill('0') << std::setw(16) << i;
-
     return QString::fromStdString(oss.str());
 }
 
@@ -303,34 +287,28 @@ QString IeeeFloatToHex(float value) {
         float f;
         u32 i;
     };
-
     f = value;
-
     std::ostringstream oss;
     oss << std::hex << std::uppercase << i;
-
     return QString::fromStdString(oss.str());
 }
 
 void CheatDialog::OnScan(bool is_next_scan) {
-    int value_type{};
-    int search_type{};
-    QString search_value{};
-    bool convert_hex{};
-
+    int value_type;
+    int search_type;
+    QString search_value;
+    bool convert_hex;
     try {
         value_type = ui->cbValueType->currentIndex();
         search_type = ui->cbScanType->currentIndex();
         search_value = ui->txtSearch->text();
         convert_hex = ui->chkHex->isChecked();
     } catch (const std::exception& e) {
-        LOG_CRITICAL(Frontend, "Exception when scanning: {}", e.what());
+        LOG_ERROR(Frontend, "Exception when scanning: {}", e.what());
         ui->txtSearch->clear();
         return;
     }
-
-    std::function<bool(int, int, int)> comparer{};
-
+    std::function<bool(int, int, int)> comparer;
     switch (search_type) {
     case 0: { // Equals
         comparer = [&](int a, int b, int c) { return Equals(a, b, c); };
@@ -349,9 +327,7 @@ void CheatDialog::OnScan(bool is_next_scan) {
         break;
     }
     }
-
     int base{ui->chkHex->isChecked() ? 16 : 10};
-
     switch (value_type) {
     case 0: { // u32
         u32 value{search_value.toUInt(nullptr, base)};
@@ -361,7 +337,6 @@ void CheatDialog::OnScan(bool is_next_scan) {
             previous_found = NextSearch<u32>(value, comparer);
         break;
     }
-
     case 1: { // u16
         u16 value{search_value.toUShort(nullptr, base)};
         if (!is_next_scan)
@@ -379,25 +354,22 @@ void CheatDialog::OnScan(bool is_next_scan) {
         break;
     }
     }
-
     ui->tableFound->setRowCount(0);
-
-    if (previous_found.size() > 50000) {
+    if (previous_found.size() > 50000)
         ui->lblCount->setText("Count: 50000+");
-    } else {
+    else {
         LoadTable(previous_found);
         ui->lblCount->setText(QString("Count: %1").arg(previous_found.size()));
     }
-
     ui->btnNextScan->setEnabled(previous_found.size() > 0);
 }
 
 void CheatDialog::OnValueTypeChanged(int index) {
     ui->txtSearch->clear();
     ui->txtSearchTo->clear();
-    if (index >= 0 && index <= 2) {
+    if (index >= 0 && index <= 2)
         ui->chkHex->setVisible(true);
-    } else {
+    else {
         ui->chkHex->setVisible(false);
         ui->chkHex->setChecked(false);
     }
@@ -412,10 +384,9 @@ void CheatDialog::OnScanTypeChanged(int index) {
         ui->txtSearchTo->setVisible(false);
         ui->txtSearchTo->clear();
     }
-
-    if (index == 0) { // Equals
+    if (index == 0) // Equals
         ui->chkNot->setVisible(true);
-    } else {
+    else {
         ui->chkNot->setVisible(false);
         ui->chkNot->setChecked(false);
     }
@@ -424,26 +395,21 @@ void CheatDialog::OnScanTypeChanged(int index) {
 void CheatDialog::OnHexCheckedChanged(bool checked) {
     QString text{ui->txtSearch->text()};
     QString text_to{ui->txtSearchTo->text()};
-
     try {
         if (checked) {
             if (text.length() > 0) {
                 int val{std::stoi(text.toStdString(), nullptr, 10)};
                 ui->txtSearch->setText(IntToHex(val));
             }
-
             if (text_to.length() > 0) {
                 int val2{std::stoi(text_to.toStdString(), nullptr, 10)};
                 ui->txtSearchTo->setText(IntToHex(val2));
             }
         } else {
-            if (text.length() > 0) {
+            if (text.length() > 0)
                 ui->txtSearch->setText(QString::number(HexToInt(text)));
-            }
-
-            if (text_to.length() > 0) {
+            if (text_to.length() > 0)
                 ui->txtSearchTo->setText(QString::number(HexToInt(text_to)));
-            }
         }
     } catch (const std::exception&) {
         ui->txtSearch->clear();
@@ -453,7 +419,6 @@ void CheatDialog::OnHexCheckedChanged(bool checked) {
 
 void CheatDialog::LoadTable(const std::vector<FoundItem>& items) {
     ui->tableFound->setRowCount(static_cast<int>(items.size()));
-
     for (int i{}; i < items.size(); i++) {
         ui->tableFound->setItem(i, 0, new QTableWidgetItem(items[i].address.toUpper()));
         ui->tableFound->setItem(i, 1, new QTableWidgetItem(items[i].value));
@@ -468,18 +433,14 @@ std::vector<FoundItem> CheatDialog::FirstSearch(const T value,
     std::vector<FoundItem> results;
     int base{ui->chkHex->isChecked() ? 16 : 10};
     T search_to_value{static_cast<T>(ui->txtSearchTo->text().toInt(nullptr, base))};
-
-    for (VAddr i{Memory::PROCESS_IMAGE_VADDR}; i < Memory::NEW_LINEAR_HEAP_VADDR_END; i += 4096) {
-        if (Memory::IsValidVirtualAddress(i)) {
+    for (VAddr i{Memory::PROCESS_IMAGE_VADDR}; i < Memory::NEW_LINEAR_HEAP_VADDR_END; i += 4096)
+        if (Memory::IsValidVirtualAddress(i))
             address_in_use.push_back(i);
-        }
-    }
-
     for (auto& address : address_in_use) {
         for (VAddr i{address}; i < (address + 4096); i++) {
             T result{Read<T>(i)};
             if (comparer(result, value, search_to_value)) {
-                FoundItem item{};
+                FoundItem item;
                 item.address = IntToHex(i);
                 item.value = QString::number(result);
                 results.push_back(item);
@@ -495,19 +456,16 @@ std::vector<FoundItem> CheatDialog::NextSearch(const T value,
     std::vector<FoundItem> results{};
     int base{ui->chkHex->isChecked() ? 16 : 10};
     T search_to_value{static_cast<T>(ui->txtSearchTo->text().toUInt(nullptr, base))};
-
     for (auto& f : previous_found) {
         VAddr addr{static_cast<VAddr>(f.address.toUInt(nullptr, 16))};
         T result{Read<T>(addr)};
-
         if (comparer(result, value, search_to_value)) {
-            FoundItem item{};
+            FoundItem item;
             item.address = IntToHex(addr);
             item.value = QString::number(result);
             results.push_back(item);
         }
     }
-
     return results;
 }
 
@@ -532,24 +490,19 @@ ModifyAddressDialog::ModifyAddressDialog(QWidget* parent, const QString& address
     : QDialog{parent, Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint} {
     setWindowTitle("Modify Address");
     setSizeGripEnabled(false);
-
     QVBoxLayout* main_layout{new QVBoxLayout(this)};
-
     address_block = new QLineEdit();
     value_block = new QLineEdit();
     type_select = new QComboBox();
-
     QHBoxLayout* address_layout{new QHBoxLayout()};
     address_block->setReadOnly(true);
     address_block->setText(address);
     address_layout->addWidget(new QLabel("Address: ", this));
     address_layout->addWidget(address_block);
-
     QHBoxLayout* value_layout{new QHBoxLayout()};
     value_block->setText(value);
     value_layout->addWidget(new QLabel("Value: ", this));
     value_layout->addWidget(value_block);
-
     QHBoxLayout* type_layout{new QHBoxLayout()};
     type_select->addItem("u32");
     type_select->addItem("u16");
@@ -559,14 +512,12 @@ ModifyAddressDialog::ModifyAddressDialog(QWidget* parent, const QString& address
     type_select->setCurrentIndex(type);
     type_layout->addWidget(new QLabel("Type: ", this));
     type_layout->addWidget(type_select);
-
     auto button_box{new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel)};
     connect(button_box, &QDialogButtonBox::accepted, this, [&] { OnOkClicked(); });
     connect(button_box, &QDialogButtonBox::rejected, this, [&] {
         return_value = value;
         close();
     });
-
     main_layout->addLayout(address_layout);
     main_layout->addLayout(value_layout);
     main_layout->addLayout(type_layout);
@@ -579,7 +530,6 @@ void ModifyAddressDialog::OnOkClicked() {
     int value_type;
     QString new_value;
     u32 address;
-
     try {
         value_type = type_select->currentIndex();
         new_value = value_block->text();
@@ -587,7 +537,6 @@ void ModifyAddressDialog::OnOkClicked() {
     } catch (const std::exception&) {
         close();
     }
-
     switch (value_type) {
     case 0: { // u32
         u32 value{new_value.toUInt(nullptr, 10)};
@@ -622,7 +571,6 @@ void ModifyAddressDialog::OnOkClicked() {
         break;
     }
     }
-
     return_value = new_value;
     close();
 }

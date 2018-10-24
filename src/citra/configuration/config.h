@@ -5,7 +5,6 @@
 #pragma once
 
 #include <array>
-#include <string>
 #include <QVariant>
 #include "core/settings.h"
 
@@ -24,7 +23,6 @@ public:
 
 private:
     QSettings* qt_config;
-    std::string qt_config_loc;
 
     void ReadValues();
     void SaveValues();

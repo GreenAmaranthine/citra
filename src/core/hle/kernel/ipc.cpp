@@ -71,7 +71,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
                     continue;
                 }
                 auto result{dst_process->handle_table.Create(std::move(object))};
-                cmd_buf[i++] = result.ValueOr(0);
+                cmd_buf[i++] = result;
             }
             break;
         }

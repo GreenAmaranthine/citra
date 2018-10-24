@@ -39,19 +39,17 @@ struct ThreadQueueList {
 
     T get_first() {
         Queue* cur{first};
-        while (cur != nullptr) {
-            if (!cur->data.empty()) {
+        while (cur) {
+            if (!cur->data.empty())
                 return cur->data.front();
-            }
             cur = cur->next_nonempty;
         }
-
         return T();
     }
 
     T pop_first() {
         Queue* cur{first};
-        while (cur != nullptr) {
+        while (cur) {
             if (!cur->data.empty()) {
                 auto tmp{std::move(cur->data.front())};
                 cur->data.pop_front();
@@ -59,7 +57,6 @@ struct ThreadQueueList {
             }
             cur = cur->next_nonempty;
         }
-
         return T();
     }
 

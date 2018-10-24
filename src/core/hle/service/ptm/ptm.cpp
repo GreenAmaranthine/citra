@@ -37,22 +37,19 @@ void Module::Interface::GetShellState(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetBatteryLevel(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x7, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x7, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push(Settings::values.p_battery_level);
 }
 
 void Module::Interface::GetBatteryChargeState(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x8, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x8, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push(Settings::values.p_battery_charging);
 }
 
 void Module::Interface::GetPedometerState(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x9, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x9, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push(ptm->pedometer_is_counting);
     LOG_WARNING(Service_PTM, "stubbed");
@@ -77,16 +74,14 @@ void Module::Interface::GetStepHistory(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetTotalStepCount(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0xC, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0xC, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
     LOG_WARNING(Service_PTM, "stubbed");
 }
 
 void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x80F, 0, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x80F, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push(false);
     LOG_WARNING(Service_PTM, "stubbed");

@@ -37,7 +37,7 @@ bool ServerSession::ShouldWait(Thread* thread) const {
     if (!parent->client)
         return false;
     // Wait if we have no pending requests, or if we're currently handling a request.
-    return pending_requesting_threads.empty() || currently_handling != nullptr;
+    return pending_requesting_threads.empty() || currently_handling;
 }
 
 void ServerSession::Acquire(Thread* thread) {
@@ -57,13 +57,13 @@ ResultCode ServerSession::HandleSyncRequest(SharedPtr<Thread> thread) {
     // from its ClientSession, so wake up any threads that may be waiting on a svcReplyAndReceive or
     // similar.
     // If this ServerSession has an associated HLE handler, forward the request to it.
-    if (hle_handler != nullptr)
+    if (hle_handler)
         hle_handler->HandleSyncRequest(SharedPtr<ServerSession>(this));
     if (thread->status == ThreadStatus::Running) {
         // Put the thread to sleep until the server replies, it will be awoken in
         // svcReplyAndReceive for LLE servers.
         thread->status = ThreadStatus::WaitIPC;
-        if (hle_handler != nullptr)
+        if (hle_handler)
             // For HLE services, we put the request threads to sleep for a short duration to
             // simulate IPC overhead, but only if the HLE handler didn't put the thread to sleep for
             // other reasons like an async callback. The IPC overhead is needed to prevent

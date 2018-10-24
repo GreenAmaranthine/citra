@@ -12,19 +12,19 @@ namespace Service::GSP {
 
 FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index) {
     auto gpu{Core::System::GetInstance().ServiceManager().GetService<GSP_GPU>("gsp::Gpu")};
-    ASSERT(gpu != nullptr);
+    ASSERT(gpu);
     return gpu->GetFrameBufferInfo(thread_id, screen_index);
 }
 
 void SignalInterrupt(InterruptId interrupt_id) {
     auto gpu{Core::System::GetInstance().ServiceManager().GetService<GSP_GPU>("gsp::Gpu")};
-    ASSERT(gpu != nullptr);
+    ASSERT(gpu);
     return gpu->SignalInterrupt(interrupt_id);
 }
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager{system.ServiceManager()};
-    std::make_shared<GSP_GPU>()->InstallAsService(service_manager);
+    std::make_shared<GSP_GPU>(system)->InstallAsService(service_manager);
     std::make_shared<GSP_LCD>()->InstallAsService(service_manager);
 }
 

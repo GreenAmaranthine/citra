@@ -33,9 +33,8 @@ void MemorySynchronizer::RemoveMemoryBlock(VAddr mapping, VAddr original) {
 }
 
 void MemorySynchronizer::SynchronizeOriginalMemory(Kernel::Process& process) {
-    for (auto& block : memory_blocks) {
+    for (auto& block : memory_blocks)
         Memory::CopyBlock(process, block.original, block.mapping, block.size);
-    }
 }
 
 } // namespace Service::LDR

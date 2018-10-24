@@ -41,7 +41,7 @@ SharedPtr<SharedMemory> KernelSystem::CreateSharedMemory(SharedPtr<Process> owne
             Memory::FCRAM_PADDR + memory_region->base +
             static_cast<PAddr>(shared_memory->backing_block_offset);
         // Increase the amount of used linear heap memory for the owner process.
-        if (s !hared_memory->owner_process)
+        if (shared_memory->owner_process)
             shared_memory->owner_process->linear_heap_used += size;
         // Refresh the address mappings for the current process.
         if (current_process)

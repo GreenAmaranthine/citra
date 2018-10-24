@@ -299,7 +299,7 @@ void GSP_GPU::RegisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
     u32 flags{rp.Pop<u32>()};
     auto interrupt_event{rp.PopObject<Kernel::Event>()};
     // TODO: return right error code instead of asserting
-    ASSERT_MSG((interrupt_event != nullptr), "handle isn't valid!");
+    ASSERT_MSG((interrupt_event), "handle isn't valid!");
     interrupt_event->SetName("GSP_GSP_GPU::interrupt_event");
     SessionData* session_data{GetSessionData(ctx.Session())};
     session_data->interrupt_event = std::move(interrupt_event);
@@ -617,7 +617,7 @@ SessionData* GSP_GPU::FindRegisteredThreadData(u32 thread_id) {
     return nullptr;
 }
 
-GSP_GPU::GSP_GPU() : ServiceFramework{"gsp::Gpu", 2} {
+GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework{"gsp::Gpu", 2} {
     static const FunctionInfo functions[]{
         {0x00010082, &GSP_GPU::WriteHWRegs, "WriteHWRegs"},
         {0x00020084, &GSP_GPU::WriteHWRegsWithMask, "WriteHWRegsWithMask"},
@@ -655,7 +655,7 @@ GSP_GPU::GSP_GPU() : ServiceFramework{"gsp::Gpu", 2} {
     using Kernel::MemoryPermission;
     shared_memory = system.Kernel().CreateSharedMemory(
         nullptr, 0x1000, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite, 0,
-        Kernel::MemoryRegion::BASE, "GSP:SharedMemory");
+        Kernel::MemoryRegion::Base, "GSP:SharedMemory");
     first_initialization = true;
 };
 

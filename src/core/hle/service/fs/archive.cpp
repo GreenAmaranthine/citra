@@ -39,13 +39,10 @@ ArchiveBackend* ArchiveManager::GetArchive(ArchiveHandle handle) {
 ResultVal<ArchiveHandle> ArchiveManager::OpenArchive(ArchiveIdCode id_code,
                                                      FileSys::Path& archive_path) {
     LOG_TRACE(Service_FS, "Opening archive with id code 0x{:08X}", static_cast<u32>(id_code));
-
     auto itr{id_code_map.find(id_code)};
     if (itr == id_code_map.end())
         return FileSys::ERROR_NOT_FOUND;
-
     CASCADE_RESULT(std::unique_ptr<ArchiveBackend> res, itr->second->Open(archive_path));
-
     // This should never even happen in the first place with 64-bit handles,
     while (handle_map.count(next_handle) != 0)
         ++next_handle;
@@ -65,10 +62,8 @@ ResultCode ArchiveManager::CloseArchive(ArchiveHandle handle) {
 ResultCode ArchiveManager::RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factory,
                                                ArchiveIdCode id_code) {
     auto result{id_code_map.emplace(id_code, std::move(factory))};
-
     bool inserted{result.second};
     ASSERT_MSG(inserted, "Tried to register more than one archive with same id code");
-
     auto& archive{result.first->second};
     LOG_DEBUG(Service_FS, "Registered archive {} with id code 0x{:08X}", archive->GetName(),
               static_cast<u32>(id_code));
@@ -81,11 +76,9 @@ ResultVal<std::shared_ptr<File>> ArchiveManager::OpenFileFromArchive(ArchiveHand
     ArchiveBackend* archive{GetArchive(archive_handle)};
     if (!archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
     auto backend{archive->OpenFile(path, mode)};
     if (backend.Failed())
         return backend.Code();
-
     auto file{std::shared_ptr<File>(new File(system, std::move(backend).Unwrap(), path))};
     return MakeResult<std::shared_ptr<File>>(std::move(file));
 }
@@ -95,7 +88,6 @@ ResultCode ArchiveManager::DeleteFileFromArchive(ArchiveHandle archive_handle,
     ArchiveBackend* archive{GetArchive(archive_handle)};
     if (!archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
     return archive->DeleteFile(path);
 }
 
@@ -107,7 +99,6 @@ ResultCode ArchiveManager::RenameFileBetweenArchives(ArchiveHandle src_archive_h
     ArchiveBackend* dest_archive{GetArchive(dest_archive_handle)};
     if (!src_archive || !dest_archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
     if (src_archive == dest_archive)
         return src_archive->RenameFile(src_path, dest_path);
     else
@@ -120,7 +111,6 @@ ResultCode ArchiveManager::DeleteDirectoryFromArchive(ArchiveHandle archive_hand
     ArchiveBackend* archive{GetArchive(archive_handle)};
     if (!archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
     return archive->DeleteDirectory(path);
 }
 
@@ -129,7 +119,6 @@ ResultCode ArchiveManager::DeleteDirectoryRecursivelyFromArchive(ArchiveHandle a
     ArchiveBackend* archive{GetArchive(archive_handle)};
     if (!archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
     return archive->DeleteDirectoryRecursively(path);
 }
 
@@ -138,7 +127,6 @@ ResultCode ArchiveManager::CreateFileInArchive(ArchiveHandle archive_handle,
     ArchiveBackend* archive{GetArchive(archive_handle)};
     if (!archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
     return archive->CreateFile(path, file_size);
 }
 
@@ -147,7 +135,6 @@ ResultCode ArchiveManager::CreateDirectoryFromArchive(ArchiveHandle archive_hand
     ArchiveBackend* archive{GetArchive(archive_handle)};
     if (!archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
     return archive->CreateDirectory(path);
 }
 
@@ -159,7 +146,6 @@ ResultCode ArchiveManager::RenameDirectoryBetweenArchives(ArchiveHandle src_arch
     ArchiveBackend* dest_archive{GetArchive(dest_archive_handle)};
     if (!src_archive || !dest_archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
     if (src_archive == dest_archive)
         return src_archive->RenameDirectory(src_path, dest_path);
     else
@@ -172,18 +158,16 @@ ResultVal<std::shared_ptr<Directory>> ArchiveManager::OpenDirectoryFromArchive(
     ArchiveBackend* archive{GetArchive(archive_handle)};
     if (!archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-
     auto backend{archive->OpenDirectory(path)};
     if (backend.Failed())
         return backend.Code();
-
     auto directory{std::shared_ptr<Directory>(new Directory(std::move(backend).Unwrap(), path))};
     return MakeResult<std::shared_ptr<Directory>>(std::move(directory));
 }
 
 ResultVal<u64> ArchiveManager::GetFreeBytesInArchive(ArchiveHandle archive_handle) {
     ArchiveBackend* archive{GetArchive(archive_handle)};
-    if (archive == nullptr)
+    if (!archive)
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
     return MakeResult<u64>(archive->GetFreeBytes());
 }
@@ -191,18 +175,17 @@ ResultVal<u64> ArchiveManager::GetFreeBytesInArchive(ArchiveHandle archive_handl
 ResultCode ArchiveManager::FormatArchive(ArchiveIdCode id_code,
                                          const FileSys::ArchiveFormatInfo& format_info,
                                          const FileSys::Path& path) {
-    auto archive_itr{id_code_map.find(id_code)};
-    if (archive_itr == id_code_map.end())
+    auto archive{id_code_map.find(id_code)};
+    if (archive == id_code_map.end())
         return UnimplementedFunction(ErrorModule::FS); // TODO: Find the right error
-
-    return archive_itr->second->Format(path, format_info);
+    return archive->second->Format(path, format_info);
 }
 
 ResultVal<FileSys::ArchiveFormatInfo> ArchiveManager::GetArchiveFormatInfo(
     ArchiveIdCode id_code, FileSys::Path& archive_path) {
     auto archive{id_code_map.find(id_code)};
-    return UnimplementedFunction(ErrorModule::FS); // TODO: Find the right error
-
+    if (archive == id_code_map.end())
+        return UnimplementedFunction(ErrorModule::FS); // TODO: Find the right error
     return archive->second->GetFormatInfo(archive_path);
 }
 
@@ -212,20 +195,14 @@ ResultCode ArchiveManager::CreateExtSaveData(MediaType media_type, u32 high, u32
     // Construct the binary path to the archive first
     FileSys::Path path{
         FileSys::ConstructExtDataBinaryPath(static_cast<u32>(media_type), high, low)};
-
     auto archive{id_code_map.find(media_type == MediaType::NAND ? ArchiveIdCode::SharedExtSaveData
                                                                 : ArchiveIdCode::ExtSaveData)};
-
-    if (archive == id_code_map.end()) {
+    if (archive == id_code_map.end())
         return UnimplementedFunction(ErrorModule::FS); // TODO: Find the right error
-    }
-
     auto ext_savedata{static_cast<FileSys::ArchiveFactory_ExtSaveData*>(archive->second.get())};
-
     ResultCode result{ext_savedata->Format(path, format_info)};
     if (result.IsError())
         return result;
-
     ext_savedata->WriteIcon(path, smdh_icon.data(), smdh_icon.size());
     return RESULT_SUCCESS;
 }
@@ -234,7 +211,6 @@ ResultCode ArchiveManager::DeleteExtSaveData(MediaType media_type, u32 high, u32
     // Construct the binary path to the archive first
     FileSys::Path path{
         FileSys::ConstructExtDataBinaryPath(static_cast<u32>(media_type), high, low)};
-
     std::string media_type_directory;
     if (media_type == MediaType::NAND)
         media_type_directory =
@@ -246,11 +222,10 @@ ResultCode ArchiveManager::DeleteExtSaveData(MediaType media_type, u32 high, u32
         LOG_ERROR(Service_FS, "Unsupported media type {}", static_cast<u32>(media_type));
         return ResultCode(-1); // TODO: Find the right error code
     }
-
     // Delete all directories (/user, /boss) and the icon file.
     std::string base_path{
         FileSys::GetExtDataContainerPath(media_type_directory, media_type == MediaType::NAND)};
-    std::string extsavedata_path = FileSys::GetExtSaveDataPath(base_path, path);
+    std::string extsavedata_path{FileSys::GetExtSaveDataPath(base_path, path)};
     if (FileUtil::Exists(extsavedata_path) && !FileUtil::DeleteDirRecursively(extsavedata_path))
         return ResultCode(-1); // TODO: Find the right error code
     return RESULT_SUCCESS;
@@ -259,7 +234,6 @@ ResultCode ArchiveManager::DeleteExtSaveData(MediaType media_type, u32 high, u32
 ResultCode ArchiveManager::DeleteSystemSaveData(u32 high, u32 low) {
     // Construct the binary path to the archive first
     FileSys::Path path{FileSys::ConstructSystemSaveDataBinaryPath(high, low)};
-
     std::string nand_directory{
         FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir)};
     std::string base_path{FileSys::GetSystemSaveDataContainerPath(nand_directory)};
@@ -272,7 +246,6 @@ ResultCode ArchiveManager::DeleteSystemSaveData(u32 high, u32 low) {
 ResultCode ArchiveManager::CreateSystemSaveData(u32 high, u32 low) {
     // Construct the binary path to the archive first
     FileSys::Path path{FileSys::ConstructSystemSaveDataBinaryPath(high, low)};
-
     std::string nand_directory{
         FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir)};
     std::string base_path{FileSys::GetSystemSaveDataContainerPath(nand_directory)};
@@ -285,7 +258,6 @@ ResultCode ArchiveManager::CreateSystemSaveData(u32 high, u32 low) {
 void ArchiveManager::RegisterArchiveTypes() {
     // TODO: Add the other archive types (see here for the known types:
     // http://3dbrew.org/wiki/FS:OpenArchive#Archive_idcodes).
-
     std::string sdmc_directory{
         FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir, Settings::values.sdmc_dir)};
     std::string nand_directory{
@@ -295,43 +267,42 @@ void ArchiveManager::RegisterArchiveTypes() {
         RegisterArchiveType(std::move(sdmc_factory), ArchiveIdCode::SDMC);
     else
         LOG_ERROR(Service_FS, "Can't instantiate SDMC archive with path {}", sdmc_directory);
-
     auto sdmcwo_factory{std::make_unique<FileSys::ArchiveFactory_SDMCWriteOnly>(sdmc_directory)};
     if (sdmcwo_factory->Initialize())
         RegisterArchiveType(std::move(sdmcwo_factory), ArchiveIdCode::SDMCWriteOnly);
     else
         LOG_ERROR(Service_FS, "Can't instantiate SDMCWriteOnly archive with path {}",
                   sdmc_directory);
-
     // Create the SaveData archive
     auto sd_savedata_source{std::make_shared<FileSys::ArchiveSource_SDSaveData>(sdmc_directory)};
     auto savedata_factory{std::make_unique<FileSys::ArchiveFactory_SaveData>(sd_savedata_source)};
     RegisterArchiveType(std::move(savedata_factory), ArchiveIdCode::SaveData);
+    // Create the OtherSaveDataPermitted archive
     auto other_savedata_permitted_factory{
         std::make_unique<FileSys::ArchiveFactory_OtherSaveDataPermitted>(sd_savedata_source)};
     RegisterArchiveType(std::move(other_savedata_permitted_factory),
                         ArchiveIdCode::OtherSaveDataPermitted);
+    // Create the OtherSaveDataGeneral archive
     auto other_savedata_general_factory{
         std::make_unique<FileSys::ArchiveFactory_OtherSaveDataGeneral>(sd_savedata_source)};
     RegisterArchiveType(std::move(other_savedata_general_factory),
                         ArchiveIdCode::OtherSaveDataGeneral);
-
+    // Create the ExtSaveData archive
     auto extsavedata_factory{
         std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(sdmc_directory, false)};
     RegisterArchiveType(std::move(extsavedata_factory), ArchiveIdCode::ExtSaveData);
-
+    // Create the shared ExtSaveData archive
     auto sharedextsavedata_factory{
         std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(nand_directory, true)};
     RegisterArchiveType(std::move(sharedextsavedata_factory), ArchiveIdCode::SharedExtSaveData);
-
     // Create the NCCH archive, basically a small variation of the RomFS archive
-    auto savedatacheck_factory = std::make_unique<FileSys::ArchiveFactory_NCCH>();
+    auto savedatacheck_factory{std::make_unique<FileSys::ArchiveFactory_NCCH>()};
     RegisterArchiveType(std::move(savedatacheck_factory), ArchiveIdCode::NCCH);
-
+    // Create the SystemSaveData archive
     auto systemsavedata_factory{
         std::make_unique<FileSys::ArchiveFactory_SystemSaveData>(nand_directory)};
     RegisterArchiveType(std::move(systemsavedata_factory), ArchiveIdCode::SystemSaveData);
-
+    // Create the SelfNCCH archive
     auto selfncch_factory{std::make_unique<FileSys::ArchiveFactory_SelfNCCH>()};
     RegisterArchiveType(std::move(selfncch_factory), ArchiveIdCode::SelfNCCH);
 }
@@ -343,7 +314,6 @@ void ArchiveManager::RegisterSelfNCCH(Loader::AppLoader& app_loader) {
                   "Could not register a new NCCH because the SelfNCCH archive hasn't been created");
         return;
     }
-
     auto* factory{static_cast<FileSys::ArchiveFactory_SelfNCCH*>(itr->second.get())};
     factory->Register(app_loader);
 }

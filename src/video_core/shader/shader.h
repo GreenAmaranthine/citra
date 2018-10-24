@@ -17,6 +17,7 @@
 #include "video_core/pica_types.h"
 #include "video_core/regs_rasterizer.h"
 #include "video_core/regs_shader.h"
+#include "video_core/shader/engine.h"
 
 using nihstro::DestRegister;
 using nihstro::RegisterType;
@@ -199,10 +200,10 @@ struct ShaderSetup {
     std::array<u32, MAX_PROGRAM_CODE_LENGTH> program_code;
     std::array<u32, MAX_SWIZZLE_DATA_LENGTH> swizzle_data;
 
-    /// Data private to ShaderEngines
+    /// Data private to ShaderEngine
     struct EngineData {
         unsigned int entry_point;
-        /// Used by the JIT, points to a compiled shader object.
+        /// Points to a compiled shader object.
         const void* cached_shader{};
     } engine_data;
 
@@ -235,25 +236,6 @@ private:
     bool swizzle_data_hash_dirty{true};
     u64 program_code_hash{0xDEADC0DE};
     u64 swizzle_data_hash{0xDEADC0DE};
-};
-
-class ShaderEngine {
-public:
-    virtual ~ShaderEngine() = default;
-
-    /**
-     * Performs any shader unit setup that only needs to happen once per shader (as opposed to once
-     * per vertex, which would happen within the `Run` function).
-     */
-    virtual void SetupBatch(ShaderSetup& setup, unsigned int entry_point) = 0;
-
-    /**
-     * Runs the currently setup shader.
-     *
-     * @param setup Shader engine state, must be setup with SetupBatch on each shader change.
-     * @param state Shader unit state, must be setup with input data before each shader invocation.
-     */
-    virtual void Run(const ShaderSetup& setup, UnitState& state) const = 0;
 };
 
 // TODO: Remove and make it non-global state somewhere

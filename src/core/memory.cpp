@@ -81,7 +81,7 @@ static void MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, Page
         page_table.attributes[base] = type;
         page_table.pointers[base] = memory;
         base += 1;
-        if (memory != nullptr)
+        if (memory)
             memory += PAGE_SIZE;
     }
 }

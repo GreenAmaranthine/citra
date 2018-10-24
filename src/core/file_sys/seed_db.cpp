@@ -34,25 +34,14 @@ bool SeedDB::Load() {
         LOG_ERROR(Service_FS, "Failed to read seed database count fully");
         return false;
     }
+    seeds.resize(count);
     if (!file.Seek(SEEDDB_PADDING_BYTES, SEEK_CUR)) {
         LOG_ERROR(Service_FS, "Failed to skip seed database padding");
         return false;
     }
-    for (u32 i{}; i < count; ++i) {
-        Seed seed;
-        if (!file.ReadBytes(&seed.title_id, sizeof(seed.title_id))) {
-            LOG_ERROR(Service_FS, "Failed to read seed {} title ID", i);
-            return false;
-        }
-        if (!file.ReadBytes(seed.data.data(), seed.data.size())) {
-            LOG_ERROR(Service_FS, "Failed to read seed {} data", i);
-            return false;
-        }
-        if (!file.ReadBytes(seed.reserved.data(), seed.reserved.size())) {
-            LOG_ERROR(Service_FS, "Failed to read seed {} reserved data", i);
-            return false;
-        }
-        seeds.push_back(seed);
+    if (file.ReadArray(&seeds[0], count) != count) {
+        LOG_ERROR(Log, "Invalid seed database file");
+        return false;
     }
     return true;
 }
@@ -79,21 +68,9 @@ bool SeedDB::Save() {
         LOG_ERROR(Service_FS, "Failed to write seed database padding fully");
         return false;
     }
-    for (std::size_t i{}; i < count; ++i) {
-        if (file.WriteBytes(&seeds[i].title_id, sizeof(seeds[i].title_id)) !=
-            sizeof(seeds[i].title_id)) {
-            LOG_ERROR(Service_FS, "Failed to write seed {} title ID fully", i);
-            return false;
-        }
-        if (file.WriteBytes(seeds[i].data.data(), seeds[i].data.size()) != seeds[i].data.size()) {
-            LOG_ERROR(Service_FS, "Failed to write seed {} data fully", i);
-            return false;
-        }
-        if (file.WriteBytes(seeds[i].reserved.data(), seeds[i].reserved.size()) !=
-            seeds[i].reserved.size()) {
-            LOG_ERROR(Service_FS, "Failed to write seed {} reserved data fully", i);
-            return false;
-        }
+    if (file.WriteArray(&seeds[0], count) != count) {
+        LOG_ERROR(Service_FS, "Error when writing seeds");
+        return false;
     }
     return true;
 }

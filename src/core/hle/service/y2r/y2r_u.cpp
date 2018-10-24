@@ -368,12 +368,9 @@ void Y2R_U::SetAlpha(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::GetAlpha(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x23, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x23, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push(conversion.alpha);
-
     LOG_DEBUG(Service_Y2R, "alpha={}", conversion.alpha);
 }
 
@@ -382,17 +379,13 @@ void Y2R_U::SetDitheringWeightParams(Kernel::HLERequestContext& ctx) {
     rp.PopRaw(dithering_weight_params);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_Y2R, "called");
 }
 
 void Y2R_U::GetDitheringWeightParams(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x25, 0, 0};
-
-    IPC::ResponseBuilder rb{rp.MakeBuilder(9, 0)};
+    IPC::ResponseBuilder rb{ctx, 0x25, 9, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(dithering_weight_params);
-
     LOG_DEBUG(Service_Y2R, "called");
 }
 

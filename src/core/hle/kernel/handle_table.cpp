@@ -12,20 +12,12 @@
 
 namespace Kernel {
 
-<<<<<<< HEAD
-HandleTable g_handle_table;
-
-HandleTable::HandleTable() {
-=======
-HandleTable::HandleTable(KernelSystem& kernel) : kernel(kernel) {
-    next_generation = 1;
->>>>>>> eb285c33f... kernel: make handle table per-process
+HandleTable::HandleTable(KernelSystem& kernel) : kernel{kernel} {
     Clear();
 }
 
 Handle HandleTable::Create(SharedPtr<Object> obj) {
-    DEBUG_ASSERT(obj != nullptr);
-
+    DEBUG_ASSERT(obj);
     return objects.emplace(++handle_counter, std::move(obj)).first->first;
 }
 
@@ -41,9 +33,7 @@ ResultVal<Handle> HandleTable::Duplicate(Handle handle) {
 ResultCode HandleTable::Close(Handle handle) {
     if (!IsValid(handle))
         return ERR_INVALID_HANDLE;
-
     objects.erase(handle);
-
     return RESULT_SUCCESS;
 }
 
@@ -56,13 +46,13 @@ SharedPtr<Object> HandleTable::GetGeneric(Handle handle) const {
         return GetCurrentThread();
     else if (handle == CurrentProcess)
         return kernel.GetCurrentProcess();
-    if (!IsValid(handle)) {
+    if (!IsValid(handle))
         return nullptr;
-        return objects.find(handle)->second;
-    }
+    return objects.find(handle)->second;
+}
 
-    void HandleTable::Clear() {
-        objects.clear();
-    }
+void HandleTable::Clear() {
+    objects.clear();
+}
 
 } // namespace Kernel

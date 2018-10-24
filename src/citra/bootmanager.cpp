@@ -78,9 +78,8 @@ void Screens::moveContext() {
 
     // If the thread started running, move the GL Context to the new thread. Otherwise, move it
     // back.
-    auto thread{(QThread::currentThread() == qApp->thread() && emu_thread != nullptr)
-                    ? emu_thread
-                    : qApp->thread()};
+    auto thread{(QThread::currentThread() == qApp->thread() && emu_thread) ? emu_thread
+                                                                           : qApp->thread()};
     child->context()->moveToThread(thread);
 }
 

@@ -629,7 +629,7 @@ const QStringList GameList::supported_file_extensions{
     {"3ds", "3dsx", "elf", "axf", "cci", "cxi", "app"}};
 
 void GameList::RefreshGameDirectory() {
-    if (!UISettings::values.game_dirs.isEmpty() && current_worker != nullptr) {
+    if (!UISettings::values.game_dirs.isEmpty() && current_worker) {
         LOG_INFO(Frontend, "Change detected in the games directory. Reloading game list.");
         PopulateAsync(UISettings::values.game_dirs);
     }

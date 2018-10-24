@@ -146,7 +146,7 @@ void ServiceFrameworkBase::InstallAsNamedPort(Kernel::KernelSystem& kernel) {
     ASSERT(!port);
     auto [server_port, client_port]{kernel.CreatePortPair(max_sessions, service_name)};
     server_port->SetHleHandler(shared_from_this());
-    AddNamedPort(service_name, std::move(client_port));
+    Core::System::GetInstance().Kernel().AddNamedPort(service_name, std::move(client_port));
 }
 
 void ServiceFrameworkBase::RegisterHandlersBase(const FunctionInfoBase* functions, std::size_t n) {
@@ -205,18 +205,12 @@ static bool AttemptLLE(const ServiceModuleInfo& service_module) {
 }
 
 /// Initialize ServiceManager
-void Init(Core::System& core) {
-    SM::ServiceManager::InstallInterfaces(core);
+void Init(Core::System& system) {
+    SM::ServiceManager::InstallInterfaces(system);
     for (const auto& service_module : service_module_map)
         if (!AttemptLLE(service_module))
-            service_module.init_function(core);
+            service_module.init_function(system);
     LOG_DEBUG(Service, "initialized OK");
-}
-
-/// Shutdown ServiceManager
-void Shutdown() {
-    Kernel::g_named_ports.clear();
-    LOG_DEBUG(Service, "shutdown OK");
 }
 
 } // namespace Service

@@ -165,7 +165,8 @@ void Module::Interface::ReadMessage(Kernel::HLERequestContext& ctx) {
     if (message_result.Succeeded()) {
         auto message{std::move(message_result).Unwrap()};
         std::vector<u8> buffer(buffer_size);
-        const u32 bytes_read{message->Read(0, buffer_size, buffer.data()).Unwrap()};
+        const u32 bytes_read{
+            static_cast<u32>(message->Read(0, buffer_size, buffer.data()).Unwrap())};
         write_buffer.Write(buffer.data(), 0, buffer_size);
         message->Close();
         CecMessageHeader msg_header;

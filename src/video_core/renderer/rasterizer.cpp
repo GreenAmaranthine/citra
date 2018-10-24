@@ -463,7 +463,7 @@ bool Rasterizer::Draw(bool accelerate, bool is_indexed) {
     MathUtil::Rectangle<u32> surfaces_rect;
     std::tie(color_surface, depth_surface, surfaces_rect) =
         res_cache.GetFramebufferSurfaces(using_color_fb, using_depth_fb, viewport_rect_unscaled);
-    const u16 res_scale{static_cast<u16>(color_surface != nullptr
+    const u16 res_scale{static_cast<u16>(color_surface
                                              ? color_surface->res_scale
                                              : (!depth_surface ? 1u : depth_surface->res_scale))};
     MathUtil::Rectangle<u32> draw_rect{
@@ -495,8 +495,8 @@ bool Rasterizer::Draw(bool accelerate, bool is_indexed) {
         state.image_shadow_buffer = color_surface->texture.handle;
     } else {
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                               color_surface != nullptr ? color_surface->texture.handle : 0, 0);
-        if (depth_surface != nullptr) {
+                               color_surface ? color_surface->texture.handle : 0, 0);
+        if (depth_surface) {
             if (has_stencil)
                 // Attach both depth and stencil
                 glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
@@ -566,7 +566,7 @@ bool Rasterizer::Draw(bool accelerate, bool is_indexed) {
                     if (!allow_shadow)
                         continue;
                     Surface surface{res_cache.GetTextureSurface(texture)};
-                    if (surface != nullptr)
+                    if (surface)
                         CheckBarrier(state.image_shadow_texture_px = surface->texture.handle);
                     else
                         state.image_shadow_texture_px = 0;
@@ -581,42 +581,42 @@ bool Rasterizer::Draw(bool accelerate, bool is_indexed) {
                     info.physical_address =
                         regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveX);
                     Surface surface{res_cache.GetTextureSurface(info)};
-                    if (surface != nullptr)
+                    if (surface)
                         CheckBarrier(state.image_shadow_texture_px = surface->texture.handle);
                     else
                         state.image_shadow_texture_px = 0;
                     info.physical_address =
                         regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeX);
                     surface = res_cache.GetTextureSurface(info);
-                    if (surface != nullptr)
+                    if (surface)
                         CheckBarrier(state.image_shadow_texture_nx = surface->texture.handle);
                     else
                         state.image_shadow_texture_nx = 0;
                     info.physical_address =
                         regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveY);
                     surface = res_cache.GetTextureSurface(info);
-                    if (surface != nullptr)
+                    if (surface)
                         CheckBarrier(state.image_shadow_texture_py = surface->texture.handle);
                     else
                         state.image_shadow_texture_py = 0;
                     info.physical_address =
                         regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeY);
                     surface = res_cache.GetTextureSurface(info);
-                    if (surface != nullptr)
+                    if (surface)
                         CheckBarrier(state.image_shadow_texture_ny = surface->texture.handle);
                     else
                         state.image_shadow_texture_ny = 0;
                     info.physical_address =
                         regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveZ);
                     surface = res_cache.GetTextureSurface(info);
-                    if (surface != nullptr)
+                    if (surface)
                         CheckBarrier(state.image_shadow_texture_pz = surface->texture.handle);
                     else
                         state.image_shadow_texture_pz = 0;
                     info.physical_address =
                         regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeZ);
                     surface = res_cache.GetTextureSurface(info);
-                    if (surface != nullptr)
+                    if (surface)
                         CheckBarrier(state.image_shadow_texture_nz = surface->texture.handle);
                     else
                         state.image_shadow_texture_nz = 0;
@@ -643,7 +643,7 @@ bool Rasterizer::Draw(bool accelerate, bool is_indexed) {
             }
             texture_samplers[texture_index].SyncWithConfig(texture.config);
             Surface surface{res_cache.GetTextureSurface(texture)};
-            if (surface != nullptr)
+            if (surface)
                 CheckBarrier(state.texture_units[texture_index].texture_2d =
                                  surface->texture.handle);
             else
@@ -722,12 +722,12 @@ bool Rasterizer::Draw(bool accelerate, bool is_indexed) {
     MathUtil::Rectangle<u32> draw_rect_unscaled{
         draw_rect.left / res_scale, draw_rect.top / res_scale, draw_rect.right / res_scale,
         draw_rect.bottom / res_scale};
-    if (color_surface != nullptr && write_color_fb) {
+    if (color_surface && write_color_fb) {
         auto interval{color_surface->GetSubRectInterval(draw_rect_unscaled)};
         res_cache.InvalidateRegion(boost::icl::first(interval), boost::icl::length(interval),
                                    color_surface);
     }
-    if (depth_surface != nullptr && write_depth_fb) {
+    if (depth_surface && write_depth_fb) {
         auto interval{depth_surface->GetSubRectInterval(draw_rect_unscaled)};
         res_cache.InvalidateRegion(boost::icl::first(interval), boost::icl::length(interval),
                                    depth_surface);

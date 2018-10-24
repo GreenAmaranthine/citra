@@ -135,17 +135,14 @@ static ResultCode ControlProcessMemory(Handle process, u32 addr0, u32 addr1, u32
                                        u32 permissions) {
     LOG_INFO(Kernel_SVC, "process={}, addr0={}, addr1={}, size={}, type={}, permissions={}",
              static_cast<u32>(process), addr0, addr1, size, type, permissions);
-    if ((addr0 & Memory::PAGE_MASK) != 0 || (addr1 & Memory::PAGE_MASK) != 0) {
+    if ((addr0 & Memory::PAGE_MASK) != 0 || (addr1 & Memory::PAGE_MASK) != 0)
         return ERR_MISALIGNED_ADDRESS;
-    }
-    if ((size & Memory::PAGE_MASK) != 0) {
+    if ((size & Memory::PAGE_MASK) != 0)
         return ERR_MISALIGNED_SIZE;
-    }
-    if ((permissions & (u32)MemoryPermission::ReadWrite) != permissions) {
+    if ((permissions & (u32)MemoryPermission::ReadWrite) != permissions)
         return ERR_INVALID_COMBINATION;
-    }
     VMAPermission vma_permissions{(VMAPermission)permissions};
-    auto& p{*GetProcessById(process)};
+    auto& p{*Core::System::GetInstance().Kernel().GetProcessById(process)};
     switch (type & MEMOP_OPERATION_MASK) {
     case MEMOP_MAP: {
         // TODO: This is just a hack to avoid regressions until memory aliasing is implemented
@@ -179,7 +176,7 @@ static ResultCode MapProcessMemory(Handle process, u32 start_addr, u32 size) {
              size);
     if ((size & Memory::PAGE_MASK) != 0)
         return ERR_MISALIGNED_SIZE;
-    auto& p{*GetProcessById(process)};
+    auto& p{*Core::System::GetInstance().Kernel().GetProcessById(process)};
     p.HeapAllocate(start_addr, size, VMAPermission::ReadWrite);
     p.vm_manager.LogLayout(Log::Level::Trace);
     return RESULT_SUCCESS;
@@ -191,7 +188,7 @@ static ResultCode UnmapProcessMemory(Handle process, u32 start_addr, u32 size) {
              size);
     if ((size & Memory::PAGE_MASK) != 0)
         return ERR_MISALIGNED_SIZE;
-    auto& p{*GetProcessById(process)};
+    auto& p{*Core::System::GetInstance().Kernel().GetProcessById(process)};
     ResultCode result{p.HeapFree(start_addr, size)};
     if (result.IsError())
         return result;
@@ -227,7 +224,6 @@ static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 o
     LOG_TRACE(Kernel_SVC,
               "memblock=0x{:08X}, addr=0x{:08X}, mypermissions=0x{:08X}, otherpermission={}",
               handle, addr, permissions, other_permissions);
-
     SharedPtr<SharedMemory> shared_memory{
         Core::System::GetInstance().Kernel().GetCurrentProcess()->handle_table.Get<SharedMemory>(
             handle)};
@@ -254,7 +250,7 @@ static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 o
 
 static ResultCode UnmapMemoryBlock(Handle handle, u32 addr) {
     LOG_TRACE(Kernel_SVC, "called memblock=0x{:08X}, addr=0x{:08X}", handle, addr);
-    // TODO: Return E0A01BF5 if the address is not in the application's heap
+    // TODO: Return E0A01BF5 if the address isn't in the application's heap
     SharedPtr<Process> current_process{Core::System::GetInstance().Kernel().GetCurrentProcess()};
     SharedPtr<SharedMemory> shared_memory{current_process->handle_table.Get<SharedMemory>(handle)};
     if (!shared_memory)
@@ -272,8 +268,9 @@ static ResultCode ConnectToPort(Handle* out_handle, VAddr port_name_address) {
     if (port_name.size() > PortNameMaxLength)
         return ERR_PORT_NAME_TOO_LONG;
     LOG_TRACE(Kernel_SVC, "port_name={}", port_name);
-    auto it{g_named_ports.find(port_name)};
-    if (it == g_named_ports.end()) {
+    const auto named_ports{Core::System::GetInstance().Kernel().named_ports};
+    auto it{named_ports.find(port_name)};
+    if (it == named_ports.end()) {
         LOG_WARNING(Kernel_SVC, "tried to connect to unknown port: {}", port_name);
         return ERR_NOT_FOUND;
     }
@@ -281,9 +278,8 @@ static ResultCode ConnectToPort(Handle* out_handle, VAddr port_name_address) {
     SharedPtr<ClientSession> client_session;
     CASCADE_RESULT(client_session, client_port->Connect());
     // Return the client session
-    CASCADE_RESULT(*out_handle,
-                   Core::System::GetInstance().Kernel().GetCurrentProcess()->handle_table.Create(
-                       client_session));
+    *out_handle = Core::System::GetInstance().Kernel().GetCurrentProcess()->handle_table.Create(
+        client_session);
     return RESULT_SUCCESS;
 }
 
@@ -301,7 +297,7 @@ static ResultCode SendSyncRequest(Handle handle) {
 
 /// Opens a process
 static ResultCode OpenProcess(Handle* process, u32 process_id) {
-    auto ptr{GetProcessById(process_id)};
+    auto ptr{Core::System::GetInstance().Kernel().GetProcessById(process_id)};
     if (!ptr)
         return ERR_NOT_FOUND;
     *process = ptr->process_id;
@@ -377,8 +373,8 @@ static ResultCode WaitSynchronizationN(s32* out, VAddr handles_address, s32 hand
         return ERR_INVALID_POINTER;
     // NOTE: on real hardware, there is no nullptr check for 'out' (tested with firmware 4.4). If
     // this happens, the running application will crash.
-    ASSERT_MSG(out != nullptr, "invalid output pointer specified!");
-    // Check if 'handle_count' is invalid
+    ASSERT_MSG(out, "invalid output pointer specified!");
+    // Check if handle_count is invalid
     if (handle_count < 0)
         return ERR_OUT_OF_RANGE;
     using ObjectPtr = SharedPtr<WaitObject>;
@@ -517,7 +513,7 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
     for (int i{}; i < handle_count; ++i) {
         Handle handle{Memory::Read32(handles_address + i * sizeof(Handle))};
         auto object{current_process->handle_table.Get<WaitObject>(handle)};
-        if (object == nullptr)
+        if (!object)
             return ERR_INVALID_HANDLE;
         objects[i] = object;
     }
@@ -604,8 +600,7 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
 static ResultCode CreateAddressArbiter(Handle* out_handle) {
     KernelSystem& kernel{Core::System::GetInstance().Kernel()};
     SharedPtr<AddressArbiter> arbiter{kernel.CreateAddressArbiter()};
-    CASCADE_RESULT(*out_handle,
-                   kernel.GetCurrentProcess()->handle_table.Create(std::move(arbiter)));
+    *out_handle = kernel.GetCurrentProcess()->handle_table.Create(std::move(arbiter));
     LOG_TRACE(Kernel_SVC, "returned handle=0x{:08X}", *out_handle);
     return RESULT_SUCCESS;
 }
@@ -663,7 +658,7 @@ static ResultCode GetResourceLimit(Handle* resource_limit, Handle process_handle
     SharedPtr<Process> process{current_process->handle_table.Get<Process>(process_handle)};
     if (!process)
         return ERR_INVALID_HANDLE;
-    CASCADE_RESULT(*resource_limit, current_process->handle_table.Create(process->resource_limit));
+    *resource_limit = current_process->handle_table.Create(process->resource_limit);
     return RESULT_SUCCESS;
 }
 
@@ -743,7 +738,7 @@ static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point
                        name, entry_point, priority, arg, processor_id, stack_top, current_process));
     thread->context->SetFpscr(FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO |
                               FPSCR_ROUND_TOZERO); // 0x03C00000
-    CASCADE_RESULT(*out_handle, current_process->handle_table.Create(std::move(thread)));
+    *out_handle = current_process->handle_table.Create(std::move(thread));
     Core::System::GetInstance().PrepareReschedule();
     LOG_TRACE(Kernel_SVC,
               "entrypoint=0x{:08X} ({}), arg=0x{:08X}, stacktop=0x{:08X}, "
@@ -799,7 +794,7 @@ static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
     KernelSystem& kernel{Core::System::GetInstance().Kernel()};
     SharedPtr<Mutex> mutex{kernel.CreateMutex(initial_locked != 0)};
     mutex->name = fmt::format("mutex-{:08x}", Core::CPU().GetReg(14));
-    CASCADE_RESULT(*out_handle, kernel.GetCurrentProcess()->handle_table.Create(std::move(mutex)));
+    *out_handle = kernel.GetCurrentProcess()->handle_table.Create(std::move(mutex));
     LOG_TRACE(Kernel_SVC, "called initial_locked={} : created handle=0x{:08X}",
               initial_locked ? "true" : "false", *out_handle);
     return RESULT_SUCCESS;
@@ -858,8 +853,7 @@ static ResultCode CreateSemaphore(Handle* out_handle, s32 initial_count, s32 max
     CASCADE_RESULT(SharedPtr<Semaphore> semaphore,
                    kernel.CreateSemaphore(initial_count, max_count));
     semaphore->name = fmt::format("semaphore-{:08x}", Core::CPU().GetReg(14));
-    CASCADE_RESULT(*out_handle,
-                   kernel.GetCurrentProcess()->handle_table.Create(std::move(semaphore)));
+    *out_handle = kernel.GetCurrentProcess()->handle_table.Create(std::move(semaphore));
     LOG_TRACE(Kernel_SVC, "called initial_count={}, max_count={}, created handle=0x{:08X}",
               initial_count, max_count, *out_handle);
     return RESULT_SUCCESS;
@@ -907,7 +901,7 @@ static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
     KernelSystem& kernel{Core::System::GetInstance().Kernel()};
     SharedPtr<Event> evt{kernel.CreateEvent(static_cast<ResetType>(reset_type),
                                             fmt::format("event-{:08x}", Core::CPU().GetReg(14)))};
-    CASCADE_RESULT(*out_handle, kernel.GetCurrentProcess()->handle_table.Create(std::move(evt)));
+    *out_handle = kernel.GetCurrentProcess()->handle_table.Create(std::move(evt));
     LOG_TRACE(Kernel_SVC, "called reset_type=0x{:08X} : created handle=0x{:08X}", reset_type,
               *out_handle);
     return RESULT_SUCCESS;
@@ -949,7 +943,7 @@ static ResultCode CreateTimer(Handle* out_handle, u32 reset_type) {
     KernelSystem& kernel{Core::System::GetInstance().Kernel()};
     SharedPtr<Timer> timer{kernel.CreateTimer(
         static_cast<ResetType>(reset_type), fmt ::format("timer-{:08x}", Core::CPU().GetReg(14)))};
-    CASCADE_RESULT(*out_handle, kernel.GetCurrentProcess()->handle_table.Create(std::move(timer)));
+    *out_handle = kernel.GetCurrentProcess()->handle_table.Create(std::move(timer));
     LOG_TRACE(Kernel_SVC, "reset_type=0x{:08X}, created handle=0x{:08X}", reset_type, *out_handle);
     return RESULT_SUCCESS;
 }
@@ -1044,13 +1038,13 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
     // if the process has the Shared Device Memory flag in the exheader,
     // then we have to allocate from the same region as the caller process instead of the BASE
     // region.
-    MemoryRegion region{MemoryRegion::BASE};
+    MemoryRegion region{MemoryRegion::Base};
     if (addr == 0 && current_process->flags.shared_device_mem)
         region = current_process->flags.memory_region;
     shared_memory = Core::System::GetInstance().Kernel().CreateSharedMemory(
         current_process, size, static_cast<MemoryPermission>(my_permission),
         static_cast<MemoryPermission>(other_permission), addr, region);
-    CASCADE_RESULT(*out_handle, current_process->handle_table.Create(std::move(shared_memory)));
+    *out_handle = current_process->handle_table.Create(std::move(shared_memory));
     LOG_WARNING(Kernel_SVC, "addr=0x{:08X}", addr);
     return RESULT_SUCCESS;
 }
@@ -1062,12 +1056,12 @@ static ResultCode CreatePort(Handle* server_port, Handle* client_port, VAddr nam
     KernelSystem& kernel{Core::System::GetInstance().Kernel()};
     SharedPtr<Process> current_process{kernel.GetCurrentProcess()};
     auto ports{kernel.CreatePortPair(max_sessions)};
-    CASCADE_RESULT(*client_port, current_process->handle_table.Create(
-                                     std::move(std::get<SharedPtr<ClientPort>>(ports))));
+    *client_port =
+        current_process->handle_table.Create(std::move(std::get<SharedPtr<ClientPort>>(ports)));
     // Note: The 3DS kernel also leaks the client port handle if the server port handle fails to be
     // created.
-    CASCADE_RESULT(*server_port, current_process->handle_table.Create(
-                                     std::move(std::get<SharedPtr<ServerPort>>(ports))));
+    *server_port =
+        current_process->handle_table.Create(std::move(std::get<SharedPtr<ServerPort>>(ports)));
     LOG_TRACE(Kernel_SVC, "called max_sessions={}", max_sessions);
     return RESULT_SUCCESS;
 }
@@ -1079,7 +1073,7 @@ static ResultCode CreateSessionToPort(Handle* out_client_session, Handle client_
     if (!client_port)
         return ERR_INVALID_HANDLE;
     CASCADE_RESULT(auto session, client_port->Connect());
-    CASCADE_RESULT(*out_client_session, current_process->handle_table.Create(std::move(session)));
+    *out_client_session = current_process->handle_table.Create(std::move(session));
     return RESULT_SUCCESS;
 }
 
@@ -1088,9 +1082,9 @@ static ResultCode CreateSession(Handle* server_session, Handle* client_session) 
     auto sessions{kernel.CreateSessionPair()};
     SharedPtr<Process> current_process{kernel.GetCurrentProcess()};
     auto& server{std::get<SharedPtr<ServerSession>>(sessions)};
-    CASCADE_RESULT(*server_session, current_process->handle_table.Create(std::move(server)));
+    *server_session = current_process->handle_table.Create(std::move(server));
     auto& client{std::get<SharedPtr<ClientSession>>(sessions)};
-    CASCADE_RESULT(*client_session, current_process->handle_table.Create(std::move(client)));
+    *client_session = current_process->handle_table.Create(std::move(client));
     LOG_TRACE(Kernel_SVC, "called");
     return RESULT_SUCCESS;
 }
@@ -1102,7 +1096,7 @@ static ResultCode AcceptSession(Handle* out_server_session, Handle server_port_h
     if (!server_port)
         return ERR_INVALID_HANDLE;
     CASCADE_RESULT(auto session, server_port->Accept());
-    CASCADE_RESULT(*out_server_session, current_process->handle_table.Create(std::move(session)));
+    *out_server_session = current_process->handle_table.Create(std::move(session));
     return RESULT_SUCCESS;
 }
 
@@ -1112,30 +1106,30 @@ static ResultCode GetSystemInfo(s64* out, u32 type, s32 param) {
     case SystemInfoType::REGION_MEMORY_USAGE:
         switch ((SystemInfoMemUsageRegion)param) {
         case SystemInfoMemUsageRegion::ALL:
-            *out = GetMemoryRegion(MemoryRegion::APPLICATION)->used +
-                   GetMemoryRegion(MemoryRegion::SYSTEM)->used +
-                   GetMemoryRegion(MemoryRegion::BASE)->used;
+            *out = GetMemoryRegion(MemoryRegion::Application)->used +
+                   GetMemoryRegion(MemoryRegion::System)->used +
+                   GetMemoryRegion(MemoryRegion::Base)->used;
             break;
         case SystemInfoMemUsageRegion::APPLICATION:
-            *out = GetMemoryRegion(MemoryRegion::APPLICATION)->used;
+            *out = GetMemoryRegion(MemoryRegion::Application)->used;
             break;
         case SystemInfoMemUsageRegion::SYSTEM:
-            *out = GetMemoryRegion(MemoryRegion::SYSTEM)->used;
+            *out = GetMemoryRegion(MemoryRegion::System)->used;
             break;
         case SystemInfoMemUsageRegion::BASE:
-            *out = GetMemoryRegion(MemoryRegion::BASE)->used;
+            *out = GetMemoryRegion(MemoryRegion::Base)->used;
             break;
         default:
-            LOG_ERROR(Kernel_SVC, "unknown GetSystemInfo type=0, region: param={}", param);
+            LOG_ERROR(Kernel_SVC, "unknown GetSystemInfo 0 (param={})", param);
             *out = 0;
             break;
         }
         break;
     case SystemInfoType::KERNEL_SPAWNED_PIDS:
-        *out = GetProcessListSize();
+        *out = Core::System::GetInstance().Kernel().GetProcessListSize();
         break;
     default:
-        LOG_ERROR(Kernel_SVC, "unknown GetSystemInfo type={}, param={}", type, param);
+        LOG_ERROR(Kernel_SVC, "unknown GetSystemInfo {} (param={})", type, param);
         *out = 0;
         break;
     }

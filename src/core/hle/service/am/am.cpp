@@ -1002,10 +1002,10 @@ ResultVal<std::unique_ptr<AMFileWrapper>> GetFileFromSession(
         LOG_WARNING(Service_AM, "File handle ServerSession disconnected!");
         return Kernel::ERR_SESSION_CLOSED_BY_REMOTE;
     }
-    if (server->hle_handler != nullptr) {
+    if (server->hle_handler) {
         auto file{std::dynamic_pointer_cast<Service::FS::File>(server->hle_handler)};
         // TODO: This requires RTTI, use service calls directly instead?
-        if (file != nullptr) {
+        if (file) {
             // Grab the session file offset in case we were given a subfile opened with
             // File::OpenSubFile
             std::size_t offset{file->GetSessionFileOffset(server)};

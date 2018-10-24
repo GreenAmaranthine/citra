@@ -501,7 +501,7 @@ void GMainWindow::ConnectMenuEvents() {
 
 bool GMainWindow::LoadROM(const std::string& filename) {
     // Shutdown previous session if the emu thread is still active...
-    if (emu_thread != nullptr)
+    if (emu_thread)
         ShutdownGame();
     screens->InitRenderTarget();
     screens->MakeCurrent();
@@ -609,7 +609,7 @@ bool GMainWindow::LoadROM(const std::string& filename) {
     presence.largeImageKey = "icon";
     Discord_UpdatePresence(&presence);
 #endif
-    if (cheats_window != nullptr)
+    if (cheats_window)
         cheats_window->UpdateTitleID();
     else
         CheatCore::RefreshCheats();
@@ -804,7 +804,7 @@ void GMainWindow::Update3D() {
         QMetaObject::invokeMethod(this, "Update3D", Qt::BlockingQueuedConnection);
         return;
     }
-    if (control_panel != nullptr)
+    if (control_panel)
         control_panel->Update3D();
 }
 
@@ -824,7 +824,7 @@ void GMainWindow::UpdateControlPanelNetwork() {
         QMetaObject::invokeMethod(this, "UpdateControlPanelNetwork", Qt::BlockingQueuedConnection);
         return;
     }
-    if (control_panel != nullptr)
+    if (control_panel)
         control_panel->UpdateNetwork();
 }
 
@@ -1083,7 +1083,7 @@ void GMainWindow::OnPauseGame() {
 
 void GMainWindow::OnStopGame() {
     ShutdownGame();
-    if (cheats_window != nullptr)
+    if (cheats_window)
         cheats_window->close();
 }
 
@@ -1456,7 +1456,7 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, const std::stri
         break;
     }
     case Core::System::ResultStatus::ShutdownRequested:
-        if (cheats_window != nullptr)
+        if (cheats_window)
             cheats_window->close();
         break;
     case Core::System::ResultStatus::FatalError:
@@ -1526,7 +1526,7 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     game_list->SaveInterfaceLayout();
     SaveHotkeys();
     // Shutdown session if the emu thread is active...
-    if (emu_thread != nullptr)
+    if (emu_thread)
         ShutdownGame();
     screens->close();
     multiplayer_state->Close();

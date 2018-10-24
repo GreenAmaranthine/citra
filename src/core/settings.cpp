@@ -63,8 +63,6 @@ void LogSettings() {
     LogSetting("Renderer_ResolutionFactor", Settings::values.resolution_factor);
     LogSetting("Renderer_UseFrameLimit", Settings::values.use_frame_limit);
     LogSetting("Renderer_FrameLimit", Settings::values.frame_limit);
-    LogSetting("Renderer_EnableClearCache", Settings::values.enable_clear_cache);
-    LogSetting("Renderer_ClearCacheMs", Settings::values.clear_cache_secs);
     LogSetting("Renderer_MinVerticesPerThread", Settings::values.min_vertices_per_thread);
     LogSetting("Layout_LayoutOption", static_cast<int>(Settings::values.layout_option));
     LogSetting("Layout_SwapScreen", Settings::values.swap_screen);

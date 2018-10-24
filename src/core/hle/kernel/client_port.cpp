@@ -38,8 +38,8 @@ void ClientPort::ConnectionClosed() {
     --active_sessions;
 }
 
-void AddNamedPort(std::string name, SharedPtr<ClientPort> port) {
-    g_named_ports.emplace(std::move(name), std::move(port));
+void KernelSystem::AddNamedPort(std::string name, SharedPtr<ClientPort> port) {
+    named_ports.emplace(std::move(name), std::move(port));
 }
 
 } // namespace Kernel
