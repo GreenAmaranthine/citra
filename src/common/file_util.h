@@ -26,6 +26,7 @@ enum class UserPath {
     RootDir,
     SDMCDir,
     SysDataDir,
+    CheatsDir,
     UserDir,
 };
 

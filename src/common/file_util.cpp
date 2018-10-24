@@ -344,7 +344,7 @@ u64 GetSize(FILE* f) {
     return size;
 }
 
-// creates an empty file filename, returns true on success
+// Creates an empty file, returns true on success
 bool CreateEmptyFile(const std::string& filename) {
     LOG_TRACE(Common_Filesystem, "{}", filename);
     if (!IOFile{filename, "wb"}) {
@@ -589,6 +589,7 @@ const std::string& GetUserPath(UserPath path, const std::string& settings_dir) {
         paths.emplace(UserPath::SDMCDir, user_path + SDMC_DIR DIR_SEP);
         paths.emplace(UserPath::NANDDir, user_path + NAND_DIR DIR_SEP);
         paths.emplace(UserPath::SysDataDir, user_path + SYSDATA_DIR DIR_SEP);
+        paths.emplace(UserPath::CheatsDir, user_path + CHEATS_DIR DIR_SEP);
     }
     return paths[path];
 }

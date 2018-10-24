@@ -45,7 +45,7 @@ void RefreshCheats() {
 
 static std::string GetFilePath() {
     return fmt::format(
-        "{}cheats/{:016X}.txt", FileUtil::GetUserPath(FileUtil::UserPath::UserDir),
+        "{}{:016X}.txt", FileUtil::GetUserPath(FileUtil::UserPath::CheatsDir),
         Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id);
 }
 

@@ -23,7 +23,7 @@
 #define SDMC_DIR "sdmc"
 #define NAND_DIR "nand"
 #define SYSDATA_DIR "sysdata"
-#define LOG_DIR "log"
+#define CHEATS_DIR "cheats"
 
 // Filenames
 #define LOG_FILE "log.txt"
