@@ -210,7 +210,6 @@ void System::Shutdown() {
     cpu_core.reset();
     CoreTiming::Shutdown();
     app_loader.reset();
-    Memory::InvalidateAreaCache();
     if (auto member{Network::GetRoomMember().lock()}) {
         Network::GameInfo game_info{};
         member->SendGameInfo(game_info);

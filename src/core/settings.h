@@ -150,7 +150,7 @@ struct Values {
     u64 init_time;
 
     // Renderer
-    bool use_hw_shader;
+    bool use_hw_shaders;
     bool shaders_accurate_gs;
     bool shaders_accurate_mul;
     u16 resolution_factor;

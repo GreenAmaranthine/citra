@@ -12,13 +12,11 @@ namespace VideoCore {
 
 std::unique_ptr<Renderer> g_renderer; ///< Renderer plugin
 
-std::atomic_bool g_hw_shader_enabled;
-std::atomic_bool g_hw_shader_accurate_gs;
-std::atomic_bool g_hw_shader_accurate_mul;
-std::atomic_bool g_renderer_bg_color_update_requested;
-
-// Screenshot
-std::atomic_bool g_renderer_screenshot_requested;
+std::atomic_bool g_hw_shaders_enabled;
+std::atomic_bool g_hw_shaders_accurate_gs;
+std::atomic_bool g_hw_shaders_accurate_mul;
+std::atomic_bool g_bg_color_update_requested;
+std::atomic_bool g_screenshot_requested;
 void* g_screenshot_bits;
 std::function<void()> g_screenshot_complete_callback;
 Layout::FramebufferLayout g_screenshot_framebuffer_layout;
@@ -44,14 +42,14 @@ void Shutdown() {
 
 void RequestScreenshot(void* data, std::function<void()> callback,
                        const Layout::FramebufferLayout& layout) {
-    if (g_renderer_screenshot_requested) {
+    if (g_screenshot_requested) {
         LOG_ERROR(Render, "A screenshot is already requested or in progress, ignoring the request");
         return;
     }
     g_screenshot_bits = data;
     g_screenshot_complete_callback = std::move(callback);
     g_screenshot_framebuffer_layout = layout;
-    g_renderer_screenshot_requested = true;
+    g_screenshot_requested = true;
 }
 
 } // namespace VideoCore

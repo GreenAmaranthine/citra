@@ -17,22 +17,18 @@ namespace Settings {
 Values values{};
 
 void Apply() {
-    VideoCore::g_hw_shader_enabled = values.use_hw_shader;
-    VideoCore::g_hw_shader_accurate_gs = values.shaders_accurate_gs;
-    VideoCore::g_hw_shader_accurate_mul = values.shaders_accurate_mul;
-
+    VideoCore::g_hw_shaders_enabled = values.use_hw_shaders;
+    VideoCore::g_hw_shaders_accurate_gs = values.shaders_accurate_gs;
+    VideoCore::g_hw_shaders_accurate_mul = values.shaders_accurate_mul;
     if (VideoCore::g_renderer) {
         VideoCore::g_renderer->UpdateCurrentFramebufferLayout();
         VideoCore::g_renderer->GetRasterizer()->SyncSettings();
     }
-
-    VideoCore::g_renderer_bg_color_update_requested = true;
-
+    VideoCore::g_bg_color_update_requested = true;
     if (Core::System::GetInstance().IsPoweredOn()) {
         Core::DSP().UpdateSink();
         Core::DSP().EnableStretching(values.enable_audio_stretching);
     }
-
     Service::HID::ReloadInputDevices();
     Service::IR::ReloadInputDevices();
     Service::CAM::ReloadCameraDevices();
@@ -57,7 +53,7 @@ void LogSettings() {
     LogSetting("ControlPanel_WifiStatus", Settings::values.n_wifi_status);
     LogSetting("Core_KeyboardMode", static_cast<int>(Settings::values.keyboard_mode));
     LogSetting("Core_EnableNSLaunch", Settings::values.enable_ns_launch);
-    LogSetting("Renderer_UseHwShader", Settings::values.use_hw_shader);
+    LogSetting("Renderer_UseHwShaders", Settings::values.use_hw_shaders);
     LogSetting("Renderer_ShadersAccurateGs", Settings::values.shaders_accurate_gs);
     LogSetting("Renderer_ShadersAccurateMul", Settings::values.shaders_accurate_mul);
     LogSetting("Renderer_ResolutionFactor", Settings::values.resolution_factor);

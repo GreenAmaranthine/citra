@@ -101,36 +101,27 @@ static void InitializeLogging() {
         FileUtil::GetUserPath(FileUtil::UserPath::UserDir) + LOG_FILE));
 }
 
-GMainWindow::GMainWindow() : config{new Config()} /*, emu_thread{nullptr}*/ {
+GMainWindow::GMainWindow() : config{new Config()} {
     InitializeLogging();
     Util::ToggleConsole();
     Settings::LogSettings();
-
-    // register types to use in slots and signals
+    // Register types to use in slots and signals
     qRegisterMetaType<std::size_t>("std::size_t");
     qRegisterMetaType<Service::AM::InstallStatus>("Service::AM::InstallStatus");
-
     setAcceptDrops(true);
     ui.setupUi(this);
     statusBar()->hide();
-
     default_theme_paths = QIcon::themeSearchPaths();
     UpdateUITheme();
-
     Network::Init();
-
     InitializeWidgets();
     InitializeRecentFileMenuActions();
     InitializeHotkeys();
-
     SetDefaultUIGeometry();
     RestoreUIState();
-
     ConnectMenuEvents();
     ConnectWidgetEvents();
-
     SetupUIStrings();
-
 #ifdef _MSC_VER
     int cpu_id[4];
     __cpuid(cpu_id, 1);
@@ -139,9 +130,7 @@ GMainWindow::GMainWindow() : config{new Config()} /*, emu_thread{nullptr}*/ {
         closeEvent(nullptr);
     }
 #endif
-
     game_list->PopulateAsync(UISettings::values.game_dirs);
-
     QStringList args{QApplication::arguments()};
     if (args.length() >= 2)
         BootApplication(args[1].toStdString());
@@ -228,9 +217,7 @@ void GMainWindow::InitializeRecentFileMenuActions() {
     for (int i{}; i < max_recent_files_item; ++i) {
         actions_recent_files[i] = new QAction(this);
         actions_recent_files[i]->setVisible(false);
-
         connect(actions_recent_files[i], &QAction::triggered, this, &GMainWindow::OnMenuRecentFile);
-
         ui.menu_recent_files->addAction(actions_recent_files[i]);
     }
     ui.menu_recent_files->addSeparator();
@@ -241,7 +228,6 @@ void GMainWindow::InitializeRecentFileMenuActions() {
         UpdateRecentFiles();
     });
     ui.menu_recent_files->addAction(action_clear_recent_files);
-
     UpdateRecentFiles();
 }
 
@@ -266,6 +252,7 @@ void GMainWindow::InitializeHotkeys() {
     RegisterHotkey("Main Window", "Toggle Frame Advancing", QKeySequence("CTRL+A"));
     RegisterHotkey("Main Window", "Advance Frame", QKeySequence(Qt::Key_Backslash));
     RegisterHotkey("Main Window", "Open User Directory", QKeySequence("CTRL+U"));
+    RegisterHotkey("Main Window", "Toggle Hardware Shaders", QKeySequence("CTRL+W"));
     LoadHotkeys();
 
     connect(GetHotkey("Main Window", "Load File", this), &QShortcut::activated, this,
@@ -361,17 +348,20 @@ void GMainWindow::InitializeHotkeys() {
             ui.action_Advance_Frame, &QAction::trigger);
     connect(GetHotkey("Main Window", "Open User Directory", this), &QShortcut::activated,
             ui.action_Open_User_Directory, &QAction::trigger);
+    connect(GetHotkey("Main Window", "Toggle Hardware Shaders", this), &QShortcut::activated, this,
+            [&] {
+                Settings::values.use_hw_shaders = !Settings::values.use_hw_shaders;
+                Settings::Apply();
+            });
 }
 
 void GMainWindow::SetDefaultUIGeometry() {
     // geometry: 55% of the window contents are in the upper screen half, 45% in the lower half
     const QRect screenRect{QApplication::desktop()->screenGeometry(this)};
-
     const int w{screenRect.width() * 2 / 3};
     const int h{screenRect.height() / 2};
     const int x{(screenRect.x() + screenRect.width()) / 2 - w / 2};
     const int y{(screenRect.y() + screenRect.height()) / 2 - h * 55 / 100};
-
     setGeometry(x, y, w, h);
 }
 

@@ -284,6 +284,4 @@ enum class FlushMode {
  */
 void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode);
 
-void InvalidateAreaCache();
-
 } // namespace Memory

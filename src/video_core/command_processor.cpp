@@ -223,7 +223,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     case PICA_REG_INDEX(pipeline.trigger_draw_indexed): {
         bool is_indexed{(id == PICA_REG_INDEX(pipeline.trigger_draw_indexed))};
         PrimitiveAssembler<Shader::OutputVertex>& primitive_assembler{g_state.primitive_assembler};
-        bool accelerate_draw{Settings::values.use_hw_shader && primitive_assembler.IsEmpty()};
+        bool accelerate_draw{Settings::values.use_hw_shaders && primitive_assembler.IsEmpty()};
         if (regs.pipeline.use_gs == PipelineRegs::UseGS::No) {
             switch (primitive_assembler.GetTopology()) {
             case PipelineRegs::TriangleTopology::Shader:

@@ -129,17 +129,17 @@
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="toggle_hw_shader">
+       <widget class="QCheckBox" name="toggle_hw_shaders">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use OpenGL to accelerate shader emulation.&lt;/p&gt;&lt;p&gt;Requires a relatively powerful GPU for better performance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>Enable Hardware Shader</string>
+         <string>Enable Hardware Shaders</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QWidget" name="hw_shader_group" native="true">
+       <widget class="QWidget" name="hw_shaders_group" native="true">
         <layout class="QVBoxLayout" name="verticalLayout_7">
          <property name="leftMargin">
           <number>16</number>

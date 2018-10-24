@@ -29,15 +29,15 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
                 QString("QPushButton { background-color: %1 }").arg(bg_color.name()));
         }
     });
-    ui->hw_shader_group->setEnabled(ui->toggle_hw_shader->isChecked());
-    connect(ui->toggle_hw_shader, &QCheckBox::stateChanged, ui->hw_shader_group,
+    ui->hw_shaders_group->setEnabled(ui->toggle_hw_shaders->isChecked());
+    connect(ui->toggle_hw_shaders, &QCheckBox::stateChanged, ui->hw_shaders_group,
             &QWidget::setEnabled);
 #ifdef __APPLE__
-    connect(ui->toggle_hw_shader, &QCheckBox::stateChanged, this, [this](int state) {
+    connect(ui->toggle_hw_shaders, &QCheckBox::stateChanged, this, [this](int state) {
         if (state == Qt::Checked) {
             QMessageBox::warning(
-                this, "Hardware Shader Warning",
-                "Hardware Shader support is broken on macOS, and will cause graphical issues "
+                this, "Hardware Shaders Warning",
+                "Hardware Shaders support is broken on macOS, and will cause graphical issues "
                 "like showing a black screen.<br><br>The option is only there for "
                 "test/development purposes. If you experience graphical issues with Hardware "
                 "Shader, please turn it off.");
@@ -49,7 +49,7 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
 ConfigureGraphics::~ConfigureGraphics() {}
 
 void ConfigureGraphics::setConfiguration() {
-    ui->toggle_hw_shader->setChecked(Settings::values.use_hw_shader);
+    ui->toggle_hw_shaders->setChecked(Settings::values.use_hw_shaders);
     ui->toggle_accurate_gs->setChecked(Settings::values.shaders_accurate_gs);
     ui->toggle_accurate_mul->setChecked(Settings::values.shaders_accurate_mul);
     ui->resolution_factor_combobox->setCurrentIndex(Settings::values.resolution_factor - 1);
@@ -66,7 +66,7 @@ void ConfigureGraphics::setConfiguration() {
 }
 
 void ConfigureGraphics::applyConfiguration() {
-    Settings::values.use_hw_shader = ui->toggle_hw_shader->isChecked();
+    Settings::values.use_hw_shaders = ui->toggle_hw_shaders->isChecked();
     Settings::values.shaders_accurate_gs = ui->toggle_accurate_gs->isChecked();
     Settings::values.shaders_accurate_mul = ui->toggle_accurate_mul->isChecked();
     Settings::values.resolution_factor =

@@ -14,17 +14,12 @@ class Frontend;
 
 namespace VideoCore {
 
-extern std::unique_ptr<Renderer> g_renderer; ///< Renderer plugin
-
-// TODO: Wrap these in a user settings struct along with any other graphics settings (often set from
-// qt ui)
-extern std::atomic_bool g_hw_shader_enabled;
-extern std::atomic_bool g_hw_shader_accurate_gs;
-extern std::atomic_bool g_hw_shader_accurate_mul;
-extern std::atomic_bool g_renderer_bg_color_update_requested;
-
-// Screenshot
-extern std::atomic_bool g_renderer_screenshot_requested;
+extern std::unique_ptr<Renderer> g_renderer;
+extern std::atomic_bool g_hw_shaders_enabled;
+extern std::atomic_bool g_hw_shaders_accurate_gs;
+extern std::atomic_bool g_hw_shaders_accurate_mul;
+extern std::atomic_bool g_bg_color_update_requested;
+extern std::atomic_bool g_screenshot_requested;
 extern void* g_screenshot_bits;
 extern std::function<void()> g_screenshot_complete_callback;
 extern Layout::FramebufferLayout g_screenshot_framebuffer_layout;

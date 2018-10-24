@@ -179,9 +179,9 @@ void Config::ReadValues() {
     // Hardware shader is broken on macOS thanks to poor drivers.
     // We still want to provide this option for test/development purposes, but disable it by
     // default.
-    Settings::values.use_hw_shader = qt_config->value("use_hw_shader", false).toBool();
+    Settings::values.use_hw_shaders = qt_config->value("use_hw_shaders", false).toBool();
 #else
-    Settings::values.use_hw_shader = qt_config->value("use_hw_shader", true).toBool();
+    Settings::values.use_hw_shaders = qt_config->value("use_hw_shaders", true).toBool();
 #endif
     Settings::values.shaders_accurate_gs = qt_config->value("shaders_accurate_gs", true).toBool();
     Settings::values.shaders_accurate_mul =
@@ -405,7 +405,7 @@ void Config::SaveValues() {
     }
     qt_config->endGroup();
     qt_config->beginGroup("Renderer");
-    qt_config->setValue("use_hw_shader", Settings::values.use_hw_shader);
+    qt_config->setValue("use_hw_shaders", Settings::values.use_hw_shaders);
     qt_config->setValue("shaders_accurate_gs", Settings::values.shaders_accurate_gs);
     qt_config->setValue("shaders_accurate_mul", Settings::values.shaders_accurate_mul);
     qt_config->setValue("resolution_factor", Settings::values.resolution_factor);

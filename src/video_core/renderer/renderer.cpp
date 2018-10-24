@@ -89,7 +89,7 @@ static std::array<GLfloat, 6> MakeOrthographicMatrix(const float width, const fl
 
 Renderer::Renderer(Frontend& frontend)
     : frontend{frontend}, rasterizer{std::make_unique<Rasterizer>()} {
-    VideoCore::g_renderer_bg_color_update_requested = true;
+    VideoCore::g_bg_color_update_requested = true;
 }
 
 Renderer::~Renderer() = default;
@@ -129,7 +129,7 @@ void Renderer::SwapBuffers() {
             screen_infos[i].texture.height = framebuffer.height;
         }
     }
-    if (VideoCore::g_renderer_screenshot_requested) {
+    if (VideoCore::g_screenshot_requested) {
         // Draw this frame to the screenshot framebuffer
         screenshot_framebuffer.Create();
         GLuint old_read_fb{state.draw.read_framebuffer};
@@ -152,7 +152,7 @@ void Renderer::SwapBuffers() {
         state.Apply();
         glDeleteRenderbuffers(1, &renderbuffer);
         VideoCore::g_screenshot_complete_callback();
-        VideoCore::g_renderer_screenshot_requested = false;
+        VideoCore::g_screenshot_requested = false;
     }
     DrawScreens(frontend.GetFramebufferLayout());
     Core::System::GetInstance().perf_stats.EndSystemFrame();
@@ -347,7 +347,7 @@ void Renderer::DrawSingleScreenRotated(const ScreenInfo& screen_info, float x, f
  */
 void Renderer::DrawScreens(const Layout::FramebufferLayout& layout) {
     // Update background color before drawing if the user changed it
-    if (VideoCore::g_renderer_bg_color_update_requested.exchange(false))
+    if (VideoCore::g_bg_color_update_requested.exchange(false))
         glClearColor(Settings::values.bg_red, Settings::values.bg_green, Settings::values.bg_blue,
                      0.0f);
     const auto& top_screen{layout.top_screen};
