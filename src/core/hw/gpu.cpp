@@ -395,7 +395,6 @@ template void Read<u64>(u64& var, const u32 addr);
 template void Read<u32>(u32& var, const u32 addr);
 template void Read<u16>(u16& var, const u32 addr);
 template void Read<u8>(u8& var, const u32 addr);
-
 template void Write<u64>(u32 addr, const u64 data);
 template void Write<u32>(u32 addr, const u32 data);
 template void Write<u16>(u32 addr, const u16 data);

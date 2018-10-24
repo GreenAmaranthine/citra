@@ -99,4 +99,5 @@ void Shutdown() {
     LCD::Shutdown();
     LOG_DEBUG(HW, "shutdown OK");
 }
+
 } // namespace HW

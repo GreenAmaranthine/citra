@@ -50,20 +50,16 @@ static void ConvertYUVToRGB(InputFormat input_format, const u8* input_Y, const u
                 V = input_Y[(y * width + (x / 2) * 2) * 2 + 3];
                 break;
             }
-
             // This conversion process is bit-exact with hardware, as far as could be tested.
             auto& c{coefficients};
             s32 cY{c[0] * Y};
-
             s32 r{cY + c[1] * V};
             s32 g{cY - c[2] * V - c[3] * U};
             s32 b{cY + c[4] * U};
-
             const s32 rounding_offset{0x18};
             r = (r >> 3) + c[5] + rounding_offset;
             g = (g >> 3) + c[6] + rounding_offset;
             b = (b >> 3) + c[7] + rounding_offset;
-
             unsigned int tile{x / 8};
             unsigned int tile_x{x % 8};
             u32* out{&output[tile][y * 8 + tile_x]};
@@ -79,18 +75,13 @@ static void ConvertYUVToRGB(InputFormat input_format, const u8* input_Y, const u
 template <std::size_t N>
 static void ReceiveData(u8* output, ConversionBuffer& buf, std::size_t amount_of_data) {
     const u8* input{Memory::GetPointer(buf.address)};
-
     std::size_t output_unit{buf.transfer_unit / N};
     ASSERT(amount_of_data % output_unit == 0);
-
     while (amount_of_data > 0) {
-        for (std::size_t i{}; i < output_unit; ++i) {
+        for (std::size_t i{}; i < output_unit; ++i)
             output[i] = input[i * N];
-        }
-
         output += output_unit;
         input += buf.transfer_unit + buf.gap;
-
         buf.address += buf.transfer_unit + buf.gap;
         buf.image_size -= buf.transfer_unit;
         amount_of_data -= output_unit;
@@ -102,13 +93,11 @@ static void ReceiveData(u8* output, ConversionBuffer& buf, std::size_t amount_of
 static void SendData(const u32* input, ConversionBuffer& buf, int amount_of_data,
                      OutputFormat output_format, u8 alpha) {
     u8* output{Memory::GetPointer(buf.address)};
-
     while (amount_of_data > 0) {
-        u8* unit_end = output + buf.transfer_unit;
+        u8* unit_end{output + buf.transfer_unit};
         while (output < unit_end) {
             u32 color{*input++};
             Math::Vec4<u8> col_vec{(u8)(color >> 24), (u8)(color >> 16), (u8)(color >> 8), alpha};
-
             switch (output_format) {
             case OutputFormat::RGBA8:
                 Color::EncodeRGBA8(col_vec, output);
@@ -127,83 +116,59 @@ static void SendData(const u32* input, ConversionBuffer& buf, int amount_of_data
                 output += 2;
                 break;
             }
-
             amount_of_data -= 1;
         }
-
         output += buf.gap;
         buf.address += buf.transfer_unit + buf.gap;
         buf.image_size -= buf.transfer_unit;
     }
 }
 
-static const u8 linear_lut[TILE_SIZE] = {
-    // clang-format off
-     0,  1,  2,  3,  4,  5,  6,  7,
-     8,  9, 10, 11, 12, 13, 14, 15,
-    16, 17, 18, 19, 20, 21, 22, 23,
-    24, 25, 26, 27, 28, 29, 30, 31,
-    32, 33, 34, 35, 36, 37, 38, 39,
-    40, 41, 42, 43, 44, 45, 46, 47,
-    48, 49, 50, 51, 52, 53, 54, 55,
-    56, 57, 58, 59, 60, 61, 62, 63,
-    // clang-format on
+constexpr u8 linear_lut[TILE_SIZE]{
+    0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+    22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
+    44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
 };
 
-static const u8 morton_lut[TILE_SIZE] = {
-    // clang-format off
-     0,  1,  4,  5, 16, 17, 20, 21,
-     2,  3,  6,  7, 18, 19, 22, 23,
-     8,  9, 12, 13, 24, 25, 28, 29,
-    10, 11, 14, 15, 26, 27, 30, 31,
-    32, 33, 36, 37, 48, 49, 52, 53,
-    34, 35, 38, 39, 50, 51, 54, 55,
-    40, 41, 44, 45, 56, 57, 60, 61,
-    42, 43, 46, 47, 58, 59, 62, 63,
-    // clang-format on
+constexpr u8 morton_lut[TILE_SIZE]{
+    0,  1,  4,  5,  16, 17, 20, 21, 2,  3,  6,  7,  18, 19, 22, 23, 8,  9,  12, 13, 24, 25,
+    28, 29, 10, 11, 14, 15, 26, 27, 30, 31, 32, 33, 36, 37, 48, 49, 52, 53, 34, 35, 38, 39,
+    50, 51, 54, 55, 40, 41, 44, 45, 56, 57, 60, 61, 42, 43, 46, 47, 58, 59, 62, 63,
 };
 
 static void RotateTile0(const ImageTile& input, ImageTile& output, int height,
                         const u8 out_map[64]) {
-    for (int i{}; i < height * 8; ++i) {
+    for (int i{}; i < height * 8; ++i)
         output[out_map[i]] = input[i];
-    }
 }
 
 static void RotateTile90(const ImageTile& input, ImageTile& output, int height,
                          const u8 out_map[64]) {
     int out_i{};
-    for (int x{}; x < 8; ++x) {
-        for (int y{height - 1}; y >= 0; --y) {
+    for (int x{}; x < 8; ++x)
+        for (int y{height - 1}; y >= 0; --y)
             output[out_map[out_i++]] = input[y * 8 + x];
-        }
-    }
 }
 
 static void RotateTile180(const ImageTile& input, ImageTile& output, int height,
                           const u8 out_map[64]) {
     int out_i{};
-    for (int i{height * 8 - 1}; i >= 0; --i) {
+    for (int i{height * 8 - 1}; i >= 0; --i)
         output[out_map[out_i++]] = input[i];
-    }
 }
 
 static void RotateTile270(const ImageTile& input, ImageTile& output, int height,
                           const u8 out_map[64]) {
     int out_i{};
-    for (int x = 8 - 1; x >= 0; --x) {
-        for (int y{}; y < height; ++y) {
+    for (int x{7}; x >= 0; --x)
+        for (int y{}; y < height; ++y)
             output[out_map[out_i++]] = input[y * 8 + x];
-        }
-    }
 }
 
 static void WriteTileToOutput(u32* output, const ImageTile& tile, int height, int line_stride) {
-    for (int y{}; y < height; ++y) {
-        for (int x{}; x < 8; ++x) {
+    for (int y{}; y < height; ++y)
+        for (int x{}; x < 8; ++x)
             output[y * line_stride + x] = tile[y * 8 + x];
-        }
-    }
 }
 
 /**
@@ -262,14 +227,11 @@ void PerformConversion(ConversionConfiguration& cvt) {
     // Tiles per row
     std::size_t num_tiles{static_cast<std::size_t>(cvt.input_line_width / 8)};
     ASSERT(num_tiles <= MAX_TILES);
-
     // Buffer used as a CDMA source/target.
     std::unique_ptr<u8[]> data_buffer{new u8[cvt.input_line_width * 8 * 4]};
-
     // Intermediate storage for decoded 8x8 image tiles. Always stored as RGB32.
     std::unique_ptr<ImageTile[]> tiles{new ImageTile[num_tiles]};
     ImageTile tmp_tile;
-
     // LUT used to remap writes to a tile. Used to allow linear or swizzled output without
     // requiring two different code paths.
     const u8* tile_remap{};
@@ -281,17 +243,13 @@ void PerformConversion(ConversionConfiguration& cvt) {
         tile_remap = morton_lut;
         break;
     }
-
     for (unsigned int y{}; y < cvt.input_lines; y += 8) {
         unsigned int row_height{std::min(cvt.input_lines - y, 8u)};
-
         // Total size in pixels of incoming data required for this strip.
         const std::size_t row_data_size{row_height * cvt.input_line_width};
-
         u8* input_Y{data_buffer.get()};
         u8* input_U{input_Y + 8 * cvt.input_line_width};
         u8* input_V{input_U + 8 * cvt.input_line_width / 2};
-
         switch (cvt.input_format) {
         case InputFormat::YUV422_Indiv8:
             ReceiveData<1>(input_Y, cvt.src_Y, row_data_size);
@@ -319,18 +277,15 @@ void PerformConversion(ConversionConfiguration& cvt) {
             ReceiveData<1>(input_Y, cvt.src_YUYV, row_data_size * 2);
             break;
         }
-
-        // Note(yuriks): If additional optimization is required, input_format can be moved to a
+        // Note: If additional optimization is required, input_format can be moved to a
         // template parameter, so that its dispatch can be moved to outside the inner loop.
         ConvertYUVToRGB(cvt.input_format, input_Y, input_U, input_V, tiles.get(),
                         cvt.input_line_width, row_height, cvt.coefficients);
 
         u32* output_buffer{reinterpret_cast<u32*>(data_buffer.get())};
-
         for (std::size_t i{}; i < num_tiles; ++i) {
             int image_strip_width{};
             int output_stride{};
-
             switch (cvt.rotation) {
             case Rotation::None:
                 RotateTile0(tiles[i], tmp_tile, row_height, tile_remap);
@@ -355,7 +310,6 @@ void PerformConversion(ConversionConfiguration& cvt) {
                 output_stride = 8 * row_height;
                 break;
             }
-
             switch (cvt.block_alignment) {
             case BlockAlignment::Linear:
                 WriteTileToOutput(output_buffer, tmp_tile, row_height, image_strip_width);
@@ -367,11 +321,11 @@ void PerformConversion(ConversionConfiguration& cvt) {
                 break;
             }
         }
-
-        // Note(yuriks): If additional optimization is required, output_format can be moved to a
+        // Note: If additional optimization is required, output_format can be moved to a
         // template parameter, so that its dispatch can be moved to outside the inner loop.
         SendData(reinterpret_cast<u32*>(data_buffer.get()), cvt.dst, (int)row_data_size,
                  cvt.output_format, (u8)cvt.alpha);
     }
 }
+
 } // namespace HW::Y2R
