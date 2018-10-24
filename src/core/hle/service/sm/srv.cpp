@@ -59,7 +59,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_SRV, "(name_size=0x{:X}) invalid name size", name_size);
         return;
     }
-    std::string name(name_buf.data(), name_len);
+    std::string name(name_buf.data(), name_size);
     // TODO: Permission checks go here
     auto get_handle{[name, this](Kernel::SharedPtr<Kernel::Thread> thread,
                                  Kernel::HLERequestContext& ctx,
@@ -82,7 +82,6 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
             rb.Push(session.Code());
         }
     }};
-
     auto client_port{system.ServiceManager().GetServicePort(name)};
     if (client_port.Failed()) {
         if (wait_until_available && client_port.Code() == ERR_SERVICE_NOT_REGISTERED) {
