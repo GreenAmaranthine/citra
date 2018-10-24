@@ -795,7 +795,7 @@ static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
     SharedPtr<Mutex> mutex{kernel.CreateMutex(initial_locked != 0)};
     mutex->name = fmt::format("mutex-{:08x}", Core::CPU().GetReg(14));
     *out_handle = kernel.GetCurrentProcess()->handle_table.Create(std::move(mutex));
-    LOG_TRACE(Kernel_SVC, "initial_locked={}, created handle=0x{:08X}",
+    LOG_TRACE(Kernel_SVC, "initial_locked={}, created handle: 0x{:08X}",
               initial_locked ? "true" : "false", *out_handle);
     return RESULT_SUCCESS;
 }
@@ -854,7 +854,7 @@ static ResultCode CreateSemaphore(Handle* out_handle, s32 initial_count, s32 max
                    kernel.CreateSemaphore(initial_count, max_count));
     semaphore->name = fmt::format("semaphore-{:08x}", Core::CPU().GetReg(14));
     *out_handle = kernel.GetCurrentProcess()->handle_table.Create(std::move(semaphore));
-    LOG_TRACE(Kernel_SVC, "initial_count={}, max_count={}, created handle=0x{:08X}", initial_count,
+    LOG_TRACE(Kernel_SVC, "initial_count={}, max_count={}, created handle: 0x{:08X}", initial_count,
               max_count, *out_handle);
     return RESULT_SUCCESS;
 }
@@ -902,7 +902,7 @@ static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
     SharedPtr<Event> evt{kernel.CreateEvent(static_cast<ResetType>(reset_type),
                                             fmt::format("event-{:08x}", Core::CPU().GetReg(14)))};
     *out_handle = kernel.GetCurrentProcess()->handle_table.Create(std::move(evt));
-    LOG_TRACE(Kernel_SVC, "reset_type=0x{:08X}, created handle=0x{:08X}", reset_type, *out_handle);
+    LOG_TRACE(Kernel_SVC, "reset_type=0x{:08X}, created handle: 0x{:08X}", reset_type, *out_handle);
     return RESULT_SUCCESS;
 }
 
