@@ -9,22 +9,22 @@ namespace ConfigMem {
 
 ConfigMemDef config_mem;
 
-void Init() {
-    std::memset(&config_mem, 0, sizeof(config_mem));
+ConfigMemDef::ConfigMemDef() {
+    std::memset(this, 0, sizeof(ConfigMemDef));
 
     // TODO: Update this
     // Values extracted from firmware 11.2.0-35E
-    config_mem.kernel_version_min = 0x34;
-    config_mem.kernel_version_maj = 0x2;
-    config_mem.ns_tid = 0x0004013000008002;
-    config_mem.sys_core_ver = 0x2;
-    config_mem.unit_info = 0x1; // Bit 0 set for Retail
-    config_mem.prev_firm = 0x1;
-    config_mem.ctr_sdk_ver = 0x0000F297;
-    config_mem.firm_version_min = 0x34;
-    config_mem.firm_version_maj = 0x2;
-    config_mem.firm_sys_core_ver = 0x2;
-    config_mem.firm_ctr_sdk_ver = 0x0000F297;
+    kernel_version_min = 0x34;
+    kernel_version_maj = 0x2;
+    ns_tid = 0x0004013000008002;
+    sys_core_ver = 0x2;
+    unit_info = 0x1; // Bit 0 set for Retail
+    prev_firm = 0x1;
+    ctr_sdk_ver = 0x0000F297;
+    firm_version_min = 0x34;
+    firm_version_maj = 0x2;
+    firm_sys_core_ver = 0x2;
+    firm_ctr_sdk_ver = 0x0000F297;
 }
 
 } // namespace ConfigMem

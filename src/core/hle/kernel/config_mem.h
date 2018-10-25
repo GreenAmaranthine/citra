@@ -43,12 +43,12 @@ struct ConfigMemDef {
     u32_le firm_sys_core_ver;            // 64
     u32_le firm_ctr_sdk_ver;             // 68
     INSERT_PADDING_BYTES(0x1000 - 0x6C); // 6C
+
+    ConfigMemDef();
 };
 static_assert(sizeof(ConfigMemDef) == Memory::CONFIG_MEMORY_SIZE,
               "Config Memory structure size is wrong");
 
 extern ConfigMemDef config_mem;
-
-void Init();
 
 } // namespace ConfigMem
