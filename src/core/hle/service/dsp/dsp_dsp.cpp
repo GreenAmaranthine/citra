@@ -24,16 +24,12 @@ namespace Service::DSP {
 void DSP_DSP::RecvData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x01, 1, 0};
     const u32 register_number{rp.Pop<u32>()};
-
     ASSERT_MSG(register_number == 0, "Unknown register_number {}", register_number);
-
     // Application reads this after requesting DSP shutdown, to verify the DSP has indeed shutdown
     // or slept.
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
-
-    switch (Core::DSP().GetDspState()) {
+    switch (system.DSP().GetDspState()) {
     case AudioCore::DspState::On:
         rb.Push<u32>(0);
         break;
@@ -45,44 +41,35 @@ void DSP_DSP::RecvData(Kernel::HLERequestContext& ctx) {
         UNREACHABLE();
         break;
     }
-
     LOG_DEBUG(Service_DSP, "register_number={}", register_number);
 }
 
 void DSP_DSP::RecvDataIsReady(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x02, 1, 0};
     const u32 register_number{rp.Pop<u32>()};
-
     ASSERT_MSG(register_number == 0, "Unknown register_number {}", register_number);
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(true); /// 0 = not ready, 1 = ready to read
-
     LOG_DEBUG(Service_DSP, "register_number={}", register_number);
 }
 
 void DSP_DSP::SetSemaphore(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x07, 1, 0};
     const u16 semaphore_value{rp.Pop<u16>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
     LOG_WARNING(Service_DSP, "(stubbed) semaphore_value={:04X}", semaphore_value);
 }
 
 void DSP_DSP::ConvertProcessAddressFromDspDram(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0C, 1, 0};
     const u32 address{rp.Pop<u32>()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
-
     // TODO: There is a per-region offset missing in this calculation (that seems to be
     // always zero).
     rb.Push<u32>((address << 1) + (Memory::DSP_RAM_VADDR + 0x40000));
-
     LOG_DEBUG(Service_DSP, "address=0x{:08X}", address);
 }
 
@@ -91,9 +78,7 @@ void DSP_DSP::WriteProcessPipe(Kernel::HLERequestContext& ctx) {
     const u32 channel{rp.Pop<u32>()};
     const u32 size{rp.Pop<u32>()};
     auto buffer{rp.PopStaticBuffer()};
-
     const DspPipe pipe{static_cast<DspPipe>(channel)};
-
     // This behaviour was confirmed by RE.
     // The likely reason for this is that games tend to pass in garbage at these bytes
     // because they read random bytes off the stack.
@@ -111,12 +96,9 @@ void DSP_DSP::WriteProcessPipe(Kernel::HLERequestContext& ctx) {
         buffer[7] = 0;
         break;
     }
-
-    Core::DSP().PipeWrite(pipe, buffer);
-
+    system.DSP().PipeWrite(pipe, buffer);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_DSP, "channel={}, size=0x{:X}, buffer_size={:X}", channel, size,
               buffer.size());
 }
@@ -126,23 +108,19 @@ void DSP_DSP::ReadPipe(Kernel::HLERequestContext& ctx) {
     const u32 channel{rp.Pop<u32>()};
     const u32 peer{rp.Pop<u32>()};
     const u16 size{rp.Pop<u16>()};
-
     const DspPipe pipe{static_cast<DspPipe>(channel)};
-    const u16 pipe_readable_size{static_cast<u16>(Core::DSP().GetPipeReadableSize(pipe))};
-
+    const u16 pipe_readable_size{static_cast<u16>(system.DSP().GetPipeReadableSize(pipe))};
     std::vector<u8> pipe_buffer;
     if (pipe_readable_size >= size)
-        pipe_buffer = Core::DSP().PipeRead(pipe, size);
+        pipe_buffer = system.DSP().PipeRead(pipe, size);
     else {
-        // No more data is in pipe. Hardware hangs in this case. we emulate the hang
+        // No more data is in pipe. Hardware hangs in this case. we do same
         for (;;)
             ;
     }
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(std::move(pipe_buffer), 0);
-
     LOG_DEBUG(Service_DSP, "channel={}, peer={}, size=0x{:04X}, pipe_readable_size=0x{:04X}",
               channel, peer, size, pipe_readable_size);
 }
@@ -151,14 +129,11 @@ void DSP_DSP::GetPipeReadableSize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0F, 2, 0};
     const u32 channel{rp.Pop<u32>()};
     const u32 peer{rp.Pop<u32>()};
-
     const DspPipe pipe{static_cast<DspPipe>(channel)};
-    const u16 pipe_readable_size{static_cast<u16>(Core::DSP().GetPipeReadableSize(pipe))};
-
+    const u16 pipe_readable_size{static_cast<u16>(system.DSP().GetPipeReadableSize(pipe))};
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u16>(pipe_readable_size);
-
     LOG_DEBUG(Service_DSP, "channel={}, peer={}, return pipe_readable_size=0x{:04X}", channel, peer,
               pipe_readable_size);
 }
@@ -168,19 +143,15 @@ void DSP_DSP::ReadPipeIfPossible(Kernel::HLERequestContext& ctx) {
     const u32 channel{rp.Pop<u32>()};
     const u32 peer{rp.Pop<u32>()};
     const u16 size{rp.Pop<u16>()};
-
     const DspPipe pipe{static_cast<DspPipe>(channel)};
-    const u16 pipe_readable_size{static_cast<u16>(Core::DSP().GetPipeReadableSize(pipe))};
-
-    std::vector<u8> pipe_buffer{};
+    const u16 pipe_readable_size{static_cast<u16>(system.DSP().GetPipeReadableSize(pipe))};
+    std::vector<u8> pipe_buffer;
     if (pipe_readable_size >= size)
-        pipe_buffer = Core::DSP().PipeRead(pipe, size);
-
+        pipe_buffer = system.DSP().PipeRead(pipe, size);
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u16>(pipe_readable_size);
     rb.PushStaticBuffer(pipe_buffer, 0);
-
     LOG_DEBUG(Service_DSP, "channel={}, peer={}, size=0x{:04X}, pipe_readable_size=0x{:04X}",
               channel, peer, size, pipe_readable_size);
 }
@@ -191,24 +162,19 @@ void DSP_DSP::LoadComponent(Kernel::HLERequestContext& ctx) {
     const u32 prog_mask{rp.Pop<u32>()};
     const u32 data_mask{rp.Pop<u32>()};
     auto& buffer{rp.PopMappedBuffer()};
-
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(true); /// Pretend that we actually loaded the DSP firmware
     rb.PushMappedBuffer(buffer);
-
     // TODO: Implement real DSP firmware loading
-
     std::vector<u8> component_data(size);
     buffer.Read(component_data.data(), 0, size);
-
     LOG_INFO(Service_DSP, "Firmware hash: {:#018x}",
              Common::ComputeHash64(component_data.data(), component_data.size()));
     // Some versions of the firmware have the location of DSP structures listed here.
-    if (size > 0x37C) {
+    if (size > 0x37C)
         LOG_INFO(Service_DSP, "Structures hash: {:#018x}",
                  Common::ComputeHash64(component_data.data() + 0x340, 60));
-    }
     LOG_WARNING(Service_DSP, "(stubbed) size=0x{:X}, prog_mask=0x{:08X}, data_mask=0x{:08X}", size,
                 prog_mask, data_mask);
 }
@@ -216,7 +182,6 @@ void DSP_DSP::LoadComponent(Kernel::HLERequestContext& ctx) {
 void DSP_DSP::UnloadComponent(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x12, 1, 0};
     rb.Push(RESULT_SUCCESS);
-
     LOG_WARNING(Service_DSP, "stubbed");
 }
 
@@ -350,7 +315,7 @@ bool DSP_DSP::HasTooManyEventsRegistered() const {
     return number >= max_number_of_interrupt_events;
 }
 
-DSP_DSP::DSP_DSP(Core::System& system) : ServiceFramework{"dsp::DSP"} {
+DSP_DSP::DSP_DSP(Core::System& system) : ServiceFramework{"dsp::DSP"}, system{system} {
     static const FunctionInfo functions[]{
         {0x00010040, &DSP_DSP::RecvData, "RecvData"},
         {0x00020040, &DSP_DSP::RecvDataIsReady, "RecvDataIsReady"},
@@ -392,16 +357,13 @@ DSP_DSP::DSP_DSP(Core::System& system) : ServiceFramework{"dsp::DSP"} {
         system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "DSP_DSP::semaphore_event");
 }
 
-DSP_DSP::~DSP_DSP() {
-    semaphore_event = nullptr;
-    pipes = {};
-}
+DSP_DSP::~DSP_DSP() = default;
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager{system.ServiceManager()};
     auto dsp{std::make_shared<DSP_DSP>(system)};
     dsp->InstallAsService(service_manager);
-    Core::DSP().SetServiceToInterrupt(std::move(dsp));
+    system.DSP().SetServiceToInterrupt(std::move(dsp));
 }
 
 } // namespace Service::DSP

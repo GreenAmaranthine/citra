@@ -36,8 +36,7 @@ void ConfigureHacks::applyConfiguration() {
     Settings::values.ticks = static_cast<u64>(ui->spinbox_ticks->value());
     Settings::values.use_bos = ui->toggle_bos->isChecked();
     Settings::values.force_memory_mode_7 = ui->toggle_force_memory_mode_7->isChecked();
-
-    if (Core::System::GetInstance().IsPoweredOn()) {
-        Core::CPU().SyncSettings();
-    }
+    auto& system{Core::System::GetInstance()};
+    if (system.IsPoweredOn())
+        system.CPU().SyncSettings();
 }

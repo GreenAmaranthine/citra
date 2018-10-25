@@ -62,7 +62,9 @@ private:
     Kernel::SharedPtr<Kernel::Event> interrupt_one{}; // Currently unknown purpose
 
     /// Each DSP pipe has an associated interrupt
-    std::array<Kernel::SharedPtr<Kernel::Event>, AudioCore::num_dsp_pipe> pipes = {{}};
+    std::array<Kernel::SharedPtr<Kernel::Event>, AudioCore::num_dsp_pipe> pipes{};
+
+    Core::System& system;
 };
 
 void InstallInterfaces(Core::System& system);

@@ -521,7 +521,7 @@ void Module::Interface::SendDspSleep(Kernel::HLERequestContext& ctx) {
     u32 handle{rp.Pop<u32>()};
     std::vector<u8> buffer(4);
     buffer[0] = 3;
-    Core::DSP().PipeWrite(AudioCore::DspPipe::Audio, buffer);
+    apt->system.DSP().PipeWrite(AudioCore::DspPipe::Audio, buffer);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
@@ -533,7 +533,7 @@ void Module::Interface::SendDspWakeUp(Kernel::HLERequestContext& ctx) {
     u32 handle{rp.Pop<u32>()};
     std::vector<u8> buffer(4);
     buffer[0] = 2;
-    Core::DSP().PipeWrite(AudioCore::DspPipe::Audio, buffer);
+    apt->system.DSP().PipeWrite(AudioCore::DspPipe::Audio, buffer);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }

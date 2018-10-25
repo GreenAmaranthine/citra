@@ -25,9 +25,10 @@ void Apply() {
         VideoCore::g_renderer->GetRasterizer()->SyncSettings();
     }
     VideoCore::g_bg_color_update_requested = true;
-    if (Core::System::GetInstance().IsPoweredOn()) {
-        Core::DSP().UpdateSink();
-        Core::DSP().EnableStretching(values.enable_audio_stretching);
+    auto& system{Core::System::GetInstance()};
+    if (system.IsPoweredOn()) {
+        system.DSP().UpdateSink();
+        system.DSP().EnableStretching(values.enable_audio_stretching);
     }
     Service::HID::ReloadInputDevices();
     Service::IR::ReloadInputDevices();
