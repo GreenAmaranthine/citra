@@ -10,6 +10,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/result.h"
 #include "core/hle/service/gsp/gsp.h"
 #include "core/hle/service/gsp/gsp_gpu.h"
@@ -444,7 +445,6 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         }
         break;
     }
-
     case CommandId::SET_DISPLAY_TRANSFER: {
         auto& params{command.display_transfer};
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.input_address)),
@@ -599,7 +599,7 @@ void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
             Settings::values.factor_3d = 0;
         else
             Settings::values.factor_3d = 100;
-        Core::System::GetInstance().GetSharedPageHandler()->Update3DSettings();
+        system.Kernel().GetSharedPageHandler()->Update3DSettings();
     }
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
@@ -617,7 +617,7 @@ SessionData* GSP_GPU::FindRegisteredThreadData(u32 thread_id) {
     return nullptr;
 }
 
-GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework{"gsp::Gpu", 2} {
+GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework{"gsp::Gpu", 2}, system{system} {
     static const FunctionInfo functions[]{
         {0x00010082, &GSP_GPU::WriteHWRegs, "WriteHWRegs"},
         {0x00020084, &GSP_GPU::WriteHWRegsWithMask, "WriteHWRegsWithMask"},

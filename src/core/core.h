@@ -12,7 +12,6 @@
 #include "common/common_types.h"
 #include "core/hle/applets/erreula.h"
 #include "core/hle/applets/swkbd.h"
-#include "core/hle/shared_page.h"
 #include "core/loader/loader.h"
 #include "core/memory.h"
 #include "core/perf_stats.h"
@@ -243,16 +242,10 @@ private:
     std::unique_ptr<RPC::RPCServer> rpc_server;
 #endif
 
-    /// Shared page
-    std::shared_ptr<SharedPage::Handler> shared_page_handler;
-
     std::unique_ptr<Service::FS::ArchiveManager> archive_manager;
 
-public: // HACK: this is temporary exposed for tests,
-        // due to WIP kernel refactor causing desync state in memory
     std::unique_ptr<Kernel::KernelSystem> kernel;
 
-private:
     static System s_instance;
 
     ResultStatus status;

@@ -121,6 +121,8 @@ add_library(core STATIC
     hle/kernel/session.h
     hle/kernel/shared_memory.cpp
     hle/kernel/shared_memory.h
+    hle/kernel/shared_page.cpp
+    hle/kernel/shared_page.h
     hle/kernel/svc.cpp
     hle/kernel/svc.h
     hle/kernel/thread.cpp

@@ -146,7 +146,6 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     rpc_server = std::make_unique<RPC::RPCServer>();
 #endif
     service_manager = std::make_shared<Service::SM::ServiceManager>(*this);
-    shared_page_handler = std::make_shared<SharedPage::Handler>();
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
     shutdown_requested = false;
     sleep_mode_enabled = false;

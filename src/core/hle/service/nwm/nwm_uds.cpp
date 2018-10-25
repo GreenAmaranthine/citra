@@ -20,6 +20,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/lock.h"
 #include "core/hle/result.h"
 #include "core/hle/service/nwm/nwm_uds.h"
@@ -1175,7 +1176,7 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework{"nwm::UDS"}, system{sy
     if (auto member{Network::GetRoomMember().lock()})
         if (member->IsConnected())
             mac = member->GetMacAddress();
-    system.GetSharedPageHandler()->SetMacAddress(mac);
+    system.Kernel().GetSharedPageHandler().SetMacAddress(mac);
 }
 
 NWM_UDS::~NWM_UDS() {

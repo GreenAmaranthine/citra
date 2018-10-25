@@ -18,7 +18,6 @@ static std::chrono::seconds GetInitTime() {
         // Override the clock init time with the one in the movie
         return std::chrono::seconds{override_init_time};
     }
-
     switch (Settings::values.init_clock) {
     case Settings::InitClock::SystemTime: {
         auto now{std::chrono::system_clock::now()};
@@ -38,26 +37,19 @@ static std::chrono::seconds GetInitTime() {
 
 Handler::Handler() {
     std::memset(&shared_page, 0, sizeof(shared_page));
-
-    shared_page.running_hw = 0x1; // product
-
+    shared_page.running_hw = 0x1; // Product
     // Some games wait until this value becomes 0x1, before asking running_hw
     shared_page.unknown_value = 0x1;
-
     shared_page.battery_state.charge_level.Assign(
         static_cast<u8>(Settings::values.p_battery_level));
     shared_page.battery_state.is_adapter_connected.Assign(
         static_cast<u8>(Settings::values.p_adapter_connected));
     shared_page.battery_state.is_charging.Assign(
         static_cast<u8>(Settings::values.p_battery_charging));
-
     shared_page.wifi_link_level = Settings::values.n_wifi_link_level;
     shared_page.network_state = static_cast<NetworkState>(Settings::values.n_state);
-
     Update3DSettings();
-
     init_time = GetInitTime();
-
     using namespace std::placeholders;
     update_time_event = CoreTiming::RegisterEvent(
         "SharedPage::UpdateTimeCallback", std::bind(&Handler::UpdateTimeCallback, this, _1, _2));
@@ -68,7 +60,6 @@ Handler::Handler() {
 u64 Handler::GetSystemTime() const {
     std::chrono::milliseconds now{init_time + std::chrono::duration_cast<std::chrono::milliseconds>(
                                                   CoreTiming::GetGlobalTimeUs())};
-
     // 3DS system does't allow user to set a time before Jan 1 2000,
     // so we use it as an auxiliary epoch to calculate the console time.
     std::tm epoch_tm{};
@@ -80,31 +71,24 @@ u64 Handler::GetSystemTime() const {
     epoch_tm.tm_year = 100;
     epoch_tm.tm_isdst = 0;
     s64 epoch{std::mktime(&epoch_tm) * 1000};
-
     // 3DS console time uses Jan 1 1900 as internal epoch,
     // so we use the milliseconds between 1900 and 2000 as base console time
     u64 console_time{3155673600000ULL};
-
     // Only when system time is after 2000, we set it as 3DS system time
-    if (now.count() > epoch) {
+    if (now.count() > epoch)
         console_time += (now.count() - epoch);
-    }
-
     return console_time;
 }
 
 void Handler::UpdateTimeCallback(u64 userdata, int cycles_late) {
     DateTime& date_time{shared_page.date_time_counter % 2 ? shared_page.date_time_0
                                                           : shared_page.date_time_1};
-
     date_time.date_time = GetSystemTime();
     date_time.update_tick = CoreTiming::GetTicks();
     date_time.tick_to_second_coefficient = BASE_CLOCK_RATE_ARM11;
     date_time.tick_offset = 0;
-
     ++shared_page.date_time_counter;
-
-    // system time is updated hourly
+    // System time is updated hourly
     CoreTiming::ScheduleEvent(msToCycles(60 * 60 * 1000) - cycles_late, update_time_event);
 }
 
@@ -149,9 +133,8 @@ void Handler::Update3DSettings(bool called_by_control_panel) {
     shared_page.ledstate_3d = Settings::values.factor_3d == 0 ? 1 : 0;
     shared_page.sliderstate_3d =
         Settings::values.factor_3d != 0 ? (float_le)Settings::values.factor_3d / 100 : 0.0f;
-    if (!called_by_control_panel && update_3d) {
+    if (!called_by_control_panel && update_3d)
         update_3d();
-    }
 }
 
 } // namespace SharedPage

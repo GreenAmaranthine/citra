@@ -13,6 +13,10 @@
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Kernel {
 class SharedMemory;
 } // namespace Kernel
@@ -247,6 +251,8 @@ private:
     int active_thread_id{-1};
 
     bool first_initialization{true};
+
+    Core::System& system;
 };
 
 ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info);
