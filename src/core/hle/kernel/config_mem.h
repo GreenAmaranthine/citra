@@ -49,6 +49,4 @@ struct ConfigMemDef {
 static_assert(sizeof(ConfigMemDef) == Memory::CONFIG_MEMORY_SIZE,
               "Config Memory structure size is wrong");
 
-extern ConfigMemDef config_mem;
-
 } // namespace ConfigMem

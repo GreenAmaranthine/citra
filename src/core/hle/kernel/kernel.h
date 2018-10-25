@@ -13,6 +13,10 @@
 #include "common/common_types.h"
 #include "core/hle/result.h"
 
+namespace ConfigMem {
+class ConfigMemDef;
+}
+
 namespace Kernel {
 
 class AddressArbiter;
@@ -31,6 +35,7 @@ class ResourceLimitList;
 class SharedMemory;
 class ThreadManager;
 class TimerManager;
+class VMManager;
 
 enum class ResetType {
     OneShot,
@@ -204,7 +209,11 @@ public:
     TimerManager& GetTimerManager();
     const TimerManager& GetTimerManager() const;
 
+    void MapSharedPages(VMManager& address_space);
+
 private:
+    void MemoryInit(u32 mem_type);
+
     std::unique_ptr<ResourceLimitList> resource_limits;
     std::atomic<u32> next_object_id{};
     u32 next_process_id{};
@@ -216,6 +225,8 @@ private:
 
     std::unique_ptr<ThreadManager> thread_manager;
     std::unique_ptr<TimerManager> timer_manager;
+
+    std::unique_ptr<ConfigMem::ConfigMemDef> config_mem;
 };
 
 } // namespace Kernel

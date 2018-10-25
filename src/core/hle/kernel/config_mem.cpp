@@ -7,8 +7,6 @@
 
 namespace ConfigMem {
 
-ConfigMemDef config_mem;
-
 ConfigMemDef::ConfigMemDef() {
     std::memset(this, 0, sizeof(ConfigMemDef));
 
