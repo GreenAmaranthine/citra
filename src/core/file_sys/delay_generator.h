@@ -4,10 +4,15 @@
 
 #pragma once
 
+#include <algorithm>
+#include <cstddef>
+#include "common/common_types.h"
+
 namespace FileSys {
 
 class DelayGenerator {
 public:
+    virtual ~DelayGenerator() = default;
     virtual u64 GetReadDelayNs(std::size_t length) = 0;
 
     // TODO: Add getter for all other file/directory io operations
