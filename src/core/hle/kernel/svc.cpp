@@ -733,9 +733,9 @@ static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point
         ASSERT_MSG(false, "Unsupported thread processor ID: {}", processor_id);
         break;
     }
-    CASCADE_RESULT(SharedPtr<Thread> thread,
-                   Core::System::GetInstance().Kernel().CreateThread(
-                       name, entry_point, priority, arg, processor_id, stack_top, current_process));
+    CASCADE_RESULT(SharedPtr<Thread> thread, Core::System::GetInstance().Kernel().CreateThread(
+                                                 name, entry_point, priority, arg, processor_id,
+                                                 stack_top, current_process.get()));
     thread->context->SetFpscr(FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO |
                               FPSCR_ROUND_TOZERO); // 0x03C00000
     *out_handle = current_process->handle_table.Create(std::move(thread));
@@ -1041,7 +1041,7 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
     if (addr == 0 && current_process->flags.shared_device_mem)
         region = current_process->flags.memory_region;
     shared_memory = Core::System::GetInstance().Kernel().CreateSharedMemory(
-        current_process, size, static_cast<MemoryPermission>(my_permission),
+        current_process.get(), size, static_cast<MemoryPermission>(my_permission),
         static_cast<MemoryPermission>(other_permission), addr, region);
     *out_handle = current_process->handle_table.Create(std::move(shared_memory));
     LOG_WARNING(Kernel_SVC, "addr=0x{:08X}", addr);

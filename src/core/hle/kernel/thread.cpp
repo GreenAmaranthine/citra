@@ -281,8 +281,7 @@ static void ResetThreadContext(const std::unique_ptr<ThreadContext>& context, u3
 
 ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr entry_point,
                                                         u32 priority, u32 arg, s32 processor_id,
-                                                        VAddr stack_top,
-                                                        SharedPtr<Process> owner_process) {
+                                                        VAddr stack_top, Process* owner_process) {
     // Check if priority is in ranged. Lowest priority -> highest priority id.
     if (priority > ThreadPrioLowest) {
         LOG_ERROR(Kernel_SVC, "Invalid thread priority: {}", priority);
@@ -387,7 +386,7 @@ SharedPtr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u32 pri
     // Initialize new "main" thread
     auto thread_res{kernel.CreateThread("main", entry_point, priority, 0,
                                         owner_process->ideal_processor, Memory::HEAP_VADDR_END,
-                                        owner_process)};
+                                        owner_process.get())};
     SharedPtr<Thread> thread{std::move(thread_res).Unwrap()};
     thread->context->SetFpscr(FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO | FPSCR_ROUND_TOZERO |
                               FPSCR_IXC); // 0x03C00010
