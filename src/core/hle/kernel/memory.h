@@ -12,18 +12,6 @@ namespace Kernel {
 
 class VMManager;
 
-struct MemoryRegionInfo {
-    u32 base; // Not an address, but offset from start of FCRAM
-    u32 size;
-    u32 used;
-
-    std::shared_ptr<std::vector<u8>> linear_heap_memory;
-};
-
-void MemoryShutdown();
-MemoryRegionInfo* GetMemoryRegion(MemoryRegion region);
-
 void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mapping);
 
-extern MemoryRegionInfo memory_regions[3];
 } // namespace Kernel

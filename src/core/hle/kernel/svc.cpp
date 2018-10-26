@@ -1112,22 +1112,23 @@ static ResultCode AcceptSession(Handle* out_server_session, Handle server_port_h
 
 static ResultCode GetSystemInfo(s64* out, u32 type, s32 param) {
     LOG_TRACE(Kernel_SVC, "type={}, param={}", type, param);
-    switch (static_cast<SystemInfoType>(type)) {
+    auto& kernel{Core::System::GetInstance().Kernel()};
+    switch ((SystemInfoType)type) {
     case SystemInfoType::REGION_MEMORY_USAGE:
         switch ((SystemInfoMemUsageRegion)param) {
         case SystemInfoMemUsageRegion::ALL:
-            *out = GetMemoryRegion(MemoryRegion::Application)->used +
-                   GetMemoryRegion(MemoryRegion::System)->used +
-                   GetMemoryRegion(MemoryRegion::Base)->used;
+            *out = kernel.GetMemoryRegion(MemoryRegion::APPLICATION)->used +
+                   kernel.GetMemoryRegion(MemoryRegion::SYSTEM)->used +
+                   kernel.GetMemoryRegion(MemoryRegion::BASE)->used;
             break;
         case SystemInfoMemUsageRegion::APPLICATION:
-            *out = GetMemoryRegion(MemoryRegion::Application)->used;
+            *out = kernel.GetMemoryRegion(MemoryRegion::APPLICATION)->used;
             break;
         case SystemInfoMemUsageRegion::SYSTEM:
-            *out = GetMemoryRegion(MemoryRegion::System)->used;
+            *out = kernel.GetMemoryRegion(MemoryRegion::SYSTEM)->used;
             break;
         case SystemInfoMemUsageRegion::BASE:
-            *out = GetMemoryRegion(MemoryRegion::Base)->used;
+            *out = kernel.GetMemoryRegion(MemoryRegion::BASE)->used;
             break;
         default:
             LOG_ERROR(Kernel_SVC, "unknown GetSystemInfo 0 (param={})", param);
@@ -1136,7 +1137,7 @@ static ResultCode GetSystemInfo(s64* out, u32 type, s32 param) {
         }
         break;
     case SystemInfoType::KERNEL_SPAWNED_PIDS:
-        *out = Core::System::GetInstance().Kernel().GetProcessListSize();
+        *out = kernel.GetProcessListSize();
         break;
     default:
         LOG_ERROR(Kernel_SVC, "unknown GetSystemInfo {} (param={})", type, param);

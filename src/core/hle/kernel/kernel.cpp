@@ -21,10 +21,7 @@ KernelSystem::KernelSystem(u32 system_mode) {
     timer_manager = std::make_unique<TimerManager>();
 }
 
-KernelSystem::~KernelSystem() {
-    named_ports.clear();
-    Kernel::MemoryShutdown();
-}
+KernelSystem::~KernelSystem() = default;
 
 ResourceLimitList& KernelSystem::ResourceLimit() {
     return *resource_limits;

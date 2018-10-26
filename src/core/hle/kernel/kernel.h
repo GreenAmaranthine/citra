@@ -69,6 +69,14 @@ enum class MemoryRegion : u16 {
 template <typename T>
 using SharedPtr = boost::intrusive_ptr<T>;
 
+struct MemoryRegionInfo {
+    u32 base; // Not an address, but offset from start of FCRAM
+    u32 size;
+    u32 used;
+
+    std::shared_ptr<std::vector<u8>> linear_heap_memory;
+};
+
 class KernelSystem {
 public:
     explicit KernelSystem(u32 system_mode);
@@ -217,6 +225,10 @@ public:
 
     SharedPage::Handler& GetSharedPageHandler();
     const SharedPage::Handler& GetSharedPageHandler() const;
+
+    MemoryRegionInfo* GetMemoryRegion(MemoryRegion region);
+
+    MemoryRegionInfo memory_regions[3];
 
 private:
     void MemoryInit(u32 mem_type);

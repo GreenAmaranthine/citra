@@ -78,16 +78,7 @@ void KernelSystem::MemoryInit(u32 mem_type) {
     shared_page_handler = std::make_unique<SharedPage::Handler>();
 }
 
-void MemoryShutdown() {
-    for (auto& region : memory_regions) {
-        region.base = 0;
-        region.size = 0;
-        region.used = 0;
-        region.linear_heap_memory = nullptr;
-    }
-}
-
-MemoryRegionInfo* GetMemoryRegion(MemoryRegion region) {
+MemoryRegionInfo* KernelSystem::GetMemoryRegion(MemoryRegion region) {
     switch (region) {
     case MemoryRegion::Application:
         return &memory_regions[0];
