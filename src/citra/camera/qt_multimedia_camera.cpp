@@ -128,9 +128,8 @@ void QtMultimediaCameraHandler::Init() {
 
 std::shared_ptr<QtMultimediaCameraHandler> QtMultimediaCameraHandler::GetHandler(
     const std::string& camera_name) {
-    if (loaded.count(camera_name)) {
+    if (loaded.count(camera_name))
         return loaded.at(camera_name);
-    }
     for (int i{}; i < handlers.size(); i++) {
         if (!status[i]) {
             LOG_INFO(Service_CAM, "Successfully got handler {}", i);
@@ -139,7 +138,7 @@ std::shared_ptr<QtMultimediaCameraHandler> QtMultimediaCameraHandler::GetHandler
             return handlers[i];
         }
     }
-    LOG_CRITICAL(Service_CAM, "All handlers taken up");
+    LOG_ERROR(Service_CAM, "All handlers taken up");
     return nullptr;
 }
 

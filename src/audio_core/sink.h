@@ -17,10 +17,6 @@ public:
     explicit Sink(std::string device_id);
     ~Sink();
 
-    /// The native rate of this sink. The sink expects to be fed samples that respect this.
-    /// (Units: samples/sec)
-    unsigned int GetNativeSampleRate() const;
-
     /**
      * Set callback for samples
      * @param samples Samples in interleaved stereo PCM16 format.

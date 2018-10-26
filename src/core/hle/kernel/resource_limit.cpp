@@ -26,8 +26,7 @@ SharedPtr<ResourceLimit> ResourceLimitList::GetForCategory(ResourceLimitCategory
     case ResourceLimitCategory::OTHER:
         return resource_limits[static_cast<u8>(category)];
     default:
-        LOG_CRITICAL(Kernel, "Unknown resource limit category");
-        UNREACHABLE();
+        UNREACHABLE_MSG("Unknown resource limit category");
     }
 }
 

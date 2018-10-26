@@ -20,8 +20,6 @@ public:
     TimeStretcher();
     ~TimeStretcher();
 
-    void SetOutputSampleRate(std::size_t sample_rate);
-
     /// @param in       Input sample buffer
     /// @param num_in   Number of input frames in `in`
     /// @param out      Output sample buffer
@@ -34,7 +32,6 @@ public:
     void Flush();
 
 private:
-    std::size_t sample_rate;
     std::unique_ptr<soundtouch::SoundTouch> sound_touch;
     double stretch_ratio{1.0};
 };

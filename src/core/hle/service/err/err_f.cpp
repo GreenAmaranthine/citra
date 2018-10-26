@@ -148,9 +148,8 @@ static void LogGenericInfo(const ErrInfo::ErrInfoCommon& errinfo_common) {
 
 void ERR_F::ThrowFatalError(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 1, 32, 0};
-    LOG_CRITICAL(Service_ERR, "Fatal error");
     const ErrInfo errinfo{rp.PopRaw<ErrInfo>()};
-    LOG_CRITICAL(Service_ERR, "Fatal error type: {}", GetErrType(errinfo.errinfo_common.specifier));
+    LOG_CRITICAL(Service_ERR, "Fatal error type {}", GetErrType(errinfo.errinfo_common.specifier));
     system.SetStatus(Core::System::ResultStatus::FatalError);
     // Generic Info
     LogGenericInfo(errinfo.errinfo_common);
@@ -168,24 +167,23 @@ void ERR_F::ThrowFatalError(Kernel::HLERequestContext& ctx) {
         LOG_CRITICAL(Service_ERR, "ARM Registers:");
         for (u32 index{}; index < errtype.exception_data.exception_context.arm_regs.size();
              ++index) {
-            if (index < 13) {
-                LOG_DEBUG(Service_ERR, "r{}=0x{:08X}", index,
-                          errtype.exception_data.exception_context.arm_regs.at(index));
-            } else if (index == 13) {
+            if (index < 13)
+                LOG_CRITICAL(Service_ERR, "r{}=0x{:08X}", index,
+                             errtype.exception_data.exception_context.arm_regs.at(index));
+            else if (index == 13)
                 LOG_CRITICAL(Service_ERR, "SP=0x{:08X}",
                              errtype.exception_data.exception_context.arm_regs.at(index));
-            } else if (index == 14) {
+            else if (index == 14)
                 LOG_CRITICAL(Service_ERR, "LR=0x{:08X}",
                              errtype.exception_data.exception_context.arm_regs.at(index));
-            } else if (index == 15) {
+            else if (index == 15)
                 LOG_CRITICAL(Service_ERR, "PC=0x{:08X}",
                              errtype.exception_data.exception_context.arm_regs.at(index));
-            }
         }
         LOG_CRITICAL(Service_ERR, "CPSR=0x{:08X}", errtype.exception_data.exception_context.cpsr);
         // Exception Info
         LOG_CRITICAL(
-            Service_ERR, "EXCEPTION TYPE: {}",
+            Service_ERR, "Exception type: {}",
             GetExceptionType(errtype.exception_data.exception_info.exception_type).c_str());
         switch (static_cast<ExceptionType>(errtype.exception_data.exception_info.exception_type)) {
         case ExceptionType::PrefetchAbort:
@@ -213,7 +211,7 @@ void ERR_F::ThrowFatalError(Kernel::HLERequestContext& ctx) {
     case FatalErrType::ResultFailure: {
         const auto& errtype{errinfo.result_failure};
         // Failure Message
-        LOG_CRITICAL(Service_ERR, "Failure Message: {}", errtype.message);
+        LOG_CRITICAL(Service_ERR, "Failure message: {}", errtype.message);
         LOG_CRITICAL(Service_ERR, "Datetime: {}", GetCurrentSystemTime());
         break;
     }

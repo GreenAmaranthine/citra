@@ -89,7 +89,7 @@ void Timer::Signal(s64 cycles_late) {
 static void TimerCallback(u64 callback_id, s64 cycles_late) {
     SharedPtr<Timer> timer{timer_callback_table.at(callback_id)};
     if (!timer) {
-        LOG_CRITICAL(Kernel, "Callback fired for invalid timer {:016x}", callback_id);
+        LOG_ERROR(Kernel, "Callback fired for invalid timer {:016x}", callback_id);
         return;
     }
     timer->Signal(cycles_late);

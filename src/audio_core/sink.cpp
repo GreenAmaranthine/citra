@@ -13,10 +13,8 @@
 namespace AudioCore {
 
 struct Sink::Impl {
-    unsigned int sample_rate{};
-
-    cubeb* ctx{};
-    cubeb_stream* stream{};
+    cubeb* ctx;
+    cubeb_stream* stream;
 
     std::function<void(s16*, std::size_t)> cb;
 
@@ -28,24 +26,19 @@ struct Sink::Impl {
 
 Sink::Sink(std::string target_device_name) : impl{std::make_unique<Impl>()} {
     if (cubeb_init(&impl->ctx, "Citra", nullptr) != CUBEB_OK) {
-        LOG_CRITICAL(Audio, "cubeb_init failed");
+        LOG_ERROR(Audio, "cubeb_init failed");
         return;
     }
     cubeb_set_log_callback(CUBEB_LOG_NORMAL, &Impl::LogCallback);
-
-    impl->sample_rate = native_sample_rate;
-
     cubeb_stream_params params{};
-    params.rate = impl->sample_rate;
+    params.rate = native_sample_rate;
     params.channels = 2;
     params.layout = CUBEB_LAYOUT_STEREO;
     params.format = CUBEB_SAMPLE_S16NE;
     params.prefs = CUBEB_STREAM_PREF_NONE;
-
-    u32 minimum_latency{100 * impl->sample_rate / 1000}; // Firefox default
+    u32 minimum_latency{100 * native_sample_rate / 1000}; // Firefox default
     if (cubeb_get_min_latency(impl->ctx, &params, &minimum_latency) != CUBEB_OK)
-        LOG_CRITICAL(Audio, "Error getting minimum latency");
-
+        LOG_ERROR(Audio, "Error getting minimum latency");
     cubeb_devid output_device{};
     if (target_device_name != "auto" && !target_device_name.empty()) {
         cubeb_device_collection collection;
@@ -55,14 +48,13 @@ Sink::Sink(std::string target_device_name) : impl{std::make_unique<Impl>()} {
             const auto collection_end{collection.device + collection.count};
             const auto device{
                 std::find_if(collection.device, collection_end, [&](const cubeb_device_info& info) {
-                    return target_device_name == info.friendly_name;
+                    return info.friendly_name && target_device_name == info.friendly_name;
                 })};
             if (device != collection_end)
                 output_device = device->devid;
             cubeb_device_collection_destroy(impl->ctx, &collection);
         }
     }
-
     int stream_err{cubeb_stream_init(impl->ctx, &impl->stream, "CitraAudio", nullptr, nullptr,
                                      output_device, &params, std::max(512u, minimum_latency),
                                      &Impl::DataCallback, &Impl::StateCallback, impl.get())};
@@ -81,7 +73,6 @@ Sink::Sink(std::string target_device_name) : impl{std::make_unique<Impl>()} {
         }
         return;
     }
-
     if (cubeb_stream_start(impl->stream) != CUBEB_OK) {
         LOG_ERROR(Audio, "Error starting cubeb stream");
         return;
@@ -89,25 +80,13 @@ Sink::Sink(std::string target_device_name) : impl{std::make_unique<Impl>()} {
 }
 
 Sink::~Sink() {
-    if (!impl->ctx) {
+    if (!impl->ctx)
         return;
-    }
-
     impl->cb = nullptr;
-
-    if (cubeb_stream_stop(impl->stream) != CUBEB_OK) {
-        LOG_CRITICAL(Audio, "Error stopping cubeb stream");
-    }
-
+    if (cubeb_stream_stop(impl->stream) != CUBEB_OK)
+        LOG_ERROR(Audio, "Error stopping cubeb stream");
     cubeb_stream_destroy(impl->stream);
     cubeb_destroy(impl->ctx);
-}
-
-unsigned int Sink::GetNativeSampleRate() const {
-    if (!impl->ctx)
-        return native_sample_rate;
-
-    return impl->sample_rate;
 }
 
 void Sink::SetCallback(std::function<void(s16*, std::size_t)> cb) {
@@ -118,15 +97,12 @@ long Sink::Impl::DataCallback(cubeb_stream* stream, void* user_data, const void*
                               void* output_buffer, long num_frames) {
     Impl* impl{static_cast<Impl*>(user_data)};
     s16* buffer{reinterpret_cast<s16*>(output_buffer)};
-
     if (!impl || !impl->cb) {
         LOG_DEBUG(Audio, "Emitting zeros");
         std::memset(output_buffer, 0, num_frames * 2 * sizeof(s16));
         return num_frames;
     }
-
     impl->cb(buffer, num_frames);
-
     return num_frames;
 }
 
@@ -142,7 +118,7 @@ void Sink::Impl::StateCallback(cubeb_stream* stream, void* user_data, cubeb_stat
         LOG_INFO(Audio, "Audio Stream Drained");
         break;
     case CUBEB_STATE_ERROR:
-        LOG_CRITICAL(Audio, "Audio Stream Errored");
+        LOG_ERROR(Audio, "Audio Stream Errored");
         break;
     }
 }
@@ -162,27 +138,23 @@ void Sink::Impl::LogCallback(char const* format, ...) {
 }
 
 std::vector<std::string> ListDevices() {
-    std::vector<std::string> device_list{};
+    std::vector<std::string> device_list;
     cubeb* ctx;
-
     if (cubeb_init(&ctx, "CitraEnumerator", nullptr) != CUBEB_OK) {
-        LOG_CRITICAL(Audio, "cubeb_init failed");
+        LOG_ERROR(Audio, "cubeb_init failed");
         return {};
     }
-
     cubeb_device_collection collection;
-    if (cubeb_enumerate_devices(ctx, CUBEB_DEVICE_TYPE_OUTPUT, &collection) != CUBEB_OK) {
+    if (cubeb_enumerate_devices(ctx, CUBEB_DEVICE_TYPE_OUTPUT, &collection) != CUBEB_OK)
         LOG_WARNING(Audio, "Audio output device enumeration not supported");
-    } else {
+    else {
         for (std::size_t i{}; i < collection.count; i++) {
             const cubeb_device_info& device{collection.device[i]};
-            if (device.friendly_name) {
-                device_list.emplace_back(device.friendly_name);
-            }
+            if (device.friendly_name)
+                device_list.push_back(device.friendly_name);
         }
         cubeb_device_collection_destroy(ctx, &collection);
     }
-
     cubeb_destroy(ctx);
     return device_list;
 }

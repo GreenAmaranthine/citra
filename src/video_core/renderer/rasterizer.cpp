@@ -1422,8 +1422,8 @@ void Rasterizer::SyncCullMode() {
         state.cull.mode = GL_FRONT;
         break;
     default:
-        LOG_CRITICAL(Render, "Unknown cull mode {}",
-                     static_cast<u32>(regs.rasterizer.cull_mode.Value()));
+        LOG_ERROR(Render, "Unknown cull mode {}",
+                  static_cast<u32>(regs.rasterizer.cull_mode.Value()));
         UNIMPLEMENTED();
         break;
     }

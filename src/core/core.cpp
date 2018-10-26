@@ -74,14 +74,14 @@ System::ResultStatus System::RunLoop() {
 System::ResultStatus System::Load(Frontend& frontend, const std::string& filepath) {
     app_loader = Loader::GetLoader(filepath);
     if (!app_loader) {
-        LOG_CRITICAL(Core, "Failed to obtain loader for {}!", filepath);
+        LOG_ERROR(Core, "Failed to obtain loader for {}!", filepath);
         return ResultStatus::ErrorGetLoader;
     }
     std::pair<std::optional<u32>, Loader::ResultStatus> system_mode{
         app_loader->LoadKernelSystemMode()};
     if (system_mode.second != Loader::ResultStatus::Success) {
-        LOG_CRITICAL(Core, "Failed to determine system mode (Error {})!",
-                     static_cast<int>(system_mode.second));
+        LOG_ERROR(Core, "Failed to determine system mode (Error {})!",
+                  static_cast<int>(system_mode.second));
         switch (system_mode.second) {
         case Loader::ResultStatus::ErrorEncrypted:
             return ResultStatus::ErrorLoader_ErrorEncrypted;
@@ -94,8 +94,7 @@ System::ResultStatus System::Load(Frontend& frontend, const std::string& filepat
     ASSERT(system_mode.first);
     ResultStatus init_result{Init(frontend, *system_mode.first)};
     if (init_result != ResultStatus::Success) {
-        LOG_CRITICAL(Core, "Failed to initialize system (Error {})!",
-                     static_cast<u32>(init_result));
+        LOG_ERROR(Core, "Failed to initialize system (Error {})!", static_cast<u32>(init_result));
         Shutdown();
         return init_result;
     }
@@ -103,7 +102,7 @@ System::ResultStatus System::Load(Frontend& frontend, const std::string& filepat
     const Loader::ResultStatus load_result{app_loader->Load(process)};
     kernel->SetCurrentProcess(process);
     if (Loader::ResultStatus::Success != load_result) {
-        LOG_CRITICAL(Core, "Failed to load ROM (Error {})!", static_cast<u32>(load_result));
+        LOG_ERROR(Core, "Failed to load ROM (Error {})!", static_cast<u32>(load_result));
         Shutdown();
         switch (load_result) {
         case Loader::ResultStatus::ErrorEncrypted:

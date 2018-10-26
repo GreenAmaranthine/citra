@@ -114,8 +114,8 @@ void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mappin
     };
     VAddr mapping_limit{mapping.address + mapping.size};
     if (mapping_limit < mapping.address) {
-        LOG_CRITICAL(Loader, "Mapping size overflowed: address=0x{:08X}, size=0x{:08X}",
-                     mapping.address, mapping.size);
+        LOG_ERROR(Loader, "Mapping size overflowed: address=0x{:08X}, size=0x{:08X}",
+                  mapping.address, mapping.size);
         return;
     }
     auto area{std::find_if(std::begin(memory_areas), std::end(memory_areas), [&](const auto& area) {

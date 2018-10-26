@@ -455,7 +455,7 @@ SDLState::SDLState() {
     // If the frontend is going to manage the event loop, then we don't start one here
     start_thread = !SDL_WasInit(SDL_INIT_JOYSTICK);
     if (start_thread && SDL_Init(SDL_INIT_JOYSTICK) < 0) {
-        LOG_CRITICAL(Input, "SDL_Init(SDL_INIT_JOYSTICK) failed with: {}", SDL_GetError());
+        LOG_ERROR(Input, "SDL_Init(SDL_INIT_JOYSTICK) failed with: {}", SDL_GetError());
         return;
     }
     if (SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1") == SDL_FALSE) {

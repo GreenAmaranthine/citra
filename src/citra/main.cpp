@@ -504,7 +504,7 @@ bool GMainWindow::LoadROM(const std::string& filename) {
     if (result != Core::System::ResultStatus::Success) {
         switch (result) {
         case Core::System::ResultStatus::ErrorGetLoader:
-            LOG_CRITICAL(Frontend, "Failed to obtain loader for {}!", filename);
+            LOG_ERROR(Frontend, "Failed to obtain loader for {}!", filename);
             QMessageBox::critical(
                 this, "Invalid ROM Format",
                 "Your ROM format isn't supported.<br/>Please follow the guides to redump your "
@@ -518,7 +518,7 @@ bool GMainWindow::LoadROM(const std::string& filename) {
                 "titles</a>.");
             break;
         case Core::System::ResultStatus::ErrorSystemMode:
-            LOG_CRITICAL(Frontend, "Failed to load ROM!");
+            LOG_ERROR(Frontend, "Failed to load ROM!");
             QMessageBox::critical(
                 this, "ROM Corrupted",
                 "Your ROM is corrupted. <br/>Please follow the guides to redump your "

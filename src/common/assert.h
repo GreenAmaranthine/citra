@@ -47,7 +47,7 @@ __declspec(noinline, noreturn)
 #ifdef _DEBUG
 #define DEBUG_ASSERT(_a_) ASSERT(_a_)
 #define DEBUG_ASSERT_MSG(_a_, ...) ASSERT_MSG(_a_, __VA_ARGS__)
-#else // not debug
+#else // Not Debug build
 #define DEBUG_ASSERT(_a_)
 #define DEBUG_ASSERT_MSG(_a_, _desc_, ...)
 #endif

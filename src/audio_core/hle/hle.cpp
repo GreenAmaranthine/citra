@@ -203,9 +203,7 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer)
                   std::back_inserter(pipe_data[static_cast<std::size_t>(DspPipe::Binary)]));
         return;
     default:
-        LOG_CRITICAL(Audio_DSP, "pipe_number = {} unimplemented",
-                     static_cast<std::size_t>(pipe_number));
-        UNIMPLEMENTED();
+        UNIMPLEMENTED_MSG("pipe_number={} unimplemented", static_cast<std::size_t>(pipe_number));
         return;
     }
 }
@@ -358,7 +356,6 @@ DspHle::DspHle()
                                                Settings::values.output_device)} {
     sink->SetCallback(
         [this](s16* buffer, std::size_t num_frames) { OutputCallback(buffer, num_frames); });
-    time_stretcher.SetOutputSampleRate(sink->GetNativeSampleRate());
 }
 
 DspHle::~DspHle() = default;

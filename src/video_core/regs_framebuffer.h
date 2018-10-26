@@ -199,7 +199,7 @@ struct FramebufferRegs {
         case ColorFormat::RGBA4:
             return 2;
         default:
-            LOG_CRITICAL(HW_GPU, "Unknown color format {}", static_cast<u32>(format));
+            LOG_ERROR(HW_GPU, "Unknown color format {}", static_cast<u32>(format));
             UNIMPLEMENTED();
         }
     }

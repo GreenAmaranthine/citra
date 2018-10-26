@@ -1175,7 +1175,7 @@ SurfaceSurfaceRect_Tuple RasterizerCache::GetFramebufferSurfaces(
     // Make sure that framebuffers don't overlap if both color and depth are being used
     if (using_color_fb && using_depth_fb &&
         boost::icl::length(color_vp_interval & depth_vp_interval)) {
-        LOG_CRITICAL(
+        LOG_WARNING(
             Render,
             "Color and depth framebuffer memory regions overlapping framebuffers not supported!");
         using_depth_fb = false;

@@ -330,9 +330,7 @@ void SoftwareKeyboard::Update() {
         break;
     }
     default:
-        LOG_CRITICAL(Applet_Swkbd, "Unknown button config {}",
-                     static_cast<u32>(config.num_buttons_m1));
-        UNREACHABLE();
+        UNREACHABLE_MSG("Unknown button config {}", static_cast<u32>(config.num_buttons_m1));
     }
 }
 

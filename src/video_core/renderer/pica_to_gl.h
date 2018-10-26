@@ -34,32 +34,25 @@ inline GLenum TextureFilterMode(Pica::TexturingRegs::TextureConfig::TextureFilte
         GL_NEAREST, // TextureFilter::Nearest
         GL_LINEAR,  // TextureFilter::Linear
     }};
-
     const auto index{static_cast<std::size_t>(mode)};
-
     // Range check table for input
     if (index >= filter_mode_table.size()) {
-        LOG_CRITICAL(Render, "Unknown texture filtering mode {}", index);
+        LOG_ERROR(Render, "Unknown texture filtering mode {}", index);
         UNREACHABLE();
-
         return GL_LINEAR;
     }
-
     GLenum gl_mode{filter_mode_table[index]};
-
     // Check for dummy values indicating an unknown mode
     if (gl_mode == 0) {
-        LOG_CRITICAL(Render, "Unknown texture filtering mode {}", index);
+        LOG_ERROR(Render, "Unknown texture filtering mode {}", index);
         UNIMPLEMENTED();
-
         return GL_LINEAR;
     }
-
     return gl_mode;
 }
 
 inline GLenum WrapMode(Pica::TexturingRegs::TextureConfig::WrapMode mode) {
-    static constexpr std::array<GLenum, 8> wrap_mode_table{{
+    std::array<GLenum, 8> wrap_mode_table{{
         GL_CLAMP_TO_EDGE,   // WrapMode::ClampToEdge
         GL_CLAMP_TO_BORDER, // WrapMode::ClampToBorder
         GL_REPEAT,          // WrapMode::Repeat
@@ -71,58 +64,45 @@ inline GLenum WrapMode(Pica::TexturingRegs::TextureConfig::WrapMode mode) {
         GL_REPEAT,          // WrapMode::Repeat2
         GL_REPEAT,          // WrapMode::Repeat3
     }};
-
     const auto index{static_cast<std::size_t>(mode)};
-
     // Range check table for input
     if (index >= wrap_mode_table.size()) {
-        LOG_CRITICAL(Render, "Unknown texture wrap mode {}", index);
+        LOG_ERROR(Render, "Unknown texture wrap mode {}", index);
         UNREACHABLE();
-
         return GL_CLAMP_TO_EDGE;
     }
-
-    if (index > 3) {
+    if (index > 3)
         LOG_WARNING(Render, "Using texture wrap mode {}", index);
-    }
-
     GLenum gl_mode{wrap_mode_table[index]};
-
     // Check for dummy values indicating an unknown mode
     if (gl_mode == 0) {
-        LOG_CRITICAL(Render, "Unknown texture wrap mode {}", index);
+        LOG_ERROR(Render, "Unknown texture wrap mode {}", index);
         UNIMPLEMENTED();
-
         return GL_CLAMP_TO_EDGE;
     }
-
     return gl_mode;
 }
 
 inline GLenum BlendEquation(Pica::FramebufferRegs::BlendEquation equation) {
-    static constexpr std::array<GLenum, 5> blend_equation_table{{
+    constexpr std::array<GLenum, 5> blend_equation_table{{
         GL_FUNC_ADD,              // BlendEquation::Add
         GL_FUNC_SUBTRACT,         // BlendEquation::Subtract
         GL_FUNC_REVERSE_SUBTRACT, // BlendEquation::ReverseSubtract
         GL_MIN,                   // BlendEquation::Min
         GL_MAX,                   // BlendEquation::Max
     }};
-
     const auto index{static_cast<std::size_t>(equation)};
-
     // Range check table for input
     if (index >= blend_equation_table.size()) {
-        LOG_CRITICAL(Render, "Unknown blend equation {}", index);
-
+        LOG_ERROR(Render, "Unknown blend equation {}", index);
         // This return value is hwtested, not just a stub
         return GL_FUNC_ADD;
     }
-
     return blend_equation_table[index];
 }
 
 inline GLenum BlendFunc(Pica::FramebufferRegs::BlendFactor factor) {
-    static constexpr std::array<GLenum, 15> blend_func_table{{
+    constexpr std::array<GLenum, 15> blend_func_table{{
         GL_ZERO,                     // BlendFactor::Zero
         GL_ONE,                      // BlendFactor::One
         GL_SRC_COLOR,                // BlendFactor::SourceColor
@@ -139,22 +119,15 @@ inline GLenum BlendFunc(Pica::FramebufferRegs::BlendFactor factor) {
         GL_ONE_MINUS_CONSTANT_ALPHA, // BlendFactor::OneMinusConstantAlpha
         GL_SRC_ALPHA_SATURATE,       // BlendFactor::SourceAlphaSaturate
     }};
-
     const auto index{static_cast<std::size_t>(factor)};
-
     // Range check table for input
-    if (index >= blend_func_table.size()) {
-        LOG_CRITICAL(Render, "Unknown blend factor {}", index);
-        UNREACHABLE();
-
-        return GL_ONE;
-    }
-
+    if (index >= blend_func_table.size())
+        UNREACHABLE_MSG("Unknown blend factor {}", index);
     return blend_func_table[index];
 }
 
 inline GLenum LogicOp(Pica::FramebufferRegs::LogicOp op) {
-    static constexpr std::array<GLenum, 16> logic_op_table{{
+    constexpr std::array<GLenum, 16> logic_op_table{{
         GL_CLEAR,         // Clear
         GL_AND,           // And
         GL_AND_REVERSE,   // AndReverse
@@ -172,22 +145,15 @@ inline GLenum LogicOp(Pica::FramebufferRegs::LogicOp op) {
         GL_OR_REVERSE,    // OrReverse
         GL_OR_INVERTED,   // OrInverted
     }};
-
     const auto index{static_cast<std::size_t>(op)};
-
     // Range check table for input
-    if (index >= logic_op_table.size()) {
-        LOG_CRITICAL(Render, "Unknown logic op {}", index);
-        UNREACHABLE();
-
-        return GL_COPY;
-    }
-
+    if (index >= logic_op_table.size())
+        UNREACHABLE_MSG("Unknown logic op {}", index);
     return logic_op_table[index];
 }
 
 inline GLenum CompareFunc(Pica::FramebufferRegs::CompareFunc func) {
-    static constexpr std::array<GLenum, 8> compare_func_table{{
+    constexpr std::array<GLenum, 8> compare_func_table{{
         GL_NEVER,    // CompareFunc::Never
         GL_ALWAYS,   // CompareFunc::Always
         GL_EQUAL,    // CompareFunc::Equal
@@ -197,22 +163,15 @@ inline GLenum CompareFunc(Pica::FramebufferRegs::CompareFunc func) {
         GL_GREATER,  // CompareFunc::GreaterThan
         GL_GEQUAL,   // CompareFunc::GreaterThanOrEqual
     }};
-
     const auto index{static_cast<std::size_t>(func)};
-
     // Range check table for input
-    if (index >= compare_func_table.size()) {
-        LOG_CRITICAL(Render, "Unknown compare function {}", index);
-        UNREACHABLE();
-
-        return GL_ALWAYS;
-    }
-
+    if (index >= compare_func_table.size())
+        UNREACHABLE_MSG("Unknown compare function {}", index);
     return compare_func_table[index];
 }
 
 inline GLenum StencilOp(Pica::FramebufferRegs::StencilAction action) {
-    static constexpr std::array<GLenum, 8> stencil_op_table{{
+    constexpr std::array<GLenum, 8> stencil_op_table{{
         GL_KEEP,      // StencilAction::Keep
         GL_ZERO,      // StencilAction::Zero
         GL_REPLACE,   // StencilAction::Replace
@@ -222,17 +181,10 @@ inline GLenum StencilOp(Pica::FramebufferRegs::StencilAction action) {
         GL_INCR_WRAP, // StencilAction::IncrementWrap
         GL_DECR_WRAP, // StencilAction::DecrementWrap
     }};
-
     const auto index{static_cast<std::size_t>(action)};
-
     // Range check table for input
-    if (index >= stencil_op_table.size()) {
-        LOG_CRITICAL(Render, "Unknown stencil op {}", index);
-        UNREACHABLE();
-
-        return GL_KEEP;
-    }
-
+    if (index >= stencil_op_table.size())
+        UNREACHABLE_MSG("Unknown stencil op {}", index);
     return stencil_op_table[index];
 }
 

@@ -136,13 +136,12 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
     u8* src_pointer{Memory::GetPhysicalPointer(src_addr)};
     u8* dst_pointer{Memory::GetPhysicalPointer(dst_addr)};
     if (config.scaling > config.ScaleXY) {
-        LOG_CRITICAL(HW_GPU, "Unimplemented display transfer scaling mode {}",
-                     config.scaling.Value());
+        LOG_ERROR(HW_GPU, "Unimplemented display transfer scaling mode {}", config.scaling.Value());
         UNIMPLEMENTED();
         return;
     }
     if (config.input_linear && config.scaling != config.NoScale) {
-        LOG_CRITICAL(HW_GPU, "Scaling is only implemented on tiled input");
+        LOG_ERROR(HW_GPU, "Scaling is only implemented on tiled input");
         UNIMPLEMENTED();
         return;
     }

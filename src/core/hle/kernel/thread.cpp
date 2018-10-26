@@ -184,7 +184,7 @@ void ExitCurrentThread() {
 static void ThreadWakeupCallback(u64 thread_id, s64 cycles_late) {
     SharedPtr<Thread> thread{wakeup_callback_table.at(thread_id)};
     if (!thread) {
-        LOG_CRITICAL(Kernel, "Callback fired for invalid thread {:08X}", thread_id);
+        LOG_ERROR(Kernel, "Callback fired for invalid thread {:08X}", thread_id);
         return;
     }
     if (thread->status == ThreadStatus::WaitSynchAny ||
