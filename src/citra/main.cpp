@@ -1587,9 +1587,10 @@ void GMainWindow::OnMoviePlaybackCompleted() {
 
 void GMainWindow::SetupUIStrings() {
     if (short_title.empty())
-        setWindowTitle(QString("Citra | %1-%2").arg(Common::g_scm_branch, Common::g_scm_desc));
+        setWindowTitle(
+            QString("Citra Valentin | %1-%2").arg(Common::g_scm_branch, Common::g_scm_desc));
     else
-        setWindowTitle(QString("Citra | %1-%2 | %3")
+        setWindowTitle(QString("Citra Valentin | %1-%2 | %3")
                            .arg(Common::g_scm_branch, Common::g_scm_desc, short_title.c_str()));
 }
 
