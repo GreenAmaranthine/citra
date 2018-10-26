@@ -69,6 +69,8 @@ struct Values {
     QList<UISettings::GameDir> game_dirs;
     QStringList recent_files;
 
+    bool enable_discord_rpc;
+
     QString theme;
 
     // Shortcut name <Shortcut, context>

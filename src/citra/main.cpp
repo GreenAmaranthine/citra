@@ -254,7 +254,6 @@ void GMainWindow::InitializeHotkeys() {
     RegisterHotkey("Main Window", "Open User Directory", QKeySequence("CTRL+U"));
     RegisterHotkey("Main Window", "Toggle Hardware Shaders", QKeySequence("CTRL+W"));
     LoadHotkeys();
-
     connect(GetHotkey("Main Window", "Load File", this), &QShortcut::activated, this,
             &GMainWindow::OnMenuLoadFile);
     connect(GetHotkey("Main Window", "Load Amiibo", this), &QShortcut::activated, this,
@@ -586,18 +585,20 @@ bool GMainWindow::LoadROM(const std::string& filename) {
     system.GetAppLoader().ReadShortTitle(short_title);
     SetupUIStrings();
 #ifdef ENABLE_DISCORD_RPC
-    DiscordEventHandlers handlers{};
-    handlers.disconnected = HandleDiscordDisconnected;
-    handlers.errored = HandleDiscordError;
-    Discord_Initialize("472104565165260826", &handlers, 0, NULL);
-    DiscordRichPresence presence{};
-    presence.state = short_title.empty() ? "Unknown game" : short_title.c_str();
-    presence.details = "Playing";
-    presence.startTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
-                                  std::chrono::system_clock::now().time_since_epoch())
-                                  .count();
-    presence.largeImageKey = "icon";
-    Discord_UpdatePresence(&presence);
+    if (UISettings::values.enable_discord_rpc) {
+        DiscordEventHandlers handlers{};
+        handlers.disconnected = HandleDiscordDisconnected;
+        handlers.errored = HandleDiscordError;
+        Discord_Initialize("472104565165260826", &handlers, 0, NULL);
+        DiscordRichPresence presence{};
+        presence.state = short_title.empty() ? "Unknown game" : short_title.c_str();
+        presence.details = "Playing";
+        presence.startTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
+                                      std::chrono::system_clock::now().time_since_epoch())
+                                      .count();
+        presence.largeImageKey = "icon";
+        Discord_UpdatePresence(&presence);
+    }
 #endif
     if (cheats_window)
         cheats_window->UpdateTitleID();
@@ -609,10 +610,8 @@ bool GMainWindow::LoadROM(const std::string& filename) {
 void GMainWindow::BootApplication(const std::string& filename) {
     LOG_INFO(Frontend, "Booting {}", filename);
     StoreRecentFile(QString::fromStdString(filename)); // Put the filename on top of the list
-
     if (movie_record_on_start)
         Core::Movie::GetInstance().PrepareForRecording();
-
     if (!LoadROM(filename))
         return;
 
@@ -631,28 +630,21 @@ void GMainWindow::BootApplication(const std::string& filename) {
     ui.action_Sleep_Mode->setChecked(false);
 
     status_bar_update_timer.start(2000);
-
     screens->show();
     screens->setFocus();
-
     if (ui.action_Fullscreen->isChecked())
         ShowFullscreen();
-
     OnStartGame();
-
     HLE::Applets::ErrEula::cb = [this](HLE::Applets::ErrEulaConfig& config, bool& open) {
         ErrEulaCallback(config, open);
     };
-
     HLE::Applets::SoftwareKeyboard::cb = [this](HLE::Applets::SoftwareKeyboardConfig& config,
                                                 std::u16string& text,
                                                 bool& open) { SwkbdCallback(config, text, open); };
-
     HLE::Applets::MiiSelector::cb = [this](const HLE::Applets::MiiConfig& config,
                                            HLE::Applets::MiiResult& result, bool& open) {
         MiiSelectorCallback(config, result, open);
     };
-
     SharedPage::Handler::update_3d = [this] { Update3D(); };
     RPC::RPCServer::cb_update_frame_advancing = [this] { UpdateFrameAdvancingCallback(); };
     Service::NWM::NWM_EXT::update_control_panel = [this] { UpdateControlPanelNetwork(); };
@@ -712,8 +704,10 @@ void GMainWindow::ShutdownGame() {
     short_title.clear();
     SetupUIStrings();
 #ifdef ENABLE_DISCORD_RPC
-    Discord_ClearPresence();
-    Discord_Shutdown();
+    if (UISettings::values.enable_discord_rpc) {
+        Discord_ClearPresence();
+        Discord_Shutdown();
+    }
 #endif
 }
 

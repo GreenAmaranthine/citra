@@ -4,21 +4,25 @@
 
 #include "citra/configuration/configure_ui.h"
 #include "citra/ui_settings.h"
+#include "core/core.h"
 #include "ui_configure_ui.h"
 
 ConfigureUi::ConfigureUi(QWidget* parent)
     : QWidget(parent), ui{std::make_unique<Ui::ConfigureUi>()} {
     ui->setupUi(this);
-
+#ifndef ENABLE_DISCORD_RPC
+    ui->enable_discord_rpc->hide();
+#endif
+    ui->enable_discord_rpc->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     for (const auto& theme : UISettings::themes)
         ui->theme_combobox->addItem(theme.first, theme.second);
-
     setConfiguration();
 }
 
 ConfigureUi::~ConfigureUi() = default;
 
 void ConfigureUi::setConfiguration() {
+    ui->enable_discord_rpc->setChecked(UISettings::values.enable_discord_rpc);
     ui->theme_combobox->setCurrentIndex(ui->theme_combobox->findData(UISettings::values.theme));
     ui->icon_size_combobox->setCurrentIndex(
         static_cast<int>(UISettings::values.game_list_icon_size));
@@ -29,6 +33,7 @@ void ConfigureUi::setConfiguration() {
 }
 
 void ConfigureUi::applyConfiguration() {
+    UISettings::values.enable_discord_rpc = ui->enable_discord_rpc->isChecked();
     UISettings::values.theme =
         ui->theme_combobox->itemData(ui->theme_combobox->currentIndex()).toString();
     UISettings::values.game_list_icon_size =

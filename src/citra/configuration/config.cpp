@@ -273,6 +273,7 @@ void Config::ReadValues() {
     Settings::values.disable_mh_3d = qt_config->value("disable_mh_3d", false).toBool();
     qt_config->endGroup();
     qt_config->beginGroup("UI");
+    UISettings::values.enable_discord_rpc = qt_config->value("enable_discord_rpc", true).toBool();
     UISettings::values.theme = qt_config->value("theme", UISettings::themes[0].second).toString();
     u16 screenshot_resolution_factor{
         static_cast<u16>(qt_config->value("screenshot_resolution_factor", 1).toInt())};
@@ -482,6 +483,7 @@ void Config::SaveValues() {
     qt_config->setValue("disable_mh_3d", Settings::values.disable_mh_3d);
     qt_config->endGroup();
     qt_config->beginGroup("UI");
+    qt_config->setValue("enable_discord_rpc", UISettings::values.enable_discord_rpc);
     qt_config->setValue("theme", UISettings::values.theme);
     qt_config->setValue("screenshot_resolution_factor",
                         UISettings::values.screenshot_resolution_factor);

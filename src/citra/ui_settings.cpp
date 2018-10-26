@@ -13,6 +13,6 @@ const Themes themes{{
     {"Colorful Dark", "colorful_dark"},
 }};
 
-Values values{};
+Values values;
 
 } // namespace UISettings

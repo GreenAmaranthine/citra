@@ -31,10 +31,8 @@ void ConfigureWeb::setConfiguration() {
     ui->web_token_info_link->setText(
         "<a href='https://citra-emu.org/wiki/citra-web-service/'><span style=\"text-decoration: "
         "underline; color:#039be5;\">What is my token?</span></a>");
-
     ui->edit_username->setText(QString::fromStdString(Settings::values.citra_username));
     ui->edit_token->setText(QString::fromStdString(Settings::values.citra_token));
-
     // Connect after setting the values, to avoid calling OnLoginChanged now
     connect(ui->edit_token, &QLineEdit::textChanged, this, &ConfigureWeb::OnLoginChanged);
     connect(ui->edit_username, &QLineEdit::textChanged, this, &ConfigureWeb::OnLoginChanged);
