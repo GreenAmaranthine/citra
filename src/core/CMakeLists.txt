@@ -516,7 +516,7 @@ endif()
 create_target_directory_groups(core)
 
 get_directory_property(OPENSSL_LIBS
-        DIRECTORY ${CMAKE_SOURCE_DIR}/externals/libressl
+        DIRECTORY ${PROJECT_SOURCE_DIR}/externals/libressl
         DEFINITION OPENSSL_LIBS)
 target_compile_definitions(core PUBLIC -DCPPHTTPLIB_OPENSSL_SUPPORT)
 

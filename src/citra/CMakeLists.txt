@@ -115,8 +115,8 @@ set(UIS
     multiplayer/host_room.ui
 )
 
-file(GLOB_RECURSE ICONS ${CMAKE_SOURCE_DIR}/dist/icons/*)
-file(GLOB_RECURSE THEMES ${CMAKE_SOURCE_DIR}/dist/themes/*)
+file(GLOB_RECURSE ICONS ${PROJECT_SOURCE_DIR}/dist/icons/*)
+file(GLOB_RECURSE THEMES ${PROJECT_SOURCE_DIR}/dist/themes/*)
 
 qt5_wrap_ui(UI_HDRS ${UIS})
 

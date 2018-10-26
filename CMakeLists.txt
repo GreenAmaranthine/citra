@@ -23,11 +23,11 @@ option(ENABLE_SCRIPTING "Enable scripting support" OFF)
 # =======================================================================
 
 function(check_submodules_present)
-    file(READ "${CMAKE_SOURCE_DIR}/.gitmodules" gitmodules)
+    file(READ "${PROJECT_SOURCE_DIR}/.gitmodules" gitmodules)
     string(REGEX MATCHALL "path *= *[^ \t\r\n]*" gitmodules ${gitmodules})
     foreach(module ${gitmodules})
         string(REGEX REPLACE "path *= *" "" module ${module})
-        if (NOT EXISTS "${CMAKE_SOURCE_DIR}/${module}/.git")
+        if (NOT EXISTS "${PROJECT_SOURCE_DIR}/${module}/.git")
             message(SEND_ERROR "Git submodule ${module} not found."
                     "Please run: git submodule update --init --recursive")
         endif()
@@ -161,7 +161,7 @@ find_package(Boost 1.66.0 QUIET)
 if (NOT Boost_FOUND)
     message(STATUS "Boost 1.66.0 or newer not found, falling back to externals")
 
-    set(BOOST_ROOT "${CMAKE_SOURCE_DIR}/externals/boost")
+    set(BOOST_ROOT "${PROJECT_SOURCE_DIR}/externals/boost")
     set(Boost_NO_SYSTEM_PATHS OFF)
     find_package(Boost QUIET REQUIRED)
 endif()
@@ -272,7 +272,7 @@ if (NOT CLANG_FORMAT)
 endif()
 
 if (CLANG_FORMAT)
-    set(SRCS ${CMAKE_SOURCE_DIR}/src)
+    set(SRCS ${PROJECT_SOURCE_DIR}/src)
     set(CCOMMENT "Running clang format against all the .h and .cpp files in src/")
     if (WIN32)
         add_custom_target(clang-format
@@ -346,10 +346,10 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT c
 # http://standards.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html
 # http://standards.freedesktop.org/shared-mime-info-spec/shared-mime-info-spec-latest.html
 if(UNIX AND NOT APPLE)
-    install(FILES "${CMAKE_SOURCE_DIR}/dist/citra.desktop"
+    install(FILES "${PROJECT_SOURCE_DIR}/dist/citra.desktop"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications")
-    install(FILES "${CMAKE_SOURCE_DIR}/dist/citra.svg"
+    install(FILES "${PROJECT_SOURCE_DIR}/dist/citra.svg"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps")
-    install(FILES "${CMAKE_SOURCE_DIR}/dist/citra.xml"
+    install(FILES "${PROJECT_SOURCE_DIR}/dist/citra.xml"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/mime/packages")
 endif()
