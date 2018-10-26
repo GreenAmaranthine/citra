@@ -45,6 +45,7 @@ add_library(common STATIC
     thread_queue_list.h
     threadsafe_queue.h
     vector_math.h
+    web_result.h
 )
 
 create_target_directory_groups(common)
