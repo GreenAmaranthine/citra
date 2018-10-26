@@ -9,7 +9,6 @@
 namespace NetworkMessage {
 
 class ConnectionError {
-
 public:
     explicit ConnectionError(std::string str) : err{std::move(str)} {}
 
@@ -36,9 +35,7 @@ extern const ConnectionError GENERIC_ERROR;
 extern const ConnectionError LOST_CONNECTION;
 extern const ConnectionError MAC_COLLISION;
 
-/**
- *  Shows a standard QMessageBox with a error message
- */
+/// Shows a standard QMessageBox with a error message
 void ShowError(const ConnectionError& e);
 
 /**

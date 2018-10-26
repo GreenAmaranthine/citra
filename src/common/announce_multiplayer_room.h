@@ -29,8 +29,6 @@ struct WebResult {
 
 namespace AnnounceMultiplayerRoom {
 
-using MacAddress = std::array<u8, 6>;
-
 struct Room {
     struct Member {
         std::string name;
@@ -48,7 +46,6 @@ struct Room {
     bool has_password;
     std::string preferred_game;
     u64 preferred_game_id;
-
     std::vector<Member> members;
 };
 using RoomList = std::vector<Room>;
@@ -92,9 +89,7 @@ public:
      */
     virtual Common::WebResult Announce() = 0;
 
-    /**
-     * Empties the stored players
-     */
+    /// Empties the stored players
     virtual void ClearPlayers() = 0;
 
     /**
@@ -103,9 +98,7 @@ public:
      */
     virtual RoomList GetRoomList() = 0;
 
-    /**
-     * Sends a delete message to the announce service
-     */
+    /// Sends a delete message to the announce service
     virtual void Delete() = 0;
 };
 

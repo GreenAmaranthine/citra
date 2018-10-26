@@ -43,10 +43,8 @@ union BatteryState {
     BitField<2, 3, u8> charge_level;
 };
 
-using MacAddress = std::array<u8, 6>;
-
 // Default MAC address in the Nintendo 3DS range
-constexpr MacAddress DefaultMac = {0x40, 0xF4, 0x07, 0x00, 0x00, 0x00};
+constexpr MacAddress DefaultMac{0x40, 0xF4, 0x07, 0x00, 0x00, 0x00};
 
 enum class WifiLinkLevel : u8 {
     Off = 0,

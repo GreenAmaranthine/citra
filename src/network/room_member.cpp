@@ -18,32 +18,35 @@ constexpr u32 ConnectionTimeoutMs{5000};
 
 class RoomMember::RoomMemberImpl {
 public:
-    ENetHost* client{}; ///< ENet network interface.
-    ENetPeer* server{}; ///< The server peer the client is connected to
+    ENetHost* client; ///< ENet network interface.
+    ENetPeer* server; ///< The server peer the client is connected to
 
     /// Information about the clients connected to the same room as us.
     MemberList member_information;
+
     /// Information about the room we're connected to.
     RoomInformation room_information;
 
-    /// The current game name, id and version
+    /// The current game name and id
     GameInfo current_game_info;
 
     std::atomic<State> state{State::Idle}; ///< Current state of the RoomMember.
+
     void SetState(const State new_state);
     bool IsConnected() const;
 
     std::string nickname;   ///< The nickname of this member.
     MacAddress mac_address; ///< The mac_address of this member.
 
-    std::mutex network_mutex; ///< Mutex that controls access to the `client` variable.
-    /// Thread that receives and dispatches network packets
-    std::unique_ptr<std::thread> loop_thread;
-    std::mutex send_list_mutex;  ///< Mutex that controls access to the `send_list` variable.
+    std::mutex network_mutex; ///< Mutex that controls access to the client variable.
+    std::unique_ptr<std::thread>
+        loop_thread;             ///< Thread that receives and dispatches network packets
+    std::mutex send_list_mutex;  ///< Mutex that controls access to the send_list variable.
     std::list<Packet> send_list; ///< A list that stores all packets to send the async
 
     template <typename T>
     using CallbackSet = std::set<CallbackHandle<T>>;
+
     std::mutex callback_mutex; ///< The mutex used for handling callbacks
 
     class Callbacks {
@@ -57,10 +60,10 @@ public:
         CallbackSet<RoomInformation> callback_set_room_information;
         CallbackSet<State> callback_set_state;
     };
+
     Callbacks callbacks; ///< All CallbackSets to all events
 
     void MemberLoop();
-
     void StartLoop();
 
     /**
@@ -86,6 +89,7 @@ public:
      * @param event The ENet event that was received.
      */
     void HandleJoinPacket(const ENetEvent* event);
+
     /**
      * Extracts RoomInformation and MemberInformation from a received ENet packet.
      * @param event The ENet event that was received.
@@ -104,9 +108,7 @@ public:
      */
     void HandleChatPacket(const ENetEvent* event);
 
-    /**
-     * Disconnects the RoomMember from the Room
-     */
+    /// Disconnects the RoomMember from the room
     void Disconnect();
 
     template <typename T>
@@ -215,11 +217,9 @@ void RoomMember::RoomMemberImpl::SendJoinRequest(const std::string& nickname,
 void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* event) {
     Packet packet;
     packet.Append(event->packet->data, event->packet->dataLength);
-
     // Ignore the first byte, which is the message id.
     packet.IgnoreBytes(sizeof(u8)); // Ignore the message type
-
-    RoomInformation info{};
+    RoomInformation info;
     packet >> info.name;
     packet >> info.member_slots;
     packet >> info.uid;
@@ -229,11 +229,9 @@ void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* ev
     room_information.member_slots = info.member_slots;
     room_information.port = info.port;
     room_information.preferred_game = info.preferred_game;
-
     u32 num_members;
     packet >> num_members;
     member_information.resize(num_members);
-
     for (auto& member : member_information) {
         packet >> member.nickname;
         packet >> member.mac_address;
@@ -246,10 +244,8 @@ void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* ev
 void RoomMember::RoomMemberImpl::HandleJoinPacket(const ENetEvent* event) {
     Packet packet;
     packet.Append(event->packet->data, event->packet->dataLength);
-
     // Ignore the first byte, which is the message id.
     packet.IgnoreBytes(sizeof(u8)); // Ignore the message type
-
     // Parse the MAC Address from the packet
     packet >> mac_address;
     SetState(State::Joined);
@@ -259,32 +255,26 @@ void RoomMember::RoomMemberImpl::HandleWifiPacket(const ENetEvent* event) {
     WifiPacket wifi_packet;
     Packet packet;
     packet.Append(event->packet->data, event->packet->dataLength);
-
     // Ignore the first byte, which is the message id.
     packet.IgnoreBytes(sizeof(u8)); // Ignore the message type
-
     // Parse the WifiPacket from the packet
     u8 frame_type;
     packet >> frame_type;
     WifiPacket::PacketType type{static_cast<WifiPacket::PacketType>(frame_type)};
-
     wifi_packet.type = type;
     packet >> wifi_packet.channel;
     packet >> wifi_packet.transmitter_address;
     packet >> wifi_packet.destination_address;
     packet >> wifi_packet.data;
-
     Invoke<WifiPacket>(wifi_packet);
 }
 
 void RoomMember::RoomMemberImpl::HandleChatPacket(const ENetEvent* event) {
     Packet packet;
     packet.Append(event->packet->data, event->packet->dataLength);
-
     // Ignore the first byte, which is the message id.
     packet.IgnoreBytes(sizeof(u8));
-
-    ChatEntry chat_entry{};
+    ChatEntry chat_entry;
     packet >> chat_entry.nickname;
     packet >> chat_entry.message;
     Invoke<ChatEntry>(chat_entry);
@@ -294,11 +284,9 @@ void RoomMember::RoomMemberImpl::Disconnect() {
     member_information.clear();
     room_information.member_slots = 0;
     room_information.name.clear();
-
     if (!server)
         return;
     enet_peer_disconnect(server, 0);
-
     ENetEvent event;
     while (enet_host_service(client, &event, ConnectionTimeoutMs) > 0) {
         switch (event.type) {
@@ -313,7 +301,7 @@ void RoomMember::RoomMemberImpl::Disconnect() {
             break;
         }
     }
-    // didn't disconnect gracefully force disconnect
+    // Didn't disconnect gracefully force disconnect
     enet_peer_reset(server);
     server = nullptr;
 }
@@ -363,9 +351,8 @@ RoomMember::RoomMember() : room_member_impl{std::make_unique<RoomMemberImpl>()} 
 
 RoomMember::~RoomMember() {
     ASSERT_MSG(!IsConnected(), "RoomMember is being destroyed while connected");
-    if (room_member_impl->loop_thread) {
+    if (room_member_impl->loop_thread)
         Leave();
-    }
 }
 
 RoomMember::State RoomMember::GetState() const {
@@ -392,33 +379,26 @@ RoomInformation RoomMember::GetRoomInformation() const {
 void RoomMember::Join(const std::string& nick, const char* server_addr, u16 server_port,
                       const MacAddress& preferred_mac, const std::string& password) {
     // If the member is connected, kill the connection first
-    if (room_member_impl->loop_thread && room_member_impl->loop_thread->joinable()) {
+    if (room_member_impl->loop_thread && room_member_impl->loop_thread->joinable())
         Leave();
-    }
     // If the thread isn't running but the ptr still exists, reset it
-    else if (room_member_impl->loop_thread) {
+    else if (room_member_impl->loop_thread)
         room_member_impl->loop_thread.reset();
-    }
-
     if (!room_member_impl->client) {
         room_member_impl->client = enet_host_create(nullptr, 1, NumChannels, 0, 0);
         ASSERT_MSG(room_member_impl->client, "Could not create client");
     }
-
     room_member_impl->SetState(State::Joining);
-
-    ENetAddress address{};
+    ENetAddress address;
     enet_address_set_host(&address, server_addr);
     address.port = server_port;
     room_member_impl->server =
         enet_host_connect(room_member_impl->client, &address, NumChannels, 0);
-
     if (!room_member_impl->server) {
         room_member_impl->SetState(State::Error);
         return;
     }
-
-    ENetEvent event{};
+    ENetEvent event;
     int net{enet_host_service(room_member_impl->client, &event, ConnectionTimeoutMs)};
     if (net > 0 && event.type == ENET_EVENT_TYPE_CONNECT) {
         room_member_impl->nickname = nick;
@@ -457,7 +437,6 @@ void RoomMember::SendGameInfo(const GameInfo& game_info) {
     room_member_impl->current_game_info = game_info;
     if (!IsConnected())
         return;
-
     Packet packet;
     packet << static_cast<u8>(IdSetGameInfo);
     packet << game_info.name;
@@ -495,7 +474,6 @@ void RoomMember::Leave() {
     room_member_impl->SetState(State::Idle);
     room_member_impl->loop_thread->join();
     room_member_impl->loop_thread.reset();
-
     enet_host_destroy(room_member_impl->client);
     room_member_impl->client = nullptr;
 }

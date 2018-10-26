@@ -23,28 +23,23 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     : QDialog{parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint},
       ui{std::make_unique<Ui::Lobby>()}, announce_multiplayer_session{session} {
     ui->setupUi(this);
-
-    // setup the watcher for background connections
+    // Setup the watcher for background connections
     watcher = new QFutureWatcher<void>;
-
     model = new QStandardItemModel(ui->room_list);
-
     // Create a proxy to the game list to get the list of games owned
     game_list = new QStandardItemModel;
-
     for (int i{}; i < list->rowCount(); i++) {
         auto parent{list->item(i, 0)};
-        for (int j{}; j < parent->rowCount(); j++) {
+        for (int j{}; j < parent->rowCount(); j++)
             game_list->appendRow(parent->child(j)->clone());
-        }
     }
-
     proxy = new LobbyFilterProxyModel(this, game_list);
     proxy->setSourceModel(model);
     proxy->setDynamicSortFilter(true);
     proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
     proxy->setSortLocaleAware(true);
     ui->room_list->setModel(proxy);
+
     ui->room_list->header()->setSectionResizeMode(QHeaderView::Interactive);
     ui->room_list->header()->stretchLastSection();
     ui->room_list->setAlternatingRowColors(true);
@@ -56,14 +51,11 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     ui->room_list->setEditTriggers(QHeaderView::NoEditTriggers);
     ui->room_list->setExpandsOnDoubleClick(false);
     ui->room_list->setContextMenuPolicy(Qt::CustomContextMenu);
-
     ui->nickname->setValidator(validation.GetNickname());
     ui->nickname->setText(UISettings::values.nickname);
-    if (ui->nickname->text().isEmpty() && !Settings::values.citra_username.empty()) {
+    if (ui->nickname->text().isEmpty() && !Settings::values.citra_username.empty())
         // Use Citra Web Service user name as nickname by default
         ui->nickname->setText(QString::fromStdString(Settings::values.citra_username));
-    }
-
     // UI Buttons
     connect(ui->refresh_list, &QPushButton::pressed, this, &Lobby::RefreshLobby);
     connect(ui->games_owned, &QCheckBox::stateChanged, proxy,
@@ -72,11 +64,9 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     connect(ui->search, &QLineEdit::textChanged, proxy, &LobbyFilterProxyModel::SetFilterSearch);
     connect(ui->room_list, &QTreeView::doubleClicked, this, &Lobby::OnJoinRoom);
     connect(ui->room_list, &QTreeView::clicked, this, &Lobby::OnExpandRoom);
-
     // Actions
     connect(&room_list_watcher, &QFutureWatcher<AnnounceMultiplayerRoom::RoomList>::finished, this,
             &Lobby::OnRefreshLobby);
-
     // Manually start a refresh when the window is opening
     // TODO: if this refresh is slow for people with bad internet, then don't do it as
     // part of the constructor, but offload the refresh until after the window shown. perhaps emit a
@@ -127,17 +117,14 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
     const std::string ip{
         proxy->data(connection_index, LobbyItemHost::HostIPRole).toString().toStdString()};
     int port{proxy->data(connection_index, LobbyItemHost::HostPortRole).toInt()};
-
-    // attempt to connect in a different thread
+    // Attempt to connect in a different thread
     QFuture<void> f{QtConcurrent::run([nickname, ip, port, password] {
         if (auto member{Network::GetRoomMember().lock()}) {
             member->Join(nickname, ip.c_str(), port, Network::NoPreferredMac, password);
         }
     })};
     watcher->setFuture(f);
-
     // TODO: disable widgets and display a connecting while we wait
-
     // Save settings
     UISettings::values.nickname = ui->nickname->text();
     UISettings::values.ip = proxy->data(connection_index, LobbyItemHost::HostIPRole).toString();
@@ -162,15 +149,14 @@ void Lobby::RefreshLobby() {
         ui->refresh_list->setText("Refreshing");
         room_list_watcher.setFuture(
             QtConcurrent::run([session]() { return session->GetRoomList(); }));
-    } else {
-        // TODO: Display an error box about announce couldn't be started
     }
+    // TODO: Display an error box about announce couldn't be started
 }
 
 void Lobby::OnRefreshLobby() {
     AnnounceMultiplayerRoom::RoomList new_room_list{room_list_watcher.result()};
     for (auto room : new_room_list) {
-        // find the icon for the game if this person owns that game.
+        // Find the icon for the game if this person owns that game.
         QPixmap smdh_icon;
         for (int r{}; r < game_list->rowCount(); ++r) {
             auto index{game_list->index(r, 0)};
@@ -178,7 +164,6 @@ void Lobby::OnRefreshLobby() {
             if (game_id != 0 && room.preferred_game_id == game_id)
                 smdh_icon = game_list->data(index, Qt::DecorationRole).value<QPixmap>();
         }
-
         QList<QVariant> members;
         for (auto member : room.members) {
             QVariant var;
@@ -186,7 +171,6 @@ void Lobby::OnRefreshLobby() {
                                      QString::fromStdString(member.game_name)});
             members.append(var);
         }
-
         auto first_item{new LobbyItem()};
         auto row{QList<QStandardItem*>({
             first_item,
@@ -201,25 +185,20 @@ void Lobby::OnRefreshLobby() {
         // To make the rows expandable, add the member data as a child of the first column of the
         // rows with people in them and have qt set them to colspan after the model is finished
         // resetting
-        if (room.members.size() > 0) {
+        if (room.members.size() > 0)
             first_item->appendRow(new LobbyItemExpandedMemberList(members));
-        }
     }
-
     // Reenable the refresh button and resize the columns
     ui->refresh_list->setEnabled(true);
     ui->refresh_list->setText("Refresh List");
     ui->room_list->header()->stretchLastSection();
-    for (int i{}; i < Column::TOTAL - 1; ++i) {
+    for (int i{}; i < Column::TOTAL - 1; ++i)
         ui->room_list->resizeColumnToContents(i);
-    }
-
     // Set the member list child items to span all columns
     for (int i{}; i < proxy->rowCount(); i++) {
         auto parent{model->item(i, 0)};
-        if (parent->hasChildren()) {
+        if (parent->hasChildren())
             ui->room_list->setFirstColumnSpanned(0, proxy->index(i, 0), true);
-        }
     }
 }
 
@@ -228,11 +207,9 @@ LobbyFilterProxyModel::LobbyFilterProxyModel(QWidget* parent, QStandardItemModel
 
 bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const {
     // Prioritize filters by fastest to compute
-
     // Pass over any child rows (aka row that shows the players in the room)
     if (sourceParent != QModelIndex())
         return true;
-
     // Filter by filled rooms
     if (filter_full) {
         QModelIndex member_list{sourceModel()->index(sourceRow, Column::MEMBER, sourceParent)};
@@ -243,7 +220,6 @@ bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& s
         if (player_count >= max_players)
             return false;
     }
-
     // Filter by search parameters
     if (!filter_search.isEmpty()) {
         QModelIndex game_name{sourceModel()->index(sourceRow, Column::GAME_NAME, sourceParent)};
@@ -264,7 +240,6 @@ bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& s
         if (!preferred_game_match && !room_name_match && !username_match)
             return false;
     }
-
     // Filter by game owned
     if (filter_owned) {
         QModelIndex game_name{sourceModel()->index(sourceRow, Column::GAME_NAME, sourceParent)};
@@ -278,14 +253,12 @@ bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& s
         bool owned{};
         for (const auto& game : owned_games) {
             auto game_id{game_list->data(game, GameListItemPath::ProgramIdRole).toLongLong()};
-            if (current_id == game_id) {
+            if (current_id == game_id)
                 owned = true;
-            }
         }
         if (!owned)
             return false;
     }
-
     return true;
 }
 

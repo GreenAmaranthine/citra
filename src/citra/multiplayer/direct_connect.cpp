@@ -26,7 +26,7 @@ DirectConnectWindow::DirectConnectWindow(QWidget* parent)
       ui{std::make_unique<Ui::DirectConnect>()} {
     ui->setupUi(this);
 
-    // setup the watcher for background connections
+    // Setup the watcher for background connections
     watcher = new QFutureWatcher<void>;
     connect(watcher, &QFutureWatcher<void>::finished, this, &DirectConnectWindow::OnConnection);
 
@@ -40,7 +40,6 @@ DirectConnectWindow::DirectConnectWindow(QWidget* parent)
     ui->ip->setText(UISettings::values.ip);
     ui->port->setValidator(validation.GetPort());
     ui->port->setText(UISettings::values.port);
-
     // TODO: Show or hide the connection options based on the current value of the combo
     // box. Add this back in when the traversal server support is added.
     connect(ui->connect, &QPushButton::pressed, this, &DirectConnectWindow::Connect);
@@ -53,17 +52,14 @@ void DirectConnectWindow::Connect() {
         NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID);
         return;
     }
-    if (const auto member{Network::GetRoomMember().lock()}) {
+    if (const auto member{Network::GetRoomMember().lock()})
         // Prevent the user from trying to join a room while they are already joining.
-        if (member->GetState() == Network::RoomMember::State::Joining) {
+        if (member->GetState() == Network::RoomMember::State::Joining)
             return;
-        } else if (member->GetState() == Network::RoomMember::State::Joined) {
+        else if (member->GetState() == Network::RoomMember::State::Joined)
             // And ask if they want to leave the room if they are already in one.
-            if (!NetworkMessage::WarnDisconnect()) {
+            if (!NetworkMessage::WarnDisconnect())
                 return;
-            }
-        }
-    }
     switch (static_cast<ConnectionType>(ui->connection_type->currentIndex())) {
     case ConnectionType::TraversalServer:
         break;
@@ -78,7 +74,6 @@ void DirectConnectWindow::Connect() {
         }
         break;
     }
-
     // Store settings
     UISettings::values.nickname = ui->nickname->text();
     UISettings::values.ip = ui->ip->text();
@@ -86,8 +81,7 @@ void DirectConnectWindow::Connect() {
                                   ? ui->port->text()
                                   : UISettings::values.port;
     Settings::Apply();
-
-    // attempt to connect in a different thread
+    // Attempt to connect in a different thread
     QFuture<void> f{QtConcurrent::run([&] {
         if (auto member{Network::GetRoomMember().lock()}) {
             auto port{UISettings::values.port.toUInt()};
@@ -95,10 +89,8 @@ void DirectConnectWindow::Connect() {
                          port, Network::NoPreferredMac, ui->password->text().toStdString().c_str());
         }
     })};
-
     watcher->setFuture(f);
-
-    // and disable widgets and display a connecting while we wait
+    // And disable widgets and display a connecting while we wait
     BeginConnecting();
 }
 
@@ -114,10 +106,7 @@ void DirectConnectWindow::EndConnecting() {
 
 void DirectConnectWindow::OnConnection() {
     EndConnecting();
-
-    if (auto member{Network::GetRoomMember().lock()}) {
-        if (member->GetState() == Network::RoomMember::State::Joined) {
+    if (auto member{Network::GetRoomMember().lock()})
+        if (member->GetState() == Network::RoomMember::State::Joined)
             close();
-        }
-    }
 }

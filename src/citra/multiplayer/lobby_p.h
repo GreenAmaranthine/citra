@@ -43,9 +43,8 @@ public:
             bool has_password{data(PasswordRole).toBool()};
             return has_password ? QIcon::fromTheme("lock").pixmap(16) : QIcon();
         }
-        if (role != Qt::DisplayRole) {
+        if (role != Qt::DisplayRole)
             return LobbyItem::data(role);
-        }
         return data(NameRole).toString();
     }
 
@@ -72,13 +71,11 @@ public:
     QVariant data(int role) const override {
         if (role == Qt::DecorationRole) {
             auto val{data(GameIconRole)};
-            if (val.isValid()) {
+            if (val.isValid())
                 val = val.value<QPixmap>().scaled(16, 16, Qt::KeepAspectRatio);
-            }
             return val;
-        } else if (role != Qt::DisplayRole) {
+        } else if (role != Qt::DisplayRole)
             return LobbyItem::data(role);
-        }
         return data(GameNameRole).toString();
     }
 
@@ -104,9 +101,8 @@ public:
     }
 
     QVariant data(int role) const override {
-        if (role != Qt::DisplayRole) {
+        if (role != Qt::DisplayRole)
             return LobbyItem::data(role);
-        }
         return data(HostUsernameRole).toString();
     }
 
@@ -161,16 +157,15 @@ public:
     }
 
     QVariant data(int role) const override {
-        if (role != Qt::DisplayRole) {
+        if (role != Qt::DisplayRole)
             return LobbyItem::data(role);
-        }
         auto members = data(MemberListRole).toList();
         return QString("%1 / %2").arg(QString::number(members.size()),
                                       data(MaxPlayerRole).toString());
     }
 
     bool operator<(const QStandardItem& other) const override {
-        // sort by rooms that have the most players
+        // Sort by rooms that have the most players
         int left_members{data(MemberListRole).toList().size()};
         int right_members{other.data(MemberListRole).toList().size()};
         return left_members < right_members;
@@ -180,9 +175,7 @@ public:
     static const int MaxPlayerRole{Qt::UserRole + 2};
 };
 
-/**
- * Member information for when a lobby is expanded in the UI
- */
+/// Member information for when a lobby is expanded in the UI
 class LobbyItemExpandedMemberList : public LobbyItem {
 public:
     LobbyItemExpandedMemberList() = default;
@@ -202,11 +195,10 @@ public:
             if (!first)
                 out += '\n';
             const auto& m{member.value<LobbyMember>()};
-            if (m.GetGameName().isEmpty()) {
+            if (m.GetGameName().isEmpty())
                 out += QString("%1 isn't playing a game").arg(m.GetUsername());
-            } else {
+            else
                 out += QString("%1 is playing %2").arg(m.GetUsername(), m.GetGameName());
-            }
             first = false;
         }
         return out;

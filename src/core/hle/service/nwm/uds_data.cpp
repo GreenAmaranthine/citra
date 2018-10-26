@@ -17,8 +17,6 @@
 
 namespace Service::NWM {
 
-using MacAddress = std::array<u8, 6>;
-
 /*
  * Generates a SNAP-enabled 802.2 LLC header for the specified protocol.
  * @returns a buffer with the bytes of the generated header.

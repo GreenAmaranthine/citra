@@ -36,9 +36,9 @@ const ConnectionError LOST_CONNECTION{"Connection to room lost. Try to reconnect
 const ConnectionError MAC_COLLISION{"MAC address is already in use. Please choose another."};
 
 static bool WarnMessage(const std::string& title, const std::string& text) {
-    return QMessageBox::Ok == QMessageBox::warning(nullptr, QString::fromStdString(title),
-                                                   QString::fromStdString(text),
-                                                   QMessageBox::Ok | QMessageBox::Cancel);
+    return QMessageBox::warning(nullptr, QString::fromStdString(title),
+                                QString::fromStdString(text),
+                                QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Ok;
 }
 
 void ShowError(const ConnectionError& e) {

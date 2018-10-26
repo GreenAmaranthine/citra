@@ -103,18 +103,15 @@ std::vector<u8> GenerateBasicTaggedParameters() {
 std::vector<u8> GenerateNintendoDummyTag() {
     // Note: These values were taken from a packet capture of an o3DS XL
     // broadcasting a Super Smash Bros. 4 lobby.
-    constexpr std::array<u8, 3> dummy_data = {0x0A, 0x00, 0x00};
-
+    constexpr std::array<u8, 3> dummy_data{0x0A, 0x00, 0x00};
     DummyTag tag{};
     tag.header.tag_id = static_cast<u8>(TagId::VendorSpecific);
     tag.header.length = sizeof(DummyTag) - sizeof(TagHeader);
     tag.oui_type = static_cast<u8>(NintendoTagId::Dummy);
-    tag.oui = NintendoOUI;
+    tag.oui = NintendoOUI3;
     tag.data = dummy_data;
-
     std::vector<u8> buffer(sizeof(DummyTag));
     std::memcpy(buffer.data(), &tag, sizeof(DummyTag));
-
     return buffer;
 }
 
@@ -136,7 +133,7 @@ std::vector<u8> GenerateNintendoNetworkInfoTag(const NetworkInfo& network_info) 
 
     // Ensure the network structure has the correct OUI and OUI type.
     ASSERT(network_info.oui_type == static_cast<u8>(NintendoTagId::NetworkInfo));
-    ASSERT(network_info.oui_value == NintendoOUI);
+    ASSERT(network_info.oui_value == NintendoOUI3);
 
     // This tag contains the network info structure starting at the OUI.
     std::memcpy(tag.network_info.data(), &network_info.oui_value, tag.network_info.size());
@@ -240,19 +237,15 @@ std::vector<u8> GenerateNintendoFirstEncryptedDataTag(const NetworkInfo& network
                                                       const NodeList& nodes) {
     const std::size_t payload_size{
         std::min<std::size_t>(EncryptedDataSizeCutoff, nodes.size() * sizeof(NodeInfo))};
-
     EncryptedDataTag tag;
     tag.header.tag_id = static_cast<u8>(TagId::VendorSpecific);
     tag.header.length = static_cast<u8>(sizeof(tag) - sizeof(TagHeader) + payload_size);
     tag.oui_type = static_cast<u8>(NintendoTagId::EncryptedData0);
-    tag.oui = NintendoOUI;
-
+    tag.oui = NintendoOUI3;
     std::vector<u8> buffer(sizeof(tag) + payload_size);
     std::memcpy(buffer.data(), &tag, sizeof(tag));
-
-    std::vector<u8> encrypted_data = GeneratedEncryptedData(network_info, nodes);
+    std::vector<u8> encrypted_data{GeneratedEncryptedData(network_info, nodes)};
     std::memcpy(buffer.data() + sizeof(tag), encrypted_data.data(), payload_size);
-
     return buffer;
 }
 
@@ -269,23 +262,18 @@ std::vector<u8> GenerateNintendoSecondEncryptedDataTag(const NetworkInfo& networ
     // This tag is only present if the payload is larger than EncryptedDataSizeCutoff (0xFA).
     if (nodes.size() * sizeof(NodeInfo) <= EncryptedDataSizeCutoff)
         return {};
-
     const std::size_t payload_size{nodes.size() * sizeof(NodeInfo) - EncryptedDataSizeCutoff};
     const std::size_t tag_length{sizeof(EncryptedDataTag) - sizeof(TagHeader) + payload_size};
-
     EncryptedDataTag tag;
     tag.header.tag_id = static_cast<u8>(TagId::VendorSpecific);
     tag.header.length = static_cast<u8>(tag_length);
     tag.oui_type = static_cast<u8>(NintendoTagId::EncryptedData1);
-    tag.oui = NintendoOUI;
-
+    tag.oui = NintendoOUI3;
     std::vector<u8> buffer(sizeof(tag) + payload_size);
     std::memcpy(buffer.data(), &tag, sizeof(tag));
-
     std::vector<u8> encrypted_data{GeneratedEncryptedData(network_info, nodes)};
     std::memcpy(buffer.data() + sizeof(tag), encrypted_data.data() + EncryptedDataSizeCutoff,
                 payload_size);
-
     return buffer;
 }
 

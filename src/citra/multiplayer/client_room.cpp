@@ -22,8 +22,7 @@ ClientRoomWindow::ClientRoomWindow(QWidget* parent)
     : QDialog{parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint},
       ui{std::make_unique<Ui::ClientRoom>()} {
     ui->setupUi(this);
-
-    // setup the callbacks for network updates
+    // Setup the callbacks for network updates
     if (auto member{Network::GetRoomMember().lock()}) {
         member->BindOnRoomInformationChanged(
             [this](const Network::RoomInformation& info) { emit RoomInformationChanged(info); });
@@ -33,10 +32,8 @@ ClientRoomWindow::ClientRoomWindow(QWidget* parent)
         connect(this, &ClientRoomWindow::RoomInformationChanged, this,
                 &ClientRoomWindow::OnRoomUpdate);
         connect(this, &ClientRoomWindow::StateChanged, this, &::ClientRoomWindow::OnStateChange);
-    } else {
-        // TODO: network was not initialized?
     }
-
+    // TODO: Network was not initialized?
     connect(ui->disconnect, &QPushButton::pressed, [this] { Disconnect(); });
     ui->disconnect->setDefault(false);
     ui->disconnect->setAutoDefault(false);
@@ -66,7 +63,7 @@ void ClientRoomWindow::Disconnect() {
 }
 
 void ClientRoomWindow::UpdateView() {
-    if (auto member{Network::GetRoomMember().lock()}) {
+    if (auto member{Network::GetRoomMember().lock()})
         if (member->IsConnected()) {
             ui->chat->Enable();
             ui->disconnect->setEnabled(true);
@@ -79,7 +76,6 @@ void ClientRoomWindow::UpdateView() {
                                .arg(information.member_slots));
             return;
         }
-    }
-    // TODO: can't get RoomMember*, show error and close window
+    // TODO: Can't get RoomMember*, show error and close window
     close();
 }

@@ -72,9 +72,8 @@ void RoomJson::SetRoomInformation(const std::string& uid, const std::string& nam
     room.preferred_game = preferred_game;
     room.preferred_game_id = preferred_game_id;
 }
-void RoomJson::AddPlayer(const std::string& nickname,
-                         const AnnounceMultiplayerRoom::MacAddress& mac_address, const u64 game_id,
-                         const std::string& game_name) {
+void RoomJson::AddPlayer(const std::string& nickname, const MacAddress& mac_address,
+                         const u64 game_id, const std::string& game_name) {
     AnnounceMultiplayerRoom::Room::Member member;
     member.name = nickname;
     member.mac_address = mac_address;

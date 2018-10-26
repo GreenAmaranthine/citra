@@ -12,16 +12,12 @@
 
 namespace Network {
 
-constexpr u32 network_version = 3; ///< The version of this Room and RoomMember
-
+constexpr u32 network_version{3}; ///< The network version
 constexpr u16 DefaultRoomPort = 24872;
-
-constexpr u32 MaxMessageSize = 500;
-
-/// Maximum number of concurrent connections allowed to this room.
-static constexpr u32 MaxConcurrentConnections = 254;
-
-constexpr std::size_t NumChannels = 1; // Number of channels used for the connection
+constexpr u32 MaxMessageSize{500};
+constexpr u32 MaxConcurrentConnections{
+    254};                             ///< Maximum number of concurrent connections allowed rooms.
+constexpr std::size_t NumChannels{1}; // Number of channels used for the connection
 
 struct RoomInformation {
     std::string name;           ///< Name of the server
@@ -37,13 +33,11 @@ struct GameInfo {
     u64 id{};
 };
 
-using MacAddress = std::array<u8, 6>;
-/// A special MAC address that tells the room we're joining to assign us a MAC address
-/// automatically.
-constexpr MacAddress NoPreferredMac = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-
-// 802.11 broadcast MAC address
-constexpr MacAddress BroadcastMac = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+constexpr MacAddress NoPreferredMac{
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}; ///< A special MAC address that tells the room
+                                         /// we're joining to assign us a MAC address automatically.
+constexpr MacAddress BroadcastMac{0xFF, 0xFF, 0xFF,
+                                  0xFF, 0xFF, 0xFF}; ///< 802.11 broadcast MAC address
 
 // The different types of messages that can be sent. The first byte of each packet defines the type
 enum RoomMessageTypes : u8 {

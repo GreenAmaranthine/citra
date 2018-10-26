@@ -187,9 +187,7 @@ private:
     // Status bar elements
     QProgressBar* progress_bar;
     QLabel* message_label;
-    QLabel* emu_speed_label;
-    QLabel* game_fps_label;
-    QLabel* emu_frametime_label;
+    QLabel* perf_label;
 
     QTimer status_bar_update_timer;
     QTimer movie_play_timer;

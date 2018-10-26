@@ -99,7 +99,6 @@ void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& s
         leave_room->setEnabled(false);
         show_room->setEnabled(false);
     }
-
     current_state = state;
 }
 

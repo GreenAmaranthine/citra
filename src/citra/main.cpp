@@ -173,24 +173,12 @@ void GMainWindow::InitializeWidgets() {
     progress_bar->hide();
     statusBar()->addPermanentWidget(progress_bar);
 
-    emu_speed_label = new QLabel();
-    emu_speed_label->setToolTip("Current emulation speed. Values higher or lower than 100% "
-                                "indicate emulation is running faster or slower than a 3DS.");
-    game_fps_label = new QLabel();
-    game_fps_label->setToolTip("How many frames per second the game is currently displaying. "
-                               "This will vary from game to game and scene to scene.");
-    emu_frametime_label = new QLabel();
-    emu_frametime_label->setToolTip(
-        "Time taken to emulate a 3DS frame, not counting framelimiting. For "
-        "full-speed emulation (with screen refresh rate set to 60) this should be at most 16.67 "
-        "ms.");
-
-    for (auto& label : {emu_speed_label, game_fps_label, emu_frametime_label}) {
-        label->setVisible(false);
-        label->setFrameStyle(QFrame::NoFrame);
-        label->setContentsMargins(4, 0, 4, 0);
-        statusBar()->addPermanentWidget(label, 0);
-    }
+    perf_label = new QLabel();
+    perf_label->setToolTip("Performance information (Speed | FPS | Frametime)");
+    perf_label->setVisible(false);
+    perf_label->setFrameStyle(QFrame::NoFrame);
+    perf_label->setContentsMargins(4, 0, 4, 0);
+    statusBar()->addPermanentWidget(perf_label, 0);
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusIcon(), 0);
     statusBar()->setVisible(true);
 
@@ -697,9 +685,7 @@ void GMainWindow::ShutdownGame() {
     // Disable status bar updates
     status_bar_update_timer.stop();
     message_label->setVisible(false);
-    emu_speed_label->setVisible(false);
-    game_fps_label->setVisible(false);
-    emu_frametime_label->setVisible(false);
+    perf_label->setVisible(false);
 
     short_title.clear();
     SetupUIStrings();
@@ -1408,18 +1394,17 @@ void GMainWindow::UpdateStatusBar() {
     }
     auto results{system.GetAndResetPerfStats()};
     if (Settings::values.use_frame_limit)
-        emu_speed_label->setText(QString("Speed: %1% / %2%")
-                                     .arg(results.emulation_speed * 100.0, 0, 'f', 0)
-                                     .arg(Settings::values.frame_limit));
+        perf_label->setText(QString("%1 % / %2 % | %3 FPS | %4 ms")
+                                .arg(results.emulation_speed * 100.0, 0, 'f', 0)
+                                .arg(Settings::values.frame_limit)
+                                .arg(results.game_fps, 0, 'f', 0)
+                                .arg(results.frametime * 1000.0, 0, 'f', 2));
     else
-        emu_speed_label->setText(
-            QString("Speed: %1%").arg(results.emulation_speed * 100.0, 0, 'f', 0));
-    game_fps_label->setText(QString("Game: %1 FPS").arg(results.game_fps, 0, 'f', 0));
-    emu_frametime_label->setText(
-        QString("Frame: %1 ms").arg(results.frametime * 1000.0, 0, 'f', 2));
-    emu_speed_label->setVisible(true);
-    game_fps_label->setVisible(true);
-    emu_frametime_label->setVisible(true);
+        perf_label->setText(QString("%1 % | %2 FPS | %3 ms")
+                                .arg(results.emulation_speed * 100.0, 0, 'f', 0)
+                                .arg(results.game_fps, 0, 'f', 0)
+                                .arg(results.frametime * 1000.0, 0, 'f', 2));
+    perf_label->setVisible(true);
 }
 
 void GMainWindow::OnCoreError(Core::System::ResultStatus result, const std::string& details) {

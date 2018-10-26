@@ -190,7 +190,7 @@ static void HandleNodeMapPacket(const Network::WifiPacket& packet) {
     }
     node_map.clear();
     std::size_t num_entries;
-    Network::MacAddress address;
+    MacAddress address;
     u16 id;
     std::memcpy(&num_entries, packet.data.data(), sizeof(num_entries));
     std::size_t offset{sizeof(num_entries)};
@@ -457,7 +457,7 @@ void HandleAuthenticationFrame(const Network::WifiPacket& packet) {
             }
             if (node_map.find(packet.transmitter_address) != node_map.end()) {
                 LOG_ERROR(Service_NWM, "Connection sequence aborted, because there is already a "
-                                       "connected client with that MAC-Adress");
+                                       "connected client with that MAC address");
                 return;
             }
             if (connection_status.max_nodes == connection_status.total_nodes) {
@@ -547,7 +547,7 @@ void OnWifiPacketReceived(const Network::WifiPacket& packet) {
     }
 }
 
-static std::optional<Network::MacAddress> GetNodeMacAddress(u16 dest_node_id, u8 flags) {
+static std::optional<MacAddress> GetNodeMacAddress(u16 dest_node_id, u8 flags) {
     constexpr u8 BroadcastFlag{0x2};
     if ((flags & BroadcastFlag) || dest_node_id == BroadcastNetworkNodeId)
         // Broadcast
@@ -787,7 +787,7 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
         ASSERT_MSG(network_info.max_nodes > 1, "Trying to host a network of only one member.");
         connection_status.status = static_cast<u32>(NetworkStatus::ConnectedAsHost);
         // Set up basic information for this network.
-        network_info.oui_value = NintendoOUI;
+        network_info.oui_value = NintendoOUI3;
         network_info.oui_type = static_cast<u8>(NintendoTagId::NetworkInfo);
         connection_status.max_nodes = network_info.max_nodes;
         // Resize the nodes list to hold max_nodes.
@@ -1074,7 +1074,7 @@ void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx) {
     // The first 4 bytes should be the OUI and the OUI Type of the tags.
     std::array<u8, 3> oui;
     std::memcpy(oui.data(), encrypted_data0_buffer.data(), oui.size());
-    ASSERT_MSG(oui == NintendoOUI, "Unexpected OUI");
+    ASSERT_MSG(oui == NintendoOUI3, "Unexpected OUI");
     ASSERT_MSG(encrypted_data0_buffer[3] == static_cast<u8>(NintendoTagId::EncryptedData0),
                "Unexpected tag id");
     std::vector<u8> beacon_data(encrypted_data0_buffer.size() - 4 + encrypted_data1_buffer.size() -
@@ -1167,7 +1167,7 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework{"nwm::UDS"}, system{sy
         system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "NWM::connection_status_event");
     beacon_broadcast_event =
         CoreTiming::RegisterEvent("UDS::BeaconBroadcastCallback", BeaconBroadcastCallback);
-    CryptoPP::AutoSeededRandomPool rng{};
+    CryptoPP::AutoSeededRandomPool rng;
     auto mac{SharedPage::DefaultMac};
     // Keep the Nintendo 3DS MAC header and randomly generate the last 3 bytes
     rng.GenerateBlock(static_cast<CryptoPP::byte*>(mac.data() + 3), 3);

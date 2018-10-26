@@ -13,9 +13,6 @@
 
 namespace Service::NWM {
 
-using MacAddress = std::array<u8, 6>;
-constexpr std::array<u8, 3> NintendoOUI = {0x00, 0x1F, 0x32};
-
 /**
  * Internal vendor-specific tag ids as stored inside
  * VendorSpecific blocks in the Beacon frames.

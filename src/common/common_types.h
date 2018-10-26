@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 #ifdef _MSC_VER
@@ -36,25 +37,28 @@ using u8 = std::uint8_t;   ///< 8-bit unsigned byte
 using u16 = std::uint16_t; ///< 16-bit unsigned short
 using u32 = std::uint32_t; ///< 32-bit unsigned word
 using u64 = std::uint64_t; ///< 64-bit unsigned int
-
-using s8 = std::int8_t;   ///< 8-bit signed byte
-using s16 = std::int16_t; ///< 16-bit signed short
-using s32 = std::int32_t; ///< 32-bit signed word
-using s64 = std::int64_t; ///< 64-bit signed int
-
-using f32 = float; ///< 32-bit floating point
+using s8 = std::int8_t;    ///< 8-bit signed byte
+using s16 = std::int16_t;  ///< 16-bit signed short
+using s32 = std::int32_t;  ///< 32-bit signed word
+using s64 = std::int64_t;  ///< 64-bit signed int
+using f32 = float;         ///< 32-bit floating point
 
 // TODO: It would be nice to eventually replace these with strong types that prevent accidental
 // conversion between each other.
 using VAddr = u32; ///< Represents a pointer in the userspace virtual address space.
 using PAddr = u32; ///< Represents a pointer in the ARM11 physical address space.
 
+using MacAddress = std::array<u8, 6>;  ///< Network MAC Address (size is 6)
+using MacAddress3 = std::array<u8, 3>; ///< Network MAC Address (size is 3)
+
+constexpr MacAddress NintendoOUI{0x00, 0x1F, 0x32, 0x00, 0x00, 0x00};
+constexpr MacAddress3 NintendoOUI3{0x00, 0x1F, 0x32};
+
 // An inheritable class to disallow the copy constructor and operator= functions
 class NonCopyable {
 protected:
     constexpr NonCopyable() = default;
     ~NonCopyable() = default;
-
     NonCopyable(const NonCopyable&) = delete;
     NonCopyable& operator=(const NonCopyable&) = delete;
 };

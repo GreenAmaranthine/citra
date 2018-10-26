@@ -36,9 +36,7 @@ public slots:
     void RefreshLobby();
 
 private slots:
-    /**
-     * Pulls the list of rooms from network and fills out the lobby model with the results
-     */
+    /// Pulls the list of rooms from network and fills out the lobby model with the results
     void OnRefreshLobby();
 
     /**
@@ -61,9 +59,7 @@ signals:
     void StateChanged(const Network::RoomMember::State&);
 
 private:
-    /**
-     * Removes all entries in the Lobby before refreshing.
-     */
+    /// Removes all entries in the Lobby before refreshing.
     void ResetModel();
 
     /**
