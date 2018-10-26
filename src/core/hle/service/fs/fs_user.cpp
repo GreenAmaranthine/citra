@@ -66,18 +66,16 @@ void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
         rb.PushMoveObjects<Kernel::Object>(nullptr);
         LOG_ERROR(Service_FS, "failed to get a handle for file {}", file_path.DebugStr());
     }
-    ctx.SleepClientThread(Kernel::GetCurrentThread(), "fs::openfile",
+    // Super Mario Maker fix
+    ctx.SleepClientThread(system.Kernel().GetThreadManager().GetCurrentThread(), "fs::openfile",
                           std::chrono::nanoseconds{10000000},
                           [](Kernel::SharedPtr<Kernel::Thread> thread,
-                             Kernel::HLERequestContext& ctx, Kernel::ThreadWakeupReason reason) {
-                              // This is a fix for Super Mario Maker for Nintendo 3DS
-                          });
+                             Kernel::HLERequestContext& ctx, Kernel::ThreadWakeupReason reason) {});
 }
 
 void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x803, 8, 4};
     rp.Skip(1, false); // Transaction
-
     auto archive_id{rp.PopEnum<FS::ArchiveIdCode>()};
     auto archivename_type{rp.PopEnum<FileSys::LowPathType>()};
     u32 archivename_size{rp.Pop<u32>()};

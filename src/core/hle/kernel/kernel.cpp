@@ -24,11 +24,7 @@ KernelSystem::KernelSystem(u32 system_mode) {
 }
 
 KernelSystem::~KernelSystem() {
-<<<<<<< HEAD
     named_ports.clear();
-    Kernel::TimersShutdown();
-=======
->>>>>>> e5b93741d... kernel/timer: add TimerManager for timer system states
     Kernel::MemoryShutdown();
 }
 

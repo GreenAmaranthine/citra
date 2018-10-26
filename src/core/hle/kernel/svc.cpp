@@ -308,7 +308,8 @@ static ResultCode OpenProcess(Handle* process, u32 process_id) {
 
 /// Opens a thread
 static ResultCode OpenThread(Handle* thread, Handle process, u32 thread_id) {
-    const auto& thread_list{GetThreadList()};
+    const auto& thread_list{
+        Core::System::GetInstance().Kernel().GetThreadManager().GetThreadList()};
     auto itr{
         std::find_if(thread_list.begin(), thread_list.end(), [&](const SharedPtr<Thread>& thread) {
             bool check1 = thread->thread_id == thread_id;

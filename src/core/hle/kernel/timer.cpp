@@ -78,7 +78,6 @@ void Timer::Signal(s64 cycles_late) {
         CoreTiming::ScheduleEvent(nsToCycles(interval_delay) - cycles_late,
                                   timer_manager.timer_callback_event_type, callback_id);
 }
-} // namespace Kernel
 
 /// The timer callback event, called when a timer is fired
 void TimerManager::TimerCallback(u64 callback_id, s64 cycles_late) {
