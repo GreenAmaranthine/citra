@@ -599,7 +599,7 @@ void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
             Settings::values.factor_3d = 0;
         else
             Settings::values.factor_3d = 100;
-        system.Kernel().GetSharedPageHandler()->Update3DSettings();
+        system.Kernel().GetSharedPageHandler().Update3DSettings();
     }
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);

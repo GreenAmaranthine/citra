@@ -10,7 +10,7 @@
 #include "core/file_sys/archive_ncch.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/applets/applet.h"
-#include "core/hle/config_mem.h"
+#include "core/hle/kernel/config_mem.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/romfs.h"
@@ -722,9 +722,9 @@ void Module::Interface::IsStandardMemoryLayout(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x104, 2, 0};
     rb.Push(RESULT_SUCCESS);
     if (CFG::IsNewModeEnabled())
-        rb.Push<u32>((ConfigMem::config_mem.app_mem_type != 7) ? 1 : 0);
+        rb.Push<u32>((apt->system.Kernel().GetConfigMem().app_mem_type != 7) ? 1 : 0);
     else
-        rb.Push<u32>((ConfigMem::config_mem.app_mem_type == 0) ? 1 : 0);
+        rb.Push<u32>((apt->system.Kernel().GetConfigMem().app_mem_type == 0) ? 1 : 0);
 }
 
 void Module::Interface::ReplySleepQuery(Kernel::HLERequestContext& ctx) {

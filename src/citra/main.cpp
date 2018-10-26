@@ -57,6 +57,7 @@
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/file_sys/seed_db.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/service/am/am_u.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"

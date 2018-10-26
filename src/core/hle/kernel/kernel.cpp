@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/config_mem.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/kernel.h"
@@ -65,6 +66,14 @@ SharedPage::Handler& KernelSystem::GetSharedPageHandler() {
 
 const SharedPage::Handler& KernelSystem::GetSharedPageHandler() const {
     return *shared_page_handler;
+}
+
+ConfigMem::ConfigMemDef& KernelSystem::GetConfigMem() {
+    return *config_mem;
+}
+
+const ConfigMem::ConfigMemDef& KernelSystem::GetConfigMem() const {
+    return *config_mem;
 }
 
 } // namespace Kernel

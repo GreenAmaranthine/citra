@@ -7,6 +7,7 @@
 #include "core/core.h"
 #include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/result.h"
 #include "core/hle/service/mcu/cam.h"
 #include "core/hle/service/mcu/cdc.h"
@@ -44,7 +45,7 @@ void Module::Interface::Set3DLEDState(Kernel::HLERequestContext& ctx) {
             Settings::values.factor_3d = 0;
         else
             Settings::values.factor_3d = 100;
-        mcu->system.GetSharedPageHandler()->Update3DSettings();
+        mcu->system.Kernel().GetSharedPageHandler().Update3DSettings();
     }
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);

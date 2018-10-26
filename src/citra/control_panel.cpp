@@ -6,6 +6,7 @@
 #include <QComboBox>
 #include "citra/control_panel.h"
 #include "core/core.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/settings.h"
 #include "ui_control_panel.h"
 
@@ -59,14 +60,14 @@ ControlPanel::ControlPanel(QWidget* parent)
         Settings::values.p_adapter_connected = ui->power_adapter_connected->isChecked();
         auto& system{Core::System::GetInstance()};
         if (system.IsPoweredOn())
-            system.GetSharedPageHandler()->SetAdapterConnected(
+            system.Kernel().GetSharedPageHandler().SetAdapterConnected(
                 static_cast<u8>(Settings::values.p_adapter_connected));
     });
     connect(ui->power_battery_charging, &QCheckBox::stateChanged, [this] {
         Settings::values.p_battery_charging = ui->power_battery_charging->isChecked();
         auto& system{Core::System::GetInstance()};
         if (system.IsPoweredOn())
-            system.GetSharedPageHandler()->SetBatteryCharging(
+            system.Kernel().GetSharedPageHandler().SetBatteryCharging(
                 static_cast<u8>(Settings::values.p_battery_charging));
     });
     connect(ui->power_battery_level,
@@ -75,7 +76,7 @@ ControlPanel::ControlPanel(QWidget* parent)
                     static_cast<u32>(ui->power_battery_level->currentIndex() + 1);
                 auto& system{Core::System::GetInstance()};
                 if (system.IsPoweredOn())
-                    system.GetSharedPageHandler()->SetBatteryLevel(
+                    system.Kernel().GetSharedPageHandler().SetBatteryLevel(
                         static_cast<u8>(Settings::values.p_battery_level));
             });
     connect(ui->network_wifi_status,
@@ -87,7 +88,7 @@ ControlPanel::ControlPanel(QWidget* parent)
                     static_cast<u8>(ui->network_link_level->currentIndex());
                 auto& system{Core::System::GetInstance()};
                 if (system.IsPoweredOn())
-                    system.GetSharedPageHandler()->SetWifiLinkLevel(
+                    system.Kernel().GetSharedPageHandler().SetWifiLinkLevel(
                         static_cast<SharedPage::WifiLinkLevel>(Settings::values.n_wifi_link_level));
             });
     connect(ui->network_state,
@@ -96,7 +97,7 @@ ControlPanel::ControlPanel(QWidget* parent)
                     SharedPageUtil::IndexToNetworkState(ui->network_state->currentIndex()));
                 auto& system{Core::System::GetInstance()};
                 if (system.IsPoweredOn())
-                    system.GetSharedPageHandler()->SetNetworkState(
+                    system.Kernel().GetSharedPageHandler().SetNetworkState(
                         static_cast<SharedPage::NetworkState>(Settings::values.n_state));
             });
     connect(ui->volume_slider, &QSlider::valueChanged, [this] {
@@ -107,7 +108,7 @@ ControlPanel::ControlPanel(QWidget* parent)
         Settings::values.factor_3d = ui->slider_3d->value();
         auto& system{Core::System::GetInstance()};
         if (system.IsPoweredOn())
-            system.GetSharedPageHandler()->Update3DSettings(true);
+            system.Kernel().GetSharedPageHandler().Update3DSettings(true);
     });
     connect(ui->checkbox_headphones_connected, &QCheckBox::stateChanged, [this] {
         Settings::values.headphones_connected = ui->checkbox_headphones_connected->isChecked();

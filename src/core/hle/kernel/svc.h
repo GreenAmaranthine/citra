@@ -43,10 +43,10 @@ enum class SystemInfoType {
  * memory usage of.
  */
 enum class SystemInfoMemUsageRegion {
-    ALL = 0,
-    APPLICATION = 1,
-    SYSTEM = 2,
-    BASE = 3,
+    All = 0,
+    Application = 1,
+    System = 2,
+    Base = 3,
 };
 
 enum class KernelSetStateType : u32 {

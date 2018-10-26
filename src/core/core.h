@@ -182,10 +182,6 @@ public:
         return *app_loader;
     }
 
-    std::shared_ptr<SharedPage::Handler> GetSharedPageHandler() const {
-        return shared_page_handler;
-    }
-
     bool IsSleepModeEnabled() const {
         return sleep_mode_enabled.load(std::memory_order_relaxed);
     }

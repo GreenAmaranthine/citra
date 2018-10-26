@@ -15,11 +15,11 @@
 
 namespace ConfigMem {
 class ConfigMemDef;
-}
+} // namespace ConfigMem
 
 namespace SharedPage {
 class Handler;
-}
+} // namespace SharedPage
 
 namespace Kernel {
 
@@ -229,6 +229,9 @@ public:
     MemoryRegionInfo* GetMemoryRegion(MemoryRegion region);
 
     MemoryRegionInfo memory_regions[3];
+
+    ConfigMem::ConfigMemDef& GetConfigMem();
+    const ConfigMem::ConfigMemDef& GetConfigMem() const;
 
 private:
     void MemoryInit(u32 mem_type);

@@ -467,8 +467,6 @@ add_library(core STATIC
     hle/service/ssl/ssl_c.h
     hle/service/y2r/y2r_u.cpp
     hle/service/y2r/y2r_u.h
-    hle/shared_page.cpp
-    hle/shared_page.h
     hw/aes/arithmetic128.cpp
     hw/aes/arithmetic128.h
     hw/aes/ccm.cpp

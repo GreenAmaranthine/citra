@@ -1116,19 +1116,19 @@ static ResultCode GetSystemInfo(s64* out, u32 type, s32 param) {
     switch ((SystemInfoType)type) {
     case SystemInfoType::REGION_MEMORY_USAGE:
         switch ((SystemInfoMemUsageRegion)param) {
-        case SystemInfoMemUsageRegion::ALL:
-            *out = kernel.GetMemoryRegion(MemoryRegion::APPLICATION)->used +
-                   kernel.GetMemoryRegion(MemoryRegion::SYSTEM)->used +
-                   kernel.GetMemoryRegion(MemoryRegion::BASE)->used;
+        case SystemInfoMemUsageRegion::All:
+            *out = kernel.GetMemoryRegion(MemoryRegion::Application)->used +
+                   kernel.GetMemoryRegion(MemoryRegion::System)->used +
+                   kernel.GetMemoryRegion(MemoryRegion::Base)->used;
             break;
-        case SystemInfoMemUsageRegion::APPLICATION:
-            *out = kernel.GetMemoryRegion(MemoryRegion::APPLICATION)->used;
+        case SystemInfoMemUsageRegion::Application:
+            *out = kernel.GetMemoryRegion(MemoryRegion::Application)->used;
             break;
-        case SystemInfoMemUsageRegion::SYSTEM:
-            *out = kernel.GetMemoryRegion(MemoryRegion::SYSTEM)->used;
+        case SystemInfoMemUsageRegion::System:
+            *out = kernel.GetMemoryRegion(MemoryRegion::System)->used;
             break;
-        case SystemInfoMemUsageRegion::BASE:
-            *out = kernel.GetMemoryRegion(MemoryRegion::BASE)->used;
+        case SystemInfoMemUsageRegion::Base:
+            *out = kernel.GetMemoryRegion(MemoryRegion::Base)->used;
             break;
         default:
             LOG_ERROR(Kernel_SVC, "unknown GetSystemInfo 0 (param={})", param);
