@@ -110,11 +110,10 @@ constexpr std::array<u8, 4> header_magic_bytes{{'C', 'T', 'M', 0x1B}};
 
 #pragma pack(push, 1)
 struct CTMHeader {
-    std::array<u8, 4> filetype;  /// Unique Identifier to check the file type (always "CTM"0x1B)
-    u64_le program_id;           /// ID of the ROM being executed. Also called title_id
-    std::array<u8, 20> revision; /// Git hash of the revision this movie was created with
-    u64_le clock_init_time;      /// The init time of the system clock
-
+    std::array<u8, 4> filetype;   /// Unique Identifier to check the file type (always "CTM"0x1B)
+    u64_le program_id;            /// ID of the ROM being executed. Also called title_id
+    std::array<u8, 20> revision;  /// Git hash of the revision this movie was created with
+    u64_le clock_init_time;       /// The init time of the system clock
     std::array<u8, 216> reserved; /// Make heading 256 bytes so it has consistent size
 };
 static_assert(sizeof(CTMHeader) == 256, "CTMHeader should be 256 bytes");
@@ -123,6 +122,7 @@ static_assert(sizeof(CTMHeader) == 256, "CTMHeader should be 256 bytes");
 bool Movie::IsPlayingInput() const {
     return play_mode == PlayMode::Playing;
 }
+
 bool Movie::IsRecordingInput() const {
     return play_mode == PlayMode::Recording;
 }
@@ -138,16 +138,14 @@ void Movie::CheckInputEnd() {
 
 void Movie::Play(Service::HID::PadState& pad_state, s16& circle_pad_x, s16& circle_pad_y) {
     ControllerState s;
-    std::memcpy(&s, &recorded_input[current_byte], sizeof(ControllerState));
+    std::memcpy(&s, &recorded_input[current_byte], sizeof(s));
     current_byte += sizeof(ControllerState);
-
     if (s.type != ControllerStateType::PadAndCircle) {
         LOG_ERROR(Movie,
                   "Expected to read type {}, but found {}. Your playback will be out of sync",
                   static_cast<int>(ControllerStateType::PadAndCircle), static_cast<int>(s.type));
         return;
     }
-
     pad_state.a.Assign(s.pad_and_circle.a);
     pad_state.b.Assign(s.pad_and_circle.b);
     pad_state.select.Assign(s.pad_and_circle.select);
@@ -160,7 +158,6 @@ void Movie::Play(Service::HID::PadState& pad_state, s16& circle_pad_x, s16& circ
     pad_state.l.Assign(s.pad_and_circle.l);
     pad_state.x.Assign(s.pad_and_circle.x);
     pad_state.y.Assign(s.pad_and_circle.y);
-
     circle_pad_x = s.pad_and_circle.circle_pad_x;
     circle_pad_y = s.pad_and_circle.circle_pad_y;
 }
@@ -169,14 +166,12 @@ void Movie::Play(Service::HID::TouchDataEntry& touch_data) {
     ControllerState s;
     std::memcpy(&s, &recorded_input[current_byte], sizeof(ControllerState));
     current_byte += sizeof(ControllerState);
-
     if (s.type != ControllerStateType::Touch) {
         LOG_ERROR(Movie,
                   "Expected to read type {}, but found {}. Your playback will be out of sync",
                   static_cast<int>(ControllerStateType::Touch), static_cast<int>(s.type));
         return;
     }
-
     touch_data.x = s.touch.x;
     touch_data.y = s.touch.y;
     touch_data.valid.Assign(s.touch.valid);
@@ -186,14 +181,12 @@ void Movie::Play(Service::HID::AccelerometerDataEntry& accelerometer_data) {
     ControllerState s;
     std::memcpy(&s, &recorded_input[current_byte], sizeof(ControllerState));
     current_byte += sizeof(ControllerState);
-
     if (s.type != ControllerStateType::Accelerometer) {
         LOG_ERROR(Movie,
                   "Expected to read type {}, but found {}. Your playback will be out of sync",
                   static_cast<int>(ControllerStateType::Accelerometer), static_cast<int>(s.type));
         return;
     }
-
     accelerometer_data.x = s.accelerometer.x;
     accelerometer_data.y = s.accelerometer.y;
     accelerometer_data.z = s.accelerometer.z;
@@ -201,16 +194,14 @@ void Movie::Play(Service::HID::AccelerometerDataEntry& accelerometer_data) {
 
 void Movie::Play(Service::HID::GyroscopeDataEntry& gyroscope_data) {
     ControllerState s;
-    std::memcpy(&s, &recorded_input[current_byte], sizeof(ControllerState));
+    std::memcpy(&s, &recorded_input[current_byte], sizeof(s));
     current_byte += sizeof(ControllerState);
-
     if (s.type != ControllerStateType::Gyroscope) {
         LOG_ERROR(Movie,
                   "Expected to read type {}, but found {}. Your playback will be out of sync",
                   static_cast<int>(ControllerStateType::Gyroscope), static_cast<int>(s.type));
         return;
     }
-
     gyroscope_data.x = s.gyroscope.x;
     gyroscope_data.y = s.gyroscope.y;
     gyroscope_data.z = s.gyroscope.z;
@@ -218,16 +209,14 @@ void Movie::Play(Service::HID::GyroscopeDataEntry& gyroscope_data) {
 
 void Movie::Play(Service::IR::PadState& pad_state, s16& c_stick_x, s16& c_stick_y) {
     ControllerState s;
-    std::memcpy(&s, &recorded_input[current_byte], sizeof(ControllerState));
+    std::memcpy(&s, &recorded_input[current_byte], sizeof(s));
     current_byte += sizeof(ControllerState);
-
     if (s.type != ControllerStateType::IrRst) {
         LOG_ERROR(Movie,
                   "Expected to read type {}, but found {}. Your playback will be out of sync",
                   static_cast<int>(ControllerStateType::IrRst), static_cast<int>(s.type));
         return;
     }
-
     c_stick_x = s.ir_rst.x;
     c_stick_y = s.ir_rst.y;
     pad_state.zl.Assign(s.ir_rst.zl);
@@ -236,16 +225,14 @@ void Movie::Play(Service::IR::PadState& pad_state, s16& c_stick_x, s16& c_stick_
 
 void Movie::Play(Service::IR::ExtraHIDResponse& extra_hid_response) {
     ControllerState s;
-    std::memcpy(&s, &recorded_input[current_byte], sizeof(ControllerState));
+    std::memcpy(&s, &recorded_input[current_byte], sizeof(s));
     current_byte += sizeof(ControllerState);
-
     if (s.type != ControllerStateType::ExtraHidResponse) {
         LOG_ERROR(
             Movie, "Expected to read type {}, but found {}. Your playback will be out of sync",
             static_cast<int>(ControllerStateType::ExtraHidResponse), static_cast<int>(s.type));
         return;
     }
-
     extra_hid_response.buttons.battery_level.Assign(
         static_cast<u8>(s.extra_hid_response.battery_level));
     extra_hid_response.c_stick.c_stick_x.Assign(s.extra_hid_response.c_stick_x);
@@ -267,7 +254,6 @@ void Movie::Record(const Service::HID::PadState& pad_state, const s16& circle_pa
                    const s16& circle_pad_y) {
     ControllerState s;
     s.type = ControllerStateType::PadAndCircle;
-
     s.pad_and_circle.a.Assign(static_cast<u16>(pad_state.a));
     s.pad_and_circle.b.Assign(static_cast<u16>(pad_state.b));
     s.pad_and_circle.select.Assign(static_cast<u16>(pad_state.select));
@@ -280,43 +266,35 @@ void Movie::Record(const Service::HID::PadState& pad_state, const s16& circle_pa
     s.pad_and_circle.l.Assign(static_cast<u16>(pad_state.l));
     s.pad_and_circle.x.Assign(static_cast<u16>(pad_state.x));
     s.pad_and_circle.y.Assign(static_cast<u16>(pad_state.y));
-
     s.pad_and_circle.circle_pad_x = circle_pad_x;
     s.pad_and_circle.circle_pad_y = circle_pad_y;
-
     Record(s);
 }
 
 void Movie::Record(const Service::HID::TouchDataEntry& touch_data) {
     ControllerState s;
     s.type = ControllerStateType::Touch;
-
     s.touch.x = touch_data.x;
     s.touch.y = touch_data.y;
     s.touch.valid = static_cast<u8>(touch_data.valid);
-
     Record(s);
 }
 
 void Movie::Record(const Service::HID::AccelerometerDataEntry& accelerometer_data) {
     ControllerState s;
     s.type = ControllerStateType::Accelerometer;
-
     s.accelerometer.x = accelerometer_data.x;
     s.accelerometer.y = accelerometer_data.y;
     s.accelerometer.z = accelerometer_data.z;
-
     Record(s);
 }
 
 void Movie::Record(const Service::HID::GyroscopeDataEntry& gyroscope_data) {
     ControllerState s;
     s.type = ControllerStateType::Gyroscope;
-
     s.gyroscope.x = gyroscope_data.x;
     s.gyroscope.y = gyroscope_data.y;
     s.gyroscope.z = gyroscope_data.z;
-
     Record(s);
 }
 
@@ -324,26 +302,22 @@ void Movie::Record(const Service::IR::PadState& pad_state, const s16& c_stick_x,
                    const s16& c_stick_y) {
     ControllerState s;
     s.type = ControllerStateType::IrRst;
-
     s.ir_rst.x = c_stick_x;
     s.ir_rst.y = c_stick_y;
     s.ir_rst.zl = static_cast<u8>(pad_state.zl);
     s.ir_rst.zr = static_cast<u8>(pad_state.zr);
-
     Record(s);
 }
 
 void Movie::Record(const Service::IR::ExtraHIDResponse& extra_hid_response) {
     ControllerState s;
     s.type = ControllerStateType::ExtraHidResponse;
-
     s.extra_hid_response.battery_level.Assign(extra_hid_response.buttons.battery_level);
     s.extra_hid_response.c_stick_x.Assign(extra_hid_response.c_stick.c_stick_x);
     s.extra_hid_response.c_stick_y.Assign(extra_hid_response.c_stick.c_stick_y);
     s.extra_hid_response.r_not_held.Assign(extra_hid_response.buttons.r_not_held);
     s.extra_hid_response.zl_not_held.Assign(extra_hid_response.buttons.zl_not_held);
     s.extra_hid_response.zr_not_held.Assign(extra_hid_response.buttons.zr_not_held);
-
     Record(s);
 }
 
@@ -356,50 +330,40 @@ Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header, u64 progr
         LOG_ERROR(Movie, "Playback file doesn't have valid header");
         return ValidationResult::Invalid;
     }
-
     std::string revision{
         Common::ArrayToString(header.revision.data(), header.revision.size(), 21, false)};
     revision = Common::ToLower(revision);
-
     if (!program_id)
         Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id);
     if (program_id != header.program_id) {
         LOG_WARNING(Movie, "This movie was recorded using a ROM with a different program id");
         return ValidationResult::GameDismatch;
     }
-
     if (revision != Common::g_scm_rev) {
         LOG_WARNING(Movie,
                     "This movie was created on a different version of Citra, playback may desync");
         return ValidationResult::RevisionDismatch;
     }
-
     return ValidationResult::OK;
 }
 
 void Movie::SaveMovie() {
     LOG_INFO(Movie, "Saving recorded movie to '{}'", record_movie_file);
     FileUtil::IOFile save_record{record_movie_file, "wb"};
-
     if (!save_record.IsGood()) {
         LOG_ERROR(Movie, "Unable to open file to save movie");
         return;
     }
-
     CTMHeader header{};
     header.filetype = header_magic_bytes;
     header.clock_init_time = init_time;
-
     Core::System::GetInstance().GetAppLoader().ReadProgramId(header.program_id);
-
     std::string rev_bytes;
     CryptoPP::StringSource(Common::g_scm_rev, true,
                            new CryptoPP::HexDecoder(new CryptoPP::StringSink(rev_bytes)));
     std::memcpy(header.revision.data(), rev_bytes.data(), sizeof(CTMHeader::revision));
-
     save_record.WriteBytes(&header, sizeof(CTMHeader));
     save_record.WriteBytes(recorded_input.data(), recorded_input.size());
-
     if (!save_record.IsGood())
         LOG_ERROR(Movie, "Error saving movie");
 }
@@ -409,7 +373,6 @@ void Movie::StartPlayback(const std::string& movie_file,
     LOG_INFO(Movie, "Loading Movie for playback");
     FileUtil::IOFile save_record{movie_file, "rb"};
     const u64 size{save_record.GetSize()};
-
     if (save_record.IsGood() && size > sizeof(CTMHeader)) {
         CTMHeader header;
         save_record.ReadArray(&header, 1);
@@ -420,9 +383,8 @@ void Movie::StartPlayback(const std::string& movie_file,
             current_byte = 0;
             playback_completion_callback = completion_callback;
         }
-    } else {
+    } else
         LOG_ERROR(Movie, "Failed to playback movie: Unable to open '{}'", movie_file);
-    }
 }
 
 void Movie::StartRecording(const std::string& movie_file) {
@@ -434,16 +396,12 @@ void Movie::StartRecording(const std::string& movie_file) {
 static std::optional<CTMHeader> ReadHeader(const std::string& movie_file) {
     FileUtil::IOFile save_record{movie_file, "rb"};
     const u64 size{save_record.GetSize()};
-
     if (!save_record || size <= sizeof(CTMHeader))
         return {};
-
     CTMHeader header;
     save_record.ReadArray(&header, 1);
-
     if (header_magic_bytes != header.filetype)
         return {};
-
     return header;
 }
 
@@ -451,7 +409,6 @@ void Movie::PrepareForPlayback(const std::string& movie_file) {
     auto header{ReadHeader(movie_file)};
     if (!header.has_value())
         return;
-
     init_time = header->clock_init_time;
 }
 
@@ -468,7 +425,6 @@ Movie::ValidationResult Movie::ValidateMovie(const std::string& movie_file, u64 
     auto header{ReadHeader(movie_file)};
     if (!header.has_value())
         return ValidationResult::Invalid;
-
     return ValidateHeader(*header, program_id);
 }
 
@@ -476,14 +432,12 @@ u64 Movie::GetMovieProgramID(const std::string& movie_file) const {
     auto header{ReadHeader(movie_file)};
     if (!header)
         return 0;
-
     return static_cast<u64>(header->program_id);
 }
 
 void Movie::Shutdown() {
     if (IsRecordingInput())
         SaveMovie();
-
     play_mode = PlayMode::None;
     recorded_input.resize(0);
     record_movie_file.clear();
@@ -525,4 +479,5 @@ void Movie::HandleIrRst(Service::IR::PadState& pad_state, s16& c_stick_x, s16& c
 void Movie::HandleExtraHidResponse(Service::IR::ExtraHIDResponse& extra_hid_response) {
     Handle(extra_hid_response);
 }
+
 } // namespace Core
