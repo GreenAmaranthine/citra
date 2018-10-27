@@ -16,12 +16,13 @@ public:
     ~Config();
 
     void Save();
+    void RestoreDefaults();
 
     static const std::array<int, Settings::NativeButton::NumButtons> default_buttons;
     static const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> default_analogs;
 
 private:
-    void Read();
+    void Load();
 
     std::unique_ptr<QSettings> qt_config;
 };

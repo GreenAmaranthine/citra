@@ -17,7 +17,10 @@ class ConfigurationDialog : public QDialog {
 public:
     explicit ConfigurationDialog(QWidget* parent);
     ~ConfigurationDialog();
-    void applyConfiguration();
+
+    void ApplyConfiguration();
+
+    bool restore_defaults_requested{};
 
 private:
     std::unique_ptr<Ui::ConfigurationDialog> ui;

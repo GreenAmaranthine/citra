@@ -10,7 +10,7 @@
 ConfigureHacks::ConfigureHacks(QWidget* parent)
     : QWidget{parent}, ui{std::make_unique<Ui::ConfigureHacks>()} {
     ui->setupUi(this);
-    setConfiguration();
+    LoadConfiguration();
     ui->toggle_priority_boost->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     ui->toggle_force_memory_mode_7->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     connect(ui->combo_ticks_mode,
@@ -20,7 +20,7 @@ ConfigureHacks::ConfigureHacks(QWidget* parent)
 
 ConfigureHacks::~ConfigureHacks() {}
 
-void ConfigureHacks::setConfiguration() {
+void ConfigureHacks::LoadConfiguration() {
     ui->toggle_priority_boost->setChecked(Settings::values.priority_boost);
     ui->combo_ticks_mode->setCurrentIndex(static_cast<int>(Settings::values.ticks_mode));
     ui->spinbox_ticks->setValue(static_cast<int>(Settings::values.ticks));
@@ -29,7 +29,7 @@ void ConfigureHacks::setConfiguration() {
     ui->toggle_force_memory_mode_7->setChecked(Settings::values.force_memory_mode_7);
 }
 
-void ConfigureHacks::applyConfiguration() {
+void ConfigureHacks::ApplyConfiguration() {
     Settings::values.priority_boost = ui->toggle_priority_boost->isChecked();
     Settings::values.ticks_mode =
         static_cast<Settings::TicksMode>(ui->combo_ticks_mode->currentIndex());

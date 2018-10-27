@@ -14,12 +14,12 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
     : QWidget{parent}, ui{std::make_unique<Ui::ConfigureAudio>()} {
     ui->setupUi(this);
 
-    setConfiguration();
+    LoadConfiguration();
 }
 
 ConfigureAudio::~ConfigureAudio() {}
 
-void ConfigureAudio::setConfiguration() {
+void ConfigureAudio::LoadConfiguration() {
     ui->toggle_audio_stretching->setChecked(Settings::values.enable_audio_stretching);
 
     // Load output devices
@@ -63,7 +63,7 @@ void ConfigureAudio::setConfiguration() {
     }
 }
 
-void ConfigureAudio::applyConfiguration() {
+void ConfigureAudio::ApplyConfiguration() {
     Settings::values.enable_audio_stretching = ui->toggle_audio_stretching->isChecked();
     Settings::values.output_device = ui->output_device_combo_box->currentText().toStdString();
     Settings::values.input_device = ui->input_device_combo_box->currentText().toStdString();

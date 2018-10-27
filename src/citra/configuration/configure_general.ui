@@ -106,6 +106,13 @@
        </layout>
       </widget>
      </item>
+     <item alignment="Qt::AlignRight">
+      <widget class="QPushButton" name="restore_defaults">
+       <property name="text">
+        <string>Restore Defaults</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
   </layout>

@@ -127,7 +127,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
             handleClick(button_map[button_id],
                         [=](const Common::ParamPackage& params) {
                             buttons_param[button_id] = params;
-                            applyConfiguration();
+                            ApplyConfiguration();
                             Settings::SaveProfile(ui->profile->currentIndex());
                         },
                         InputCommon::Polling::DeviceType::Button);
@@ -141,14 +141,14 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                     connect(clear_action, &QAction::triggered, [&] {
                         buttons_param[button_id].Clear();
                         button_map[button_id]->setText("[not set]");
-                        applyConfiguration();
+                        ApplyConfiguration();
                         Settings::SaveProfile(ui->profile->currentIndex());
                     });
                     connect(restore_default_action, &QAction::triggered, [&] {
                         buttons_param[button_id] = Common::ParamPackage{
                             InputCommon::GenerateKeyboardParam(Config::default_buttons[button_id])};
                         button_map[button_id]->setText(ButtonToText(buttons_param[button_id]));
-                        applyConfiguration();
+                        ApplyConfiguration();
                         Settings::SaveProfile(ui->profile->currentIndex());
                     });
                     context_menu.exec(button_map[button_id]->mapToGlobal(menu_location));
@@ -166,7 +166,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                             [=](const Common::ParamPackage& params) {
                                 SetAnalogButton(params, analogs_param[analog_id],
                                                 analog_sub_buttons[sub_button_id]);
-                                applyConfiguration();
+                                ApplyConfiguration();
                                 Settings::SaveProfile(ui->profile->currentIndex());
                             },
                             InputCommon::Polling::DeviceType::Button);
@@ -180,7 +180,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                         connect(clear_action, &QAction::triggered, [=] {
                             analogs_param[analog_id].Erase(analog_sub_buttons[sub_button_id]);
                             analog_map_buttons[analog_id][sub_button_id]->setText("[not set]");
-                            applyConfiguration();
+                            ApplyConfiguration();
                             Settings::SaveProfile(ui->profile->currentIndex());
                         });
                         connect(restore_default_action, &QAction::triggered, [=] {
@@ -190,7 +190,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                                             analog_sub_buttons[sub_button_id]);
                             analog_map_buttons[analog_id][sub_button_id]->setText(AnalogToText(
                                 analogs_param[analog_id], analog_sub_buttons[sub_button_id]));
-                            applyConfiguration();
+                            ApplyConfiguration();
                             Settings::SaveProfile(ui->profile->currentIndex());
                         });
                         context_menu.exec(analog_map_buttons[analog_id][sub_button_id]->mapToGlobal(
@@ -204,7 +204,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
             handleClick(analog_map_stick[analog_id],
                         [=](const Common::ParamPackage& params) {
                             analogs_param[analog_id] = params;
-                            applyConfiguration();
+                            ApplyConfiguration();
                             Settings::SaveProfile(ui->profile->currentIndex());
                         },
                         InputCommon::Polling::DeviceType::Analog);
@@ -222,7 +222,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
     connect(ui->buttonRename, &QPushButton::released, [this] { renameProfile(); });
     connect(ui->profile, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             [this](int i) {
-                applyConfiguration();
+                ApplyConfiguration();
                 Settings::SaveProfile(Settings::values.profile);
                 Settings::LoadProfile(i);
                 loadConfiguration();
@@ -245,14 +245,14 @@ ConfigureInput::ConfigureInput(QWidget* parent)
     loadConfiguration();
 }
 
-void ConfigureInput::applyConfiguration() {
+void ConfigureInput::ApplyConfiguration() {
     std::transform(buttons_param.begin(), buttons_param.end(), Settings::values.buttons.begin(),
                    [](const Common::ParamPackage& param) { return param.Serialize(); });
     std::transform(analogs_param.begin(), analogs_param.end(), Settings::values.analogs.begin(),
                    [](const Common::ParamPackage& param) { return param.Serialize(); });
 }
 
-void ConfigureInput::applyProfile() {
+void ConfigureInput::ApplyProfile() {
     Settings::values.profile = ui->profile->currentIndex();
 }
 
@@ -374,7 +374,7 @@ void ConfigureInput::newProfile() {
     if (name.isEmpty()) {
         return;
     }
-    applyConfiguration();
+    ApplyConfiguration();
     Settings::SaveProfile(ui->profile->currentIndex());
     Settings::CreateProfile(name.toStdString());
     ui->profile->addItem(name);

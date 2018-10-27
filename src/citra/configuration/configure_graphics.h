@@ -17,10 +17,10 @@ class ConfigureGraphics : public QWidget {
 public:
     explicit ConfigureGraphics(QWidget* parent = nullptr);
     ~ConfigureGraphics();
-    void applyConfiguration();
+    void ApplyConfiguration();
 
 private:
-    void setConfiguration();
+    void LoadConfiguration();
     QColor bg_color;
     std::unique_ptr<Ui::ConfigureGraphics> ui;
 };

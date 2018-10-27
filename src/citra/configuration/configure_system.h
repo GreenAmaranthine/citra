@@ -23,8 +23,8 @@ public:
     explicit ConfigureSystem(QWidget* parent = nullptr);
     ~ConfigureSystem() override;
 
-    void applyConfiguration();
-    void setConfiguration();
+    void ApplyConfiguration();
+    void LoadConfiguration();
 
 private:
     void ReadSystemSettings();

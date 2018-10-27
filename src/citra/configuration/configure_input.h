@@ -29,8 +29,8 @@ class ConfigureInput : public QWidget {
 
 public:
     explicit ConfigureInput(QWidget* parent = nullptr);
-    void applyConfiguration(); ///< Save all button configurations
-    void applyProfile();
+    void ApplyConfiguration(); ///< Save all button configurations
+    void ApplyProfile();
 
 private:
     std::unique_ptr<Ui::ConfigureInput> ui;

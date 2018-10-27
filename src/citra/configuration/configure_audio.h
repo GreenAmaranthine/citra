@@ -17,9 +17,9 @@ class ConfigureAudio : public QWidget {
 public:
     explicit ConfigureAudio(QWidget* parent = nullptr);
     ~ConfigureAudio();
-    void applyConfiguration();
+    void ApplyConfiguration();
 
 private:
-    void setConfiguration();
+    void LoadConfiguration();
     std::unique_ptr<Ui::ConfigureAudio> ui;
 };

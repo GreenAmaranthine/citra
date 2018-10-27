@@ -46,18 +46,17 @@ const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> Config:
 }};
 
 Config::Config() {
-    // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
     std::string path{FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "qt-config.ini"};
     FileUtil::CreateFullPath(path);
     qt_config = std::make_unique<QSettings>(QString::fromStdString(path), QSettings::IniFormat);
-    Read();
+    Load();
 }
 
 Config::~Config() {
     Save();
 }
 
-void Config::Read() {
+void Config::Load() {
     qt_config->beginGroup("ControlPanel");
     Settings::values.volume = qt_config->value("volume", 1).toFloat();
     Settings::values.headphones_connected =
@@ -161,7 +160,7 @@ void Config::Read() {
         profile.udp_pad_index = static_cast<u8>(qt_config->value("udp_pad_index", 0).toUInt());
         Settings::values.profiles.push_back(profile);
     }
-    if (Settings::values.profile <= size) {
+    if (Settings::values.profile >= size) {
         Settings::values.profile = 0;
         LOG_ERROR(Config, "Invalid profile index");
     }
@@ -538,4 +537,12 @@ void Config::Save() {
     qt_config->setValue("game_id", UISettings::values.game_id);
     qt_config->endGroup();
     qt_config->endGroup();
+}
+
+void Config::RestoreDefaults() {
+    qt_config->clear();
+    Settings::values.profiles.clear();
+    Load();
+    Save();
+    Settings::Apply();
 }

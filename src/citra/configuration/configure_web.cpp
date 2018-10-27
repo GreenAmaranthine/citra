@@ -16,12 +16,12 @@ ConfigureWeb::ConfigureWeb(QWidget* parent)
     ui->setupUi(this);
     connect(ui->button_verify_login, &QPushButton::clicked, this, &ConfigureWeb::VerifyLogin);
     connect(&verify_watcher, &QFutureWatcher<bool>::finished, this, &ConfigureWeb::OnLoginVerified);
-    setConfiguration();
+    LoadConfiguration();
 }
 
 ConfigureWeb::~ConfigureWeb() = default;
 
-void ConfigureWeb::setConfiguration() {
+void ConfigureWeb::LoadConfiguration() {
     ui->web_credentials_disclaimer->setWordWrap(true);
     ui->web_signup_link->setOpenExternalLinks(true);
     ui->web_signup_link->setText(
@@ -39,7 +39,7 @@ void ConfigureWeb::setConfiguration() {
     user_verified = true;
 }
 
-void ConfigureWeb::applyConfiguration() {
+void ConfigureWeb::ApplyConfiguration() {
     if (user_verified) {
         Settings::values.citra_username = ui->edit_username->text().toStdString();
         Settings::values.citra_token = ui->edit_token->text().toStdString();

@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QMessageBox>
 #include "citra/configuration/configure_general.h"
 #include "citra/ui_settings.h"
 #include "citra/util/console.h"
@@ -20,19 +21,27 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
     ui->toggle_console->setText("Enable logging to console");
     ui->toggle_console->setToolTip(QString());
 #endif
-    setConfiguration();
+    connect(ui->restore_defaults, &QPushButton::released, this, [this] {
+        auto answer{QMessageBox::question(
+            this, "Citra", "Are you sure you want to <b>restore your settings to default</b>?",
+            QMessageBox::Yes | QMessageBox::No, QMessageBox::No)};
+        if (answer == QMessageBox::No)
+            return;
+        emit RestoreDefaultsRequested();
+    });
+    LoadConfiguration();
 }
 
 ConfigureGeneral::~ConfigureGeneral() {}
 
-void ConfigureGeneral::setConfiguration() {
+void ConfigureGeneral::LoadConfiguration() {
     ui->combobox_keyboard_mode->setCurrentIndex(static_cast<int>(Settings::values.keyboard_mode));
     ui->toggle_console->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     ui->toggle_console->setChecked(UISettings::values.show_console);
     ui->log_filter_edit->setText(QString::fromStdString(Settings::values.log_filter));
 }
 
-void ConfigureGeneral::applyConfiguration() {
+void ConfigureGeneral::ApplyConfiguration() {
     Settings::values.keyboard_mode =
         static_cast<Settings::KeyboardMode>(ui->combobox_keyboard_mode->currentIndex());
     UISettings::values.show_console = ui->toggle_console->isChecked();

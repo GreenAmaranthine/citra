@@ -1140,14 +1140,22 @@ void GMainWindow::OnOpenConfiguration() {
     auto old_profiles{Settings::values.profiles};
     auto result{configuration_dialog.exec()};
     if (result == QDialog::Accepted) {
-        configuration_dialog.applyConfiguration();
-        if (UISettings::values.theme != old_theme) {
+        if (configuration_dialog.restore_defaults_requested) {
+            config->RestoreDefaults();
             UpdateUITheme();
             emit UpdateThemedIcons();
+            SyncMenuUISettings();
+            game_list->RefreshGameDirectory();
+        } else {
+            configuration_dialog.ApplyConfiguration();
+            if (UISettings::values.theme != old_theme) {
+                UpdateUITheme();
+                emit UpdateThemedIcons();
+            }
+            SyncMenuUISettings();
+            game_list->RefreshGameDirectory();
+            config->Save();
         }
-        SyncMenuUISettings();
-        game_list->RefreshGameDirectory();
-        config->Save();
     } else {
         Settings::values.profiles = old_profiles;
         Settings::LoadProfile(old_profile);

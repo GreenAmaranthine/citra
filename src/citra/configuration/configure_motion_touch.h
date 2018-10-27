@@ -47,7 +47,7 @@ public:
     ~ConfigureMotionTouch();
 
 public slots:
-    void applyConfiguration();
+    void ApplyConfiguration();
 
 private slots:
     void OnCemuhookUDPTest();
@@ -56,7 +56,7 @@ private slots:
 private:
     void closeEvent(QCloseEvent* event) override;
     Q_INVOKABLE void ShowUDPTestResult(bool result);
-    void setConfiguration();
+    void LoadConfiguration();
     void updateUiDisplay();
     void connectEvents();
     bool CanCloseDialog();

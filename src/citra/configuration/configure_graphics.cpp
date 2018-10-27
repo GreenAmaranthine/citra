@@ -16,7 +16,7 @@
 ConfigureGraphics::ConfigureGraphics(QWidget* parent)
     : QWidget{parent}, ui{std::make_unique<Ui::ConfigureGraphics>()} {
     ui->setupUi(this);
-    setConfiguration();
+    LoadConfiguration();
     ui->frame_limit->setEnabled(Settings::values.use_frame_limit);
     connect(ui->toggle_frame_limit, &QCheckBox::stateChanged, ui->frame_limit,
             &QSpinBox::setEnabled);
@@ -48,7 +48,7 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
 
 ConfigureGraphics::~ConfigureGraphics() {}
 
-void ConfigureGraphics::setConfiguration() {
+void ConfigureGraphics::LoadConfiguration() {
     ui->toggle_hw_shaders->setChecked(Settings::values.use_hw_shaders);
     ui->toggle_accurate_gs->setChecked(Settings::values.shaders_accurate_gs);
     ui->toggle_accurate_mul->setChecked(Settings::values.shaders_accurate_mul);
@@ -65,7 +65,7 @@ void ConfigureGraphics::setConfiguration() {
     ui->min_vertices_per_thread->setValue(Settings::values.min_vertices_per_thread);
 }
 
-void ConfigureGraphics::applyConfiguration() {
+void ConfigureGraphics::ApplyConfiguration() {
     Settings::values.use_hw_shaders = ui->toggle_hw_shaders->isChecked();
     Settings::values.shaders_accurate_gs = ui->toggle_accurate_gs->isChecked();
     Settings::values.shaders_accurate_mul = ui->toggle_accurate_mul->isChecked();

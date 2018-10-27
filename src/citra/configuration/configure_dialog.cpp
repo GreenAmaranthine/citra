@@ -10,21 +10,25 @@
 ConfigurationDialog::ConfigurationDialog(QWidget* parent)
     : QDialog{parent}, ui{std::make_unique<Ui::ConfigurationDialog>()} {
     ui->setupUi(this);
+    connect(ui->generalTab, &ConfigureGeneral::RestoreDefaultsRequested, [this] {
+        restore_defaults_requested = true;
+        accept();
+    });
 }
 
 ConfigurationDialog::~ConfigurationDialog() {}
 
-void ConfigurationDialog::applyConfiguration() {
-    ui->generalTab->applyConfiguration();
-    ui->systemTab->applyConfiguration();
-    ui->inputTab->applyConfiguration();
-    ui->inputTab->applyProfile();
-    ui->graphicsTab->applyConfiguration();
-    ui->audioTab->applyConfiguration();
-    ui->cameraTab->applyConfiguration();
-    ui->webTab->applyConfiguration();
-    ui->hacksTab->applyConfiguration();
-    ui->uiTab->applyConfiguration();
+void ConfigurationDialog::ApplyConfiguration() {
+    ui->generalTab->ApplyConfiguration();
+    ui->systemTab->ApplyConfiguration();
+    ui->inputTab->ApplyConfiguration();
+    ui->inputTab->ApplyProfile();
+    ui->graphicsTab->ApplyConfiguration();
+    ui->audioTab->ApplyConfiguration();
+    ui->cameraTab->ApplyConfiguration();
+    ui->webTab->ApplyConfiguration();
+    ui->hacksTab->ApplyConfiguration();
+    ui->uiTab->ApplyConfiguration();
     Settings::Apply();
     Settings::LogSettings();
 }

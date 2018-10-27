@@ -235,7 +235,7 @@ ConfigureSystem::ConfigureSystem(QWidget* parent)
 
 ConfigureSystem::~ConfigureSystem() {}
 
-void ConfigureSystem::setConfiguration() {
+void ConfigureSystem::LoadConfiguration() {
     enabled = !Core::System::GetInstance().IsPoweredOn();
     ui->combo_init_clock->setCurrentIndex(static_cast<u8>(Settings::values.init_clock));
     QDateTime date_time;
@@ -289,7 +289,7 @@ void ConfigureSystem::ReadSystemSettings() {
     ui->region_combobox->setCurrentIndex(Settings::values.region_value + 1);
 }
 
-void ConfigureSystem::applyConfiguration() {
+void ConfigureSystem::ApplyConfiguration() {
     if (!enabled)
         return;
     bool modified{};
@@ -364,7 +364,7 @@ void ConfigureSystem::ConfigureTime() {
     QDateTime dt;
     dt.fromString("2000-01-01 00:00:01", "yyyy-MM-dd hh:mm:ss");
     ui->edit_init_time->setMinimumDateTime(dt);
-    setConfiguration();
+    LoadConfiguration();
     UpdateInitTime(ui->combo_init_clock->currentIndex());
 }
 

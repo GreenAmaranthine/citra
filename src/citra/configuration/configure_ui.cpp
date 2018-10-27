@@ -16,12 +16,12 @@ ConfigureUi::ConfigureUi(QWidget* parent)
     ui->enable_discord_rpc->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     for (const auto& theme : UISettings::themes)
         ui->theme_combobox->addItem(theme.first, theme.second);
-    setConfiguration();
+    LoadConfiguration();
 }
 
 ConfigureUi::~ConfigureUi() = default;
 
-void ConfigureUi::setConfiguration() {
+void ConfigureUi::LoadConfiguration() {
     ui->enable_discord_rpc->setChecked(UISettings::values.enable_discord_rpc);
     ui->theme_combobox->setCurrentIndex(ui->theme_combobox->findData(UISettings::values.theme));
     ui->icon_size_combobox->setCurrentIndex(
@@ -32,7 +32,7 @@ void ConfigureUi::setConfiguration() {
     ui->toggle_hide_no_icon->setChecked(UISettings::values.game_list_hide_no_icon);
 }
 
-void ConfigureUi::applyConfiguration() {
+void ConfigureUi::ApplyConfiguration() {
     UISettings::values.enable_discord_rpc = ui->enable_discord_rpc->isChecked();
     UISettings::values.theme =
         ui->theme_combobox->itemData(ui->theme_combobox->currentIndex()).toString();

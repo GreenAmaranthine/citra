@@ -32,7 +32,7 @@ ConfigureCamera::ConfigureCamera(QWidget* parent)
         ui->system_camera->addItem(cameraInfo.deviceName());
     }
     updateCameraMode();
-    setConfiguration();
+    LoadConfiguration();
     connectEvents();
     ui->preview_box->setHidden(true);
 }
@@ -60,7 +60,7 @@ void ConfigureCamera::connectEvents() {
                     }
                 }
                 updateCameraMode();
-                setConfiguration();
+                LoadConfiguration();
             });
     connect(ui->camera_mode, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             this, [this] {
@@ -75,7 +75,7 @@ void ConfigureCamera::connectEvents() {
                 if (getCameraSelection() != current_selected) {
                     recordConfig();
                 }
-                setConfiguration();
+                LoadConfiguration();
             });
     connect(ui->toolButton, &QToolButton::clicked, this, &ConfigureCamera::onToolButtonClicked);
     connect(ui->preview_button, &QPushButton::clicked, this, [&] { startPreviewing(); });
@@ -234,7 +234,7 @@ void ConfigureCamera::timerEvent(QTimerEvent* event) {
     ui->preview_box->setPixmap(QPixmap::fromImage(image));
 }
 
-void ConfigureCamera::setConfiguration() {
+void ConfigureCamera::LoadConfiguration() {
     int index{getSelectedCameraIndex()};
     for (int i{}; i < Implementations.size(); i++) {
         if (Implementations[i] == camera_name[index]) {
@@ -274,7 +274,7 @@ void ConfigureCamera::onToolButtonClicked() {
     }
 }
 
-void ConfigureCamera::applyConfiguration() {
+void ConfigureCamera::ApplyConfiguration() {
     recordConfig();
     stopPreviewing();
     Settings::values.camera_name = camera_name;

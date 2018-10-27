@@ -17,11 +17,11 @@ class ConfigureCamera : public QWidget {
 public:
     explicit ConfigureCamera(QWidget* parent = nullptr);
     ~ConfigureCamera();
-    void applyConfiguration();
+    void ApplyConfiguration();
     void timerEvent(QTimerEvent*) override;
 
 public slots:
-    void setConfiguration();
+    void LoadConfiguration();
     void onToolButtonClicked();
 
 private:

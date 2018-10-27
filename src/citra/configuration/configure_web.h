@@ -19,7 +19,7 @@ public:
     explicit ConfigureWeb(QWidget* parent = nullptr);
     ~ConfigureWeb();
 
-    void applyConfiguration();
+    void ApplyConfiguration();
 
 public slots:
     void OnLoginChanged();
@@ -27,7 +27,7 @@ public slots:
     void OnLoginVerified();
 
 private:
-    void setConfiguration();
+    void LoadConfiguration();
 
     bool user_verified{true};
     QFutureWatcher<bool> verify_watcher;

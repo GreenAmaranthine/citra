@@ -18,10 +18,10 @@ public:
     explicit ConfigureUi(QWidget* parent = nullptr);
     ~ConfigureUi();
 
-    void applyConfiguration();
+    void ApplyConfiguration();
 
 private:
-    void setConfiguration();
+    void LoadConfiguration();
 
     std::unique_ptr<Ui::ConfigureUi> ui;
 };

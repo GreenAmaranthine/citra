@@ -92,14 +92,14 @@ ConfigureMotionTouch::ConfigureMotionTouch(QWidget* parent)
                 "how-to-set-up-your-controller-or-android-phones-for-touch-and-motion-input'><span "
                 "style=\"text-decoration: underline; color:#039be5;\">Learn More</span></a>"));
 
-    setConfiguration();
+    LoadConfiguration();
     updateUiDisplay();
     connectEvents();
 }
 
 ConfigureMotionTouch::~ConfigureMotionTouch() = default;
 
-void ConfigureMotionTouch::setConfiguration() {
+void ConfigureMotionTouch::LoadConfiguration() {
     Common::ParamPackage motion_param{Settings::values.motion_device};
     Common::ParamPackage touch_param{Settings::values.touch_device};
     std::string motion_engine{motion_param.Get("engine", "motion_emu")};
@@ -241,7 +241,7 @@ bool ConfigureMotionTouch::CanCloseDialog() {
     return true;
 }
 
-void ConfigureMotionTouch::applyConfiguration() {
+void ConfigureMotionTouch::ApplyConfiguration() {
     if (!CanCloseDialog())
         return;
 
