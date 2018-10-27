@@ -196,7 +196,7 @@ void Module::Interface::GetAmiiboConfig(Kernel::HLERequestContext& ctx) {
     amiibo_config.series = nfc->decrypted_data[0x1e2];
     amiibo_config.amiiboID = (nfc->decrypted_data[0x1e0] << 8) | nfc->decrypted_data[0x1e1];
     amiibo_config.type = nfc->decrypted_data[0x1DF];
-    amiibo_config.pagex4_byte3 = nfc->decrypted_data[0x2B]; // raw page 0x4 byte 0x3, dec byte
+    amiibo_config.pagex4_byte3 = nfc->decrypted_data[0x2B]; // Raw page 0x4 byte 0x3, decrypted byte
     amiibo_config.appdata_size = 0xD8;
     IPC::ResponseBuilder rb{ctx, 0x18, 17, 0};
     rb.Push(RESULT_SUCCESS);
