@@ -7,17 +7,10 @@
 #include <mutex>
 #include <string>
 #include <LUrlParser.h>
-<<<<<<< HEAD
-#include "common/announce_multiplayer_room.h"
-#include "common/common_types.h"
-#include "common/logging/log.h"
-#include "core/settings.h"
-=======
 #include <httplib.h>
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/web_result.h"
->>>>>>> d28233961... Put WebResult into a seperate file
 #include "web_service/web_backend.h"
 
 namespace WebService {
@@ -87,18 +80,18 @@ struct Client::Impl {
         }
         httplib::Headers params;
         if (!jwt.empty())
-            params = {
+            params.headers = {
                 {std::string("Authorization"), fmt::format("Bearer {}", jwt)},
             };
         else if (!username.empty())
-            params = {
+            params.headers = {
                 {std::string("x-username"), username},
                 {std::string("x-token"), token},
             };
-        params.emplace(std::string("api-version"),
-                       std::string(API_VERSION.begin(), API_VERSION.end()));
+        params.headers.emplace(std::string("api-version"),
+                               std::string(API_VERSION.begin(), API_VERSION.end()));
         if (method != "GET")
-            params.emplace(std::string("Content-Type"), std::string("application/json"));
+            params.headers.emplace(std::string("Content-Type"), std::string("application/json"));
         httplib::Request request;
         request.method = method;
         request.path = path;
@@ -115,8 +108,8 @@ struct Client::Impl {
             return Common::WebResult{Common::WebResult::Code::HttpError,
                                      std::to_string(response.status)};
         }
-        auto content_type{response.headers.find("Content-Type")};
-        if (content_type == response.headers.end()) {
+        auto content_type{response.headers.headers.find("Content-Type")};
+        if (content_type == response.headers.headers.end()) {
             LOG_ERROR(WebService, "{} to {} returned no content", method, host + path);
             return Common::WebResult{Common::WebResult::Code::WrongContent, ""};
         }

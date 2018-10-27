@@ -78,48 +78,47 @@ void Context::Send() {
     std::unique_ptr<hl::Client> cli;
     int port;
     if (parsedUrl.m_Scheme == "http") {
-        if (!parsedUrl.GetPort(&port)) {
+        if (!parsedUrl.GetPort(&port))
             port = 80;
-        }
         cli = std::make_unique<hl::Client>(parsedUrl.m_Host.c_str(), port,
                                            (timeout == 0) ? 300 : (timeout * std::pow(10, -9)));
     } else if (parsedUrl.m_Scheme == "https") {
-        if (!parsedUrl.GetPort(&port)) {
+        if (!parsedUrl.GetPort(&port))
             port = 443;
-        }
         cli = std::make_unique<hl::SSLClient>(parsedUrl.m_Host.c_str(), port,
                                               (timeout == 0) ? 300 : (timeout * std::pow(10, -9)));
-    } else {
+    } else
         UNREACHABLE_MSG("Invalid scheme!");
-    }
-    if (ssl_config.enable_client_cert) {
+    if (ssl_config.enable_client_cert)
         cli->add_client_cert_ASN1(ssl_config.client_cert_ctx.certificate,
                                   ssl_config.client_cert_ctx.private_key);
-    }
-    if (ssl_config.enable_root_cert_chain) {
-        for (const auto& cert : ssl_config.root_ca_chain.certificates) {
+    if (ssl_config.enable_root_cert_chain)
+        for (const auto& cert : ssl_config.root_ca_chain.certificates)
             cli->add_cert(cert.certificate);
-        }
-    }
-    if ((ssl_config.options & 0x200) == 0x200) {
+    if ((ssl_config.options & 0x200) == 0x200)
         cli->set_verify(hl::SSLVerifyMode::None);
-    }
     hl::Request request;
-    static const std::unordered_map<RequestMethod, std::string> methods_map_strings = {
-        {RequestMethod::Get, "GET"},       {RequestMethod::Post, "POST"},
-        {RequestMethod::Head, "HEAD"},     {RequestMethod::Put, "PUT"},
-        {RequestMethod::Delete, "DELETE"}, {RequestMethod::PostEmpty, "POST"},
+    static const std::unordered_map<RequestMethod, std::string> methods_map_strings{{
+        {RequestMethod::Get, "GET"},
+        {RequestMethod::Post, "POST"},
+        {RequestMethod::Head, "HEAD"},
+        {RequestMethod::Put, "PUT"},
+        {RequestMethod::Delete, "DELETE"},
+        {RequestMethod::PostEmpty, "POST"},
         {RequestMethod::PutEmpty, "PUT"},
-    };
-    static const std::unordered_map<RequestMethod, bool> methods_map_body = {
-        {RequestMethod::Get, false},      {RequestMethod::Post, true},
-        {RequestMethod::Head, false},     {RequestMethod::Put, true},
-        {RequestMethod::Delete, true},    {RequestMethod::PostEmpty, false},
+    }};
+    static const std::unordered_map<RequestMethod, bool> methods_map_body{{
+        {RequestMethod::Get, false},
+        {RequestMethod::Post, true},
+        {RequestMethod::Head, false},
+        {RequestMethod::Put, true},
+        {RequestMethod::Delete, true},
+        {RequestMethod::PostEmpty, false},
         {RequestMethod::PutEmpty, false},
-    };
+    }};
     request.method = methods_map_strings.find(method)->second;
     request.path = '/' + parsedUrl.m_Path;
-    request.headers = headers;
+    request.headers = *headers;
     if (methods_map_body.find(method)->second) {
         for (const auto& item : post_data) {
             switch (item.type) {
@@ -139,9 +138,8 @@ void Context::Send() {
             }
             }
         }
-        if (!post_data.empty()) {
+        if (!post_data.empty())
             request.body.pop_back();
-        }
     }
     hl::detail::parse_query_text(parsedUrl.m_Query, request.params);
     response = std::make_shared<hl::Response>();
@@ -153,12 +151,12 @@ void Context::Send() {
 }
 
 void Context::SetKeepAlive(bool enable) {
-    auto itr{headers.find("Connection")};
-    bool header_keep_alive{(itr != headers.end()) && (itr->second == "Keep-Alive")};
+    auto itr{headers->headers.find("Connection")};
+    bool header_keep_alive{(itr != headers->headers.end()) && (itr->second == "Keep-Alive")};
     if (enable && !header_keep_alive)
-        headers.emplace("Connection", "Keep-Alive");
+        headers->headers.emplace("Connection", "Keep-Alive");
     else if (!enable && header_keep_alive)
-        headers.erase("Connection");
+        headers->headers.erase("Connection");
 }
 
 std::string Context::GetRawResponseWithoutBody() const {
@@ -291,7 +289,7 @@ std::string Context::GetRawResponseWithoutBody() const {
         break;
     }
     str += "\r\n";
-    for (const auto& header : response->headers) {
+    for (const auto& header : response->headers.headers) {
         str += header.first;
         str += ": ";
         str += header.second;
@@ -404,6 +402,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     context.socket_buffer_size = 0;
     context.handle = context_counter;
     context.session_id = session_data->session_id;
+    context.headers = new httplib::Headers;
     ++session_data->num_http_contexts;
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
     rb.Push(RESULT_SUCCESS);
@@ -494,9 +493,9 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
         rb.PushMappedBuffer(value_buffer);
         return;
     }
-    if (itr->second.headers.find(name) != itr->second.headers.end())
-        itr->second.headers.erase(name);
-    itr->second.headers.emplace(name, value);
+    if (itr->second.headers->headers.find(name) != itr->second.headers->headers.end())
+        itr->second.headers->headers.erase(name);
+    itr->second.headers->headers.emplace(name, value);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(value_buffer);

@@ -15,6 +15,7 @@
 
 namespace httplib {
 struct Response;
+struct Headers;
 } // namespace httplib
 
 namespace Core {
@@ -108,10 +109,10 @@ public:
 
     struct SSLConfig {
         u32 options;
-        bool enable_client_cert{};
-        bool enable_root_cert_chain{};
-        ClientCertContext client_cert_ctx{};
-        RootCertChain root_ca_chain{};
+        bool enable_client_cert;
+        bool enable_root_cert_chain;
+        ClientCertContext client_cert_ctx;
+        RootCertChain root_ca_chain;
     };
 
     struct PostData {
@@ -120,6 +121,7 @@ public:
             Binary,
             Raw,
         };
+
         Type type;
 
         struct {
@@ -146,7 +148,7 @@ public:
     std::optional<BasicAuth> basic_auth;
     SSLConfig ssl_config{};
     u32 socket_buffer_size;
-    httplib::Headers headers;
+    httplib::Headers* headers;
     std::vector<PostData> post_data;
     u32 current_offset{};
     std::shared_ptr<httplib::Response> response;
