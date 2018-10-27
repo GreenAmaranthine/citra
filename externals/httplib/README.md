@@ -24,3 +24,4 @@ Add the functions to Client:
 - void add_cert(std::vector<unsigned char> cert)
 Add SSLVerifyMode enum
 Change Headers to a struct
+File formatted using clang-format
