@@ -16,7 +16,7 @@ namespace HW::AES {
 
 namespace {
 
-// 3DS uses a non-standard AES-CCM algorithm, so we need to derive a sub class from the standard one
+// Console uses a non-standard AES-CCM algorithm, so we need to derive a sub class from the standard one
 // and override with the non-standard part.
 using CryptoPP::AES;
 using CryptoPP::CCM_Base;
@@ -27,7 +27,7 @@ class CCM_3DSVariant_Final : public CCM_Final<AES, CCM_MAC_SIZE, T_IsEncryption>
 public:
     void UncheckedSpecifyDataLengths(lword header_length, lword message_length,
                                      lword footer_length) override {
-        // 3DS uses the aligned size to generate B0 for authentication, instead of the original size
+        // console uses the aligned size to generate B0 for authentication, instead of the original size
         lword aligned_message_length = Common::AlignUp(message_length, AES_BLOCK_SIZE);
         CCM_Base::UncheckedSpecifyDataLengths(header_length, aligned_message_length, footer_length);
         CCM_Base::m_messageLength = message_length; // restore the actual message size

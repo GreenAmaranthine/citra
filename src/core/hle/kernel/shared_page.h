@@ -14,9 +14,10 @@
 #include "common/swap.h"
 #include "core/memory.h"
 
-namespace CoreTiming {
-struct EventType;
-} // namespace CoreTiming
+namespace Core {
+class Timing;
+struct TimingEventType;
+} // namespace Core
 
 namespace SharedPage {
 
@@ -43,7 +44,7 @@ union BatteryState {
     BitField<2, 3, u8> charge_level;
 };
 
-// Default MAC address in the Nintendo 3DS range
+// Default MAC address in valid range
 constexpr MacAddress DefaultMac{0x40, 0xF4, 0x07, 0x00, 0x00, 0x00};
 
 enum class WifiLinkLevel : u8 {
@@ -87,23 +88,16 @@ static_assert(sizeof(SharedPageDef) == Memory::SHARED_PAGE_SIZE,
 
 class Handler {
 public:
-    Handler();
+    explicit Handler(Core::Timing& timing);
 
     void SetMacAddress(const MacAddress&);
-
     void SetWifiLinkLevel(WifiLinkLevel);
-
     void SetNetworkState(NetworkState);
     NetworkState GetNetworkState();
-
     void SetAdapterConnected(u8);
-
     void SetBatteryCharging(u8);
-
     void SetBatteryLevel(u8);
-
     SharedPageDef& GetSharedPage();
-
     void Update3DSettings(bool called_by_control_panel = false);
 
     static inline std::function<void()> update_3d;
@@ -111,10 +105,11 @@ public:
 private:
     u64 GetSystemTime() const;
     void UpdateTimeCallback(u64 userdata, int cycles_late);
-    CoreTiming::EventType* update_time_event;
-    std::chrono::seconds init_time;
 
+    Core::TimingEventType* update_time_event;
+    std::chrono::seconds init_time;
     SharedPageDef shared_page;
+    Core::Timing& timing;
 };
 
 } // namespace SharedPage

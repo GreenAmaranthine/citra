@@ -159,35 +159,29 @@ void Client::OnPadData(Response::PadData data) {
         return;
     }
     packet_sequence = data.packet_counter;
-    // Due to differences between the 3ds and cemuhookudp motion directions, we need to invert
+    // Due to differences between the console and cemuhookudp motion directions, we need to invert
     // accel.x and accel.z and also invert pitch and yaw. See
     // https://github.com/citra-emu/citra/pull/4049 for more details on gyro/accel
     Math::Vec3f accel{Math::MakeVec<float>(-data.accel.x, data.accel.y, -data.accel.z)};
     Math::Vec3f gyro{Math::MakeVec<float>(-data.gyro.pitch, -data.gyro.yaw, data.gyro.roll)};
     {
         std::lock_guard lock{status->update_mutex};
-
         status->motion_status = {accel, gyro};
-
         // TODO: add a setting for "click" touch. Click touch refers to a device that differentiates
         // between a simple "tap" and a hard press that causes the touch screen to click.
         bool is_active{data.touch_1.is_active != 0};
-
         float x{};
         float y{};
-
         if (is_active && status->touch_calibration) {
             u16 min_x{status->touch_calibration->min_x};
             u16 max_x{status->touch_calibration->max_x};
             u16 min_y{status->touch_calibration->min_y};
             u16 max_y{status->touch_calibration->max_y};
-
             x = (std::clamp(static_cast<u16>(data.touch_1.x), min_x, max_x) - min_x) /
                 static_cast<float>(max_x - min_x);
             y = (std::clamp(static_cast<u16>(data.touch_1.y), min_y, max_y) - min_y) /
                 static_cast<float>(max_y - min_y);
         }
-
         status->touch_status = {x, y, is_active};
     }
 }

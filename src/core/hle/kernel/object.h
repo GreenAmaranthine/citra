@@ -9,6 +9,10 @@
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Kernel {
 
 class KernelSystem;
@@ -63,6 +67,9 @@ public:
      */
     bool IsWaitable() const;
 
+protected:
+    Core::System& system;
+
 private:
     friend void intrusive_ptr_add_ref(Object*);
     friend void intrusive_ptr_release(Object*);
@@ -77,9 +84,8 @@ inline void intrusive_ptr_add_ref(Object* object) {
 }
 
 inline void intrusive_ptr_release(Object* object) {
-    if (object->ref_count.fetch_sub(1, std::memory_order_acq_rel) == 1) {
+    if (object->ref_count.fetch_sub(1, std::memory_order_acq_rel) == 1)
         delete object;
-    }
 }
 
 /**

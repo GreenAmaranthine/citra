@@ -13,14 +13,14 @@ namespace Kernel {
 
 class TimerManager {
 public:
-    TimerManager();
+    explicit TimerManager(Core::Timing& timing);
 
 private:
     /// The timer callback event, called when a timer is fired
     void TimerCallback(u64 callback_id, s64 cycles_late);
 
     /// The event type of the generic timer callback event
-    CoreTiming::EventType* timer_callback_event_type;
+    Core::TimingEventType* timer_callback_event_type;
 
     u64 next_timer_callback_id{0};
     std::unordered_map<u64, Timer*> timer_callback_table;

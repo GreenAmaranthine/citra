@@ -1005,9 +1005,11 @@ static void SleepThread(s64 nanoseconds) {
 
 /// This returns the total CPU ticks elapsed since the CPU was powered-on
 static s64 GetSystemTick() {
-    s64 result{static_cast<s64>(CoreTiming::GetTicks())};
+    auto& timing{Core::System::GetInstance().CoreTiming()};
+    s64 result{timing.GetTicks()};
     // Advance time to defeat dumb games (like Cubic Ninja) that busy-wait for the frame to end.
-    CoreTiming::AddTicks(150); // Measured time between two calls on a 9.2 o3DS with Ninjhax 1.1b
+    // Measured time between two calls on a 9.2 o3DS with Ninjhax 1.1b
+    timing.AddTicks(150);
     return result;
 }
 
@@ -1064,7 +1066,7 @@ static ResultCode CreatePort(Handle* server_port, Handle* client_port, VAddr nam
     auto ports{kernel.CreatePortPair(max_sessions)};
     *client_port =
         current_process->handle_table.Create(std::move(std::get<SharedPtr<ClientPort>>(ports)));
-    // Note: The 3DS kernel also leaks the client port handle if the server port handle fails to be
+    // Note: The real kernel also leaks the client port handle if the server port handle fails to be
     // created.
     *server_port =
         current_process->handle_table.Create(std::move(std::get<SharedPtr<ServerPort>>(ports)));

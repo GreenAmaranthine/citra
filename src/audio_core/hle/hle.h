@@ -13,6 +13,10 @@
 #include "common/ring_buffer.h"
 #include "core/memory.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Service::DSP {
 class DSP_DSP;
 } // namespace Service::DSP
@@ -21,7 +25,7 @@ namespace AudioCore {
 
 class DspHle final {
 public:
-    DspHle();
+    explicit DspHle(Core::System& system);
     ~DspHle();
 
     /// Get the state of the DSP

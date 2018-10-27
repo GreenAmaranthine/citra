@@ -47,7 +47,7 @@ Thread* ThreadManager::GetCurrentThread() const {
 
 void Thread::Stop() {
     // Cancel any outstanding wakeup events for this thread
-    CoreTiming::UnscheduleEvent(thread_manager.ThreadWakeupEventType, thread_id);
+    kernel.Parent().CoreTiming().UnscheduleEvent(thread_manager.ThreadWakeupEventType, thread_id);
     thread_manager.wakeup_callback_table.erase(thread_id);
     // Clean up thread from ready queue
     // This is only needed when the thread is termintated forcefully (SVC TerminateProcess)
@@ -82,10 +82,11 @@ void ThreadManager::PriorityBoostStarvedThreads() {
 }
 
 void ThreadManager::SwitchContext(Thread* new_thread) {
-    Thread* previous_thread{GetCurrentThread()};
+    auto previous_thread{GetCurrentThread()};
+    auto& timing{system.CoreTiming()};
     // Save context for previous thread
     if (previous_thread) {
-        previous_thread->last_running_ticks = CoreTiming::GetTicks();
+        previous_thread->last_running_ticks = timing.GetTicks();
         Core::CPU().SaveContext(previous_thread->context);
         if (previous_thread->status == ThreadStatus::Running) {
             // This is only the case when a reschedule is triggered without the current thread
@@ -99,19 +100,21 @@ void ThreadManager::SwitchContext(Thread* new_thread) {
         ASSERT_MSG(new_thread->status == ThreadStatus::Ready,
                    "Thread must be ready to become running.");
         // Cancel any outstanding wakeup events for this thread
-        CoreTiming::UnscheduleEvent(ThreadWakeupEventType, new_thread->thread_id);
-        auto previous_process{Core::System::GetInstance().Kernel().GetCurrentProcess()};
+        timing.UnscheduleEvent(ThreadWakeupEventType, new_thread->thread_id);
+        auto& kernel{system.Kernel()};
+        auto previous_process{kernel.GetCurrentProcess()};
         current_thread = new_thread;
         ready_queue.remove(new_thread->current_priority, new_thread);
         new_thread->status = ThreadStatus::Running;
         if (Settings::values.priority_boost)
             new_thread->current_priority = new_thread->nominal_priority;
         if (previous_process != current_thread->owner_process) {
-            Core::System::GetInstance().Kernel().SetCurrentProcess(current_thread->owner_process);
+            kernel.SetCurrentProcess(current_thread->owner_process);
             SetCurrentPageTable(&current_thread->owner_process->vm_manager.page_table);
         }
-        Core::CPU().LoadContext(new_thread->context);
-        Core::CPU().SetCP15Register(CP15_THREAD_URO, new_thread->GetTLSAddress());
+        auto& cpu{system.CPU()};
+        cpu.LoadContext(new_thread->context);
+        cpu.SetCP15Register(CP15_THREAD_URO, new_thread->GetTLSAddress());
     } else
         current_thread = nullptr;
     // Note: We don't reset the current process and current page table when idling because
@@ -120,7 +123,7 @@ void ThreadManager::SwitchContext(Thread* new_thread) {
 
 Thread* ThreadManager::PopNextReadyThread() {
     Thread* next;
-    Thread* thread{GetCurrentThread()};
+    auto thread{GetCurrentThread()};
     if (thread && thread->status == ThreadStatus::Running) {
         // We have to do better than the current thread.
         // This call returns null when that's not possible.
@@ -134,19 +137,19 @@ Thread* ThreadManager::PopNextReadyThread() {
 }
 
 void ThreadManager::WaitCurrentThread_Sleep() {
-    Thread* thread{GetCurrentThread()};
+    auto thread{GetCurrentThread()};
     thread->status = ThreadStatus::WaitSleep;
 }
 
 void ThreadManager::ExitCurrentThread() {
-    Thread* thread{GetCurrentThread()};
+    auto thread{GetCurrentThread()};
     thread->Stop();
     thread_list.erase(std::remove(thread_list.begin(), thread_list.end(), thread),
                       thread_list.end());
 }
 
 void ThreadManager::ThreadWakeupCallback(u64 thread_id, s64 cycles_late) {
-    SharedPtr<Thread> thread{wakeup_callback_table.at(thread_id)};
+    auto thread{wakeup_callback_table.at(thread_id)};
     if (!thread) {
         LOG_ERROR(Kernel, "Callback fired for invalid thread {:08X}", thread_id);
         return;
@@ -169,8 +172,8 @@ void Thread::WakeAfterDelay(s64 nanoseconds) {
     // Don't schedule a wakeup if the thread wants to wait forever
     if (nanoseconds == -1)
         return;
-    CoreTiming::ScheduleEvent(nsToCycles(nanoseconds), thread_manager.ThreadWakeupEventType,
-                              thread_id);
+    system.CoreTiming().ScheduleEvent(nsToCycles(nanoseconds), thread_manager.ThreadWakeupEventType,
+                                      thread_id);
 }
 
 void Thread::ResumeFromWait() {
@@ -203,20 +206,7 @@ void Thread::ResumeFromWait() {
     wakeup_callback = nullptr;
     thread_manager.ready_queue.push_back(current_priority, this);
     status = ThreadStatus::Ready;
-    Core::System::GetInstance().PrepareReschedule();
-}
-
-void ThreadManager::DebugThreadQueue() {
-    Thread* thread{GetCurrentThread()};
-    if (!thread)
-        LOG_DEBUG(Kernel, "Current: NO CURRENT THREAD");
-    else
-        LOG_DEBUG(Kernel, "0x{:02X} {} (current)", thread->current_priority, thread->GetObjectId());
-    for (auto& t : thread_list) {
-        u32 priority{ready_queue.contains(t.get())};
-        if (priority != -1)
-            LOG_DEBUG(Kernel, "0x{:02X} {}", priority, t->GetObjectId());
-    }
+    system.PrepareReschedule();
 }
 
 /**
@@ -284,7 +274,7 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
     thread->entry_point = entry_point;
     thread->stack_top = stack_top;
     thread->nominal_priority = thread->current_priority = priority;
-    thread->last_running_ticks = CoreTiming::GetTicks();
+    thread->last_running_ticks = system.CoreTiming().GetTicks();
     thread->processor_id = processor_id;
     thread->wait_objects.clear();
     thread->wait_address = 0;
@@ -408,9 +398,9 @@ VAddr Thread::GetCommandBufferAddress() const {
     return GetTLSAddress() + CommandHeaderOffset;
 }
 
-ThreadManager::ThreadManager() {
+ThreadManager::ThreadManager(Core::Timing& timing) {
     ThreadWakeupEventType =
-        CoreTiming::RegisterEvent("ThreadWakeupCallback", [this](u64 thread_id, s64 cycle_late) {
+        timing.RegisterEvent("ThreadManager Wakeup Event", [this](u64 thread_id, s64 cycle_late) {
             ThreadWakeupCallback(thread_id, cycle_late);
         });
 }

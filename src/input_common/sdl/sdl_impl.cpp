@@ -74,8 +74,7 @@ public:
     std::tuple<float, float> GetAnalog(int axis_x, int axis_y) const {
         float x{GetAxis(axis_x)};
         float y{GetAxis(axis_y)};
-        y = -y; // 3DS uses an y-axis inverse from SDL
-
+        y = -y; // Console uses an y-axis inverse from SDL
         // Make sure the coordinates are in the unit circle,
         // otherwise normalize it.
         float r{x * x + y * y};
@@ -84,7 +83,6 @@ public:
             x /= r;
             y /= r;
         }
-
         return std::make_tuple(x, y);
     }
 

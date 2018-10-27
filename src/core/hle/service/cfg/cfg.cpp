@@ -44,7 +44,7 @@ struct SaveFileConfig {
                              /// to 0x455C as per hardware
     SaveConfigBlockEntry block_entries[CONFIG_FILE_MAX_BLOCK_ENTRIES]; ///< The block headers, the
                                                                        /// maximum possible value is
-    /// 1479 as per hardware
+                                                                       /// 1479 as per hardware
     u32 unknown; ///< This field is unknown, possibly padding, 0 has been observed in hardware
 };
 static_assert(sizeof(SaveFileConfig) == 0x455C,
@@ -90,6 +90,7 @@ struct ConsoleCountryInfo {
     u8 country_code; ///< The country code of the console
 };
 static_assert(sizeof(ConsoleCountryInfo) == 4, "ConsoleCountryInfo must be exactly 4 bytes");
+
 } // namespace
 
 constexpr ConsoleModelInfo CONSOLE_MODEL{NINTENDO_3DS_XL, {0, 0, 0}};

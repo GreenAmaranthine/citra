@@ -1309,7 +1309,7 @@ void RasterizerCache::ValidateSurface(const Surface& surface, PAddr addr, u32 si
             if (retry)
                 continue;
         }
-        // Load data from 3DS memory
+        // Load data from console memory
         FlushRegion(params.addr, params.size);
         surface->LoadGLBuffer(params.addr, params.end);
         surface->UploadGLTexture(surface->GetSubRect(params), read_framebuffer.handle,

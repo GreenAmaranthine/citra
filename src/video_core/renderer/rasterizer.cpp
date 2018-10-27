@@ -184,7 +184,7 @@ void Rasterizer::SyncEntireState() {
  * which did `lerp(lerp(Q1, Q2), Q3)` (with proper weighting), applying the dot product check
  * between each step would work for those cases at the cost of being more complex to implement.
  *
- * Fortunately however, the 3DS hardware happens to also use this exact same logic to work around
+ * Fortunately however, hardware happens to also use this exact same logic to work around
  * these issues, making this basic implementation actually more accurate to the hardware.
  */
 static bool AreQuaternionsOpposite(Math::Vec4<Pica::float24> qa, Math::Vec4<Pica::float24> qb) {

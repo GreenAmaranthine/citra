@@ -43,9 +43,9 @@ public:
         auto mouse_move{Math::MakeVec(x, y) - mouse_origin};
         if (is_tilting) {
             std::lock_guard lock{tilt_mutex};
-            if (mouse_move.x == 0 && mouse_move.y == 0) {
+            if (mouse_move.x == 0 && mouse_move.y == 0)
                 tilt_angle = 0;
-            } else {
+            else {
                 tilt_direction = mouse_move.Cast<float>();
                 tilt_angle = std::clamp(tilt_direction.Normalize() * sensitivity, 0.0f,
                                         MathUtil::PI * tilt_clamp / 180.0f);
@@ -93,32 +93,24 @@ private:
         auto update_time{std::chrono::steady_clock::now()};
         Math::Quaternion<float> q{MakeQuaternion(Math::Vec3<float>(), 0)};
         Math::Quaternion<float> old_q{};
-
         while (!shutdown_event.WaitUntil(update_time)) {
             update_time += update_duration;
             old_q = q;
-
             {
                 std::lock_guard lock{tilt_mutex};
-
-                // Find the quaternion describing current 3DS tilting
+                // Find the quaternion describing current console tilting
                 q = MakeQuaternion(Math::MakeVec(-tilt_direction.y, 0.0f, tilt_direction.x),
                                    tilt_angle);
             }
-
             auto inv_q{q.Inverse()};
-
             // Set the gravity vector in world space
             auto gravity{Math::MakeVec(0.0f, -1.0f, 0.0f)};
-
             // Find the angular rate vector in world space
             auto angular_rate{((q - old_q) * inv_q).xyz * 2};
             angular_rate *= 1000 / update_millisecond / MathUtil::PI * 180;
-
-            // Transform the two vectors from world space to 3DS space
+            // Transform the two vectors from world space to console space
             gravity = QuaternionRotate(inv_q, gravity);
             angular_rate = QuaternionRotate(inv_q, angular_rate);
-
             // Update the sensor state
             {
                 std::lock_guard lock{status_mutex};
@@ -150,28 +142,25 @@ std::unique_ptr<Input::MotionDevice> MotionEmu::Create(const Common::ParamPackag
     float tilt_clamp{params.Get("tilt_clamp", 90.0f)};
     auto device_wrapper{
         std::make_unique<MotionEmuDeviceWrapper>(update_period, sensitivity, tilt_clamp)};
-    // Previously created device is disconnected here. Having two motion devices for 3DS isn't
+    // Previously created device is disconnected here. Having two motion devices for console isn't
     // expected.
     current_device = device_wrapper->device;
     return std::move(device_wrapper);
 }
 
 void MotionEmu::BeginTilt(int x, int y) {
-    if (auto ptr{current_device.lock()}) {
+    if (auto ptr{current_device.lock()})
         ptr->BeginTilt(x, y);
-    }
 }
 
 void MotionEmu::Tilt(int x, int y) {
-    if (auto ptr{current_device.lock()}) {
+    if (auto ptr{current_device.lock()})
         ptr->Tilt(x, y);
-    }
 }
 
 void MotionEmu::EndTilt() {
-    if (auto ptr{current_device.lock()}) {
+    if (auto ptr{current_device.lock()})
         ptr->EndTilt();
-    }
 }
 
 } // namespace InputCommon

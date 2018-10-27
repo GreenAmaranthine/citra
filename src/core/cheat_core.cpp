@@ -64,9 +64,9 @@ CheatManager::CheatManager() {
     if (!FileUtil::Exists(cheats_dir))
         FileUtil::CreateDir(cheats_dir);
     RefreshCheats();
-    tick_event =
-        CoreTiming::RegisterEvent("CheatManager::tick_event",
-                                  [this](u64, int cycles_late) { CheatTickCallback(cycles_late); });
+    tick_event = CoreTiming::RegisterEvent("CheatManager Tick Event", [this](u64, int cycles_late) {
+        CheatTickCallback(cycles_late);
+    });
     CoreTiming::ScheduleEvent(BASE_CLOCK_RATE_ARM11, tick_event);
 }
 

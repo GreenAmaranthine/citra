@@ -9,43 +9,41 @@
 #include <vector>
 #include "core/hle/service/service.h"
 
+namespace Core {
+struct TimingEventType;
+} // namespace Core
+
 namespace Kernel {
 class Event;
 class SharedMemory;
 } // namespace Kernel
 
-namespace CoreTiming {
-struct EventType;
-} // namespace CoreTiming
-
-namespace Service::IR {
-
 class BufferManager;
 class ExtraHID;
 
-/// An interface representing a device that can communicate with 3DS via ir:USER service
+/// An interface representing a device that can communicate with console via ir:USER service
 class IRDevice {
 public:
     /**
-     * A function object that implements the method to send data to the 3DS, which takes a vector of
-     * data to send.
+     * A function object that implements the method to send data to the console, which takes a
+     * vector of data to send.
      */
     using SendFunc = std::function<void(const std::vector<u8>& data)>;
 
     explicit IRDevice(SendFunc send_func);
     virtual ~IRDevice();
 
-    /// Called when connected with 3DS
+    /// Called when connected with console
     virtual void OnConnect() = 0;
 
-    /// Called when disconnected from 3DS
+    /// Called when disconnected from console
     virtual void OnDisconnect() = 0;
 
-    /// Called when data is received from the 3DS. This is invoked by the ir:USER send function.
+    /// Called when data is received from the console. This is invoked by the ir:USER send function.
     virtual void OnReceive(const std::vector<u8>& data) = 0;
 
 protected:
-    /// Sends data to the 3DS. The actual sending method is specified in the constructor
+    /// Sends data to the console. The actual sending method is specified in the constructor
     void Send(const std::vector<u8>& data);
 
 private:

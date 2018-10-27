@@ -11,7 +11,7 @@
 
 namespace AudioCore {
 
-/// Samples per second which the 3DS's audio hardware natively outputs at
+/// Samples per second which real console's audio hardware natively outputs at
 constexpr int native_sample_rate{32728}; // Hz
 
 /// Samples per audio frame at native sample rate

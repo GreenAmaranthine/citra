@@ -37,7 +37,7 @@ static const std::unordered_set<u64> titles_output_allowed_shell_closed{{
 
 struct DspHle::Impl final {
 public:
-    explicit Impl(DspHle& parent);
+    explicit Impl(DspHle& parent, Core::System& system);
     ~Impl();
 
     DspState GetDspState() const;
@@ -80,22 +80,21 @@ private:
     HLE::Mixers mixers;
 
     DspHle& parent;
-    CoreTiming::EventType* tick_event;
+    Core::TimingEventType* tick_event;
 
     std::weak_ptr<DSP_DSP> dsp_dsp;
 };
 
-DspHle::Impl::Impl(DspHle& parent_) : parent{parent_} {
+DspHle::Impl::Impl(DspHle& parent_, Core::System& system_) : parent{parent_}, system{system_} {
     dsp_memory.raw_memory.fill(0);
-
-    tick_event =
-        CoreTiming::RegisterEvent("AudioCore::DspHle::tick_event",
-                                  [this](u64, s64 cycles_late) { AudioTickCallback(cycles_late); });
-    CoreTiming::ScheduleEvent(audio_frame_ticks, tick_event);
+    Core::Timing& timing{Core::System::GetInstance().CoreTiming()};
+    tick_event = timing.RegisterEvent(
+        "DSP Tick Event", [this](u64, s64 cycles_late) { AudioTickCallback(cycles_late); });
+    timing.ScheduleEvent(audio_frame_ticks, tick_event);
 }
 
 DspHle::Impl::~Impl() {
-    CoreTiming::UnscheduleEvent(tick_event, 0);
+    system.CoreTiming().UnscheduleEvent(tick_event, 0);
 }
 
 DspState DspHle::Impl::GetDspState() const {
@@ -105,7 +104,7 @@ DspState DspHle::Impl::GetDspState() const {
 std::vector<u8> DspHle::Impl::PipeRead(DspPipe pipe_number, u32 length) {
     const std::size_t pipe_index{static_cast<std::size_t>(pipe_number)};
     if (pipe_index >= num_dsp_pipe) {
-        LOG_ERROR(Audio_DSP, "pipe_number = {} invalid", pipe_index);
+        LOG_ERROR(Audio_DSP, "pipe_number {} invalid", pipe_index);
         return {};
     }
     if (length > UINT16_MAX) { // Can only read at most UINT16_MAX from the pipe
@@ -130,7 +129,7 @@ std::vector<u8> DspHle::Impl::PipeRead(DspPipe pipe_number, u32 length) {
 std::size_t DspHle::Impl::GetPipeReadableSize(DspPipe pipe_number) const {
     const std::size_t pipe_index{static_cast<std::size_t>(pipe_number)};
     if (pipe_index >= num_dsp_pipe) {
-        LOG_ERROR(Audio_DSP, "pipe_number = {} invalid", pipe_index);
+        LOG_ERROR(Audio_DSP, "pipe_number {} invalid", pipe_index);
         return 0;
     }
     return pipe_data[pipe_index].size();
@@ -322,12 +321,13 @@ void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
             service->SignalInterrupt(InterruptType::Pipe, DspPipe::Binary);
         }
     // Reschedule recurrent event
-    CoreTiming::ScheduleEvent(audio_frame_ticks - cycles_late, tick_event);
+    Core::Timing& timing = Core::System::GetInstance().CoreTiming();
+    timing.ScheduleEvent(audio_frame_ticks - cycles_late, tick_event);
 }
 
-DspHle::DspHle()
-    : impl{std::make_unique<Impl>(*this)}, sink{std::make_unique<Sink>(
-                                               Settings::values.output_device)} {
+DspHle::DspHle(Core::System& system)
+    : impl{std::make_unique<Impl>(*this, system)}, sink{std::make_unique<Sink>(
+                                                       Settings::values.output_device)} {
     sink->SetCallback(
         [this](s16* buffer, std::size_t num_frames) { OutputCallback(buffer, num_frames); });
 }

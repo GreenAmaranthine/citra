@@ -991,12 +991,11 @@ private:
 ResultVal<std::unique_ptr<AMFileWrapper>> GetFileFromSession(
     Kernel::SharedPtr<Kernel::ClientSession> file_session) {
     // Step up the chain from ClientSession->ServerSession and then
-    // cast to File. For AM on 3DS, invalid handles actually hang the system.
-    if (!file_session->parent) {
+    // cast to File. For AM on a real console, invalid handles actually hang the system.
+    if (!file_session->parent)
         // Invalid handle. Emulate the hang
         for (;;)
             ;
-    }
     Kernel::SharedPtr<Kernel::ServerSession> server{file_session->parent->server};
     if (!server) {
         LOG_WARNING(Service_AM, "File handle ServerSession disconnected!");

@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/core.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/config_mem.h"
 #include "core/hle/kernel/handle_table.h"
@@ -17,8 +18,9 @@ namespace Kernel {
 
 KernelSystem::KernelSystem(Core::System& system) : system{system} {
     resource_limits = std::make_unique<ResourceLimitList>(*this);
-    thread_manager = std::make_unique<ThreadManager>();
-    timer_manager = std::make_unique<TimerManager>();
+    auto& timing{system.CoreTiming()};
+    thread_manager = std::make_unique<ThreadManager>(timing);
+    timer_manager = std::make_unique<TimerManager>(timing);
 }
 
 KernelSystem::~KernelSystem() = default;

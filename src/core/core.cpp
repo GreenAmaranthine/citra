@@ -57,11 +57,11 @@ System::ResultStatus System::RunLoop() {
     // instead advance to the next event and try to yield to the next thread
     if (!kernel->GetThreadManager().GetCurrentThread()) {
         LOG_TRACE(Core_ARM11, "Idling");
-        CoreTiming::Idle();
-        CoreTiming::Advance();
+        timing->Idle();
+        timing->Advance();
         PrepareReschedule();
     } else {
-        CoreTiming::Advance();
+        timing->Advance();
         cpu_core->Run();
     }
     HW::Update();
@@ -125,7 +125,7 @@ void System::PrepareReschedule() {
 }
 
 PerfStats::Results System::GetAndResetPerfStats() {
-    return perf_stats.GetAndResetStats(CoreTiming::GetGlobalTimeUs());
+    return perf_stats.GetAndResetStats(timing->GetGlobalTimeUs());
 }
 
 void System::Reschedule() {
@@ -137,7 +137,7 @@ void System::Reschedule() {
 
 System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     LOG_DEBUG(HW_Memory, "initialized OK");
-    CoreTiming::Init();
+    timing = std::make_unique<Core::Timing>();
     kernel = std::make_unique<Kernel::KernelSystem>(*this);
     // Initialize FS, CFG and memory
     service_manager = std::make_shared<Service::SM::ServiceManager>(*this);
@@ -146,7 +146,7 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     Service::CFG::InstallInterfaces(*this);
     kernel->InitializeMemory(system_mode);
     cpu_core = std::make_unique<Cpu>();
-    dsp_core = std::make_unique<AudioCore::DspHle>();
+    dsp_core = std::make_unique<AudioCore::DspHle>(*this);
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching);
 #ifdef ENABLE_SCRIPTING
     rpc_server = std::make_unique<RPC::RPCServer>();
@@ -156,7 +156,7 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     HW::Init();
     Service::Init(*this);
     cheat_manager = std::make_unique<CheatCore::CheatManager>();
-    ResultStatus result{VideoCore::Init(frontend)};
+    ResultStatus result{VideoCore::Init(*this)};
     if (result != ResultStatus::Success)
         return result;
     LOG_DEBUG(Core, "Initialized OK");
@@ -199,6 +199,14 @@ CheatCore::CheatManager& System::CheatManager() {
     return *cheat_manager;
 }
 
+const Timing& System::CoreTiming() const {
+    return *timing;
+}
+
+Timing& System::CoreTiming() {
+    return *timing;
+}
+
 const Frontend& System::GetFrontend() const {
     return *m_frontend;
 }
@@ -219,7 +227,7 @@ void System::Shutdown() {
     service_manager.reset();
     dsp_core.reset();
     cpu_core.reset();
-    CoreTiming::Shutdown();
+    timing.reset();
     app_loader.reset();
     if (auto member{Network::GetRoomMember().lock()}) {
         Network::AppInfo app_info{};

@@ -47,6 +47,8 @@ class CheatManager;
 
 namespace Core {
 
+class Timing;
+
 class System {
 public:
     /**
@@ -163,6 +165,12 @@ public:
     // Gets a reference to the frontend.
     Frontend& GetFrontend();
 
+    /// Gets a refeence to the timing system
+    Timing& CoreTiming();
+
+    /// Gets a refeence to the timing system
+    const Timing& CoreTiming() const;
+
     PerfStats perf_stats;
     FrameLimiter frame_limiter;
 
@@ -246,6 +254,7 @@ private:
     std::unique_ptr<Service::FS::ArchiveManager> archive_manager;
 
     std::unique_ptr<Kernel::KernelSystem> kernel;
+    std::unique_ptr<Timing> timing;
 
     static System s_instance;
 

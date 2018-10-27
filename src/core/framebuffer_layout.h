@@ -17,12 +17,6 @@ struct FramebufferLayout {
     bool bottom_screen_enabled;
     MathUtil::Rectangle<unsigned> top_screen;
     MathUtil::Rectangle<unsigned> bottom_screen;
-
-    /**
-     * Returns the ration of pixel size of the top screen, compared to the native size of the 3DS
-     * screen.
-     */
-    u16 GetScalingRatio() const;
 };
 
 /**

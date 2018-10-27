@@ -377,8 +377,8 @@ void ConfigureSystem::UpdateInitTime(int init_clock) {
 void ConfigureSystem::RefreshConsoleID() {
     QMessageBox::StandardButton reply{
         QMessageBox::critical(this, "Warning",
-                              "This will replace your current virtual 3DS with a new one."
-                              "Your current virtual 3DS will not be recoverable. "
+                              "This will replace your current virtual console with a new one."
+                              "Your current virtual 3DconsoleS will not be recoverable. "
                               "This might have unexpected effects in games. This might fail, "
                               "if you use an outdated config savegame. Continue?",
                               QMessageBox::No | QMessageBox::Yes)};

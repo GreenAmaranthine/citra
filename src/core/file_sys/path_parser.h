@@ -24,7 +24,7 @@ public:
      * This function should be called once a PathParser is constructed.
      * A Path is valid if:
      *  - it is a string path (with type LowPathType::Char or LowPathType::Wchar),
-     *  - it starts with "/" (this seems a hard requirement in real 3DS),
+     *  - it starts with "/" (this seems a hard requirement in real console),
      *  - it doesn't contain invalid characters, and
      *  - it doesn't go out of the root directory using "..".
      */

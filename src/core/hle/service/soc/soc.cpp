@@ -57,7 +57,7 @@ namespace Service::SOC {
 
 const s32 SOCKET_ERROR_VALUE{-1};
 
-/// Holds the translation from system network errors to 3DS network errors
+/// Holds the translation from system network errors to console network errors
 static const std::unordered_map<int, int> error_map{{
     {E2BIG, 1},
     {ERRNO(EACCES), 2},
@@ -147,7 +147,7 @@ static const std::unordered_map<int, int> error_map{{
     {ERRNO(ETIMEDOUT), 76},
 }};
 
-/// Converts a network error from platform-specific to 3ds-specific
+/// Converts a network error from platform-specific to console-specific
 static int TranslateError(int error) {
     auto found{error_map.find(error)};
     if (found != error_map.end())
@@ -156,7 +156,7 @@ static int TranslateError(int error) {
     return error;
 }
 
-/// Holds the translation from system network socket options to 3DS network socket options
+/// Holds the translation from system network socket options to console network socket options
 /// Note: -1 = No effect/unavailable
 static const std::unordered_map<int, int> sockopt_map{{
     {0x0004, SO_REUSEADDR},
@@ -175,7 +175,7 @@ static const std::unordered_map<int, int> sockopt_map{{
     {0x1009, SO_ERROR},
 }};
 
-/// Converts a socket option from 3ds-specific to platform-specific
+/// Converts a socket option from console-specific to platform-specific
 static int TranslateSockOpt(int console_opt_name) {
     auto found{sockopt_map.find(console_opt_name)};
     if (found != sockopt_map.end()) {
@@ -184,7 +184,8 @@ static int TranslateSockOpt(int console_opt_name) {
     return console_opt_name;
 }
 
-/// Structure to represent the 3ds' pollfd structure, which is different than most implementations
+/// Structure to represent the console's pollfd structure, which is different than most
+/// implementations
 struct CTRPollFD {
     u32 fd; ///< Socket handle
 
@@ -202,7 +203,7 @@ struct CTRPollFD {
             return *this;
         }
 
-        /// Translates the resulting events of a Poll operation from platform-specific to 3ds
+        /// Translates the resulting events of a Poll operation from platform-specific to console
         /// specific
         static Events TranslateTo3DS(u32 input_event) {
             Events ev{};
@@ -221,7 +222,7 @@ struct CTRPollFD {
             return ev;
         }
 
-        /// Translates the resulting events of a Poll operation from 3ds specific to platform
+        /// Translates the resulting events of a Poll operation from console specific to platform
         /// specific
         static u32 TranslateToPlatform(Events input_event) {
             u32 ret{};
@@ -243,7 +244,7 @@ struct CTRPollFD {
     Events events;  ///< Events to poll for (input)
     Events revents; ///< Events received (output)
 
-    /// Converts a platform-specific pollfd to a 3ds specific structure
+    /// Converts a platform-specific pollfd to a console specific structure
     static CTRPollFD FromPlatform(pollfd const& fd) {
         CTRPollFD result{};
         result.events.hex = Events::TranslateTo3DS(fd.events).hex;
@@ -252,7 +253,7 @@ struct CTRPollFD {
         return result;
     }
 
-    /// Converts a 3ds specific pollfd to a platform-specific structure
+    /// Converts a console specific pollfd to a platform-specific structure
     static pollfd ToPlatform(CTRPollFD const& fd) {
         pollfd result{};
         result.events = Events::TranslateToPlatform(fd.events);
@@ -262,7 +263,7 @@ struct CTRPollFD {
     }
 };
 
-/// Union to represent the 3ds' sockaddr structure
+/// Union to represent the console's sockaddr structure
 union CTRSockAddr {
     /// Structure to represent a raw sockaddr
     struct {
@@ -271,7 +272,7 @@ union CTRSockAddr {
         u8 sa_data[0x1A]; ///< The extra data, this varies, depending on the address family
     } raw;
 
-    /// Structure to represent the 3ds' sockaddr_in structure
+    /// Structure to represent the console's sockaddr_in structure
     struct CTRSockAddrIn {
         u8 len;        ///< The length of the entire structure
         u8 sin_family; ///< The address family of the sockaddr_in
@@ -279,7 +280,7 @@ union CTRSockAddr {
         u32 sin_addr;  ///< The actual address of the sockaddr_in
     } in;
 
-    /// Convert a 3DS CTRSockAddr to a platform-specific sockaddr
+    /// Convert a console CTRSockAddr to a platform-specific sockaddr
     static sockaddr ToPlatform(CTRSockAddr const& ctr_addr) {
         sockaddr result{};
         result.sa_family = ctr_addr.raw.sa_family;
@@ -301,7 +302,7 @@ union CTRSockAddr {
         return result;
     }
 
-    /// Convert a platform-specific sockaddr to a 3DS CTRSockAddr
+    /// Convert a platform-specific sockaddr to a 3DSconsole CTRSockAddr
     static CTRSockAddr FromPlatform(sockaddr const& addr) {
         CTRSockAddr result{};
         result.raw.sa_family = static_cast<u8>(addr.sa_family);

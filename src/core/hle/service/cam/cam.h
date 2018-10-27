@@ -15,15 +15,12 @@
 
 namespace Core {
 class System;
+struct TimingEventType;
 } // namespace Core
 
 namespace Camera {
 class CameraInterface;
 } // namespace Camera
-
-namespace CoreTiming {
-struct EventType;
-} // namespace CoreTiming
 
 namespace Kernel {
 class Process;
@@ -168,9 +165,9 @@ static_assert(sizeof(StereoCameraCalibrationData) == 64,
 
 /**
  * Resolution parameters for the camera.
- * The native resolution of 3DS camera is 640 * 480. The captured image will be cropped in the
- * region [crop_x0, crop_x1] * [crop_y0, crop_y1], and then scaled to size width * height as the
- * output image. Note that all cropping coordinates are inclusive.
+ * The native resolution of a real console's camera is 640 * 480. The captured image will be cropped
+ * in the region [crop_x0, crop_x1] * [crop_y0, crop_y1], and then scaled to size width * height as
+ * the output image. Note that all cropping coordinates are inclusive.
  */
 struct Resolution {
     u16 width;
@@ -293,7 +290,7 @@ public:
     };
 
 private:
-    void CompletionEventCallBack(u64 port_id, s64);
+    void CompletionEventCallback(u64 port_id, s64);
 
     // Starts a receiving process on the specified port. This can only be called when is_busy = true
     // and is_receiving = false.
@@ -301,7 +298,7 @@ private:
 
     // Cancels any ongoing receiving processes at the specified port. This is used by functions that
     // stop capturing.
-    // TODO: what is the exact behaviour on real 3DS when stopping capture during an ongoing
+    // TODO: what is the exact behaviour on real console when stopping capture during an ongoing
     //       process? Will the completion event still be signaled?
     void CancelReceiving(int port_id);
 
@@ -357,9 +354,10 @@ private:
 
     void LoadCameraImplementation(CameraConfig& camera, int camera_id);
 
+    Core::System& system;
     std::array<CameraConfig, NumCameras> cameras;
     std::array<PortConfig, 2> ports;
-    CoreTiming::EventType* completion_event_callback;
+    Core::TimingEventType* completion_event_callback;
     std::atomic_bool is_camera_reload_pending{};
 };
 

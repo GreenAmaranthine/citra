@@ -46,7 +46,7 @@ static Kernel::SharedPtr<Kernel::Event> connection_status_event;
 // This isn't currently used.
 static Kernel::SharedPtr<Kernel::SharedMemory> recv_buffer_memory;
 
-// Connection status of this 3DS.
+// Connection status of this console.
 static ConnectionStatus connection_status{};
 
 static std::atomic_bool initialized(false);
@@ -88,7 +88,7 @@ struct Node {
 static std::map<MacAddress, Node> node_map;
 
 // Event that will generate and send the 802.11 beacon frames.
-static CoreTiming::EventType* beacon_broadcast_event;
+static Core::TimingEventType* beacon_broadcast_event;
 
 // Callback identifier for the OnWifiPacketReceived event.
 static Network::RoomMember::CallbackHandle<Network::WifiPacket> wifi_packet_received;
@@ -159,7 +159,7 @@ static u16 GetNextAvailableNodeId() {
 }
 
 static void BroadcastNodeMap() {
-    // Note: This isn't how UDS on a 3ds does it but it shouldn't be
+    // Note: This isn't how UDS on a console does it but it shouldn't be
     // necessary for citra
     Network::WifiPacket packet;
     packet.channel = network_channel;
@@ -292,7 +292,7 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
         // TODO: Encrypt the packet.
         // TODO: send the eapol packet just to the new client and implement a proper
         // broadcast packet for all other clients
-        // On a 3ds the eapol packet is only sent to packet.transmitter_address
+        // On a console the eapol packet is only sent to packet.transmitter_address
         // while a packet containing the node information is broadcasted
         // For now we will broadcast the eapol packet instead
         eapol_logoff.destination_address = BroadcastMac;
@@ -324,7 +324,7 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
         connection_event->Signal();
     } else if (connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsClient)) {
         // TODO: Remove that section and send/receive a proper connection_status packet
-        // On a 3ds this packet wouldn't be addressed to already connected clients
+        // On a console this packet wouldn't be addressed to already connected clients
         // We use this information because in the current implementation the host
         // isn't broadcasting the node information
         auto logoff{ParseEAPoLLogoffFrame(packet.data)};
@@ -818,8 +818,8 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
     }
     connection_status_event->Signal();
     // Start broadcasting the network, send a beacon frame every 102.4ms.
-    CoreTiming::ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU),
-                              beacon_broadcast_event, 0);
+    system.CoreTiming().ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU),
+                                      beacon_broadcast_event, 0);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_NWM, "An UDS network has been created.");
@@ -836,7 +836,7 @@ void NWM_UDS::UpdateNetworkAttribute(Kernel::HLERequestContext& ctx) {
 void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x08, 1, 0};
     // Unschedule the beacon broadcast event.
-    CoreTiming::UnscheduleEvent(beacon_broadcast_event, 0);
+    system.CoreTiming().UnscheduleEvent(beacon_broadcast_event, 0);
     // Only a host can destroy
     std::lock_guard lock{connection_status_mutex};
     if (connection_status.status != static_cast<u8>(NetworkStatus::ConnectedAsHost)) {
@@ -866,7 +866,7 @@ void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
     {
         std::lock_guard lock{connection_status_mutex};
         if (connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
-            // A real 3ds makes strange things here. We do the same
+            // A real console makes strange things here. We do the same
             u16_le tmp_node_id{connection_status.network_node_id};
             connection_status = {};
             connection_status.status = static_cast<u32>(NetworkStatus::ConnectedAsHost);
@@ -1114,7 +1114,7 @@ void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx) {
 }
 
 // Sends a 802.11 beacon frame with information about the current network.
-static void BeaconBroadcastCallback(u64 userdata, s64 cycles_late) {
+void NWM_UDS::BeaconBroadcastCallback(u64 userdata, s64 cycles_late) {
     // Don't do anything if we're not actually hosting a network
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost))
         return;
@@ -1127,8 +1127,9 @@ static void BeaconBroadcastCallback(u64 userdata, s64 cycles_late) {
     packet.channel = network_channel;
     SendPacket(packet);
     // Start broadcasting the network, send a beacon frame every 102.4ms.
-    CoreTiming::ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU) - cycles_late,
-                              beacon_broadcast_event, 0);
+    system.CoreTiming().ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU) -
+                                          cycles_late,
+                                      beacon_broadcast_event, 0);
 }
 
 NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework{"nwm::UDS"}, system{system} {
@@ -1167,7 +1168,7 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework{"nwm::UDS"}, system{sy
     connection_status_event =
         system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "NWM::connection_status_event");
     beacon_broadcast_event =
-        CoreTiming::RegisterEvent("UDS::BeaconBroadcastCallback", BeaconBroadcastCallback);
+        system.CoreTiming().RegisterEvent("UDS Beacon Broadcast Event", BeaconBroadcastCallback);
     CryptoPP::AutoSeededRandomPool rng;
     auto mac{SharedPage::DefaultMac};
     // Keep the Nintendo 3DS MAC header and randomly generate the last 3 bytes
@@ -1191,7 +1192,7 @@ NWM_UDS::~NWM_UDS() {
     }
     if (auto member{Network::GetRoomMember().lock()})
         member->Unbind(wifi_packet_received);
-    CoreTiming::UnscheduleEvent(beacon_broadcast_event, 0);
+    system.CoreTiming().UnscheduleEvent(beacon_broadcast_event, 0);
 }
 
 } // namespace Service::NWM

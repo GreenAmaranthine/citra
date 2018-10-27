@@ -13,13 +13,15 @@
 #include "video_core/renderer/resource_manager.h"
 #include "video_core/renderer/state.h"
 
-class Frontend;
-
 namespace Layout {
 struct FramebufferLayout;
 } // namespace Layout
 
-/// Structure used for storing information about the textures for each 3DS screen
+namespace Core {
+class System;
+} // namespace Core
+
+/// Structure used for storing information about the textures for each console screen
 struct TextureInfo {
     Texture resource;
     GLsizei width;
@@ -29,7 +31,7 @@ struct TextureInfo {
     GLenum gl_type;
 };
 
-/// Structure used for storing information about the display target for each 3DS screen
+/// Structure used for storing information about the display target for each console screen
 struct ScreenInfo {
     GLuint display_texture;
     MathUtil::Rectangle<float> display_texcoords;
@@ -38,7 +40,7 @@ struct ScreenInfo {
 
 class Renderer {
 public:
-    explicit Renderer(Frontend& frontend);
+    explicit Renderer(Core::System& system);
     ~Renderer();
 
     /// Swap buffers (render frame)
@@ -83,6 +85,6 @@ private:
     GLuint attrib_position;
     GLuint attrib_tex_coord;
 
-    Frontend& frontend;
+    Core::System& system;
     std::unique_ptr<Rasterizer> rasterizer;
 };

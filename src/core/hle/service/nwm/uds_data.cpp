@@ -108,7 +108,6 @@ static std::array<u8, CryptoPP::AES::BLOCKSIZE> GenerateDataCCMPKey(
 static std::vector<u8> GenerateCCMPAAD(const MacAddress& sender, const MacAddress& receiver,
                                        const MacAddress& bssid, u16 frame_control) {
     // Reference: IEEE 802.11-2007
-
     // 8.3.3.3.2 Construct AAD (22-30 bytes)
     // The AAD is constructed from the MPDU header. The AAD doesn't include the header Duration
     // field, because the Duration field value can change due to normal IEEE 802.11 operation (e.g.,
@@ -121,33 +120,27 @@ static std::vector<u8> GenerateCCMPAAD(const MacAddress& sender, const MacAddres
         MacAddress A3;
         u16_be SC; // MPDU Sequence Control field
     } aad_struct{};
-
     constexpr u16 AADFrameControlMask{0x8FC7};
     aad_struct.FC = frame_control & AADFrameControlMask;
     aad_struct.SC = 0;
-
     bool to_ds{(frame_control & (1 << 0)) != 0};
     bool from_ds{(frame_control & (1 << 1)) != 0};
-    // In the 802.11 standard, ToDS = 1 and FromDS = 1 is a valid configuration,
-    // however, the 3DS doesn't seem to transmit frames with such combination.
+    // In the 802.11 standard, ToDS 1 and FromDS 1 is a valid configuration,
+    // however, console doesn't seem to transmit frames with such combination.
     ASSERT_MSG(to_ds != from_ds, "Invalid combination");
-
     // The meaning of the address fields depends on the ToDS and FromDS fields.
     if (from_ds) {
         aad_struct.A1 = receiver;
         aad_struct.A2 = bssid;
         aad_struct.A3 = sender;
     }
-
     if (to_ds) {
         aad_struct.A1 = bssid;
         aad_struct.A2 = sender;
         aad_struct.A3 = receiver;
     }
-
     std::vector<u8> aad(sizeof(aad_struct));
     std::memcpy(aad.data(), &aad_struct, sizeof(aad_struct));
-
     return aad;
 }
 

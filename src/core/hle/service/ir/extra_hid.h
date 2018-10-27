@@ -11,9 +11,9 @@
 #include "core/hle/service/ir/ir_user.h"
 #include "core/input.h"
 
-namespace CoreTiming {
-struct EventType;
-} // namespace CoreTiming
+namespace Core {
+struct TimingEventType;
+} // namespace Core
 
 namespace Service::IR {
 
@@ -34,13 +34,13 @@ struct ExtraHIDResponse {
 static_assert(sizeof(ExtraHIDResponse) == 6, "HID status response has wrong size!");
 
 /**
- * An IRDevice emulating Circle Pad Pro or New 3DS additional HID hardware.
- * This device sends periodic udates at a rate configured by the 3DS, and sends calibration data if
+ * An IRDevice emulating Circle Pad Pro or new models additional HID hardware.
+ * This device sends periodic updates at a rate configured by the console, and sends calibration data if
  * requested.
  */
 class ExtraHID final : public IRDevice {
 public:
-    explicit ExtraHID(SendFunc send_func);
+    explicit ExtraHID(SendFunc send_func, Core::System& system);
     ~ExtraHID();
 
     void OnConnect() override;
@@ -57,7 +57,7 @@ private:
     void LoadInputDevices();
 
     u8 hid_period;
-    CoreTiming::EventType* hid_polling_callback_id;
+    Core::TimingEventType* hid_polling_callback_id;
     std::array<u8, 0x40> calibration_data;
     std::unique_ptr<Input::ButtonDevice> zl;
     std::unique_ptr<Input::ButtonDevice> zr;

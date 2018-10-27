@@ -196,13 +196,13 @@ bool CreateFullPath(const std::string& full_path) {
         // Include the '/' so the first call is CreateDir("/") rather than CreateDir("")
         std::string const subPath(full_path.substr(0, position + 1));
         if (!IsDirectory(subPath) && !CreateDir(subPath)) {
-            LOG_ERROR(Common, "CreateFullPath: directory creation failed");
+            LOG_ERROR(Common_Filesystem, "CreateFullPath: directory creation failed");
             return false;
         }
         // A safety check
         panic_counter--;
         if (panic_counter <= 0) {
-            LOG_ERROR(Common, "CreateFullPath: directory structure is too deep");
+            LOG_ERROR(Common_Filesystem, "CreateFullPath: directory structure is too deep");
             return false;
         }
         position++;

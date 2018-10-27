@@ -129,6 +129,8 @@ private:
     void BeginHostingNetwork(Kernel::HLERequestContext& ctx);
     void ConnectToNetwork(Kernel::HLERequestContext& ctx);
     void DecryptBeaconData(Kernel::HLERequestContext& ctx);
+
+    void BeaconBroadcastCallback(u64 userdata, s64 cycles_late);
 };
 
 } // namespace Service::NWM

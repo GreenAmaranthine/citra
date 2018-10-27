@@ -39,7 +39,7 @@ public:
                                          const u8* buffer) = 0;
 
     /**
-     * Get the amount of time a 3ds needs to read those data
+     * Get the amount of time a console needs to read those data
      * @param length Length in bytes of data read from file
      * @return Nanoseconds for the delay
      */

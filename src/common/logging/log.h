@@ -37,7 +37,7 @@ enum class Class : u8 {
     Core,              ///< LLE emulation core
     Core_ARM11,        ///< ARM11 CPU core
     Core_Timing,       ///< CoreTiming functions
-    Config,            ///< Emulator configuration (including commandline)
+    Config,            ///< Emulator configuration
     Debug,             ///< Debugging tools
     Debug_Emulated,    ///< Debug messages from the emulated programs
     Kernel,            ///< The HLE implementation of the CTR kernel
@@ -61,7 +61,7 @@ enum class Class : u8 {
     Service_AC,         ///< The AC (WiFi status) service
     Service_AM,         ///< The AM (Application manager) service
     Service_PTM,        ///< The PTM (Power status & misc.) service
-    Service_LDR,        ///< The LDR (3ds dll loader) service
+    Service_LDR,        ///< The LDR (3DS DLL loader) service
     Service_MCU,        ///< The MCU (Auxiliary Microcontroller) service
     Service_MIC,        ///< The MIC (Microphone) service
     Service_NDM,        ///< The NDM (Network daemon manager) service
@@ -75,7 +75,7 @@ enum class Class : u8 {
     Service_CSND,       ///< The CSND (CWAV format process) service
     Service_DSP,        ///< The DSP (DSP control) service
     Service_DLP,        ///< The DLP (Download Play) service
-    Service_HID,        ///< The HID (Human interface device) service
+    Service_HID,        ///< The HID (Human Interface Device) service
     Service_HTTP,       ///< The HTTP service
     Service_SOC,        ///< The SOC (Socket) service
     Service_IR,         ///< The IR service

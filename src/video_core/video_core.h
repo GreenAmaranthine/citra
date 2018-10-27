@@ -7,10 +7,12 @@
 #include <atomic>
 #include <memory>
 #include "core/core.h"
-#include "core/frontend.h"
+
+namespace Core {
+    class System;
+}//
 
 class Renderer;
-class Frontend;
 
 namespace VideoCore {
 
@@ -25,7 +27,7 @@ extern std::function<void()> g_screenshot_complete_callback;
 extern Layout::FramebufferLayout g_screenshot_framebuffer_layout;
 
 /// Initialize the video core
-Core::System::ResultStatus Init(Frontend& frontend);
+Core::System::ResultStatus Init(Core::System& system);
 
 /// Shutdown the video core
 void Shutdown();

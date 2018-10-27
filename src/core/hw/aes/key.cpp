@@ -22,11 +22,11 @@ namespace HW::AES {
 
 namespace {
 
-// The generator constant was calculated using the 0x39 KeyX and KeyY retrieved from a 3DS and the
+// The generator constant was calculated using the 0x39 KeyX and KeyY retrieved from a console and the
 // normal key dumped from a Wii U solving the equation:
 // NormalKey = (((KeyX ROL 2) XOR KeyY) + constant) ROL 87
-// On a real 3DS the generation for the normal key is hardware based, and thus the constant can't
-// get dumped. generated normal keys are also not accesible on a 3DS. The used formula for
+// On a real console the generation for the normal key is hardware based, and thus the constant can't
+// get dumped. generated normal keys are also not accesible on a console. The used formula for
 // calculating the constant is a software implementation of what the hardware generator does.
 constexpr AESKey generator_constant{{0x1F, 0xF9, 0xE9, 0xAA, 0xC5, 0xFE, 0x04, 0x08, 0x02, 0x45,
                                      0x91, 0xDC, 0x5D, 0x52, 0x76, 0x8A}};

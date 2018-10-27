@@ -57,7 +57,7 @@ enum class ThreadWakeupReason {
 
 class ThreadManager {
 public:
-    ThreadManager();
+    explicit ThreadManager();
     ~ThreadManager();
 
     /**
@@ -66,39 +66,22 @@ public:
      */
     u32 NewThreadId();
 
-    /**
-     * Gets the current thread
-     */
+    /// Gets the current thread
     Thread* GetCurrentThread() const;
 
-    /**
-     * Reschedules to the next available thread (call after current thread is suspended)
-     */
+    /// Reschedules to the next available thread (call after current thread is suspended)
     void Reschedule();
 
-    /**
-     * Prints the thread queue for debugging purposes
-     */
-    void DebugThreadQueue();
-
-    /**
-     * Returns whether there are any threads that are ready to run.
-     */
+    /// Returns whether there are any threads that are ready to run.
     bool HaveReadyThreads();
 
-    /**
-     * Waits the current thread on a sleep
-     */
+    /// Waits the current thread on a sleep
     void WaitCurrentThread_Sleep();
 
-    /**
-     * Stops the current thread and removes it from the thread_list
-     */
+    /// Stops the current thread and removes it from the thread list
     void ExitCurrentThread();
 
-    /**
-     * Get a const reference to the thread list for debug use
-     */
+    /// Get a const reference to the thread list
     const std::vector<SharedPtr<Thread>>& GetThreadList();
 
 private:
@@ -131,7 +114,7 @@ private:
     std::unordered_map<u64, Thread*> wakeup_callback_table;
 
     /// Event type for the thread wake up event
-    CoreTiming::EventType* ThreadWakeupEventType;
+    Core::TimingEventType* ThreadWakeupEventType;
 
     // Lists all threads that aren't deleted.
     std::vector<SharedPtr<Thread>> thread_list;

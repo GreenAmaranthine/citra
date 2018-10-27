@@ -87,11 +87,11 @@ void IR_RST::UpdateCallback(u64 userdata, s64 cycles_late) {
     // If we just updated index 0, provide a new timestamp
     if (mem->index == 0) {
         mem->index_reset_ticks_previous = mem->index_reset_ticks;
-        mem->index_reset_ticks = CoreTiming::GetTicks();
+        mem->index_reset_ticks = system.CoreTiming().GetTicks();
     }
     update_event->Signal();
     // Reschedule recurrent event
-    CoreTiming::ScheduleEvent(msToCycles(update_period) - cycles_late, update_callback_id);
+    system.CoreTiming().ScheduleEvent(msToCycles(update_period) - cycles_late, update_callback_id);
 }
 
 void IR_RST::GetHandles(Kernel::HLERequestContext& ctx) {
@@ -105,17 +105,17 @@ void IR_RST::Initialize(Kernel::HLERequestContext& ctx) {
     update_period = static_cast<int>(rp.Pop<u32>());
     raw_c_stick = rp.Pop<bool>();
     if (raw_c_stick)
-        LOG_ERROR(Service_IR, "raw C-stick data isn't implemented!");
+        LOG_ERROR(Service_IR, "raw C-Stick data isn't implemented!");
     next_pad_index = 0;
     is_device_reload_pending.store(true);
-    CoreTiming::ScheduleEvent(msToCycles(update_period), update_callback_id);
+    system.CoreTiming().ScheduleEvent(msToCycles(update_period), update_callback_id);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_IR, "called. update_period={}, raw_c_stick={}", update_period, raw_c_stick);
 }
 
 void IR_RST::Shutdown(Kernel::HLERequestContext& ctx) {
-    CoreTiming::UnscheduleEvent(update_callback_id, 0);
+    system.CoreTiming().UnscheduleEvent(update_callback_id, 0);
     UnloadInputDevices();
     IPC::ResponseBuilder rb{ctx, 0x03, 1, 0};
     rb.Push(RESULT_SUCCESS);
@@ -125,12 +125,13 @@ void IR_RST::Shutdown(Kernel::HLERequestContext& ctx) {
 IR_RST::IR_RST(Core::System& system) : ServiceFramework{"ir:rst", 1} {
     // Note: these two kernel objects are even available before Initialize service function is
     // called.
-    shared_memory = system.Kernel().CreateSharedMemory(
-        nullptr, 0x1000, Kernel::MemoryPermission::ReadWrite, Kernel::MemoryPermission::Read, 0,
-        Kernel::MemoryRegion::Base, "IRRST:SharedMemory");
-    update_event = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "IRRST:UpdateEvent");
+    auto& kernel{system.Kernel()};
+    shared_memory = kernel.CreateSharedMemory(nullptr, 0x1000, Kernel::MemoryPermission::ReadWrite,
+                                              Kernel::MemoryPermission::Read, 0,
+                                              Kernel::MemoryRegion::Base, "ir:rst shared_memory");
+    update_event = kernel.CreateEvent(Kernel::ResetType::OneShot, "ir_rst update_event");
     update_callback_id =
-        CoreTiming::RegisterEvent("IRRST:UpdateCallBack", [this](u64 userdata, s64 cycles_late) {
+        system.CoreTiming().RegisterEvent("IR Update Event", [this](u64 userdata, s64 cycles_late) {
             UpdateCallback(userdata, cycles_late);
         });
     static const FunctionInfo functions[]{

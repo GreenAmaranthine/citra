@@ -66,7 +66,8 @@ void Module::LoadInputDevices() {
 }
 
 void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
-    SharedMem* mem{reinterpret_cast<SharedMem*>(shared_mem->GetPointer())};
+    auto mem{reinterpret_cast<SharedMem*>(shared_mem->GetPointer())};
+    auto& timing{system.CoreTiming()};
     if (is_device_reload_pending.exchange(false))
         LoadInputDevices();
     PadState state;
@@ -124,7 +125,7 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     // If we just updated index 0, provide a new timestamp
     if (mem->pad.index == 0) {
         mem->pad.index_reset_ticks_previous = mem->pad.index_reset_ticks;
-        mem->pad.index_reset_ticks = (s64)CoreTiming::GetTicks();
+        mem->pad.index_reset_ticks = (s64)timing.GetTicks();
     }
     mem->touch.index = next_touch_index;
     next_touch_index = (next_touch_index + 1) % mem->touch.entries.size();
@@ -147,17 +148,18 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     // If we just updated index 0, provide a new timestamp
     if (mem->touch.index == 0) {
         mem->touch.index_reset_ticks_previous = mem->touch.index_reset_ticks;
-        mem->touch.index_reset_ticks = (s64)CoreTiming::GetTicks();
+        mem->touch.index_reset_ticks = (s64)timing.GetTicks();
     }
     // Signal both handles when there's an update to Pad or touch
     event_pad_or_touch_1->Signal();
     event_pad_or_touch_2->Signal();
     // Reschedule recurrent event
-    CoreTiming::ScheduleEvent(pad_update_ticks - cycles_late, pad_update_event);
+    timing.ScheduleEvent(pad_update_ticks - cycles_late, pad_update_event);
 }
 
 void Module::UpdateAccelerometerCallback(u64 userdata, s64 cycles_late) {
-    SharedMem* mem{reinterpret_cast<SharedMem*>(shared_mem->GetPointer())};
+    auto mem{reinterpret_cast<SharedMem*>(shared_mem->GetPointer())};
+    auto& timing{system.CoreTiming()};
     mem->accelerometer.index = next_accelerometer_index;
     next_accelerometer_index = (next_accelerometer_index + 1) % mem->accelerometer.entries.size();
     AccelerometerDataEntry& accelerometer_entry{
@@ -190,11 +192,11 @@ void Module::UpdateAccelerometerCallback(u64 userdata, s64 cycles_late) {
     // If we just updated index 0, provide a new timestamp
     if (mem->accelerometer.index == 0) {
         mem->accelerometer.index_reset_ticks_previous = mem->accelerometer.index_reset_ticks;
-        mem->accelerometer.index_reset_ticks = (s64)CoreTiming::GetTicks();
+        mem->accelerometer.index_reset_ticks = (s64)timing.GetTicks();
     }
     event_accelerometer->Signal();
     // Reschedule recurrent event
-    CoreTiming::ScheduleEvent(accelerometer_update_ticks - cycles_late, accelerometer_update_event);
+    timing.ScheduleEvent(accelerometer_update_ticks - cycles_late, accelerometer_update_event);
 }
 
 const PadState& GetInputsThisFrame() {
@@ -202,7 +204,8 @@ const PadState& GetInputsThisFrame() {
 }
 
 void Module::UpdateGyroscopeCallback(u64 userdata, s64 cycles_late) {
-    SharedMem* mem{reinterpret_cast<SharedMem*>(shared_mem->GetPointer())};
+    auto mem{reinterpret_cast<SharedMem*>(shared_mem->GetPointer())};
+    auto& timing{system.CoreTiming()};
     mem->gyroscope.index = next_gyroscope_index;
     next_gyroscope_index = (next_gyroscope_index + 1) % mem->gyroscope.entries.size();
     GyroscopeDataEntry& gyroscope_entry{mem->gyroscope.entries[mem->gyroscope.index]};
@@ -227,11 +230,11 @@ void Module::UpdateGyroscopeCallback(u64 userdata, s64 cycles_late) {
     // If we just updated index 0, provide a new timestamp
     if (mem->gyroscope.index == 0) {
         mem->gyroscope.index_reset_ticks_previous = mem->gyroscope.index_reset_ticks;
-        mem->gyroscope.index_reset_ticks = (s64)CoreTiming::GetTicks();
+        mem->gyroscope.index_reset_ticks = (s64)timing.GetTicks();
     }
     event_gyroscope->Signal();
     // Reschedule recurrent event
-    CoreTiming::ScheduleEvent(gyroscope_update_ticks - cycles_late, gyroscope_update_event);
+    timing.ScheduleEvent(gyroscope_update_ticks - cycles_late, gyroscope_update_event);
 }
 
 void Module::Interface::GetIPCHandles(Kernel::HLERequestContext& ctx) {
@@ -245,7 +248,8 @@ void Module::Interface::EnableAccelerometer(Kernel::HLERequestContext& ctx) {
     ++hid->enable_accelerometer_count;
     // Schedules the accelerometer update event if the accelerometer was just enabled
     if (hid->enable_accelerometer_count == 1)
-        CoreTiming::ScheduleEvent(accelerometer_update_ticks, hid->accelerometer_update_event);
+        system.CoreTiming().ScheduleEvent(accelerometer_update_ticks,
+                                          hid->accelerometer_update_event);
     IPC::ResponseBuilder rb{ctx, 0x11, 1, 0};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HID, "called");
@@ -255,7 +259,7 @@ void Module::Interface::DisableAccelerometer(Kernel::HLERequestContext& ctx) {
     --hid->enable_accelerometer_count;
     // Unschedules the accelerometer update event if the accelerometer was just disabled
     if (hid->enable_accelerometer_count == 0)
-        CoreTiming::UnscheduleEvent(hid->accelerometer_update_event, 0);
+        system.CoreTiming().UnscheduleEvent(hid->accelerometer_update_event, 0);
     IPC::ResponseBuilder rb{ctx, 0x12, 1, 0};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HID, "called");
@@ -314,31 +318,31 @@ std::shared_ptr<Module> Module::Interface::GetModule() {
 }
 
 Module::Module(Core::System& system) : system{system} {
-    shared_mem = system.Kernel().CreateSharedMemory(
-        nullptr, 0x1000, Kernel::MemoryPermission::ReadWrite, Kernel::MemoryPermission::Read, 0,
-        Kernel::MemoryRegion::Base, "HID:SharedMemory");
+    auto& kernel{system.Kernel()};
+    shared_mem = kernel.CreateSharedMemory(nullptr, 0x1000, Kernel::MemoryPermission::ReadWrite,
+                                           Kernel::MemoryPermission::Read, 0,
+                                           Kernel::MemoryRegion::Base, "HID:SharedMemory");
     // Create event handles
-    event_pad_or_touch_1 =
-        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "HID:EventPadOrTouch1");
-    event_pad_or_touch_2 =
-        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "HID:EventPadOrTouch2");
-    event_accelerometer =
-        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "HID:EventAccelerometer");
-    event_gyroscope = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "HID:EventGyroscope");
-    event_debug_pad = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "HID:EventDebugPad");
+    event_pad_or_touch_1 = kernel.CreateEvent(Kernel::ResetType::OneShot, "HID:EventPadOrTouch1");
+    event_pad_or_touch_2 = kernel.CreateEvent(Kernel::ResetType::OneShot, "HID:EventPadOrTouch2");
+    event_accelerometer = kernel.CreateEvent(Kernel::ResetType::OneShot, "HID:EventAccelerometer");
+    event_gyroscope = kernel.CreateEvent(Kernel::ResetType::OneShot, "HID:EventGyroscope");
+    event_debug_pad = kernel.CreateEvent(Kernel::ResetType::OneShot, "HID:EventDebugPad");
     // Register update callbacks
+    auto& timing{system.CoreTiming()};
     pad_update_event =
-        CoreTiming::RegisterEvent("HID::UpdatePadCallback", [this](u64 userdata, s64 cycles_late) {
+        timing.RegisterEvent("HID Pad Update Event", [this](u64 userdata, s64 cycles_late) {
             UpdatePadCallback(userdata, cycles_late);
         });
-    accelerometer_update_event = CoreTiming::RegisterEvent(
-        "HID::UpdateAccelerometerCallback", [this](u64 userdata, s64 cycles_late) {
+    accelerometer_update_event = timing.RegisterEvent(
+        "HID Accelerometer Update Event", [this](u64 userdata, s64 cycles_late) {
             UpdateAccelerometerCallback(userdata, cycles_late);
         });
-    gyroscope_update_event = CoreTiming::RegisterEvent(
-        "HID::UpdateGyroscopeCallback",
-        [this](u64 userdata, s64 cycles_late) { UpdateGyroscopeCallback(userdata, cycles_late); });
-    CoreTiming::ScheduleEvent(pad_update_ticks, pad_update_event);
+    gyroscope_update_event =
+        timing.RegisterEvent("HID Update Gyroscope Event", [this](u64 userdata, s64 cycles_late) {
+            UpdateGyroscopeCallback(userdata, cycles_late);
+        });
+    timing.ScheduleEvent(pad_update_ticks, pad_update_event);
 }
 
 void Module::ReloadInputDevices() {

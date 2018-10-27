@@ -26,7 +26,7 @@ namespace GPU {
 Regs g_regs;
 
 /// Event id for CoreTiming
-static CoreTiming::EventType* vblank_event;
+static Core::TimingEventType* vblank_event;
 
 template <typename T>
 inline void Read(T& var, const u32 raw_addr) {
@@ -410,7 +410,7 @@ static void VBlankCallback(u64 userdata, s64 cycles_late) {
     Service::GSP::SignalInterrupt(Service::GSP::InterruptId::PDC0);
     Service::GSP::SignalInterrupt(Service::GSP::InterruptId::PDC1);
     // Reschedule recurrent event
-    CoreTiming::ScheduleEvent(
+    Core::System::GetInstance().CoreTiming().ScheduleEvent(
         static_cast<u64>(BASE_CLOCK_RATE_ARM11 / Settings::values.screen_refresh_rate) -
             cycles_late,
         vblank_event);
@@ -441,8 +441,10 @@ void Init() {
     framebuffer_sub.stride = 3 * 240;
     framebuffer_sub.color_format.Assign(Regs::PixelFormat::RGB8);
     framebuffer_sub.active_fb = 0;
-    vblank_event = CoreTiming::RegisterEvent("GPU::VBlankCallback", VBlankCallback);
-    CoreTiming::ScheduleEvent(
+    // Register and schedule event
+    Core::Timing& timing{Core::System::GetInstance().CoreTiming()};
+    vblank_event = timing.RegisterEvent("GPU VBlank Event", VBlankCallback);
+    timing.ScheduleEvent(
         static_cast<u64>(BASE_CLOCK_RATE_ARM11 / Settings::values.screen_refresh_rate),
         vblank_event);
     LOG_DEBUG(HW_GPU, "initialized OK");

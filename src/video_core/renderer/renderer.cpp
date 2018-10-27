@@ -89,7 +89,7 @@ static std::array<GLfloat, 6> MakeOrthographicMatrix(const float width, const fl
     return matrix;
 }
 
-Renderer::Renderer(Frontend& frontend) : frontend{frontend} {}
+Renderer::Renderer(Core::System& system) : system{system} {}
 
 Renderer::~Renderer() = default;
 
@@ -153,18 +153,17 @@ void Renderer::SwapBuffers() {
         VideoCore::g_screenshot_complete_callback();
         VideoCore::g_screenshot_requested = false;
     }
+    auto& frontend{system.GetFrontend()};
     DrawScreens(frontend.GetFramebufferLayout());
-    Core::System::GetInstance().perf_stats.EndSystemFrame();
+    system.perf_stats.EndSystemFrame();
     // Swap buffers
     frontend.SwapBuffers();
-    Core::System::GetInstance().frame_limiter.DoFrameLimiting(CoreTiming::GetGlobalTimeUs());
-    Core::System::GetInstance().perf_stats.BeginSystemFrame();
+    system.frame_limiter.DoFrameLimiting(CoreTiming::GetGlobalTimeUs());
+    system.perf_stats.BeginSystemFrame();
     prev_state.Apply();
 }
 
-/**
- * Loads framebuffer from emulated memory into the active OpenGL texture.
- */
+/// Loads framebuffer from emulated memory into the active OpenGL texture.
 void Renderer::LoadFBToScreenInfo(const GPU::Regs::FramebufferConfig& framebuffer,
                                   ScreenInfo& screen_info, bool right_eye) {
     if (framebuffer.address_right1 == 0 || framebuffer.address_right2 == 0)
@@ -224,9 +223,7 @@ void Renderer::LoadColorToActiveGLTexture(u8 color_r, u8 color_g, u8 color_b,
     state.Apply();
 }
 
-/**
- * Initializes the OpenGL OpenGLState and creates persistent objects.
- */
+/// Initializes the OpenGL OpenGLState and creates persistent objects.
 void Renderer::InitOpenGLObjects() {
     // Link shaders and get variable locations
     shader.Create(vertex_shader, fragment_shader);
@@ -321,8 +318,8 @@ void Renderer::ConfigureFramebufferTexture(TextureInfo& texture,
 }
 
 /**
- * Draws a single texture to the emulator window, rotating the texture to correct for the 3DS's LCD
- * rotation.
+ * Draws a single texture to the emulator window, rotating the texture to correct for the console's
+ * LCD rotation.
  */
 void Renderer::DrawSingleScreenRotated(const ScreenInfo& screen_info, float x, float y, float w,
                                        float h) {
@@ -448,7 +445,7 @@ static void APIENTRY DebugHandler(GLenum source, GLenum type, GLuint id, GLenum 
 
 /// Initialize the renderer
 Core::System::ResultStatus Renderer::Init() {
-    frontend.MakeCurrent();
+    system.GetFrontend().MakeCurrent();
     if (GLAD_GL_KHR_debug) {
         glEnable(GL_DEBUG_OUTPUT);
         glDebugMessageCallback(DebugHandler, nullptr);
@@ -470,6 +467,7 @@ Core::System::ResultStatus Renderer::Init() {
 }
 
 void Renderer::UpdateCurrentFramebufferLayout() {
+    auto& frontend{system.GetFrontend()};
     const Layout::FramebufferLayout& layout{frontend.GetFramebufferLayout()};
     frontend.UpdateCurrentFramebufferLayout(layout.width, layout.height);
 }

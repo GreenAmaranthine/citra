@@ -632,13 +632,13 @@ void Module::Interface::Wrap(Kernel::HLERequestContext& ctx) {
     ASSERT(input.GetSize() == input_size);
     auto& output{rp.PopMappedBuffer()};
     ASSERT(output.GetSize() == output_size);
-    // Note: real 3DS still returns SUCCESS when the sizes don't match. It seems that it doesn't
+    // Note: real console still returns success when the sizes don't match. It seems that it doesn't
     // check the buffer size and writes data with potential overflow.
     ASSERT_MSG(output_size == input_size + HW::AES::CCM_MAC_SIZE,
                "input_size ({}) doesn't match to output_size ({})", input_size, output_size);
     LOG_DEBUG(Service_APT, "output_size={}, input_size={}, nonce_offset={}, nonce_size={}",
               output_size, input_size, nonce_offset, nonce_size);
-    // Note: This weird nonce size modification is verified against real 3DS
+    // Note: This weird nonce size modification is verified against real console
     nonce_size = std::min<u32>(nonce_size & ~3, HW::AES::CCM_NONCE_SIZE);
     // Reads nonce and concatenates the rest of the input as plaintext
     HW::AES::CCMNonce nonce;
@@ -669,13 +669,13 @@ void Module::Interface::Unwrap(Kernel::HLERequestContext& ctx) {
     ASSERT(input.GetSize() == input_size);
     auto& output{rp.PopMappedBuffer()};
     ASSERT(output.GetSize() == output_size);
-    // Note: real 3DS still returns SUCCESS when the sizes don't match. It seems that it doesn't
+    // Note: real console still returns success when the sizes don't match. It seems that it doesn't
     // check the buffer size and writes data with potential overflow.
     ASSERT_MSG(output_size == input_size - HW::AES::CCM_MAC_SIZE,
                "input_size ({}) doesn't match to output_size ({})", input_size, output_size);
     LOG_DEBUG(Service_APT, "output_size={}, input_size={}, nonce_offset={}, nonce_size={}",
               output_size, input_size, nonce_offset, nonce_size);
-    // Note: This weird nonce size modification is verified against real 3DS
+    // Note: This weird nonce size modification is verified against real console
     nonce_size = std::min<u32>(nonce_size & ~3, HW::AES::CCM_NONCE_SIZE);
     // Reads nonce and cipher text
     HW::AES::CCMNonce nonce;
@@ -820,12 +820,12 @@ Module::Module(Core::System& system) : system{system} {
     shared_font_mem =
         system.Kernel().CreateSharedMemory(nullptr, 0x332000, // 3272 KB
                                            MemoryPermission::ReadWrite, MemoryPermission::Read, 0,
-                                           Kernel::MemoryRegion::System, "APT:SharedFont");
-    lock = system.Kernel().CreateMutex(false, "APT_U:Lock");
+                                           Kernel::MemoryRegion::System, "APT Shared Font Memory");
+    lock = system.Kernel().CreateMutex(false, "APT Lock");
     if (LoadSharedFont())
         shared_font_loaded = true;
     else
-        LOG_ERROR(Service_APT, "shared font file missing - go dump it from your 3ds");
+        LOG_WARNING(Service_APT, "shared font file missing - dump it from your console");
 }
 
 Module::~Module() {}

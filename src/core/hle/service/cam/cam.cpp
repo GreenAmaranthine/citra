@@ -72,7 +72,7 @@ void Module::PortConfig::Clear() {
     transfer_bytes = 256;
 }
 
-void Module::CompletionEventCallBack(u64 port_id, s64) {
+void Module::CompletionEventCallback(u64 port_id, s64) {
     PortConfig& port{ports[port_id]};
     const CameraConfig& camera{cameras[port.camera_id]};
     const auto buffer{port.capture_result.get()};
@@ -143,7 +143,7 @@ void Module::StartReceiving(int port_id) {
     });
     // Schedules a completion event according to the frame rate. The event will block on the
     // capture task if it isn't finished within the expected time
-    CoreTiming::ScheduleEvent(
+    system.CoreTiming().ScheduleEvent(
         msToCycles(LATENCY_BY_FRAME_RATE[static_cast<int>(camera.frame_rate)]),
         completion_event_callback, port_id);
 }
@@ -152,7 +152,7 @@ void Module::CancelReceiving(int port_id) {
     if (!ports[port_id].is_receiving)
         return;
     LOG_WARNING(Service_CAM, "tries to cancel an ongoing receiving process.");
-    CoreTiming::UnscheduleEvent(completion_event_callback, port_id);
+    system.CoreTiming().UnscheduleEvent(completion_event_callback, port_id);
     ports[port_id].capture_result.wait();
     ports[port_id].is_receiving = false;
 }
@@ -249,10 +249,9 @@ void Module::Interface::IsBusy(Kernel::HLERequestContext& ctx) {
 
     if (port_select.IsValid()) {
         bool is_busy{true};
-        // Note: the behaviour on no or both ports selected are verified against real 3DS.
-        for (int i : port_select) {
+        // Note: the behaviour on no or both ports selected are verified against real console.
+        for (int i : port_select)
             is_busy &= cam->ports[i].is_busy;
-        }
         rb.Push(RESULT_SUCCESS);
         rb.Push(is_busy);
     } else {
@@ -878,7 +877,7 @@ void Module::Interface::DriverInitialize(Kernel::HLERequestContext& ctx) {
         CameraConfig& camera{cam->cameras[camera_id]};
         camera.current_context = 0;
         for (int context_id{}; context_id < 2; ++context_id) {
-            // Note: the following default values are verified against real 3DS
+            // Note: the following default values are verified against real console
             ContextConfig& context{camera.contexts[context_id]};
             context.flip = camera_id == 1 ? Flip::Horizontal : Flip::None;
             context.effect = Effect::None;
@@ -909,7 +908,8 @@ std::shared_ptr<Module> Module::Interface::GetModule() {
     return cam;
 }
 
-Module::Module(Core::System& system) {
+Module::Module(Core::System& system) : system{system} {
+    using namespace Kernel;
     for (PortConfig& port : ports) {
         port.completion_event =
             system.Kernel().CreateEvent(Kernel::ResetType::Sticky, "CAM::completion_event");
@@ -918,9 +918,9 @@ Module::Module(Core::System& system) {
         port.vsync_interrupt_event =
             system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "CAM::vsync_interrupt_event");
     }
-    completion_event_callback = CoreTiming::RegisterEvent(
-        "CAM::CompletionEventCallBack",
-        [this](u64 userdata, s64 cycles_late) { CompletionEventCallBack(userdata, cycles_late); });
+    completion_event_callback = system.CoreTiming().RegisterEvent(
+        "CAM Completion Event",
+        [this](u64 userdata, s64 cycles_late) { CompletionEventCallback(userdata, cycles_late); });
 }
 
 Module::~Module() {

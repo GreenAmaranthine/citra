@@ -15,10 +15,6 @@ constexpr float TOP_SCREEN_ASPECT_RATIO{static_cast<float>(Core::kScreenTopHeigh
 constexpr float BOT_SCREEN_ASPECT_RATIO{static_cast<float>(Core::kScreenBottomHeight) /
                                         Core::kScreenBottomWidth};
 
-u16 FramebufferLayout::GetScalingRatio() const {
-    return static_cast<u16>(((top_screen.GetWidth() - 1) / Core::kScreenTopWidth) + 1);
-}
-
 // Finds the largest size subrectangle contained in window area that is confined to the aspect ratio
 template <class T>
 static MathUtil::Rectangle<T> maxRectangle(MathUtil::Rectangle<T> window_area,

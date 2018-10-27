@@ -1001,7 +1001,7 @@ void GMainWindow::OnCIAInstallReport(Service::AM::InstallStatus status, const QS
     case Service::AM::InstallStatus::ErrorEncrypted:
         QMessageBox::critical(this, "Encrypted File",
                               QString("%1 must be decrypted "
-                                      "before being used with Citra. A real 3DS is required.")
+                                      "before being used with Citra. A real console is required.")
                                   .arg(filename));
         break;
     }
@@ -1473,7 +1473,7 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, const std::stri
         const QString common_message{
             "%1 is missing. Please <a "
             "href='https://github.com/citra-valentin/citra/wiki/"
-            "Dumping-System-Archives-from-a-3DS-Console/'>dump your system "
+            "Dumping-System-Archives-from-a-Console/'>dump your system "
             "archives</a>.<br/>Continuing emulation may result in crashes and bugs."};
         if (!details.empty())
             message = common_message.arg(QString::fromStdString(details));

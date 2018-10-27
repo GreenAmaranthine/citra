@@ -35,7 +35,7 @@
         <item>
          <widget class="QCheckBox" name="toggle_force_memory_mode_7">
           <property name="text">
-           <string>Force Memory Mode To 7 (New 3DS Only)</string>
+           <string>Force Memory Mode To 7 (New Model Only)</string>
           </property>
          </widget>
         </item>

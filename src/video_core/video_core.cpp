@@ -22,16 +22,16 @@ std::function<void()> g_screenshot_complete_callback;
 Layout::FramebufferLayout g_screenshot_framebuffer_layout;
 
 /// Initialize the video core
-Core::System::ResultStatus Init(Frontend& frontend) {
-    Pica::Init();
-    g_renderer = std::make_unique<Renderer>(frontend);
-    Core::System::ResultStatus result{g_renderer->Init()};
-    if (result != Core::System::ResultStatus::Success)
-        LOG_ERROR(Render, "initialization failed!");
-    else
-        LOG_DEBUG(Render, "initialized OK");
-    return result;
-}
+Core::System::ResultStatus Init(Core::System& system);
+Pica::Init();
+g_renderer = std::make_unique<Renderer>(system);
+Core::System::ResultStatus result{g_renderer->Init()};
+if (result != Core::System::ResultStatus::Success)
+    LOG_ERROR(Render, "initialization failed!");
+else
+    LOG_DEBUG(Render, "initialized OK");
+return result;
+} // namespace VideoCore
 
 /// Shutdown the video core
 void Shutdown() {
