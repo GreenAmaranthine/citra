@@ -134,7 +134,7 @@ GMainWindow::GMainWindow() : config{new Config()} {
     game_list->PopulateAsync(UISettings::values.game_dirs);
     QStringList args{QApplication::arguments()};
     if (args.length() >= 2)
-        BootApplication(args[1].toStdString());
+        BootGame(args[1].toStdString());
 }
 
 GMainWindow::~GMainWindow() {
@@ -263,7 +263,7 @@ void GMainWindow::InitializeHotkeys() {
     connect(GetHotkey("Main Window", "Restart", this), &QShortcut::activated, this, [this] {
         if (!system.IsPoweredOn())
             return;
-        BootApplication(system.GetFilePath());
+        BootGame(system.GetFilePath());
     });
     connect(GetHotkey("Main Window", "Swap Screens", screens), &QShortcut::activated,
             ui.action_Screen_Layout_Swap_Screens, &QAction::trigger);
@@ -414,7 +414,7 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Pause, &QAction::triggered, this, &GMainWindow::OnPauseGame);
     connect(ui.action_Stop, &QAction::triggered, this, &GMainWindow::OnStopGame);
     connect(ui.action_Restart, &QAction::triggered, this,
-            [this] { BootApplication(system.GetFilePath()); });
+            [this] { BootGame(system.GetFilePath()); });
     connect(ui.action_Sleep_Mode, &QAction::triggered, this, &GMainWindow::ToggleSleepMode);
     connect(ui.action_Configuration, &QAction::triggered, this, &GMainWindow::OnOpenConfiguration);
     connect(ui.action_Cheats, &QAction::triggered, this, &GMainWindow::OnCheats);
@@ -599,7 +599,7 @@ bool GMainWindow::LoadROM(const std::string& filename) {
     return true;
 }
 
-void GMainWindow::BootApplication(const std::string& filename) {
+void GMainWindow::BootGame(const std::string& filename) {
     LOG_INFO(Frontend, "Booting {}", filename);
     StoreRecentFile(QString::fromStdString(filename)); // Put the filename on top of the list
     if (movie_record_on_start)
@@ -820,7 +820,7 @@ void GMainWindow::UpdateRecentFiles() {
 }
 
 void GMainWindow::OnGameListLoadFile(const QString& path) {
-    BootApplication(path.toStdString());
+    BootGame(path.toStdString());
 }
 
 void GMainWindow::OnGameListOpenFolder(u64 data_id, GameListOpenTarget target) {
@@ -912,7 +912,7 @@ void GMainWindow::OnMenuLoadFile() {
     const QString filename{QFileDialog::getOpenFileName(this, "Load File", ".", file_filter)};
     if (filename.isEmpty())
         return;
-    BootApplication(filename.toStdString());
+    BootGame(filename.toStdString());
 }
 
 void GMainWindow::OnMenuInstallCIA() {
@@ -1011,7 +1011,7 @@ void GMainWindow::OnMenuRecentFile() {
     assert(action);
     const QString filename{action->data().toString()};
     if (QFileInfo::exists(filename))
-        BootApplication(filename.toStdString());
+        BootGame(filename.toStdString());
     else {
         // Display an error message and remove the file from the list.
         QMessageBox::information(this, "File not found",
@@ -1320,8 +1320,8 @@ void GMainWindow::OnPlayMovie() {
             return;
     } else {
         u64 program_id{Core::Movie::GetInstance().GetMovieProgramID(path.toStdString())};
-        QString path{game_list->FindGameByProgramID(program_id)};
-        if (path.isEmpty()) {
+        QString game_path{game_list->FindGameByProgramID(program_id)};
+        if (game_path.isEmpty()) {
             const int num_recent_files{
                 std::min(UISettings::values.recent_files.size(), max_recent_files_item)};
             for (int i{}; i < num_recent_files; i++) {
@@ -1332,26 +1332,24 @@ void GMainWindow::OnPlayMovie() {
                         u64 program_id_file;
                         if (loader->ReadProgramId(program_id_file) ==
                                 Loader::ResultStatus::Success &&
-                            program_id_file == program_id) {
-                            path = action_path;
-                        }
+                            program_id_file == program_id)
+                            game_path = action_path;
                     }
                 }
             }
-            if (path.isEmpty()) {
-                QMessageBox::warning(
-                    this, "Application Not Found",
-                    "The movie you are trying to play is from a application that isn't "
-                    "in the game list and isn't in the recent files. If you own "
-                    "the game, add the game folder to the game list or open the "
-                    "application and try to play the movie again.");
+            if (game_path.isEmpty()) {
+                QMessageBox::warning(this, "Game Not Found",
+                                     "The movie you are trying to play is from a game that isn't "
+                                     "in the game list and isn't in the recent files. If you own "
+                                     "the game, add the game folder to the game list or open the "
+                                     "game and try to play the movie again.");
                 return;
             }
         }
         if (!ValidateMovie(path, program_id))
             return;
         Core::Movie::GetInstance().PrepareForPlayback(path.toStdString());
-        BootApplication(path.toStdString());
+        BootGame(game_path.toStdString());
     }
     Core::Movie::GetInstance().StartPlayback(path.toStdString(), [this] {
         QMetaObject::invokeMethod(this, "OnMoviePlaybackCompleted");
@@ -1451,7 +1449,7 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, const std::stri
         if (emu_thread) {
             ShutdownGame();
             if (!system.set_application_file_path.empty()) {
-                BootApplication(system.set_application_file_path);
+                BootGame(system.set_application_file_path);
                 system.set_application_file_path.clear();
             }
         }
@@ -1511,7 +1509,7 @@ void GMainWindow::dropEvent(QDropEvent* event) {
     if (IsSingleFileDropEvent(event) && ConfirmChangeGame()) {
         const QMimeData* mimeData{event->mimeData()};
         QString filename{mimeData->urls().at(0).toLocalFile()};
-        BootApplication(filename.toStdString());
+        BootGame(filename.toStdString());
     }
 }
 

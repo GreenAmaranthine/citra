@@ -82,7 +82,7 @@ private:
     void ConnectMenuEvents();
 
     bool LoadROM(const std::string& filename);
-    void BootApplication(const std::string& filename);
+    void BootGame(const std::string& filename);
     void ShutdownGame();
 
     /**

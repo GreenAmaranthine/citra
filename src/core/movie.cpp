@@ -350,7 +350,7 @@ Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header, u64 progr
 void Movie::SaveMovie() {
     LOG_INFO(Movie, "Saving recorded movie to '{}'", record_movie_file);
     FileUtil::IOFile save_record{record_movie_file, "wb"};
-    if (!save_record.IsGood()) {
+    if (!save_record) {
         LOG_ERROR(Movie, "Unable to open file to save movie");
         return;
     }
@@ -362,9 +362,9 @@ void Movie::SaveMovie() {
     CryptoPP::StringSource(Common::g_scm_rev, true,
                            new CryptoPP::HexDecoder(new CryptoPP::StringSink(rev_bytes)));
     std::memcpy(header.revision.data(), rev_bytes.data(), sizeof(CTMHeader::revision));
-    save_record.WriteBytes(&header, sizeof(CTMHeader));
+    save_record.WriteBytes(&header, sizeof(header));
     save_record.WriteBytes(recorded_input.data(), recorded_input.size());
-    if (!save_record.IsGood())
+    if (!save_record)
         LOG_ERROR(Movie, "Error saving movie");
 }
 
@@ -400,14 +400,15 @@ static std::optional<CTMHeader> ReadHeader(const std::string& movie_file) {
         return {};
     CTMHeader header;
     save_record.ReadArray(&header, 1);
-    if (header_magic_bytes != header.filetype)
+    LOG_CRITICAL(Log, "{}", Common::ArrayToString(header.filetype.data(), sizeof(header.filetype)));
+    if (header.filetype != header_magic_bytes)
         return {};
     return header;
 }
 
 void Movie::PrepareForPlayback(const std::string& movie_file) {
     auto header{ReadHeader(movie_file)};
-    if (!header.has_value())
+    if (!header)
         return;
     init_time = header->clock_init_time;
 }
@@ -423,7 +424,7 @@ void Movie::PrepareForRecording() {
 Movie::ValidationResult Movie::ValidateMovie(const std::string& movie_file, u64 program_id) const {
     LOG_INFO(Movie, "Validating Movie file '{}'", movie_file);
     auto header{ReadHeader(movie_file)};
-    if (!header.has_value())
+    if (!header)
         return ValidationResult::Invalid;
     return ValidateHeader(*header, program_id);
 }
