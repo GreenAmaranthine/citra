@@ -12,7 +12,7 @@
 TEST_CASE("Memory::IsValidVirtualAddress", "[core][memory]") {
     CoreTiming::Init();
     Kernel::KernelSystem kernel(0);
-    SECTION("these regions should not be mapped on an empty process") {
+    SECTION("these regions shouldn't be mapped on an empty process") {
         auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
         CHECK(Memory::IsValidVirtualAddress(*process, Memory::PROCESS_IMAGE_VADDR) == false);
         CHECK(Memory::IsValidVirtualAddress(*process, Memory::HEAP_VADDR) == false);

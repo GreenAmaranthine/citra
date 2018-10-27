@@ -983,7 +983,7 @@ SurfaceRect_Tuple RasterizerCache::GetSurfaceSubRect(const SurfaceParams& params
     // Check if FindMatch failed because of res scaling
     // If that's the case create a new surface with
     // the dimensions of the lower res_scale surface
-    // to suggest it should not be used again
+    // to suggest it shouldn't be used again
     if (!surface && match_res_scale != ScaleMatch::Ignore) {
         surface = FindMatch<MatchFlags::SubRect | MatchFlags::Invalid>(surface_cache, params,
                                                                        ScaleMatch::Ignore);

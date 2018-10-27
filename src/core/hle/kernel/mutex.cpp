@@ -67,7 +67,7 @@ ResultCode Mutex::Release(Thread* thread) {
         return ResultCode(ErrCodes::WrongLockingThread, ErrorModule::Kernel,
                           ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
     }
-    // Note: It should not be possible for the situation where the mutex has a holding thread with a
+    // Note: It shouldn't be possible for the situation where the mutex has a holding thread with a
     // zero lock count to occur. The real kernel still checks for this, so we do too.
     if (lock_count <= 0)
         return ResultCode(ErrorDescription::InvalidResultValue, ErrorModule::Kernel,

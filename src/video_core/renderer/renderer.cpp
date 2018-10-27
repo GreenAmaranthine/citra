@@ -119,7 +119,7 @@ void Renderer::SwapBuffers() {
                 screen_infos[i].texture.height != (GLsizei)framebuffer.height ||
                 screen_infos[i].texture.format != framebuffer.color_format) {
                 // Reallocate texture if the framebuffer size has changed.
-                // This is expected to not happen very often and hence should not be a
+                // This is expected to not happen very often and hence shouldn't be a
                 // performance problem.
                 ConfigureFramebufferTexture(screen_infos[i].texture, framebuffer);
             }

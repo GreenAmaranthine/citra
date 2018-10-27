@@ -73,7 +73,7 @@ public:
     /**
      * Signals the timer, waking up any waiting threads and rescheduling it
      * for the next interval.
-     * This method should not be called from outside the timer callback handler,
+     * This method shouldn't be called from outside the timer callback handler,
      * lest multiple callback events get scheduled.
      */
     void Signal(s64 cycles_late);

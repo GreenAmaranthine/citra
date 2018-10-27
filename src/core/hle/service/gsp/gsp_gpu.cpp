@@ -399,7 +399,7 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         Memory::RasterizerFlushVirtualRegion(command.dma_request.dest_address,
                                              command.dma_request.size,
                                              Memory::FlushMode::Invalidate);
-        // TODO: These memory accesses should not go through the application's memory mapping.
+        // TODO: These memory accesses shouldn't go through the application's memory mapping.
         // They should go through the GSP module's memory mapping.
         Memory::CopyBlock(command.dma_request.dest_address, command.dma_request.source_address,
                           command.dma_request.size);
