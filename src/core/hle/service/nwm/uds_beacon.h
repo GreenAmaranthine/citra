@@ -49,8 +49,10 @@ static_assert(sizeof(BeaconDataReplyHeader) == 12, "BeaconDataReplyHeader has in
 struct BeaconFrameHeader {
     // Number of microseconds the AP has been active.
     u64_le timestamp;
+
     // Interval between beacon transmissions, expressed in TU.
     u16_le beacon_interval;
+
     // Indicates the presence of optional capabilities.
     u16_le capabilities;
 };
@@ -120,9 +122,7 @@ struct BeaconData {
 
 static_assert(sizeof(BeaconData) == 0x12, "BeaconData has incorrect size.");
 
-/**
- * Decrypts the beacon data buffer for the network described by `network_info`.
- */
+/// Decrypts the beacon data buffer for the network described by network_info.
 void DecryptBeacon(const NetworkInfo& network_info, std::vector<u8>& buffer);
 
 /**

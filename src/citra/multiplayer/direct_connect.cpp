@@ -86,7 +86,7 @@ void DirectConnectWindow::Connect() {
         if (auto member{Network::GetRoomMember().lock()}) {
             auto port{UISettings::values.port.toUInt()};
             member->Join(ui->nickname->text().toStdString(), ui->ip->text().toStdString().c_str(),
-                         port, Network::NoPreferredMac, ui->password->text().toStdString().c_str());
+                         port, BroadcastMac, ui->password->text().toStdString().c_str());
         }
     })};
     watcher->setFuture(f);

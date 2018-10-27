@@ -106,8 +106,7 @@ void HostRoomWindow::Host() {
                 return;
             }
         }
-        member->Join(ui->username->text().toStdString(), "127.0.0.1", port, Network::NoPreferredMac,
-                     password);
+        member->Join(ui->username->text().toStdString(), "127.0.0.1", port, BroadcastMac, password);
         // Store settings
         UISettings::values.room_nickname = ui->username->text();
         UISettings::values.room_name = ui->room_name->text();

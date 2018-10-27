@@ -192,7 +192,7 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
         SendNameCollision(event->peer);
         return;
     }
-    if (preferred_mac != NoPreferredMac) {
+    if (preferred_mac != BroadcastMac) {
         // Verify if the preferred mac is available
         if (!IsValidMacAddress(preferred_mac)) {
             SendMacCollision(event->peer);

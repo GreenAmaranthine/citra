@@ -76,12 +76,12 @@ public:
      * Sends a request to the server, asking for permission to join a room with the specified
      * nickname and preferred mac.
      * @params nickname The desired nickname.
-     * @params preferred_mac The preferred MAC address to use in the room, the NoPreferredMac tells
-     * @params password The password for the room
+     * @params preferred_mac The preferred MAC address to use in the room, the BroadcastMac tells
      * the server to assign one for us.
+     * @params password The password for the room
      */
     void SendJoinRequest(const std::string& nickname,
-                         const MacAddress& preferred_mac = NoPreferredMac,
+                         const MacAddress& preferred_mac = BroadcastMac,
                          const std::string& password = "");
 
     /**
