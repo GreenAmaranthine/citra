@@ -222,8 +222,7 @@ void GMainWindow::InitializeRecentFileMenuActions() {
 
 void GMainWindow::InitializeHotkeys() {
     RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
-    RegisterHotkey("Main Window", "Load Amiibo", QKeySequence("CTRL+L"));
-    RegisterHotkey("Main Window", "Remove Amiibo", QKeySequence("CTRL+R"));
+    RegisterHotkey("Main Window", "Load/Remove Amiibo", QKeySequence(Qt::Key_Comma));
     RegisterHotkey("Main Window", "Continue/Pause", QKeySequence(Qt::Key_F4));
     RegisterHotkey("Main Window", "Restart", QKeySequence(Qt::Key_F5));
     RegisterHotkey("Main Window", "Swap Screens", QKeySequence("F9"));
@@ -245,10 +244,14 @@ void GMainWindow::InitializeHotkeys() {
     LoadHotkeys();
     connect(GetHotkey("Main Window", "Load File", this), &QShortcut::activated, this,
             &GMainWindow::OnMenuLoadFile);
-    connect(GetHotkey("Main Window", "Load Amiibo", this), &QShortcut::activated, this,
-            &GMainWindow::OnLoadAmiibo);
-    connect(GetHotkey("Main Window", "Remove Amiibo", this), &QShortcut::activated, this,
-            &GMainWindow::OnRemoveAmiibo);
+    connect(GetHotkey("Main Window", "Load/Remove Amiibo", this), &QShortcut::activated, this, [&] {
+        if (!system.IsPoweredOn())
+            return;
+        if (ui.action_Remove_Amiibo->isEnabled())
+            OnRemoveAmiibo();
+        else
+            OnLoadAmiibo();
+    });
     connect(GetHotkey("Main Window", "Continue/Pause", this), &QShortcut::activated, this, [&] {
         if (system.IsPoweredOn()) {
             if (system.IsRunning())
@@ -1205,8 +1208,6 @@ void GMainWindow::OnSDMCCustom() {
 }
 
 void GMainWindow::OnLoadAmiibo() {
-    if (!system.IsPoweredOn())
-        return;
     OnPauseGame();
     const QString file_filter{QString("Amiibo File") + " (*.bin);;" + "All Files (*.*)"};
     const QString filename{QFileDialog::getOpenFileName(this, "Load Amiibo", ".", file_filter)};
@@ -1219,8 +1220,6 @@ void GMainWindow::OnLoadAmiibo() {
 }
 
 void GMainWindow::OnRemoveAmiibo() {
-    if (!system.IsPoweredOn())
-        return;
     auto nfc{system.ServiceManager().GetService<Service::NFC::Module::Interface>("nfc:u")};
     nfc->RemoveAmiibo();
     ui.action_Remove_Amiibo->setEnabled(false);
