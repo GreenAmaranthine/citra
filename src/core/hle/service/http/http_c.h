@@ -148,7 +148,7 @@ public:
     std::optional<BasicAuth> basic_auth;
     SSLConfig ssl_config{};
     u32 socket_buffer_size;
-    httplib::Headers* headers;
+    std::unique_ptr<httplib::Headers> headers;
     std::vector<PostData> post_data;
     u32 current_offset{};
     std::shared_ptr<httplib::Response> response;

@@ -144,10 +144,9 @@ void Context::Send() {
     hl::detail::parse_query_text(parsedUrl.m_Query, request.params);
     response = std::make_shared<hl::Response>();
     cli->send(request, *response);
-    if (response) {
+    if (response)
         LOG_DEBUG(Service_HTTP, "Raw response: {}",
                   GetRawResponseWithoutBody().append(1, '\n').append(response->body));
-    }
 }
 
 void Context::SetKeepAlive(bool enable) {
@@ -402,7 +401,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     context.socket_buffer_size = 0;
     context.handle = context_counter;
     context.session_id = session_data->session_id;
-    context.headers = new httplib::Headers;
+    context.headers = std::make_unique<httplib::Headers>();
     ++session_data->num_http_contexts;
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
     rb.Push(RESULT_SUCCESS);
