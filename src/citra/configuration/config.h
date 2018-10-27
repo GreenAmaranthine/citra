@@ -5,7 +5,7 @@
 #pragma once
 
 #include <array>
-#include <QVariant>
+#include <memory>
 #include "core/settings.h"
 
 class QSettings;
@@ -15,15 +15,13 @@ public:
     Config();
     ~Config();
 
-    void Reload();
     void Save();
 
     static const std::array<int, Settings::NativeButton::NumButtons> default_buttons;
     static const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> default_analogs;
 
 private:
-    QSettings* qt_config;
+    void Read();
 
-    void ReadValues();
-    void SaveValues();
+    std::unique_ptr<QSettings> qt_config;
 };

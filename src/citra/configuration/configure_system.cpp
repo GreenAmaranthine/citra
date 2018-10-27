@@ -11,7 +11,7 @@
 #include "core/settings.h"
 #include "ui_configure_system.h"
 
-static const std::array<int, 12> days_in_month{{
+constexpr std::array<int, 12> days_in_month{{
     31,
     29,
     31,
@@ -26,7 +26,7 @@ static const std::array<int, 12> days_in_month{{
     31,
 }};
 
-static const std::array<const char*, 187> country_names{{
+constexpr std::array<const char*, 187> country_names{{
     "",
     "Japan",
     "",
@@ -221,18 +221,15 @@ ConfigureSystem::ConfigureSystem(QWidget* parent)
     ui->setupUi(this);
     connect(ui->combo_birthmonth,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
-            &ConfigureSystem::updateBirthdayComboBox);
+            &ConfigureSystem::UpdateBirthdayComboBox);
     connect(ui->combo_init_clock,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
-            &ConfigureSystem::updateInitTime);
+            &ConfigureSystem::UpdateInitTime);
     connect(ui->button_regenerate_console_id, &QPushButton::clicked, this,
-            &ConfigureSystem::refreshConsoleID);
-    for (u8 i{}; i < country_names.size(); i++) {
-        if (country_names.at(i) != "") {
+            &ConfigureSystem::RefreshConsoleID);
+    for (u8 i{}; i < country_names.size(); i++)
+        if (country_names.at(i) != "")
             ui->combo_country->addItem(country_names.at(i), i);
-        }
-    }
-
     ConfigureTime();
 }
 
@@ -240,12 +237,10 @@ ConfigureSystem::~ConfigureSystem() {}
 
 void ConfigureSystem::setConfiguration() {
     enabled = !Core::System::GetInstance().IsPoweredOn();
-
     ui->combo_init_clock->setCurrentIndex(static_cast<u8>(Settings::values.init_clock));
     QDateTime date_time;
     date_time.setTime_t(Settings::values.init_time);
     ui->edit_init_time->setDateTime(date_time);
-
     if (!enabled) {
         cfg = Core::System::GetInstance()
                   .ServiceManager()
@@ -257,47 +252,39 @@ void ConfigureSystem::setConfiguration() {
         // This tab is enabled only when game isn't running (i.e. all services aren't
         // initialized).
         cfg = std::make_shared<Service::CFG::Module>();
-
         ReadSystemSettings();
         ui->label_disable_info->hide();
     }
 }
 
 void ConfigureSystem::ReadSystemSettings() {
-    // set username
+    // Set username
     username = cfg->GetUsername();
     ui->edit_username->setText(QString::fromStdU16String(username));
-
-    // set birthday
+    // Set birthday
     auto [birthmonth, birthday]{cfg->GetBirthday()};
     ui->combo_birthmonth->setCurrentIndex(birthmonth - 1);
-    updateBirthdayComboBox(
+    UpdateBirthdayComboBox(
         birthmonth -
-        1); // explicitly update it because the signal from setCurrentIndex isn't reliable
+        1); // Explicitly update it because the signal from setCurrentIndex isn't reliable
     ui->combo_birthday->setCurrentIndex(birthday - 1);
-
-    // set system language
+    // Set system language
     language_index = cfg->GetSystemLanguage();
     ui->combo_language->setCurrentIndex(language_index);
-
-    // set model
+    // Set model
     model_index = static_cast<int>(cfg->GetSystemModel());
     ui->combo_model->setCurrentIndex(model_index);
-
-    // set sound output mode
+    // Set sound output mode
     sound_index = cfg->GetSoundOutputMode();
     ui->combo_sound->setCurrentIndex(sound_index);
-
-    // set the country code
+    // Set the country code
     country_code = cfg->GetCountryCode();
     ui->combo_country->setCurrentIndex(ui->combo_country->findData(country_code));
-
-    // set the console id
+    // Set the console id
     u64 console_id{cfg->GetConsoleUniqueId()};
     ui->label_console_id->setText(
         QString("Console ID: 0x%1").arg(QString::number(console_id, 16).toUpper()));
-
-    // set the region
+    // Set the region
     // The first item is "auto-select" with actual value -1, so plus one here will do the trick
     ui->region_combobox->setCurrentIndex(Settings::values.region_value + 1);
 }
@@ -305,56 +292,47 @@ void ConfigureSystem::ReadSystemSettings() {
 void ConfigureSystem::applyConfiguration() {
     if (!enabled)
         return;
-
     bool modified{};
-
-    // apply username
+    // Apply username
     std::u16string new_username{ui->edit_username->text().toStdU16String()};
     if (new_username != username) {
         cfg->SetUsername(new_username);
         modified = true;
     }
-
-    // apply birthday
+    // Apply birthday
     int new_birthmonth{ui->combo_birthmonth->currentIndex() + 1};
     int new_birthday{ui->combo_birthday->currentIndex() + 1};
     if (birthmonth != new_birthmonth || birthday != new_birthday) {
         cfg->SetBirthday(new_birthmonth, new_birthday);
         modified = true;
     }
-
-    // apply language
+    // Apply language
     int new_language{ui->combo_language->currentIndex()};
     if (language_index != new_language) {
         cfg->SetSystemLanguage(static_cast<Service::CFG::SystemLanguage>(new_language));
         modified = true;
     }
-
-    // apply sound
+    // Apply sound
     int new_sound{ui->combo_sound->currentIndex()};
     if (sound_index != new_sound) {
         cfg->SetSoundOutputMode(static_cast<Service::CFG::SoundOutputMode>(new_sound));
         modified = true;
     }
-
-    // apply model
+    // Apply model
     int new_model{ui->combo_model->currentIndex()};
     if (model_index != new_model) {
         cfg->SetSystemModel(static_cast<Service::CFG::SystemModel>(new_model));
         modified = true;
     }
-
-    // apply country
+    // Apply country
     u8 new_country{static_cast<u8>(ui->combo_country->currentData().toInt())};
     if (country_code != new_country) {
         cfg->SetCountryCode(new_country);
         modified = true;
     }
-
-    // update the config savegame if any item except region is modified.
+    // Update the config savegame if any item except region is modified.
     if (modified)
         cfg->UpdateConfigNANDSavegame();
-
     Settings::values.init_clock =
         static_cast<Settings::InitClock>(ui->combo_init_clock->currentIndex());
     Settings::values.init_time = ui->edit_init_time->dateTime().toTime_t();
@@ -362,57 +340,49 @@ void ConfigureSystem::applyConfiguration() {
     Settings::Apply();
 }
 
-void ConfigureSystem::updateBirthdayComboBox(int birthmonth_index) {
+void ConfigureSystem::UpdateBirthdayComboBox(int birthmonth_index) {
     if (birthmonth_index < 0 || birthmonth_index >= 12)
         return;
-
-    // store current day selection
+    // Store current day selection
     int birthday_index{ui->combo_birthday->currentIndex()};
-
-    // get number of days in the new selected month
+    // Get number of days in the new selected month
     int days{days_in_month[birthmonth_index]};
-
-    // if the selected day is out of range,
+    // If the selected day is out of range,
     // reset it to 1st
     if (birthday_index < 0 || birthday_index >= days)
         birthday_index = 0;
-
-    // update the day combo box
+    // Update the day combo box
     ui->combo_birthday->clear();
-    for (int i{1}; i <= days; ++i) {
+    for (int i{1}; i <= days; ++i)
         ui->combo_birthday->addItem(QString::number(i));
-    }
-
-    // restore the day selection
+    // Restore the day selection
     ui->combo_birthday->setCurrentIndex(birthday_index);
 }
 
 void ConfigureSystem::ConfigureTime() {
     ui->edit_init_time->setCalendarPopup(true);
-    QDateTime dt{};
+    QDateTime dt;
     dt.fromString("2000-01-01 00:00:01", "yyyy-MM-dd hh:mm:ss");
     ui->edit_init_time->setMinimumDateTime(dt);
-
     setConfiguration();
-
-    updateInitTime(ui->combo_init_clock->currentIndex());
+    UpdateInitTime(ui->combo_init_clock->currentIndex());
 }
 
-void ConfigureSystem::updateInitTime(int init_clock) {
-    const bool is_fixed_time =
-        static_cast<Settings::InitClock>(init_clock) == Settings::InitClock::FixedTime;
+void ConfigureSystem::UpdateInitTime(int init_clock) {
+    const bool is_fixed_time{static_cast<Settings::InitClock>(init_clock) ==
+                             Settings::InitClock::FixedTime};
     ui->label_init_time->setVisible(is_fixed_time);
     ui->edit_init_time->setVisible(is_fixed_time);
 }
 
-void ConfigureSystem::refreshConsoleID() {
-    QMessageBox::StandardButton reply;
-    QString warning_text = "This will replace your current virtual 3DS with a new one."
-                           "Your current virtual 3DS will not be recoverable. "
-                           "This might have unexpected effects in games. This might fail, "
-                           "if you use an outdated config savegame. Continue?";
-    reply =
-        QMessageBox::critical(this, "Warning", warning_text, QMessageBox::No | QMessageBox::Yes);
+void ConfigureSystem::RefreshConsoleID() {
+    QMessageBox::StandardButton reply{
+        QMessageBox::critical(this, "Warning",
+                              "This will replace your current virtual 3DS with a new one."
+                              "Your current virtual 3DS will not be recoverable. "
+                              "This might have unexpected effects in games. This might fail, "
+                              "if you use an outdated config savegame. Continue?",
+                              QMessageBox::No | QMessageBox::Yes)};
     if (reply == QMessageBox::No)
         return;
     u32 random_number;

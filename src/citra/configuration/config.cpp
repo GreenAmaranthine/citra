@@ -10,14 +10,6 @@
 #include "input_common/udp/client.h"
 #include "network/network.h"
 
-Config::Config() {
-    // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
-    std::string path{FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "qt-config.ini"};
-    FileUtil::CreateFullPath(path);
-    qt_config = new QSettings(QString::fromStdString(path), QSettings::IniFormat);
-    Reload();
-}
-
 const std::array<int, Settings::NativeButton::NumButtons> Config::default_buttons{{
     Qt::Key_A,
     Qt::Key_S,
@@ -36,24 +28,37 @@ const std::array<int, Settings::NativeButton::NumButtons> Config::default_button
     Qt::Key_B,
 }};
 
-const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> Config::default_analogs{{
-    {
-        Qt::Key_Up,
-        Qt::Key_Down,
-        Qt::Key_Left,
-        Qt::Key_Right,
-        Qt::Key_D,
-    },
-    {
-        Qt::Key_I,
-        Qt::Key_K,
-        Qt::Key_J,
-        Qt::Key_L,
-        Qt::Key_D,
-    },
-}};
+const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs>
+    Config::default_analogs{{
+        {
+            Qt::Key_Up,
+            Qt::Key_Down,
+            Qt::Key_Left,
+            Qt::Key_Right,
+            Qt::Key_D,
+        },
+        {
+            Qt::Key_I,
+            Qt::Key_K,
+            Qt::Key_J,
+            Qt::Key_L,
+            Qt::Key_D,
+        },
+    }};
 
-void Config::ReadValues() {
+Config::Config() {
+    // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
+    std::string path{FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "qt-config.ini"};
+    FileUtil::CreateFullPath(path);
+    qt_config = std::make_unique<QSettings>(QString::fromStdString(path), QSettings::IniFormat);
+    Read();
+}
+
+Config::~Config() {
+    Save();
+}
+
+void Config::Read() {
     qt_config->beginGroup("ControlPanel");
     Settings::values.volume = qt_config->value("volume", 1).toFloat();
     Settings::values.headphones_connected =
@@ -361,7 +366,7 @@ void Config::ReadValues() {
     qt_config->endGroup();
 }
 
-void Config::SaveValues() {
+void Config::Save() {
     qt_config->beginGroup("ControlPanel");
     qt_config->setValue("volume", Settings::values.volume);
     qt_config->setValue("headphones_connected", Settings::values.headphones_connected);
@@ -534,18 +539,4 @@ void Config::SaveValues() {
     qt_config->setValue("game_id", UISettings::values.game_id);
     qt_config->endGroup();
     qt_config->endGroup();
-}
-
-void Config::Reload() {
-    ReadValues();
-    Settings::Apply();
-}
-
-void Config::Save() {
-    SaveValues();
-}
-
-Config::~Config() {
-    Save();
-    delete qt_config;
 }
