@@ -28,23 +28,22 @@ const std::array<int, Settings::NativeButton::NumButtons> Config::default_button
     Qt::Key_B,
 }};
 
-const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs>
-    Config::default_analogs{{
-        {
-            Qt::Key_Up,
-            Qt::Key_Down,
-            Qt::Key_Left,
-            Qt::Key_Right,
-            Qt::Key_D,
-        },
-        {
-            Qt::Key_I,
-            Qt::Key_K,
-            Qt::Key_J,
-            Qt::Key_L,
-            Qt::Key_D,
-        },
-    }};
+const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> Config::default_analogs{{
+    {
+        Qt::Key_Up,
+        Qt::Key_Down,
+        Qt::Key_Left,
+        Qt::Key_Right,
+        Qt::Key_D,
+    },
+    {
+        Qt::Key_I,
+        Qt::Key_K,
+        Qt::Key_J,
+        Qt::Key_L,
+        Qt::Key_D,
+    },
+}};
 
 Config::Config() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
