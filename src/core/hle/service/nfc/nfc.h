@@ -90,6 +90,8 @@ public:
         void UpdateStoredAmiiboData(Kernel::HLERequestContext& ctx);
         void GetAppDataInitStruct(Kernel::HLERequestContext& ctx);
         void SetAmiiboSettings(Kernel::HLERequestContext& ctx);
+        void CommunicationGetResult(Kernel::HLERequestContext& ctx);
+        void GetTagInfo2(Kernel::HLERequestContext& ctx);
 
     private:
         std::shared_ptr<Module> nfc;

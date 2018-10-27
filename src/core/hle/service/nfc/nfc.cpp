@@ -429,7 +429,6 @@ void Module::Interface::WriteAppData(Kernel::HLERequestContext& ctx) {
                            ErrorSummary::InvalidState, ErrorLevel::Status));
         return;
     }
-    // TODO: generate random data instead of filling AppData with zeros
     std::memset(&nfc->decrypted_data[0xDC], 0, 0xD8);
     std::memcpy(&nfc->decrypted_data[0xDC], buffer.data(), size);
     rb.Push(RESULT_SUCCESS);
@@ -469,6 +468,43 @@ void Module::Interface::GetIdentificationBlock(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x1B, 0x1F, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw<IdentificationBlockReply>(identification_block_reply);
+    LOG_DEBUG(Service_NFC, "called");
+}
+
+void Module::Interface::CommunicationGetResult(Kernel::HLERequestContext& ctx) {
+    IPC::ResponseBuilder rb{ctx, 0x12, 2, 0};
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<u32>(0);
+    LOG_DEBUG(Service_NFC, "called");
+}
+
+void Module::Interface::GetTagInfo2(Kernel::HLERequestContext& ctx) {
+    if (nfc->tag_state != TagState::TagInRange && nfc->tag_state != TagState::TagDataLoaded &&
+        nfc->tag_state != TagState::Unknown6) {
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
+        IPC::ResponseBuilder rb{ctx, 0x10, 1, 0};
+        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+    TagInfo tag_info{};
+    tag_info.id_offset_size = 0x7;
+    tag_info.unk_x3 = 0x02;
+    tag_info.id[0] = nfc->encrypted_data[0];
+    tag_info.id[1] = nfc->encrypted_data[1];
+    tag_info.id[2] = nfc->encrypted_data[2];
+    tag_info.id[3] = nfc->encrypted_data[4];
+    tag_info.id[4] = nfc->encrypted_data[5];
+    tag_info.id[5] = nfc->encrypted_data[6];
+    tag_info.id[6] = nfc->encrypted_data[7];
+    struct {
+        TagInfo struct_tag_info;
+        INSERT_PADDING_WORDS(1);
+        INSERT_PADDING_BYTES(0x30);
+    } struct_{tag_info};
+    IPC::ResponseBuilder rb{ctx, 0x10, (sizeof(struct_) / sizeof(u32)) + 1, 0};
+    rb.Push(RESULT_SUCCESS);
+    rb.PushRaw(struct_);
     LOG_DEBUG(Service_NFC, "called");
 }
 
