@@ -506,7 +506,6 @@ Module::Module(Core::System& system) : system{system} {
         system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "NFC::tag_in_range_event");
     tag_out_of_range_event =
         system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "NFC::tag_out_range_event");
-
     FileUtil::IOFile keys_file{
         fmt::format("{}amiibo_keys.bin", FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir)),
         "rb"};
