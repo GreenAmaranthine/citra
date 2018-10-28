@@ -566,7 +566,7 @@ void Shader::Compile_IF(Instruction instr) {
     jz(l_else, T_NEAR);
     // Compile the code that corresponds to the condition evaluating as true
     Compile_Block(instr.flow_control.dest_offset);
-    // If there isn't an "ELSE" condition, we are done here
+    // If there isn't an "ELSE" condition, we're done here
     if (instr.flow_control.num_instructions == 0) {
         L(l_else);
         return;

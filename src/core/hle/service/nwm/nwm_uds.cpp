@@ -485,7 +485,7 @@ void HandleDeauthenticationFrame(const Network::WifiPacket& packet) {
     std::unique_lock<std::mutex> lock{connection_status_mutex, std::defer_lock};
     std::lock(hle_lock, lock);
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
-        LOG_ERROR(Service_NWM, "Got deauthentication frame but we aren't the host");
+        LOG_ERROR(Service_NWM, "Got deauthentication frame but we'ren't the host");
         return;
     }
     if (node_map.find(packet.transmitter_address) == node_map.end()) {

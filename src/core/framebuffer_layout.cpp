@@ -60,7 +60,7 @@ FramebufferLayout DefaultFrameLayout(unsigned width, unsigned height, bool swapp
             top_screen = top_screen.TranslateY(height / 2 - top_screen.GetHeight());
         }
     }
-    // Move the top screen to the bottom if we are swapped.
+    // Move the top screen to the bottom if we're swapped.
     res.top_screen = swapped ? top_screen.TranslateY(height / 2) : top_screen;
     res.bottom_screen = swapped ? bot_screen : bot_screen.TranslateY(height / 2);
     return res;
@@ -190,7 +190,7 @@ FramebufferLayout SideFrameLayout(unsigned width, unsigned height, bool swapped)
         top_screen = top_screen.TranslateY(shift_vertical);
         bot_screen = bot_screen.TranslateY(shift_vertical);
     }
-    // Move the top screen to the right if we are swapped.
+    // Move the top screen to the right if we're swapped.
     res.top_screen = swapped ? top_screen.TranslateX(bot_screen.GetWidth()) : top_screen;
     res.bottom_screen = swapped ? bot_screen : bot_screen.TranslateX(top_screen.GetWidth());
     return res;

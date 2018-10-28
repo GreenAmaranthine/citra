@@ -413,7 +413,7 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
                          Memory::VirtualToPhysicalAddress(params.address) >> 3);
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(command_processor_config.size)),
                          params.size);
-        // TODO: Not sure if we are supposed to always write this.. seems to trigger processing
+        // TODO: Not sure if we're supposed to always write this.. seems to trigger processing
         // though
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(command_processor_config.trigger)), 1);
         // TODO: Figure out the meaning of the `flags` field.

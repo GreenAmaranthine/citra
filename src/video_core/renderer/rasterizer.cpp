@@ -115,7 +115,7 @@ Rasterizer::Rasterizer()
     glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, texture_buffer.GetHandle());
     glActiveTexture(TextureUnits::TextureBufferLUT_RGBA.Enum());
     glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, texture_buffer.GetHandle());
-    // Bind index buffer for hardware shader path
+    // Bind index buffer for hardware shaders path
     state.draw.vertex_array = hw_vao.handle;
     state.Apply();
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer.GetHandle());
@@ -1292,7 +1292,7 @@ bool Rasterizer::AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& c
     dst_params.height = src_rect.GetHeight() / src_surface->res_scale;
     dst_params.res_scale = src_surface->res_scale;
     dst_params.UpdateParams();
-    // Since we are going to invalidate the gap if there is one, we will have to load it first
+    // Since we're going to invalidate the gap if there is one, we will have to load it first
     const bool load_gap{output_gap != 0};
     MathUtil::Rectangle<u32> dst_rect;
     Surface dst_surface;

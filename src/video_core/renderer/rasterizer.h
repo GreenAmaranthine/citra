@@ -272,8 +272,8 @@ private:
     static constexpr std::size_t UNIFORM_BUFFER_SIZE{2 * 1024 * 1024};
     static constexpr std::size_t TEXTURE_BUFFER_SIZE{1 * 1024 * 1024};
 
-    VertexArray sw_vao; // VAO for software shader draw
-    VertexArray hw_vao; // VAO for hardware shader / accelerate draw
+    VertexArray sw_vao; // VAO for software shaders draw
+    VertexArray hw_vao; // VAO for hardware shaders / accelerate draw
     std::array<bool, 16> hw_vao_enabled_attributes{};
 
     std::array<SamplerInfo, 3> texture_samplers;

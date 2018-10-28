@@ -37,7 +37,7 @@ static Common::ParamPackage SDLEventToButtonParamPackage(SDLState& state, const 
 
 static int SDLEventWatcher(void* userdata, SDL_Event* event) {
     SDLState* sdl_state{reinterpret_cast<SDLState*>(userdata)};
-    // Don't handle the event if we are configuring
+    // Don't handle the event if we're configuring
     if (sdl_state->polling)
         sdl_state->event_queue.Push(*event);
     else

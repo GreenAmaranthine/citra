@@ -140,7 +140,7 @@ Loader::ResultStatus NCCHContainer::Load() {
             file.ReadBytes(&ncch_header, sizeof(NCCH_Header));
         }
 
-        // Verify we are loading the correct file type...
+        // Verify we're loading the correct file type...
         if (Loader::MakeMagic('N', 'C', 'C', 'H') != ncch_header.magic)
             return Loader::ResultStatus::ErrorInvalidFormat;
 

@@ -46,7 +46,7 @@ void ServerSession::Acquire(Thread* thread) {
     // will linger until its last handle is closed by the running application.
     if (!parent->client)
         return;
-    // We are now handling a request, pop it from the stack.
+    // we're now handling a request, pop it from the stack.
     ASSERT(!pending_requesting_threads.empty());
     currently_handling = pending_requesting_threads.back();
     pending_requesting_threads.pop_back();

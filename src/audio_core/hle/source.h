@@ -50,7 +50,7 @@ public:
      * Mix this source's output into dest, using the gains for the `intermediate_mix_id`-th
      * intermediate mixer.
      * @param dest The QuadFrame32 to mix into.
-     * @param intermediate_mix_id The id of the intermediate mix whose gains we are using.
+     * @param intermediate_mix_id The id of the intermediate mix whose gains we're using.
      */
     void MixInto(QuadFrame32& dest, std::size_t intermediate_mix_id) const;
 

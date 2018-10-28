@@ -53,7 +53,7 @@ private:
     /// Returns the Interrupt Event for a given pipe
     Kernel::SharedPtr<Kernel::Event>& GetInterruptEvent(InterruptType type,
                                                         AudioCore::DspPipe pipe);
-    /// Checks if we are trying to register more than 6 events
+    /// Checks if we're trying to register more than 6 events
     bool HasTooManyEventsRegistered() const;
 
     Kernel::SharedPtr<Kernel::Event> semaphore_event{};

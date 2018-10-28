@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/file_util.h"
 #include "common/string_util.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
@@ -98,12 +97,6 @@ void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x01, 1, 0};
     Type type{rp.PopEnum<Type>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-    if (nfc->tag_state != TagState::NotInitialized) {
-        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
-        rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
-                           ErrorSummary::InvalidState, ErrorLevel::Status));
-        return;
-    }
     nfc->type = type;
     nfc->tag_state = TagState::NotScanning;
     rb.Push(RESULT_SUCCESS);
@@ -501,7 +494,8 @@ void Module::Interface::GetTagInfo2(Kernel::HLERequestContext& ctx) {
         TagInfo struct_tag_info;
         INSERT_PADDING_WORDS(1);
         INSERT_PADDING_BYTES(0x30);
-    } struct_{tag_info};
+    } struct_{};
+    struct_.struct_tag_info = std::move(tag_info);
     IPC::ResponseBuilder rb{ctx, 0x10, (sizeof(struct_) / sizeof(u32)) + 1, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(struct_);
@@ -513,13 +507,11 @@ Module::Interface::Interface(std::shared_ptr<Module> nfc, const char* name)
 
 Module::Interface::~Interface() = default;
 
-void Module::Interface::LoadAmiibo(const std::string& path) {
+void Module::Interface::LoadAmiibo(AmiiboData data, std::string path) {
     std::lock_guard lock{HLE::g_hle_lock};
     LOG_INFO(Service_NFC, "Loading amiibo {}", path);
-    nfc->encrypted_data.fill(0);
+    nfc->encrypted_data = data;
     nfc->decrypted_data.fill(0);
-    FileUtil::IOFile file{path, "rb"};
-    file.ReadBytes(nfc->encrypted_data.data(), nfc->encrypted_data.size());
     nfc->appdata_initialized = false;
     nfc->amiibo_file = path;
     nfc->tag_state = Service::NFC::TagState::TagInRange;
@@ -529,10 +521,10 @@ void Module::Interface::LoadAmiibo(const std::string& path) {
 void Module::Interface::RemoveAmiibo() {
     std::lock_guard lock{HLE::g_hle_lock};
     LOG_INFO(Service_NFC, "Removing amiibo");
-    nfc->appdata_initialized = false;
-    nfc->amiibo_file.clear();
     nfc->encrypted_data.fill(0);
     nfc->decrypted_data.fill(0);
+    nfc->appdata_initialized = false;
+    nfc->amiibo_file.clear();
     nfc->tag_state = Service::NFC::TagState::TagOutOfRange;
     nfc->tag_out_of_range_event->Signal();
 }

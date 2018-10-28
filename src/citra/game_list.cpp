@@ -301,7 +301,7 @@ GameList::GameList(GMainWindow* parent) : QWidget{parent} {
     connect(tree_view, &QTreeView::expanded, this, &GameList::onItemExpanded);
     connect(tree_view, &QTreeView::collapsed, this, &GameList::onItemExpanded);
 
-    // We must register all custom types with the Qt Automoc system so that we are able to use
+    // We must register all custom types with the Qt Automoc system so that we're able to use
     // it with signals/slots. In this case, QList falls under the umbrells of custom types.
     qRegisterMetaType<QList<QStandardItem*>>("QList<QStandardItem*>");
 
@@ -617,7 +617,7 @@ void GameList::SaveInterfaceLayout() {
 void GameList::LoadInterfaceLayout() {
     auto header{tree_view->header()};
     if (!header->restoreState(UISettings::values.gamelist_header_state)) {
-        // We are using the name column to display icons and titles
+        // we're using the name column to display icons and titles
         // so make it as large as possible as default.
         header->resizeSection(COLUMN_NAME, header->width());
     }

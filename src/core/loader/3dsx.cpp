@@ -152,7 +152,7 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
              current_segment_reloc_table++) {
             u32 n_relocs{relocs[current_segment * n_reloc_tables + current_segment_reloc_table]};
             if (current_segment_reloc_table >= 2) {
-                // We aren't using this table - ignore it because we don't know what it dose
+                // we'ren't using this table - ignore it because we don't know what it dose
                 file.Seek(n_relocs * sizeof(THREEDSX_Reloc), SEEK_CUR);
                 continue;
             }

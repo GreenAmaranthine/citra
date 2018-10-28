@@ -717,9 +717,8 @@ void GMainWindow::ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& ope
     }
     switch (config.error_type) {
     case HLE::Applets::ErrEulaErrorType::ErrorCode:
-        QMessageBox::critical(
-            nullptr, "ErrEula",
-            QString("%1").arg(QString::fromStdString(fmt::format("0x{:08X}", config.error_code))));
+        QMessageBox::critical(nullptr, "ErrEula",
+                              QString::fromStdString(fmt::format("0x{:08X}", config.error_code)));
         break;
     case HLE::Applets::ErrEulaErrorType::LocalizedErrorText:
     case HLE::Applets::ErrEulaErrorType::ErrorText:
@@ -1221,8 +1220,26 @@ void GMainWindow::OnLoadAmiibo() {
     const QString filename{QFileDialog::getOpenFileName(this, "Load Amiibo", ".", file_filter)};
     OnStartGame();
     if (!filename.isEmpty()) {
+        std::string filename_std{filename.toStdString()};
+        FileUtil::IOFile file{filename_std, "rb"};
+        if (!file) {
+            QMessageBox::critical(
+                this, "Error opening Amiibo data file",
+                QString("Unable to open Amiibo file \"%1\" for reading.").arg(filename));
+            return;
+        }
+        Service::NFC::AmiiboData data;
+        std::size_t read{file.ReadBytes(data.data(), data.size())};
+        if (read < 540) {
+            QMessageBox::critical(
+                this, "Error reading Amiibo data file",
+                QString("Unable to fully read Amiibo data. minimum file size is 540 bytes, but "
+                        "was only able to read %1 bytes.")
+                    .arg(read));
+            return;
+        }
         auto nfc{system.ServiceManager().GetService<Service::NFC::Module::Interface>("nfc:u")};
-        nfc->LoadAmiibo(filename.toStdString());
+        nfc->LoadAmiibo(std::move(data), std::move(filename_std));
         ui.action_Remove_Amiibo->setEnabled(true);
     }
 }

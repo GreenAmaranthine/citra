@@ -23,6 +23,8 @@ class Event;
 
 namespace Service::NFC {
 
+using AmiiboData = std::array<u8, AMIIBO_MAX_SIZE>;
+
 namespace ErrCodes {
 enum {
     CommandInvalidForState = 512,
@@ -55,13 +57,15 @@ class Module final {
 public:
     explicit Module(Core::System& system);
     ~Module();
+
     void UpdateAmiiboData();
 
     class Interface : public ServiceFramework<Interface> {
     public:
         Interface(std::shared_ptr<Module> nfc, const char* name);
         ~Interface();
-        void LoadAmiibo(const std::string& path);
+
+        void LoadAmiibo(AmiiboData data, std::string path);
         void RemoveAmiibo();
 
     protected:
@@ -98,12 +102,10 @@ public:
     };
 
 private:
-    Kernel::SharedPtr<Kernel::Event> tag_in_range_event;
-    Kernel::SharedPtr<Kernel::Event> tag_out_of_range_event;
+    Kernel::SharedPtr<Kernel::Event> tag_in_range_event, tag_out_of_range_event;
     std::atomic<TagState> tag_state{TagState::NotInitialized};
     CommunicationStatus status{CommunicationStatus::NfcInitialized};
-    std::array<u8, AMIIBO_MAX_SIZE> encrypted_data{};
-    std::array<u8, AMIIBO_MAX_SIZE> decrypted_data{};
+    AmiiboData encrypted_data{}, decrypted_data{};
     std::string amiibo_file;
     std::atomic_bool appdata_initialized{};
     Type type;

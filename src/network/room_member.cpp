@@ -149,7 +149,7 @@ void RoomMember::RoomMemberImpl::MemberLoop() {
                     HandleRoomInformationPacket(&event);
                     break;
                 case IdJoinSuccess:
-                    // The join request was successful, we are now in the room.
+                    // The join request was successful, we're now in the room.
                     // If we joined successfully, there must be at least one client in the room: us.
                     ASSERT_MSG(member_information.size() > 0,
                                "We have not yet received member information.");

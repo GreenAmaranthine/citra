@@ -176,7 +176,7 @@ void QtMultimediaCameraHandler::CreateCamera(const std::string& camera_name) {
     if (camera->supportedViewfinderPixelFormats().isEmpty()) {
         // The gstreamer plugin (used on linux systems) returns an empty list on querying supported
         // viewfinder pixel formats, and will not work without expliciting setting it to some value,
-        // so we are defaulting to RGB565 here which should be fairly widely supported.
+        // so we're defaulting to RGB565 here which should be fairly widely supported.
         settings.setPixelFormat(QVideoFrame::PixelFormat::Format_RGB565);
     }
 }

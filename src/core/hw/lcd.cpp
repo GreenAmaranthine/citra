@@ -40,7 +40,7 @@ inline void Write(u32 addr, const T data) {
     g_regs[index] = static_cast<u32>(data);
 }
 
-// Explicitly instantiate template functions because we aren't defining this in the header:
+// Explicitly instantiate template functions because we'ren't defining this in the header:
 template void Read<u64>(u64& var, const u32 addr);
 template void Read<u32>(u32& var, const u32 addr);
 template void Read<u16>(u16& var, const u32 addr);

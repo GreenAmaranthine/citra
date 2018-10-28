@@ -70,7 +70,7 @@ inline void Write(u32 addr, const T data) {
     }
 }
 
-// Explicitly instantiate template functions because we aren't defining this in the header:
+// Explicitly instantiate template functions because we'ren't defining this in the header:
 
 template void Read<u64>(u64& var, const u32 addr);
 template void Read<u32>(u32& var, const u32 addr);
