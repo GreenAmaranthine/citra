@@ -594,7 +594,7 @@ void GSP_GPU::StoreDataCache(Kernel::HLERequestContext& ctx) {
 void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x1C, 1, 0};
     u8 state{rp.Pop<u8>()};
-    if (!Settings::values.disable_mh_3d) {
+    if (!Settings::values.disable_mh_2xmsaa) {
         if (state == 1)
             Settings::values.factor_3d = 0;
         else

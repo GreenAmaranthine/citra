@@ -364,7 +364,7 @@ void Renderer::DrawScreens(const Layout::FramebufferLayout& layout) {
     if (Core::System::GetInstance().IsSleepModeEnabled())
         return;
     if (layout.top_screen_enabled) {
-        if (Settings::values.disable_mh_3d || Settings::values.factor_3d == 0)
+        if (Settings::values.disable_mh_2xmsaa || Settings::values.factor_3d == 0)
             DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left, (float)top_screen.top,
                                     (float)top_screen.GetWidth(), (float)top_screen.GetHeight());
         else {
@@ -378,7 +378,7 @@ void Renderer::DrawScreens(const Layout::FramebufferLayout& layout) {
         }
     }
     if (layout.bottom_screen_enabled) {
-        if (Settings::values.disable_mh_3d || Settings::values.factor_3d == 0)
+        if (Settings::values.disable_mh_2xmsaa || Settings::values.factor_3d == 0)
             DrawSingleScreenRotated(screen_infos[2], (float)bottom_screen.left,
                                     (float)bottom_screen.top, (float)bottom_screen.GetWidth(),
                                     (float)bottom_screen.GetHeight());

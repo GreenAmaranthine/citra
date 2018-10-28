@@ -199,7 +199,7 @@ struct Values {
     TicksMode ticks_mode;
     u64 ticks;
     bool use_bos;
-    bool disable_mh_3d;
+    bool disable_mh_2xmsaa;
     bool force_memory_mode_7;
 } extern values;
 

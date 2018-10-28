@@ -40,7 +40,7 @@ void Module::Interface::GetBatteryChargeState(Kernel::HLERequestContext& ctx) {
 void Module::Interface::Set3DLEDState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0009, 1, 0};
     u8 state{rp.Pop<u8>()};
-    if (!Settings::values.disable_mh_3d) {
+    if (!Settings::values.disable_mh_2xmsaa) {
         if (state == 0)
             Settings::values.factor_3d = 0;
         else

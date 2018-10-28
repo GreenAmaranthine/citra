@@ -273,7 +273,7 @@ void Config::Load() {
     Settings::values.ticks = qt_config->value("ticks", 0).toULongLong();
     Settings::values.use_bos = qt_config->value("use_bos", false).toBool();
     Settings::values.force_memory_mode_7 = qt_config->value("force_memory_mode_7", false).toBool();
-    Settings::values.disable_mh_3d = qt_config->value("disable_mh_3d", false).toBool();
+    Settings::values.disable_mh_2xmsaa = qt_config->value("disable_mh_2xmsaa", false).toBool();
     qt_config->endGroup();
     qt_config->beginGroup("UI");
     UISettings::values.enable_discord_rpc = qt_config->value("enable_discord_rpc", true).toBool();
@@ -483,7 +483,7 @@ void Config::Save() {
     qt_config->setValue("ticks", static_cast<unsigned long long>(Settings::values.ticks));
     qt_config->setValue("use_bos", Settings::values.use_bos);
     qt_config->setValue("force_memory_mode_7", Settings::values.force_memory_mode_7);
-    qt_config->setValue("disable_mh_3d", Settings::values.disable_mh_3d);
+    qt_config->setValue("disable_mh_2xmsaa", Settings::values.disable_mh_2xmsaa);
     qt_config->endGroup();
     qt_config->beginGroup("UI");
     qt_config->setValue("enable_discord_rpc", UISettings::values.enable_discord_rpc);

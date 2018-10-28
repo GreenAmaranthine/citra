@@ -125,7 +125,7 @@ SharedPageDef& Handler::GetSharedPage() {
 }
 
 void Handler::Update3DSettings(bool called_by_control_panel) {
-    if (Settings::values.disable_mh_3d) {
+    if (Settings::values.disable_mh_2xmsaa) {
         shared_page.sliderstate_3d = 0.01f;
         shared_page.ledstate_3d = 0;
         return;
