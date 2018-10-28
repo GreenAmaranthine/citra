@@ -712,7 +712,7 @@ void GMainWindow::StoreRecentFile(const QString& filename) {
 void GMainWindow::ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& open) {
     if (QThread::currentThread() != thread()) {
         QMetaObject::invokeMethod(this, "ErrEulaCallback", Qt::BlockingQueuedConnection,
-                                  Q_ARG(HLE::Applets::ErrEulaConfig&, config), Q_ARG(bool, open));
+                                  Q_ARG(HLE::Applets::ErrEulaConfig&, config), Q_ARG(bool&, open));
         return;
     }
     switch (config.error_type) {
