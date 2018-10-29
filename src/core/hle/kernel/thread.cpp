@@ -186,7 +186,7 @@ void Thread::ResumeFromWait() {
     case ThreadStatus::Ready:
         // The thread's wakeup callback must have already been cleared when the thread was first
         // awoken.
-        ASSERT(wakeup_callback);
+        ASSERT(!wakeup_callback);
         // If the thread is waiting on multiple wait objects, it might be awoken more than once
         // before actually resuming. We can ignore subsequent wakeups if the thread status has
         // already been set to ThreadStatus::Ready.
