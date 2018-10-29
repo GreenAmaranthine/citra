@@ -141,7 +141,7 @@ public:
     /// Gets a reference to the archive manager.
     Service::FS::ArchiveManager& ArchiveManager();
 
-    /// Gets a const reference to the kernel
+    /// Gets a const reference to the kernel.
     const Kernel::KernelSystem& Kernel() const;
 
     /// Gets a reference to the kernel.
