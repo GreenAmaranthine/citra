@@ -39,7 +39,7 @@ class ArchiveManager;
 
 namespace Kernel {
 class KernelSystem;
-}
+} // namespace Kernel
 
 namespace Core {
 
