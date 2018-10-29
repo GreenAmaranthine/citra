@@ -286,8 +286,7 @@ private:
     const std::string base64_dict{
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-"};
 
-    const std::vector<u8> cecd_system_savedata_id = {0x00, 0x00, 0x00, 0x00,
-                                                     0x26, 0x00, 0x01, 0x00};
+    const std::vector<u8> cecd_system_savedata_id{0x00, 0x00, 0x00, 0x00, 0x26, 0x00, 0x01, 0x00};
 
     /// Encoding function used for the message id
     std::string EncodeBase64(const std::vector<u8>& in) const;

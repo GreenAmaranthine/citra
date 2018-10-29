@@ -14,7 +14,7 @@ namespace Pica::Texture {
 
 namespace {
 
-constexpr std::array<std::array<u8, 2>, 8> etc1_modifier_table = {{
+constexpr std::array<std::array<u8, 2>, 8> etc1_modifier_table{{
     {2, 8},
     {5, 17},
     {9, 29},

@@ -261,7 +261,7 @@ void PicaGSConfigCommonRaw::Init(const Pica::Regs& regs) {
     gs_output_attributes = vs_output_attributes;
     semantic_maps.fill({16, 0});
     for (u32 attrib{}; attrib < regs.rasterizer.vs_output_total; ++attrib) {
-        std::array<VSOutputAttributes::Semantic, 4> semantics = {
+        std::array<VSOutputAttributes::Semantic, 4> semantics{
             regs.rasterizer.vs_output_attributes[attrib].map_x,
             regs.rasterizer.vs_output_attributes[attrib].map_y,
             regs.rasterizer.vs_output_attributes[attrib].map_z,
@@ -592,7 +592,7 @@ static void AppendAlphaTestCondition(std::string& out, FramebufferRegs::CompareF
     case CompareFunc::LessThanOrEqual:
     case CompareFunc::GreaterThan:
     case CompareFunc::GreaterThanOrEqual: {
-        static const char* op[] = {"!=", "==", ">=", ">", "<=", "<"};
+        static const char* op[]={"!=", "==", ">=", ">", "<=", "<"};
         unsigned index{(unsigned)func - (unsigned)CompareFunc::Equal};
         out += "int(last_tex_env_out.a * 255.0) " + std::string(op[index]) + " alphatest_ref";
         break;

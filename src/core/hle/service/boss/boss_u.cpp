@@ -8,7 +8,6 @@ namespace Service::BOSS {
 
 BOSS_U::BOSS_U(std::shared_ptr<Module> boss) : Module::Interface{std::move(boss), "boss:U"} {
     static const FunctionInfo functions[]{
-        // clang-format off
         {0x00010082, &BOSS_U::InitializeSession, "InitializeSession"},
         {0x00020100, &BOSS_U::SetStorageInfo, "SetStorageInfo"},
         {0x00030000, &BOSS_U::UnregisterStorage, "UnregisterStorage"},
@@ -64,7 +63,6 @@ BOSS_U::BOSS_U(std::shared_ptr<Module> boss) : Module::Interface{std::move(boss)
         {0x003500C2, &BOSS_U::RegisterImmediateTask, "RegisterImmediateTask"},
         {0x00360084, &BOSS_U::SetTaskQuery, "SetTaskQuery"},
         {0x00370084, &BOSS_U::GetTaskQuery, "GetTaskQuery"},
-        // clang-format on
     };
 
     RegisterHandlers(functions);

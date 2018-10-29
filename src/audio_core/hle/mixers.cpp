@@ -36,37 +36,37 @@ void Mixers::ParseConfig(DspConfiguration& config) {
     if (config.mixer1_enabled_dirty) {
         config.mixer1_enabled_dirty.Assign(0);
         state.mixer1_enabled = config.mixer1_enabled != 0;
-        LOG_TRACE(Audio_DSP, "mixers mixer1_enabled = {}", config.mixer1_enabled);
+        LOG_TRACE(Audio_DSP, "mixers mixer1_enabled={}", config.mixer1_enabled);
     }
 
     if (config.mixer2_enabled_dirty) {
         config.mixer2_enabled_dirty.Assign(0);
         state.mixer2_enabled = config.mixer2_enabled != 0;
-        LOG_TRACE(Audio_DSP, "mixers mixer2_enabled = {}", config.mixer2_enabled);
+        LOG_TRACE(Audio_DSP, "mixers mixer2_enabled={}", config.mixer2_enabled);
     }
 
     if (config.volume_0_dirty) {
         config.volume_0_dirty.Assign(0);
         state.intermediate_mixer_volume[0] = config.volume[0];
-        LOG_TRACE(Audio_DSP, "mixers volume[0] = {}", config.volume[0]);
+        LOG_TRACE(Audio_DSP, "mixers volume[0]={}", config.volume[0]);
     }
 
     if (config.volume_1_dirty) {
         config.volume_1_dirty.Assign(0);
         state.intermediate_mixer_volume[1] = config.volume[1];
-        LOG_TRACE(Audio_DSP, "mixers volume[1] = {}", config.volume[1]);
+        LOG_TRACE(Audio_DSP, "mixers volume[1]={}", config.volume[1]);
     }
 
     if (config.volume_2_dirty) {
         config.volume_2_dirty.Assign(0);
         state.intermediate_mixer_volume[2] = config.volume[2];
-        LOG_TRACE(Audio_DSP, "mixers volume[2] = {}", config.volume[2]);
+        LOG_TRACE(Audio_DSP, "mixers volume[2]={}", config.volume[2]);
     }
 
     if (config.output_format_dirty) {
         config.output_format_dirty.Assign(0);
         state.output_format = config.output_format;
-        LOG_TRACE(Audio_DSP, "mixers output_format = {}",
+        LOG_TRACE(Audio_DSP, "mixers output_format",
                   static_cast<std::size_t>(config.output_format));
     }
 

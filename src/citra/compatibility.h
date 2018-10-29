@@ -99,7 +99,8 @@ static const std::unordered_map<u64, QStringList> compatibility_database{{
     {0x0004001000022700,
      {GitHubIssue("citra-emu/citra", 3897), GitHubIssue("citra-emu/citra", 3903)}}, // Mii Maker
     {0x0004001000022100, {"Needs DLP"}},                                            // Download Play
-    {0x0004001000022300, {}}, // Health and Safety Information
+    {0x0004001000022300, {}},                              // Health and Safety Information
+    {0x000400100002C100, {"Citra crashes when stopping"}}, // Nintendo Network ID Settings
 
     // EUR (Demos)
     {0x00040002001CB201, {}}, // Captain Toad Demo

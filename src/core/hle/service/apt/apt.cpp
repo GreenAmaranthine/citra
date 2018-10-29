@@ -479,6 +479,9 @@ void Module::Interface::DoApplicationJump(Kernel::HLERequestContext& ctx) {
     if (apt->application_restart)
         // Restart system
         apt->system.Restart();
+    else if (apt->jump_tid == 0xFFFFFFFFFFFFFFFF)
+        // Close running application
+        apt->system.CloseApplication();
     else
         apt->system.SetApplication(AM::GetTitleContentPath(apt->jump_media, apt->jump_tid));
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};

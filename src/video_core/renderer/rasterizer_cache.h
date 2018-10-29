@@ -38,6 +38,7 @@ using SurfaceMap = boost::icl::interval_map<PAddr, Surface>;
 using SurfaceCache = boost::icl::interval_map<PAddr, SurfaceSet>;
 
 using SurfaceInterval = SurfaceCache::interval_type;
+
 static_assert(std::is_same<SurfaceRegions::interval_type, SurfaceCache::interval_type>() &&
                   std::is_same<SurfaceMap::interval_type, SurfaceCache::interval_type>(),
               "incorrect interval types");
@@ -92,7 +93,7 @@ struct SurfaceParams {
     };
 
     static constexpr unsigned int GetFormatBpp(PixelFormat format) {
-        constexpr std::array<unsigned int, 18> bpp_table = {
+        constexpr std::array<unsigned int, 18> bpp_table{{
             32, // RGBA8
             24, // RGB8
             16, // RGB5A1
@@ -111,9 +112,8 @@ struct SurfaceParams {
             0,
             24, // D24
             32, // D24S8
-        };
-
-        assert(static_cast<std::size_t>(format) < bpp_table.size());
+        }};
+        ASSERT(static_cast<std::size_t>(format) < bpp_table.size());
         return bpp_table[static_cast<std::size_t>(format)];
     }
 

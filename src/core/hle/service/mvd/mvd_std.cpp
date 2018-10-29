@@ -9,7 +9,6 @@ namespace Service::MVD {
 
 MVD_STD::MVD_STD() : ServiceFramework{"mvd:std", 1} {
     static const FunctionInfo functions[]{
-        // clang-format off
         {0x00010082, nullptr, "Initialize"},
         {0x00020000, nullptr, "Shutdown"},
         {0x00030300, nullptr, "CalculateWorkBufSize"},
@@ -21,8 +20,7 @@ MVD_STD::MVD_STD() : ServiceFramework{"mvd:std", 1} {
         {0x001D0042, nullptr, "GetConfig"},
         {0x001E0044, nullptr, "SetConfig"},
         {0x001F0902, nullptr, "SetOutputBuffer"},
-        {0x00210100, nullptr, "OverrideOutputBuffers"}
-        // clang-format on
+        {0x00210100, nullptr, "OverrideOutputBuffers"},
     };
     RegisterHandlers(functions);
 };

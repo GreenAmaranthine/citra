@@ -642,15 +642,18 @@ public:
 
 protected:
     T value{};
-    // clang-format off
+
     using swap_t = std::conditional_t<
-        std::is_same_v<base, u16>, swap_16_t<u16>, std::conditional_t<
-        std::is_same_v<base, s16>, swap_16_t<s16>, std::conditional_t<
-        std::is_same_v<base, u32>, swap_32_t<u32>, std::conditional_t<
-        std::is_same_v<base, s32>, swap_32_t<s32>, std::conditional_t<
-        std::is_same_v<base, u64>, swap_64_t<u64>, std::conditional_t<
-        std::is_same_v<base, s64>, swap_64_t<s64>, void>>>>>>;
-    // clang-format on
+        std::is_same_v<base, u16>, swap_16_t<u16>,
+        std::conditional_t<
+            std::is_same_v<base, s16>, swap_16_t<s16>,
+            std::conditional_t<
+                std::is_same_v<base, u32>, swap_32_t<u32>,
+                std::conditional_t<std::is_same_v<base, s32>, swap_32_t<s32>,
+                                   std::conditional_t<std::is_same_v<base, u64>, swap_64_t<u64>,
+                                                      std::conditional_t<std::is_same_v<base, s64>,
+                                                                         swap_64_t<s64>, void>>>>>>;
+
     static T swap(T x) {
         return static_cast<T>(swap_t::swap(static_cast<base>(x)));
     }

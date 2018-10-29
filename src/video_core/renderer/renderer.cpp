@@ -79,11 +79,13 @@ struct ScreenRectVertex {
  */
 static std::array<GLfloat, 6> MakeOrthographicMatrix(const float width, const float height) {
     std::array<GLfloat, 6> matrix; // Laid out in column-major order
-    // clang-format off
-    matrix[0] = 2.f / width; matrix[2] = 0.f;           matrix[4] = -1.f;
-    matrix[1] = 0.f;         matrix[3] = -2.f / height; matrix[5] = 1.f;
+    matrix[0] = 2.f / width;
+    matrix[2] = 0.f;
+    matrix[4] = -1.f;
+    matrix[1] = 0.f;
+    matrix[3] = -2.f / height;
+    matrix[5] = 1.f;
     // Last matrix row is implicitly assumed to be [0, 0, 1].
-    // clang-format on
     return matrix;
 }
 
@@ -218,7 +220,7 @@ void Renderer::LoadColorToActiveGLTexture(u8 color_r, u8 color_g, u8 color_b,
     state.texture_units[0].texture_2d = texture.resource.handle;
     state.Apply();
     glActiveTexture(GL_TEXTURE0);
-    u8 framebuffer_data[3] = {color_r, color_g, color_b};
+    u8 framebuffer_data[3] {color_r, color_g, color_b};
     // Update existing texture
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, framebuffer_data);
     state.texture_units[0].texture_2d = 0;
@@ -328,7 +330,7 @@ void Renderer::ConfigureFramebufferTexture(TextureInfo& texture,
 void Renderer::DrawSingleScreenRotated(const ScreenInfo& screen_info, float x, float y, float w,
                                        float h) {
     auto& texcoords{screen_info.display_texcoords};
-    std::array<ScreenRectVertex, 4> vertices = {{
+    std::array<ScreenRectVertex, 4> vertices{{
         ScreenRectVertex(x, y, texcoords.bottom, texcoords.left),
         ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.right),
         ScreenRectVertex(x, y + h, texcoords.top, texcoords.left),

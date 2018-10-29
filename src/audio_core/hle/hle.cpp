@@ -67,8 +67,8 @@ private:
 
     DspState dsp_state{DspState::Off};
     std::array<std::vector<u8>, num_dsp_pipe> pipe_data;
-
     HLE::DspMemory dsp_memory;
+
     std::array<HLE::Source, HLE::num_sources> sources{{
         HLE::Source(0),  HLE::Source(1),  HLE::Source(2),  HLE::Source(3),  HLE::Source(4),
         HLE::Source(5),  HLE::Source(6),  HLE::Source(7),  HLE::Source(8),  HLE::Source(9),
@@ -76,6 +76,7 @@ private:
         HLE::Source(15), HLE::Source(16), HLE::Source(17), HLE::Source(18), HLE::Source(19),
         HLE::Source(20), HLE::Source(21), HLE::Source(22), HLE::Source(23),
     }};
+
     HLE::Mixers mixers;
 
     DspHle& parent;
@@ -103,19 +104,15 @@ DspState DspHle::Impl::GetDspState() const {
 
 std::vector<u8> DspHle::Impl::PipeRead(DspPipe pipe_number, u32 length) {
     const std::size_t pipe_index{static_cast<std::size_t>(pipe_number)};
-
     if (pipe_index >= num_dsp_pipe) {
         LOG_ERROR(Audio_DSP, "pipe_number = {} invalid", pipe_index);
         return {};
     }
-
     if (length > UINT16_MAX) { // Can only read at most UINT16_MAX from the pipe
         LOG_ERROR(Audio_DSP, "length of {} greater than max of {}", length, UINT16_MAX);
         return {};
     }
-
     std::vector<u8>& data{pipe_data[pipe_index]};
-
     if (length > data.size()) {
         LOG_WARNING(
             Audio_DSP,
@@ -123,10 +120,8 @@ std::vector<u8> DspHle::Impl::PipeRead(DspPipe pipe_number, u32 length) {
             pipe_index, length, data.size());
         length = static_cast<u32>(data.size());
     }
-
     if (length == 0)
         return {};
-
     std::vector<u8> ret{data.begin(), data.begin() + length};
     data.erase(data.begin(), data.begin() + length);
     return ret;
@@ -134,12 +129,10 @@ std::vector<u8> DspHle::Impl::PipeRead(DspPipe pipe_number, u32 length) {
 
 std::size_t DspHle::Impl::GetPipeReadableSize(DspPipe pipe_number) const {
     const std::size_t pipe_index{static_cast<std::size_t>(pipe_number)};
-
     if (pipe_index >= num_dsp_pipe) {
         LOG_ERROR(Audio_DSP, "pipe_number = {} invalid", pipe_index);
         return 0;
     }
-
     return pipe_data[pipe_index].size();
 }
 
@@ -151,20 +144,17 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer)
                       buffer.size());
             return;
         }
-
         enum class StateChange {
             Initialize = 0,
             Shutdown = 1,
             Wakeup = 2,
             Sleep = 3,
         };
-
         // The difference between Initialize and Wakeup is that Input state is maintained
         // when sleeping but isn't when turning it off and on again. (TODO: Implement this.)
         // Waking up from sleep garbles some of the structs in the memory region. (TODO:
         // Implement this.) Applications store away the state of these structs before
         // sleeping and reset it back after wakeup on behalf of the DSP.
-
         switch (static_cast<StateChange>(buffer[0])) {
         case StateChange::Initialize:
             LOG_INFO(Audio_DSP, "Application has requested initialization of DSP hardware");
@@ -224,7 +214,6 @@ void DspHle::Impl::ResetPipes() {
 
 void DspHle::Impl::WriteU16(DspPipe pipe_number, u16 value) {
     const std::size_t pipe_index{static_cast<std::size_t>(pipe_number)};
-
     std::vector<u8>& data{pipe_data.at(pipe_index)};
     // Little endian
     data.emplace_back(value & 0xFF);
@@ -234,7 +223,7 @@ void DspHle::Impl::WriteU16(DspPipe pipe_number, u16 value) {
 void DspHle::Impl::AudioPipeWriteStructAddresses() {
     // These struct addresses are DSP dram addresses.
     // See also: DSP_DSP::ConvertProcessAddressFromDspDram
-    static const std::array<u16, 15> struct_addresses = {
+    static const std::array<u16, 15> struct_addresses{{
         0x8000 + offsetof(HLE::SharedMemory, frame_counter) / 2,
         0x8000 + offsetof(HLE::SharedMemory, source_configurations) / 2,
         0x8000 + offsetof(HLE::SharedMemory, source_statuses) / 2,
@@ -250,15 +239,12 @@ void DspHle::Impl::AudioPipeWriteStructAddresses() {
         0x8000 + offsetof(HLE::SharedMemory, unknown12) / 2,
         0x8000 + offsetof(HLE::SharedMemory, unknown13) / 2,
         0x8000 + offsetof(HLE::SharedMemory, unknown14) / 2,
-    };
-
+    }};
     // Begin with a u16 denoting the number of structs.
     WriteU16(DspPipe::Audio, static_cast<u16>(struct_addresses.size()));
-
     // Then write the struct addresses.
     for (u16 addr : struct_addresses)
         WriteU16(DspPipe::Audio, addr);
-
     // Signal that we have data on this pipe.
     if (auto service{dsp_dsp.lock()})
         service->SignalInterrupt(InterruptType::Pipe, DspPipe::Audio);
@@ -269,15 +255,12 @@ std::size_t DspHle::Impl::CurrentRegionIndex() const {
     // This function only returns a 0 or 1.
     const u16 frame_counter_0{dsp_memory.region_0.frame_counter};
     const u16 frame_counter_1{dsp_memory.region_1.frame_counter};
-
     if (frame_counter_0 == 0xFFFFu && frame_counter_1 != 0xFFFEu)
         // Wraparound has occurred.
         return 1;
-
     if (frame_counter_1 == 0xFFFFu && frame_counter_0 != 0xFFFEu)
         // Wraparound has occurred.
         return 0;
-
     return (frame_counter_0 > frame_counter_1) ? 0 : 1;
 }
 
@@ -292,9 +275,7 @@ HLE::SharedMemory& DspHle::Impl::WriteRegion() {
 StereoFrame16 DspHle::Impl::GenerateCurrentFrame() {
     HLE::SharedMemory& read{ReadRegion()};
     HLE::SharedMemory& write{WriteRegion()};
-
-    std::array<QuadFrame32, 3> intermediate_mixes = {};
-
+    std::array<QuadFrame32, 3> intermediate_mixes{};
     // Generate intermediate mixes
     for (std::size_t i{}; i < HLE::num_sources; i++) {
         write.source_statuses.status[i] =
@@ -302,29 +283,23 @@ StereoFrame16 DspHle::Impl::GenerateCurrentFrame() {
         for (std::size_t mix{}; mix < 3; mix++)
             sources[i].MixInto(intermediate_mixes[mix], mix);
     }
-
     // Generate final mix
     write.dsp_status = mixers.Tick(read.dsp_configuration, read.intermediate_mix_samples,
                                    write.intermediate_mix_samples, intermediate_mixes);
-
     StereoFrame16 output_frame{mixers.GetOutput()};
-
     // Write current output frame to the shared memory region
     for (std::size_t samplei{}; samplei < output_frame.size(); samplei++)
         for (std::size_t channeli{}; channeli < output_frame[0].size(); channeli++)
             write.final_samples.pcm16[samplei][channeli] = s16_le(output_frame[samplei][channeli]);
-
     return output_frame;
 }
 
 bool DspHle::Impl::Tick() {
     if (!IsOutputAllowed())
         return false;
-
     // TODO: Check dsp::DSP semaphore (which indicates emulated application has finished writing to
     // shared memory region)
     parent.OutputFrame(GenerateCurrentFrame());
-
     return true;
 }
 
@@ -346,7 +321,6 @@ void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
             // HACK: Added to prevent regressions. Will remove soon.
             service->SignalInterrupt(InterruptType::Pipe, DspPipe::Binary);
         }
-
     // Reschedule recurrent event
     CoreTiming::ScheduleEvent(audio_frame_ticks - cycles_late, tick_event);
 }
@@ -385,7 +359,6 @@ void DspHle::SetServiceToInterrupt(std::weak_ptr<DSP_DSP> dsp) {
 }
 
 void DspHle::UpdateSink() {
-    sink.reset();
     sink = std::make_unique<Sink>(Settings::values.output_device);
     sink->SetCallback(
         [this](s16* buffer, std::size_t num_frames) { OutputCallback(buffer, num_frames); });
@@ -394,7 +367,6 @@ void DspHle::UpdateSink() {
 void DspHle::EnableStretching(bool enable) {
     if (perform_time_stretching == enable)
         return;
-
     if (!enable)
         flushing_time_stretcher = true;
     perform_time_stretching = enable;
@@ -403,7 +375,6 @@ void DspHle::EnableStretching(bool enable) {
 void DspHle::OutputFrame(const StereoFrame16& frame) {
     if (!sink)
         return;
-
     fifo.Push(frame.data(), frame.size());
 }
 
@@ -420,14 +391,11 @@ void DspHle::OutputCallback(s16* buffer, std::size_t num_frames) {
         flushing_time_stretcher = false;
     } else
         frames_written = fifo.Pop(buffer, num_frames);
-
     if (frames_written > 0)
         std::memcpy(&last_frame[0], buffer + 2 * (frames_written - 1), 2 * sizeof(s16));
-
     // Hold last emitted frame; this prevents popping.
     for (std::size_t i{frames_written}; i < num_frames; i++)
         std::memcpy(buffer + 2 * i, &last_frame[0], 2 * sizeof(s16));
-
     // Implementation of the hardware volume slider with a dynamic range of 60 dB
     const float linear_volume{std::clamp(Settings::values.volume, 0.0f, 1.0f)};
     if (linear_volume != 1.0) {

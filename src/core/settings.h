@@ -65,7 +65,7 @@ constexpr int NUM_BUTTONS_HID{BUTTON_HID_END - BUTTON_HID_BEGIN};
 constexpr int NUM_BUTTONS_IR{BUTTON_IR_END - BUTTON_IR_BEGIN};
 constexpr int NUM_BUTTONS_NS{BUTTON_NS_END - BUTTON_NS_BEGIN};
 
-static const std::array<const char*, NumButtons> mapping = {{
+static const std::array<const char*, NumButtons> mapping{{
     "button_a",
     "button_b",
     "button_x",
@@ -92,7 +92,7 @@ enum Values {
     NumAnalogs,
 };
 
-static const std::array<const char*, NumAnalogs> mapping = {{
+static const std::array<const char*, NumAnalogs> mapping{{
     "circle_pad",
     "c_stick",
 }};

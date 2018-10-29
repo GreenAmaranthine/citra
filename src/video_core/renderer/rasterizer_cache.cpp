@@ -37,7 +37,7 @@ struct FormatTuple {
     GLenum type;
 };
 
-static constexpr std::array<FormatTuple, 5> fb_format_tuples = {{
+static constexpr std::array<FormatTuple, 5> fb_format_tuples{{
     {GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8},     // RGBA8
     {GL_RGB8, GL_BGR, GL_UNSIGNED_BYTE},              // RGB8
     {GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1}, // RGB5A1
@@ -45,7 +45,7 @@ static constexpr std::array<FormatTuple, 5> fb_format_tuples = {{
     {GL_RGBA4, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4},   // RGBA4
 }};
 
-static constexpr std::array<FormatTuple, 4> depth_format_tuples = {{
+static constexpr std::array<FormatTuple, 4> depth_format_tuples{{
     {GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT}, // D16
     {},
     {GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT},   // D24
@@ -145,7 +145,7 @@ static void MortonCopy(u32 stride, u32 height, u8* gl_buffer, PAddr base, PAddr 
     }
 }
 
-static constexpr std::array<void (*)(u32, u32, u8*, PAddr, PAddr, PAddr), 18> morton_to_gl_fns = {
+static constexpr std::array<void (*)(u32, u32, u8*, PAddr, PAddr, PAddr), 18> morton_to_gl_fns{{
     MortonCopy<true, PixelFormat::RGBA8>,  // 0
     MortonCopy<true, PixelFormat::RGB8>,   // 1
     MortonCopy<true, PixelFormat::RGB5A1>, // 2
@@ -164,9 +164,9 @@ static constexpr std::array<void (*)(u32, u32, u8*, PAddr, PAddr, PAddr), 18> mo
     nullptr,                             // 15
     MortonCopy<true, PixelFormat::D24>,  // 16
     MortonCopy<true, PixelFormat::D24S8> // 17
-};
+}};
 
-static constexpr std::array<void (*)(u32, u32, u8*, PAddr, PAddr, PAddr), 18> gl_to_morton_fns = {
+static constexpr std::array<void (*)(u32, u32, u8*, PAddr, PAddr, PAddr), 18> gl_to_morton_fns{{
     MortonCopy<false, PixelFormat::RGBA8>,  // 0
     MortonCopy<false, PixelFormat::RGB8>,   // 1
     MortonCopy<false, PixelFormat::RGB5A1>, // 2
@@ -185,7 +185,7 @@ static constexpr std::array<void (*)(u32, u32, u8*, PAddr, PAddr, PAddr), 18> gl
     nullptr,                              // 15
     MortonCopy<false, PixelFormat::D24>,  // 16
     MortonCopy<false, PixelFormat::D24S8> // 17
-};
+}};
 
 // Allocate an uninitialized texture of appropriate size and format for the surface
 static void AllocateSurfaceTexture(GLuint texture, const FormatTuple& format_tuple, u32 width,
@@ -299,7 +299,7 @@ static bool FillSurface(const Surface& surface, const u8* fill_data,
         Pica::Texture::TextureInfo tex_info{};
         tex_info.format = static_cast<Pica::TexturingRegs::TextureFormat>(surface->pixel_format);
         Math::Vec4<u8> color{Pica::Texture::LookupTexture(fill_data, 0, 0, tex_info)};
-        std::array<GLfloat, 4> color_values = {color.x / 255.f, color.y / 255.f, color.z / 255.f,
+        std::array<GLfloat, 4> color_values{color.x / 255.f, color.y / 255.f, color.z / 255.f,
                                                color.w / 255.f};
         state.color_mask.red_enabled = GL_TRUE;
         state.color_mask.green_enabled = GL_TRUE;

@@ -79,7 +79,7 @@ private:
 
     DaemonMask daemon_bit_mask{DaemonMask::Default};
     DaemonMask default_daemon_bit_mask{DaemonMask::Default};
-    std::array<DaemonStatus, 4> daemon_status = {
+    std::array<DaemonStatus, 4> daemon_status{
         DaemonStatus::Idle,
         DaemonStatus::Idle,
         DaemonStatus::Idle,

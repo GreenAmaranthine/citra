@@ -301,7 +301,7 @@ Kernel::SharedPtr<Kernel::Event>& DSP_DSP::GetInterruptEvent(InterruptType type,
         return pipes[pipe_index];
     }
     }
-    UNREACHABLE_MSG("Invalid interrupt type = {}", static_cast<std::size_t>(type));
+    UNREACHABLE_MSG("Invalid interrupt type {}", static_cast<std::size_t>(type));
 }
 
 bool DSP_DSP::HasTooManyEventsRegistered() const {
@@ -311,7 +311,7 @@ bool DSP_DSP::HasTooManyEventsRegistered() const {
         number++;
     if (interrupt_one)
         number++;
-    LOG_DEBUG(Service_DSP, "Number of events registered = {}", number);
+    LOG_DEBUG(Service_DSP, "Number of events registered: {}", number);
     return number >= max_number_of_interrupt_events;
 }
 
