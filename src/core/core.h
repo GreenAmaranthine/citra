@@ -141,17 +141,17 @@ public:
     /// Gets a reference to the archive manager.
     Service::FS::ArchiveManager& ArchiveManager();
 
-    /// Gets a const reference to the frontend.
-    const Frontend& GetFrontend() const;
-
-    // Gets a reference to the frontend.
-    Frontend& GetFrontend();
-
     /// Gets a const reference to the kernel
     const Kernel::KernelSystem& Kernel() const;
 
     /// Gets a reference to the kernel.
     Kernel::KernelSystem& Kernel();
+
+    /// Gets a const reference to the frontend.
+    const Frontend& GetFrontend() const;
+
+    // Gets a reference to the frontend.
+    Frontend& GetFrontend();
 
     PerfStats perf_stats;
     FrameLimiter frame_limiter;
