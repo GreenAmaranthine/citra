@@ -214,7 +214,6 @@ struct VertexArrayInfo {
 std::optional<Rasterizer::VertexArrayInfo> Rasterizer::AnalyzeVertexArray(bool is_indexed) {
     const auto& regs{Pica::g_state.regs};
     const auto& vertex_attributes{regs.pipeline.vertex_attributes};
-
     u32 vertex_min{};
     u32 vertex_max{};
     if (is_indexed) {
