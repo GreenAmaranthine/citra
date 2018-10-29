@@ -279,7 +279,7 @@ Loader::ResultStatus NCCHContainer::Load() {
                 if ((exheader_header.system_info.jump_id & 0xFFFFFFFF) ==
                     (ncch_header.program_id & 0xFFFFFFFF)) {
                     LOG_WARNING(Service_FS, "NCCH is marked as encrypted but with decrypted "
-                                            "exheader. Force no crypto scheme.");
+                                            "exheader. Forcing no crypto scheme.");
                     is_encrypted = false;
                 } else {
                     if (failed_to_decrypt) {
