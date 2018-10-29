@@ -712,8 +712,7 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
-        LOG_WARNING(Service_NWM, "data_channel={}, bind_node_id={}", data_channel,
-                    bind_node_id);
+        LOG_WARNING(Service_NWM, "data_channel={}, bind_node_id={}", data_channel, bind_node_id);
         return;
     }
     constexpr std::size_t MaxBindNodes{16};

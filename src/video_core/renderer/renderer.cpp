@@ -220,7 +220,7 @@ void Renderer::LoadColorToActiveGLTexture(u8 color_r, u8 color_g, u8 color_b,
     state.texture_units[0].texture_2d = texture.resource.handle;
     state.Apply();
     glActiveTexture(GL_TEXTURE0);
-    u8 framebuffer_data[3] {color_r, color_g, color_b};
+    u8 framebuffer_data[3]{color_r, color_g, color_b};
     // Update existing texture
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, framebuffer_data);
     state.texture_units[0].texture_2d = 0;

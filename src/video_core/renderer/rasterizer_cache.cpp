@@ -151,14 +151,7 @@ static constexpr std::array<void (*)(u32, u32, u8*, PAddr, PAddr, PAddr), 18> mo
     MortonCopy<true, PixelFormat::RGB5A1>, // 2
     MortonCopy<true, PixelFormat::RGB565>, // 3
     MortonCopy<true, PixelFormat::RGBA4>,  // 4
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
     nullptr,                             // 5 - 13
     MortonCopy<true, PixelFormat::D16>,  // 14
     nullptr,                             // 15
@@ -172,14 +165,7 @@ static constexpr std::array<void (*)(u32, u32, u8*, PAddr, PAddr, PAddr), 18> gl
     MortonCopy<false, PixelFormat::RGB5A1>, // 2
     MortonCopy<false, PixelFormat::RGB565>, // 3
     MortonCopy<false, PixelFormat::RGBA4>,  // 4
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
     nullptr,                              // 5 - 13
     MortonCopy<false, PixelFormat::D16>,  // 14
     nullptr,                              // 15
@@ -300,7 +286,7 @@ static bool FillSurface(const Surface& surface, const u8* fill_data,
         tex_info.format = static_cast<Pica::TexturingRegs::TextureFormat>(surface->pixel_format);
         Math::Vec4<u8> color{Pica::Texture::LookupTexture(fill_data, 0, 0, tex_info)};
         std::array<GLfloat, 4> color_values{color.x / 255.f, color.y / 255.f, color.z / 255.f,
-                                               color.w / 255.f};
+                                            color.w / 255.f};
         state.color_mask.red_enabled = GL_TRUE;
         state.color_mask.green_enabled = GL_TRUE;
         state.color_mask.blue_enabled = GL_TRUE;
