@@ -166,31 +166,35 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     return ResultStatus::Success;
 }
 
-Service::SM::ServiceManager& System::ServiceManager() {
-    return *service_manager;
-}
-
 const Service::SM::ServiceManager& System::ServiceManager() const {
     return *service_manager;
 }
 
-Service::FS::ArchiveManager& System::ArchiveManager() {
-    return *archive_manager;
+Service::SM::ServiceManager& System::ServiceManager() {
+    return *service_manager;
 }
 
 const Service::FS::ArchiveManager& System::ArchiveManager() const {
     return *archive_manager;
 }
 
-Kernel::KernelSystem& System::Kernel() {
-    return *kernel;
+Service::FS::ArchiveManager& System::ArchiveManager() {
+    return *archive_manager;
 }
 
 const Kernel::KernelSystem& System::Kernel() const {
     return *kernel;
 }
 
+Kernel::KernelSystem& System::Kernel() {
+    return *kernel;
+}
+
 const Frontend& System::GetFrontend() const {
+    return *m_frontend;
+}
+
+Frontend& System::GetFrontend() {
     return *m_frontend;
 }
 

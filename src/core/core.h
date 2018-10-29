@@ -114,56 +114,44 @@ public:
         return cpu_core != nullptr;
     }
 
-    /// Prepare the core emulation for a reschedule
+    /// Prepare the core emulation for a reschedule.
     void PrepareReschedule();
 
     PerfStats::Results GetAndResetPerfStats();
 
-    /**
-     * Gets a reference to the emulated CPU.
-     * @returns A reference to the emulated CPU.
-     */
+    /// Gets a reference to the emulated CPU.
     Cpu& CPU() {
         return *cpu_core;
     }
 
-    /**
-     * Gets a reference to the emulated DSP.
-     * @returns A reference to the emulated DSP.
-     */
+    /// Gets a reference to the emulated DSP.
     AudioCore::DspHle& DSP() {
         return *dsp_core;
     }
 
-    /**
-     * Gets a reference to the service manager.
-     * @returns A reference to the service manager.
-     */
-    Service::SM::ServiceManager& ServiceManager();
-
-    /**
-     * Gets a const reference to the service manager.
-     * @returns A const reference to the service manager.
-     */
+    /// Gets a const reference to the service manager.
     const Service::SM::ServiceManager& ServiceManager() const;
 
-    /// Gets a reference to the archive manager
-    Service::FS::ArchiveManager& ArchiveManager();
+    /// Gets a reference to the service manager.
+    Service::SM::ServiceManager& ServiceManager();
 
-    /// Gets a const reference to the archive manager
+    /// Gets a const reference to the archive manager.
     const Service::FS::ArchiveManager& ArchiveManager() const;
+
+    /// Gets a reference to the archive manager.
+    Service::FS::ArchiveManager& ArchiveManager();
 
     /// Gets a const reference to the frontend.
     const Frontend& GetFrontend() const;
-
-    /// Gets a reference to the kernel
-    Kernel::KernelSystem& Kernel();
 
     // Gets a reference to the frontend.
     Frontend& GetFrontend();
 
     /// Gets a const reference to the kernel
     const Kernel::KernelSystem& Kernel() const;
+
+    /// Gets a reference to the kernel.
+    Kernel::KernelSystem& Kernel();
 
     PerfStats perf_stats;
     FrameLimiter frame_limiter;
