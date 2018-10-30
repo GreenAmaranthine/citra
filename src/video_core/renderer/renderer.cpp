@@ -89,10 +89,7 @@ static std::array<GLfloat, 6> MakeOrthographicMatrix(const float width, const fl
     return matrix;
 }
 
-Renderer::Renderer(Frontend& frontend)
-    : frontend{frontend}, rasterizer{std::make_unique<Rasterizer>()} {
-    VideoCore::g_bg_color_update_requested = true;
-}
+Renderer::Renderer(Frontend& frontend) : frontend{frontend} {}
 
 Renderer::~Renderer() = default;
 
@@ -467,6 +464,8 @@ Core::System::ResultStatus Renderer::Init() {
     if (!GLAD_GL_VERSION_3_3)
         return Core::System::ResultStatus::ErrorVideoCore_ErrorBelowGL33;
     InitOpenGLObjects();
+    rasterizer = std::make_unique<Rasterizer>();
+    VideoCore::g_bg_color_update_requested = true;
     return Core::System::ResultStatus::Success;
 }
 
