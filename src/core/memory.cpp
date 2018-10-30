@@ -24,6 +24,7 @@ namespace Memory {
 static std::array<u8, Memory::VRAM_SIZE> vram;
 static std::array<u8, Memory::N3DS_EXTRA_RAM_SIZE> n3ds_extra_ram;
 static std::array<u8, Memory::L2C_SIZE> l2cache;
+std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram;
 
 static PageTable* current_page_table{};
 
@@ -277,14 +278,7 @@ u8* GetPhysicalPointer(PAddr address) {
         target_pointer = target_base + offset_into_region;
         break;
     case FCRAM_PADDR:
-        for (const auto& region : Core::System::GetInstance().Kernel().memory_regions) {
-            if (offset_into_region >= region.base &&
-                offset_into_region < region.base + region.size) {
-                target_base = region.linear_heap_memory->data();
-                target_pointer = target_base + offset_into_region - region.base;
-                break;
-            }
-        }
+        target_pointer = fcram.data() + offset_into_region;
         break;
     case N3DS_EXTRA_RAM_PADDR:
         target_base = n3ds_extra_ram.data();

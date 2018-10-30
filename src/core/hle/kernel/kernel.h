@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <memory>
 #include <string>
@@ -11,6 +12,7 @@
 #include <vector>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include "common/common_types.h"
+#include "core/hle/kernel/memory.h"
 #include "core/hle/result.h"
 
 namespace ConfigMem {
@@ -69,14 +71,6 @@ enum class MemoryRegion : u16 {
 template <typename T>
 using SharedPtr = boost::intrusive_ptr<T>;
 
-struct MemoryRegionInfo {
-    u32 base; // Not an address, but offset from start of FCRAM
-    u32 size;
-    u32 used;
-
-    std::shared_ptr<std::vector<u8>> linear_heap_memory;
-};
-
 class KernelSystem {
 public:
     KernelSystem();
@@ -93,7 +87,7 @@ public:
     SharedPtr<AddressArbiter> CreateAddressArbiter(std::string name = "Unknown");
 
     /**
-     * Creates an event
+     * Creates a event.
      * @param reset_type ResetType describing how to create event
      * @param name Optional name of event
      */
@@ -185,8 +179,7 @@ public:
                                                std::string name = "Unknown");
 
     /**
-     * Creates a shared memory object from a block of memory managed by an HLE applet.
-     * @param heap_block Heap block of the HLE applet.
+     * Creates a shared memory object from a block of memory managed by a HLE applet.
      * @param offset The offset into the heap block that the SharedMemory will map.
      * @param size Size of the memory block. Must be page-aligned.
      * @param permissions Permission restrictions applied to the process which created the block.
@@ -194,8 +187,7 @@ public:
      * block.
      * @param name Optional object name, used for debugging purposes.
      */
-    SharedPtr<SharedMemory> CreateSharedMemoryForApplet(std::shared_ptr<std::vector<u8>> heap_block,
-                                                        u32 offset, u32 size,
+    SharedPtr<SharedMemory> CreateSharedMemoryForApplet(u32 offset, u32 size,
                                                         MemoryPermission permissions,
                                                         MemoryPermission other_permissions,
                                                         std::string name = "Unknown Applet");
@@ -229,8 +221,6 @@ public:
 
     MemoryRegionInfo* GetMemoryRegion(MemoryRegion region);
 
-    MemoryRegionInfo memory_regions[3];
-
     const ConfigMem::Handler& GetConfigMemHandler() const;
     ConfigMem::Handler& GetConfigMemHandler();
 
@@ -251,6 +241,8 @@ private:
 
     std::unique_ptr<ConfigMem::Handler> config_mem_handler;
     std::unique_ptr<SharedPage::Handler> shared_page_handler;
+
+    std::array<MemoryRegionInfo, 3> memory_regions;
 };
 
 } // namespace Kernel
