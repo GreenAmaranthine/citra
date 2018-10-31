@@ -89,7 +89,7 @@ void LogSettings() {
     LogSetting("Hacks_Ticks", Settings::values.ticks);
     LogSetting("Hacks_TicksMode", static_cast<int>(Settings::values.ticks_mode));
     LogSetting("Hacks_UseBos", Settings::values.use_bos);
-    LogSetting("Hacks_Disable2xMsaa", Settings::values.disable_mh_2xmsaa);
+    LogSetting("Hacks_DisableMh2xMsaa", Settings::values.disable_mh_2xmsaa);
 }
 
 void LoadProfile(int index) {
