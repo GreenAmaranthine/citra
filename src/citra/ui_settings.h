@@ -20,25 +20,25 @@ using Shortcut = std::pair<QString, ContextualShortcut>;
 using Themes = std::array<std::pair<const char*, const char*>, 4>;
 extern const Themes themes;
 
-struct GameDir {
+struct AppDir {
     QString path;
     bool deep_scan;
     bool expanded;
-    bool operator==(const GameDir& rhs) const {
+    bool operator==(const AppDir& rhs) const {
         return path == rhs.path;
     };
-    bool operator!=(const GameDir& rhs) const {
+    bool operator!=(const AppDir& rhs) const {
         return !operator==(rhs);
     };
 };
 
-enum class GameListIconSize {
+enum class AppListIconSize {
     NoIcon,    ///< Do not display icons
     SmallIcon, ///< Display a small (24x24) icon
     LargeIcon, ///< Display a large (48x48) icon
 };
 
-enum class GameListText {
+enum class AppListText {
     NoText = -1, ///< No text
     FileName,    ///< Display the file name of the entry
     FullPath,    ///< Display the full path of the entry
@@ -51,22 +51,22 @@ struct Values {
     QByteArray geometry;
     QByteArray state;
     QByteArray screens_geometry;
-    QByteArray gamelist_header_state;
+    QByteArray applist_header_state;
 
     bool single_window_mode;
     bool fullscreen;
     bool show_filter_bar;
     bool show_status_bar;
 
-    // Game List
-    GameListIconSize game_list_icon_size;
-    GameListText game_list_row_1;
-    GameListText game_list_row_2;
-    bool game_list_hide_no_icon;
+    // Application List
+    AppListIconSize app_list_icon_size;
+    AppListText app_list_row_1;
+    AppListText app_list_row_2;
+    bool app_list_hide_no_icon;
 
     u16 screenshot_resolution_factor;
 
-    QList<UISettings::GameDir> game_dirs;
+    QList<UISettings::AppDir> app_dirs;
     QStringList recent_files;
 
     bool enable_discord_rpc;
@@ -85,7 +85,7 @@ struct Values {
     quint32 max_player;
     QString room_port;
     uint host_type;
-    qulonglong game_id;
+    qulonglong app_id;
 
     // Logging
     bool show_console;
@@ -95,4 +95,4 @@ extern Values values;
 
 } // namespace UISettings
 
-Q_DECLARE_METATYPE(UISettings::GameDir*);
+Q_DECLARE_METATYPE(UISettings::AppDir*);

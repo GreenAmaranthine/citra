@@ -87,13 +87,13 @@ ASSERT_REG_POSITION(rasterizer.vs_output_attributes[0], 0x50);
 ASSERT_REG_POSITION(rasterizer.vs_output_attributes[1], 0x51);
 ASSERT_REG_POSITION(rasterizer.scissor_test, 0x65);
 ASSERT_REG_POSITION(rasterizer.viewport_corner, 0x68);
-ASSERT_REG_POSITION(rasterizer.depthmap_enable, 0x6D);
+ASSERT_REG_POSITION(rasterizer.depthmap_enabled, 0x6D);
 
 ASSERT_REG_POSITION(texturing, 0x80);
 ASSERT_REG_POSITION(texturing.main_config, 0x80);
 ASSERT_REG_POSITION(texturing.texture0, 0x81);
 ASSERT_REG_POSITION(texturing.texture0_format, 0x8e);
-ASSERT_REG_POSITION(texturing.fragment_lighting_enable, 0x8f);
+ASSERT_REG_POSITION(texturing.fragment_lighting_enabled, 0x8f);
 ASSERT_REG_POSITION(texturing.texture1, 0x91);
 ASSERT_REG_POSITION(texturing.texture1_format, 0x96);
 ASSERT_REG_POSITION(texturing.texture2, 0x99);

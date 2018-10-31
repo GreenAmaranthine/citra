@@ -30,7 +30,7 @@ public:
     enum class ValidationResult {
         OK,
         RevisionDismatch,
-        GameDismatch,
+        AppDismatch,
         Invalid,
     };
     /**

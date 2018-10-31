@@ -4,9 +4,9 @@
 
 #include <memory>
 #include <QFileInfo>
-#include "citra/game_list.h"
-#include "citra/game_list_p.h"
-#include "citra/game_list_worker.h"
+#include "citra/app_list.h"
+#include "citra/app_list_p.h"
+#include "citra/app_list_worker.h"
 #include "citra/ui_settings.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/fs/archive.h"
@@ -16,13 +16,13 @@ namespace {
 
 static bool HasSupportedFileExtension(const std::string& file_name) {
     QFileInfo file{QFileInfo(QString::fromStdString(file_name))};
-    return GameList::supported_file_extensions.contains(file.suffix(), Qt::CaseInsensitive);
+    return AppList::supported_file_extensions.contains(file.suffix(), Qt::CaseInsensitive);
 }
 
 } // Anonymous namespace
 
-void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsigned int recursion,
-                                             GameListDir* parent_dir) {
+void AppListWorker::AddFstEntriesToAppList(const std::string& dir_path, unsigned int recursion,
+                                           AppListDir* parent_dir) {
     const auto callback{[this, recursion, parent_dir](u64* num_entries_out,
                                                       const std::string& directory,
                                                       const std::string& virtual_name) -> bool {
@@ -67,26 +67,26 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
                 return update_smdh;
             }()};
 
-            if (!Loader::IsValidSMDH(smdh) && UISettings::values.game_list_hide_no_icon) {
+            if (!Loader::IsValidSMDH(smdh) && UISettings::values.app_list_hide_no_icon) {
                 // Skip this invalid entry
                 return true;
             }
 
             emit EntryReady(
                 {
-                    new GameListItemPath(QString::fromStdString(physical_name), smdh, program_id,
-                                         extdata_id),
-                    new GameListItemCompat(program_id),
-                    new GameListItemRegion(smdh),
-                    new GameListItem(
+                    new AppListItemPath(QString::fromStdString(physical_name), smdh, program_id,
+                                        extdata_id),
+                    new AppListItemCompat(program_id),
+                    new AppListItemRegion(smdh),
+                    new AppListItem(
                         QString::fromStdString(Loader::GetFileTypeString(loader->GetFileType()))),
-                    new GameListItemSize(FileUtil::GetSize(physical_name)),
+                    new AppListItemSize(FileUtil::GetSize(physical_name)),
                 },
                 parent_dir);
 
         } else if (is_dir && recursion > 0) {
             watch_list.append(QString::fromStdString(physical_name));
-            AddFstEntriesToGameList(physical_name, recursion - 1, parent_dir);
+            AddFstEntriesToAppList(physical_name, recursion - 1, parent_dir);
         }
 
         return true;
@@ -95,10 +95,10 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
     FileUtil::ForeachDirectoryEntry(nullptr, dir_path, callback);
 }
 
-void GameListWorker::run() {
+void AppListWorker::run() {
     stop_processing = false;
-    for (UISettings::GameDir& game_dir : game_dirs) {
-        if (game_dir.path == "INSTALLED") {
+    for (UISettings::AppDir& app_dir : app_dirs) {
+        if (app_dir.path == "INSTALLED") {
             // Add normal titles
             {
                 QString path{
@@ -108,10 +108,9 @@ void GameListWorker::run() {
                                            "3DS/00000000000000000000000000000000/"
                                            "00000000000000000000000000000000/title/00040000")};
                 watch_list.append(path);
-                GameListDir* game_list_dir{
-                    new GameListDir(game_dir, GameListItemType::InstalledDir)};
-                emit DirEntryReady({game_list_dir});
-                AddFstEntriesToGameList(path.toStdString(), 2, game_list_dir);
+                AppListDir* app_list_dir{new AppListDir(app_dir, AppListItemType::InstalledDir)};
+                emit DirEntryReady({app_list_dir});
+                AddFstEntriesToAppList(path.toStdString(), 2, app_list_dir);
             }
             // Add demos
             {
@@ -122,31 +121,30 @@ void GameListWorker::run() {
                                            "3DS/00000000000000000000000000000000/"
                                            "00000000000000000000000000000000/title/00040002")};
                 watch_list.append(path);
-                GameListDir* game_list_dir{
-                    new GameListDir(game_dir, GameListItemType::InstalledDir)};
-                emit DirEntryReady({game_list_dir});
-                AddFstEntriesToGameList(path.toStdString(), 2, game_list_dir);
+                AppListDir* app_list_dir{new AppListDir(app_dir, AppListItemType::InstalledDir)};
+                emit DirEntryReady({app_list_dir});
+                AddFstEntriesToAppList(path.toStdString(), 2, app_list_dir);
             }
-        } else if (game_dir.path == "SYSTEM") {
+        } else if (app_dir.path == "SYSTEM") {
             QString path{QString::fromStdString(FileUtil::GetUserPath(
                              FileUtil::UserPath::NANDDir, Settings::values.nand_dir + "/")) +
                          "00000000000000000000000000000000/title/00040010"};
             watch_list.append(path);
-            GameListDir* game_list_dir{new GameListDir(game_dir, GameListItemType::SystemDir)};
-            emit DirEntryReady({game_list_dir});
-            AddFstEntriesToGameList(path.toStdString(), 2, game_list_dir);
+            AppListDir* app_list_dir{new AppListDir(app_dir, AppListItemType::SystemDir)};
+            emit DirEntryReady({app_list_dir});
+            AddFstEntriesToAppList(path.toStdString(), 2, app_list_dir);
         } else {
-            watch_list.append(game_dir.path);
-            GameListDir* game_list_dir{new GameListDir(game_dir)};
-            emit DirEntryReady({game_list_dir});
-            AddFstEntriesToGameList(game_dir.path.toStdString(), game_dir.deep_scan ? 256 : 0,
-                                    game_list_dir);
+            watch_list.append(app_dir.path);
+            AppListDir* app_list_dir{new AppListDir(app_dir)};
+            emit DirEntryReady({app_list_dir});
+            AddFstEntriesToAppList(app_dir.path.toStdString(), app_dir.deep_scan ? 256 : 0,
+                                   app_list_dir);
         }
     };
     emit Finished(watch_list);
 }
 
-void GameListWorker::Cancel() {
+void AppListWorker::Cancel() {
     disconnect();
     stop_processing = true;
 }

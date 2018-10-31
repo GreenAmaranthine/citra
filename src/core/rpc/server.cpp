@@ -38,7 +38,6 @@ Server::Impl::Impl(std::function<void(std::unique_ptr<Packet>)> callback) {
     // TODO: Make configurable or increment port number on failure
     zmq_socket->bind("tcp://127.0.0.1:45987");
     LOG_INFO(RPC, "ZeroMQ listening on port 45987");
-
     worker_thread = std::thread(&Server::Impl::WorkerLoop, this);
 }
 

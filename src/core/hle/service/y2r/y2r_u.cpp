@@ -395,21 +395,16 @@ void Y2R_U::StartConversion(Kernel::HLERequestContext& ctx) {
                                            (conversion.dst.transfer_unit + conversion.dst.gap))};
     Memory::RasterizerFlushVirtualRegion(conversion.dst.address, total_output_size,
                                          Memory::FlushMode::FlushAndInvalidate);
-
     HW::Y2R::PerformConversion(conversion);
-
     completion_event->Signal();
-
     IPC::ResponseBuilder rb{ctx, 0x26, 1, 0};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_Y2R, "called");
 }
 
 void Y2R_U::StopConversion(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x27, 1, 0};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_Y2R, "called");
 }
 
@@ -417,41 +412,30 @@ void Y2R_U::IsBusyConversion(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x28, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(0); // StartConversion always finishes immediately
-
     LOG_DEBUG(Service_Y2R, "called");
 }
 
 void Y2R_U::SetPackageParameter(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x29, 7, 0};
     auto params{rp.PopRaw<ConversionParameters>()};
-
     conversion.input_format = params.input_format;
     conversion.output_format = params.output_format;
     conversion.rotation = params.rotation;
     conversion.block_alignment = params.block_alignment;
-
     ResultCode result{conversion.SetInputLineWidth(params.input_line_width)};
-
     if (result.IsError())
         goto cleanup;
-
     result = conversion.SetInputLines(params.input_lines);
-
     if (result.IsError())
         goto cleanup;
-
     result = conversion.SetStandardCoefficient(params.standard_coefficient);
-
     if (result.IsError())
         goto cleanup;
-
     conversion.padding = params.padding;
     conversion.alpha = params.alpha;
-
 cleanup:
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(result);
-
     LOG_DEBUG(
         Service_Y2R,
         "input_format={}, output_format={}, rotation={}, block_alignment={}, "
@@ -466,7 +450,6 @@ void Y2R_U::PingProcess(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x2A, 2, 0};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(0);
-
     LOG_WARNING(Service_Y2R, "stubbed");
 }
 
@@ -479,25 +462,20 @@ void Y2R_U::DriverInitialize(Kernel::HLERequestContext& ctx) {
     conversion.SetInputLineWidth(1024);
     conversion.SetInputLines(1024);
     conversion.alpha = 0;
-
     ConversionBuffer zero_buffer{};
     conversion.src_Y = zero_buffer;
     conversion.src_U = zero_buffer;
     conversion.src_V = zero_buffer;
     conversion.dst = zero_buffer;
-
     completion_event->Clear();
-
     IPC::ResponseBuilder rb{ctx, 0x2B, 1, 0};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_Y2R, "called");
 }
 
 void Y2R_U::DriverFinalize(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x2C, 1, 0};
     rb.Push(RESULT_SUCCESS);
-
     LOG_DEBUG(Service_Y2R, "called");
 }
 
@@ -505,7 +483,6 @@ void Y2R_U::GetPackageParameter(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x2D, 4, 0};
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(conversion);
-
     LOG_DEBUG(Service_Y2R, "called");
 }
 
@@ -558,7 +535,6 @@ Y2R_U::Y2R_U(Core::System& system) : ServiceFramework{"y2r:u", 1} {
         {0x002D0000, &Y2R_U::GetPackageParameter, "GetPackageParameter"},
     };
     RegisterHandlers(functions);
-
     completion_event = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "Y2R:Completed");
 }
 

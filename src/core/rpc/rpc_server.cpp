@@ -228,29 +228,27 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
         }
         case PacketType::TouchState: {
             const u8* data{request_packet->GetPacketData().data() + (sizeof(u32) * 2)};
-            struct State {
+            struct {
                 s16 x;
                 s16 y;
                 bool valid;
-            };
-            State state;
-            std::memcpy(&state, data, sizeof(State));
+            } state;
+            std::memcpy(&state, data, sizeof(state));
             HandleTouchState(*request_packet, state.x, state.y, state.valid);
             success = true;
             break;
         }
         case PacketType::MotionState: {
             const u8* data{request_packet->GetPacketData().data() + (sizeof(u32) * 2)};
-            struct State {
+            struct {
                 s16 x;
                 s16 y;
                 s16 z;
                 s16 roll;
                 s16 pitch;
                 s16 yaw;
-            };
-            State state;
-            std::memcpy(&state, data, sizeof(State));
+            } state;
+            std::memcpy(&state, data, sizeof(state));
             HandleMotionState(*request_packet, state.x, state.y, state.z, state.roll, state.pitch,
                               state.yaw);
             success = true;
@@ -258,12 +256,11 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
         }
         case PacketType::CircleState: {
             const u8* data{request_packet->GetPacketData().data() + (sizeof(u32) * 2)};
-            struct State {
+            struct {
                 s16 x;
                 s16 y;
-            };
-            State state;
-            std::memcpy(&state, data, sizeof(State));
+            } state;
+            std::memcpy(&state, data, sizeof(state));
             HandleCircleState(*request_packet, state.x, state.y);
             success = true;
             break;
@@ -287,14 +284,13 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
         }
         case PacketType::SetOverrideControls: {
             const u8* data{request_packet->GetPacketData().data() + (sizeof(u32) * 2)};
-            struct State {
+            struct {
                 bool pad;
                 bool touch;
                 bool motion;
                 bool circle;
-            };
-            State state;
-            std::memcpy(&state, data, sizeof(State));
+            } state;
+            std::memcpy(&state, data, sizeof(state));
             HandleSetOverrideControls(*request_packet, state.pad, state.touch, state.motion,
                                       state.circle);
             success = true;
@@ -325,13 +321,12 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
         }
         case PacketType::SetBackgroundColor: {
             const u8* data{request_packet->GetPacketData().data() + (sizeof(u32) * 2)};
-            struct Color {
+            struct {
                 float r;
                 float g;
                 float b;
-            };
-            Color color;
-            std::memcpy(&color, data, sizeof(Color));
+            } color;
+            std::memcpy(&color, data, sizeof(color));
             HandleSetBackgroundColor(*request_packet, color.r, color.g, color.b);
             success = true;
             break;
@@ -362,9 +357,9 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
         }
         case PacketType::SetFrameAdvancing: {
             const u8* data{request_packet->GetPacketData().data() + (sizeof(u32) * 2)};
-            bool enable;
-            std::memcpy(&enable, data, sizeof(bool));
-            HandleSetFrameAdvancing(*request_packet, enable);
+            bool enabled;
+            std::memcpy(&enabled, data, sizeof(bool));
+            HandleSetFrameAdvancing(*request_packet, enabled);
             success = true;
             break;
         }
@@ -377,7 +372,6 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
             break;
         }
     }
-
     if (!success) {
         // Send an empty reply, so as not to hang the client
         request_packet->SetPacketDataSize(0);
@@ -387,14 +381,11 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
 
 void RPCServer::HandleRequestsLoop() {
     std::unique_ptr<RPC::Packet> request_packet;
-
     LOG_INFO(RPC, "Request handler started.");
-
     for (;;) {
         request_packet = request_queue.PopWait();
-        if (!request_packet) {
+        if (!request_packet)
             break;
-        }
         HandleSingleRequest(std::move(request_packet));
     }
 }

@@ -25,22 +25,22 @@ void ConfigureUi::LoadConfiguration() {
     ui->enable_discord_rpc->setChecked(UISettings::values.enable_discord_rpc);
     ui->theme_combobox->setCurrentIndex(ui->theme_combobox->findData(UISettings::values.theme));
     ui->icon_size_combobox->setCurrentIndex(
-        static_cast<int>(UISettings::values.game_list_icon_size));
-    ui->row_1_text_combobox->setCurrentIndex(static_cast<int>(UISettings::values.game_list_row_1));
-    ui->row_2_text_combobox->setCurrentIndex(static_cast<int>(UISettings::values.game_list_row_2) +
+        static_cast<int>(UISettings::values.app_list_icon_size));
+    ui->row_1_text_combobox->setCurrentIndex(static_cast<int>(UISettings::values.app_list_row_1));
+    ui->row_2_text_combobox->setCurrentIndex(static_cast<int>(UISettings::values.app_list_row_2) +
                                              1);
-    ui->toggle_hide_no_icon->setChecked(UISettings::values.game_list_hide_no_icon);
+    ui->toggle_hide_no_icon->setChecked(UISettings::values.app_list_hide_no_icon);
 }
 
 void ConfigureUi::ApplyConfiguration() {
     UISettings::values.enable_discord_rpc = ui->enable_discord_rpc->isChecked();
     UISettings::values.theme =
         ui->theme_combobox->itemData(ui->theme_combobox->currentIndex()).toString();
-    UISettings::values.game_list_icon_size =
-        static_cast<UISettings::GameListIconSize>(ui->icon_size_combobox->currentIndex());
-    UISettings::values.game_list_row_1 =
-        static_cast<UISettings::GameListText>(ui->row_1_text_combobox->currentIndex());
-    UISettings::values.game_list_row_2 =
-        static_cast<UISettings::GameListText>(ui->row_2_text_combobox->currentIndex() - 1);
-    UISettings::values.game_list_hide_no_icon = ui->toggle_hide_no_icon->isChecked();
+    UISettings::values.app_list_icon_size =
+        static_cast<UISettings::AppListIconSize>(ui->icon_size_combobox->currentIndex());
+    UISettings::values.app_list_row_1 =
+        static_cast<UISettings::AppListText>(ui->row_1_text_combobox->currentIndex());
+    UISettings::values.app_list_row_2 =
+        static_cast<UISettings::AppListText>(ui->row_2_text_combobox->currentIndex() - 1);
+    UISettings::values.app_list_hide_no_icon = ui->toggle_hide_no_icon->isChecked();
 }

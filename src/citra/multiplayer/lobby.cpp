@@ -5,7 +5,7 @@
 #include <QInputDialog>
 #include <QList>
 #include <QtConcurrent/QtConcurrentRun>
-#include "citra/game_list_p.h"
+#include "citra/app_list_p.h"
 #include "citra/main.h"
 #include "citra/multiplayer/client_room.h"
 #include "citra/multiplayer/lobby.h"
@@ -26,14 +26,14 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     // Setup the watcher for background connections
     watcher = new QFutureWatcher<void>;
     model = new QStandardItemModel(ui->room_list);
-    // Create a proxy to the game list to get the list of games owned
-    game_list = new QStandardItemModel;
+    // Create a proxy to the application list to get the list of applications
+    app_list = new QStandardItemModel;
     for (int i{}; i < list->rowCount(); i++) {
         auto parent{list->item(i, 0)};
         for (int j{}; j < parent->rowCount(); j++)
-            game_list->appendRow(parent->child(j)->clone());
+            app_list->appendRow(parent->child(j)->clone());
     }
-    proxy = new LobbyFilterProxyModel(this, game_list);
+    proxy = new LobbyFilterProxyModel(this, app_list);
     proxy->setSourceModel(model);
     proxy->setDynamicSortFilter(true);
     proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
@@ -58,7 +58,7 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
         ui->nickname->setText(QString::fromStdString(Settings::values.citra_username));
     // UI Buttons
     connect(ui->refresh_list, &QPushButton::pressed, this, &Lobby::RefreshLobby);
-    connect(ui->games_owned, &QCheckBox::stateChanged, proxy,
+    connect(ui->applications_i_have, &QCheckBox::stateChanged, proxy,
             &LobbyFilterProxyModel::SetFilterOwned);
     connect(ui->hide_full, &QCheckBox::stateChanged, proxy, &LobbyFilterProxyModel::SetFilterFull);
     connect(ui->search, &QLineEdit::textChanged, proxy, &LobbyFilterProxyModel::SetFilterSearch);
@@ -137,7 +137,8 @@ void Lobby::ResetModel() {
     model->insertColumns(0, Column::TOTAL);
     model->setHeaderData(Column::EXPAND, Qt::Horizontal, "", Qt::DisplayRole);
     model->setHeaderData(Column::ROOM_NAME, Qt::Horizontal, "Room Name", Qt::DisplayRole);
-    model->setHeaderData(Column::GAME_NAME, Qt::Horizontal, "Preferred Game", Qt::DisplayRole);
+    model->setHeaderData(Column::APP_NAME, Qt::Horizontal, "Preferred Application",
+                         Qt::DisplayRole);
     model->setHeaderData(Column::HOST, Qt::Horizontal, "Host", Qt::DisplayRole);
     model->setHeaderData(Column::MEMBER, Qt::Horizontal, "Players", Qt::DisplayRole);
 }
@@ -156,27 +157,27 @@ void Lobby::RefreshLobby() {
 void Lobby::OnRefreshLobby() {
     AnnounceMultiplayerRoom::RoomList new_room_list{room_list_watcher.result()};
     for (auto room : new_room_list) {
-        // Find the icon for the game if this person owns that game.
+        // Find the icon if this person has that application.
         QPixmap smdh_icon;
-        for (int r{}; r < game_list->rowCount(); ++r) {
-            auto index{game_list->index(r, 0)};
-            auto game_id{game_list->data(index, GameListItemPath::ProgramIdRole).toULongLong()};
-            if (game_id != 0 && room.preferred_game_id == game_id)
-                smdh_icon = game_list->data(index, Qt::DecorationRole).value<QPixmap>();
+        for (int r{}; r < app_list->rowCount(); ++r) {
+            auto index{app_list->index(r, 0)};
+            auto app_id{app_list->data(index, AppListItemPath::ProgramIdRole).toULongLong()};
+            if (app_id != 0 && room.preferred_app_id == app_id)
+                smdh_icon = app_list->data(index, Qt::DecorationRole).value<QPixmap>();
         }
         QList<QVariant> members;
         for (auto member : room.members) {
             QVariant var;
-            var.setValue(LobbyMember{QString::fromStdString(member.name), member.game_id,
-                                     QString::fromStdString(member.game_name)});
+            var.setValue(LobbyMember{QString::fromStdString(member.name), member.app_id,
+                                     QString::fromStdString(member.app_name)});
             members.append(var);
         }
         auto first_item{new LobbyItem()};
         auto row{QList<QStandardItem*>({
             first_item,
             new LobbyItemName(room.has_password, QString::fromStdString(room.name)),
-            new LobbyItemGame(room.preferred_game_id, QString::fromStdString(room.preferred_game),
-                              smdh_icon),
+            new LobbyItemApp(room.preferred_app_id, QString::fromStdString(room.preferred_app),
+                             smdh_icon),
             new LobbyItemHost(QString::fromStdString(room.owner), QString::fromStdString(room.ip),
                               room.port),
             new LobbyItemMemberList(members, room.max_player),
@@ -203,7 +204,7 @@ void Lobby::OnRefreshLobby() {
 }
 
 LobbyFilterProxyModel::LobbyFilterProxyModel(QWidget* parent, QStandardItemModel* list)
-    : QSortFilterProxyModel{parent}, game_list{list} {}
+    : QSortFilterProxyModel{parent}, app_list{list} {}
 
 bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const {
     // Prioritize filters by fastest to compute
@@ -222,13 +223,13 @@ bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& s
     }
     // Filter by search parameters
     if (!filter_search.isEmpty()) {
-        QModelIndex game_name{sourceModel()->index(sourceRow, Column::GAME_NAME, sourceParent)};
+        QModelIndex app_name{sourceModel()->index(sourceRow, Column::APP_NAME, sourceParent)};
         QModelIndex room_name{sourceModel()->index(sourceRow, Column::ROOM_NAME, sourceParent)};
         QModelIndex host_name{sourceModel()->index(sourceRow, Column::HOST, sourceParent)};
-        bool preferred_game_match{sourceModel()
-                                      ->data(game_name, LobbyItemGame::GameNameRole)
-                                      .toString()
-                                      .contains(filter_search, filterCaseSensitivity())};
+        bool preferred_app_match{sourceModel()
+                                     ->data(app_name, LobbyItemApp::AppNameRole)
+                                     .toString()
+                                     .contains(filter_search, filterCaseSensitivity())};
         bool room_name_match{sourceModel()
                                  ->data(room_name, LobbyItemName::NameRole)
                                  .toString()
@@ -237,26 +238,26 @@ bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& s
                                 ->data(host_name, LobbyItemHost::HostUsernameRole)
                                 .toString()
                                 .contains(filter_search, filterCaseSensitivity())};
-        if (!preferred_game_match && !room_name_match && !username_match)
+        if (!preferred_app_match && !room_name_match && !username_match)
             return false;
     }
-    // Filter by game owned
-    if (filter_owned) {
-        QModelIndex game_name{sourceModel()->index(sourceRow, Column::GAME_NAME, sourceParent)};
-        QList<QModelIndex> owned_games;
-        for (int r{}; r < game_list->rowCount(); ++r)
-            owned_games.append(QModelIndex(game_list->index(r, 0)));
-        auto current_id{sourceModel()->data(game_name, LobbyItemGame::TitleIDRole).toLongLong()};
+    // Filter by applications that user have
+    if (filter_have) {
+        QModelIndex app_name{sourceModel()->index(sourceRow, Column::APP_NAME, sourceParent)};
+        QList<QModelIndex> applications_user_have;
+        for (int r{}; r < app_list->rowCount(); ++r)
+            applications_user_have.append(QModelIndex(app_list->index(r, 0)));
+        auto current_id{sourceModel()->data(app_name, LobbyItemApp::TitleIDRole).toLongLong()};
         if (current_id == 0)
-            // TODO: homebrew often doesn't have a game id and this hides them
+            // TODO: Homebrew often doesn't have a title ID and this hides them
             return false;
-        bool owned{};
-        for (const auto& game : owned_games) {
-            auto game_id{game_list->data(game, GameListItemPath::ProgramIdRole).toLongLong()};
-            if (current_id == game_id)
-                owned = true;
+        bool have{};
+        for (const auto& app : applications_user_have) {
+            auto app_id{app_list->data(app, AppListItemPath::ProgramIdRole).toLongLong()};
+            if (current_id == app_id)
+                have = true;
         }
-        if (!owned)
+        if (!have)
             return false;
     }
     return true;
@@ -267,7 +268,7 @@ void LobbyFilterProxyModel::sort(int column, Qt::SortOrder order) {
 }
 
 void LobbyFilterProxyModel::SetFilterOwned(bool filter) {
-    filter_owned = filter;
+    filter_have = filter;
     invalidate();
 }
 

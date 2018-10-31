@@ -54,7 +54,7 @@ class Screens : public QWidget, public Frontend {
     Q_OBJECT
 
 public:
-    Screens(QWidget* parent, EmuThread* emu_thread);
+    explicit Screens(QWidget* parent, EmuThread* emu_thread);
     ~Screens();
 
     void SwapBuffers() override;
@@ -95,6 +95,8 @@ public slots:
 signals:
     /// Emitted when the window is closed
     void Closed();
+
+    void TouchChanged(unsigned, unsigned);
 
 private:
     std::pair<unsigned, unsigned> ScaleTouch(const QPointF pos) const;

@@ -27,8 +27,8 @@ public:
     /// Information about the room we're connected to.
     RoomInformation room_information;
 
-    /// The current game name and id
-    GameInfo current_game_info;
+    /// The current application name and id
+    AppInfo current_app_info;
 
     std::atomic<State> state{State::Idle}; ///< Current state of the RoomMember.
 
@@ -224,19 +224,19 @@ void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* ev
     packet >> info.member_slots;
     packet >> info.uid;
     packet >> info.port;
-    packet >> info.preferred_game;
+    packet >> info.preferred_app;
     room_information.name = info.name;
     room_information.member_slots = info.member_slots;
     room_information.port = info.port;
-    room_information.preferred_game = info.preferred_game;
+    room_information.preferred_app = info.preferred_app;
     u32 num_members;
     packet >> num_members;
     member_information.resize(num_members);
     for (auto& member : member_information) {
         packet >> member.nickname;
         packet >> member.mac_address;
-        packet >> member.game_info.name;
-        packet >> member.game_info.id;
+        packet >> member.app_info.name;
+        packet >> member.app_info.id;
     }
     Invoke(room_information);
 }
@@ -404,7 +404,7 @@ void RoomMember::Join(const std::string& nick, const char* server_addr, u16 serv
         room_member_impl->nickname = nick;
         room_member_impl->StartLoop();
         room_member_impl->SendJoinRequest(nick, preferred_mac, password);
-        SendGameInfo(room_member_impl->current_game_info);
+        SendAppInfo(room_member_impl->current_app_info);
     } else {
         enet_peer_disconnect(room_member_impl->server, 0);
         room_member_impl->SetState(State::CouldNotConnect);
@@ -433,14 +433,14 @@ void RoomMember::SendChatMessage(const std::string& message) {
     room_member_impl->Send(std::move(packet));
 }
 
-void RoomMember::SendGameInfo(const GameInfo& game_info) {
-    room_member_impl->current_game_info = game_info;
+void RoomMember::SendAppInfo(const AppInfo& app_info) {
+    room_member_impl->current_app_info = app_info;
     if (!IsConnected())
         return;
     Packet packet;
-    packet << static_cast<u8>(IdSetGameInfo);
-    packet << game_info.name;
-    packet << game_info.id;
+    packet << static_cast<u8>(IdSetAppInfo);
+    packet << app_info.name;
+    packet << app_info.id;
     room_member_impl->Send(std::move(packet));
 }
 

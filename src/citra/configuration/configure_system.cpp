@@ -249,7 +249,7 @@ void ConfigureSystem::LoadConfiguration() {
         ReadSystemSettings();
         ui->group_system_settings->setEnabled(false);
     } else {
-        // This tab is enabled only when game isn't running (i.e. all services aren't
+        // This tab is enabled only when application isn't running (i.e. all services aren't
         // initialized).
         cfg = std::make_shared<Service::CFG::Module>();
         ReadSystemSettings();

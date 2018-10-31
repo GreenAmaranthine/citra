@@ -64,11 +64,11 @@ add_executable(citra
     multiplayer/state.cpp
     multiplayer/state.h
     multiplayer/validation.h
-    game_list.cpp
-    game_list.h
-    game_list_p.h
-    game_list_worker.cpp
-    game_list_worker.h
+    app_list.cpp
+    app_list.h
+    app_list_p.h
+    app_list_worker.cpp
+    app_list_worker.h
     hotkeys.cpp
     hotkeys.h
     main.cpp

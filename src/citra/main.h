@@ -22,9 +22,9 @@ class Config;
 class ControlPanel;
 class ClickableLabel;
 class EmuThread;
-class GameList;
-enum class GameListOpenTarget;
-class GameListPlaceholder;
+class AppList;
+enum class AppListOpenTarget;
+class AppListPlaceholder;
 class GImageInfo;
 class Screens;
 class MultiplayerState;
@@ -82,8 +82,8 @@ private:
     void ConnectMenuEvents();
 
     bool LoadROM(const std::string& filename);
-    void BootGame(const std::string& filename);
-    void ShutdownGame();
+    void BootApplication(const std::string& filename);
+    void ShutdownApplication();
 
     /**
      * Stores the filename in the recently loaded files list.
@@ -112,21 +112,22 @@ private:
      * @return true if the user confirmed
      */
     bool ConfirmClose();
-    bool ConfirmChangeGame();
+    bool ConfirmChangeApplication();
     void closeEvent(QCloseEvent* event) override;
 
 private slots:
-    void OnStartGame();
-    void OnPauseGame();
-    void OnStopGame();
+    void OnStartApplication();
+    void OnPauseApplication();
+    void OnStopApplication();
+    void OnTouchChanged(unsigned, unsigned);
 
-    /// Called when user selects a game in the game list widget.
-    void OnGameListLoadFile(const QString& path);
+    /// Called when user selects an application in the application list widget.
+    void OnAppListLoadFile(const QString& path);
 
-    void OnGameListOpenFolder(u64 program_id, GameListOpenTarget target);
-    void OnGameListOpenDirectory(const QString& path);
-    void OnGameListAddDirectory();
-    void OnGameListShowList(bool show);
+    void OnAppListOpenFolder(u64 program_id, AppListOpenTarget target);
+    void OnAppListOpenDirectory(const QString& path);
+    void OnAppListAddDirectory();
+    void OnAppListShowList(bool show);
     void OnMenuLoadFile();
     void OnMenuInstallCIA();
     void OnMenuAddSeed();
@@ -164,7 +165,7 @@ private slots:
 
 private:
     bool ValidateMovie(const QString& path, u64 program_id = 0);
-    void UpdateStatusBar();
+    void UpdatePerformanceStats();
     void SetupUIStrings();
 
     Q_INVOKABLE void ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& open);
@@ -181,13 +182,14 @@ private:
 
     Screens* screens;
 
-    GameList* game_list;
-    GameListPlaceholder* game_list_placeholder;
+    AppList* app_list;
+    AppListPlaceholder* app_list_placeholder;
 
     // Status bar elements
     QProgressBar* progress_bar;
     QLabel* message_label;
-    QLabel* perf_label;
+    QLabel* perf_stats_label;
+    QLabel* touch_label;
 
     QTimer status_bar_update_timer;
     QTimer movie_play_timer;
@@ -197,7 +199,7 @@ private:
 
     std::unique_ptr<EmuThread> emu_thread;
 
-    // The short title of the game currently running
+    // The short title of the application currently running
     std::string short_title;
 
     // Movie

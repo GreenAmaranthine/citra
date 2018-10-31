@@ -9,9 +9,9 @@
 #include "common/common_types.h"
 #include "ui_settings.h"
 
-class GameListWorker;
-class GameListDir;
-class GameListSearchField;
+class AppListWorker;
+class AppListDir;
+class AppListSearchField;
 class GMainWindow;
 class QFileSystemWatcher;
 class QHBoxLayout;
@@ -27,9 +27,9 @@ class QToolButton;
 class QVBoxLayout;
 class QMenu;
 
-enum class GameListOpenTarget { SAVE_DATA = 0, EXT_DATA = 1, APPLICATION = 2, UPDATE_DATA = 3 };
+enum class AppListOpenTarget { SaveData = 0, ExtData = 1, Application = 2, UpdateData = 3 };
 
-class GameList : public QWidget {
+class AppList : public QWidget {
     Q_OBJECT
 
 public:
@@ -42,8 +42,8 @@ public:
         COLUMN_COUNT, // Number of columns
     };
 
-    explicit GameList(GMainWindow* parent = nullptr);
-    ~GameList() override;
+    explicit AppList(GMainWindow* parent = nullptr);
+    ~AppList() override;
 
     QString getLastFilterResultItem();
     void clearFilter();
@@ -52,23 +52,23 @@ public:
     void setDirectoryWatcherEnabled(bool enabled);
     bool isEmpty();
 
-    void PopulateAsync(QList<UISettings::GameDir>& game_dirs);
+    void PopulateAsync(QList<UISettings::AppDir>& app_dirs);
 
     void SaveInterfaceLayout();
     void LoadInterfaceLayout();
 
     QStandardItemModel* GetModel() const;
 
-    QString FindGameByProgramID(u64 program_id);
+    QString FindApplicationByProgramID(u64 program_id);
 
-    void RefreshGameDirectory();
+    void Refresh();
 
     static const QStringList supported_file_extensions;
 
 signals:
-    void GameChosen(QString game_path);
+    void ApplicationChosen(QString app_path);
     void ShouldCancelWorker();
-    void OpenFolderRequested(u64 program_id, GameListOpenTarget target);
+    void OpenFolderRequested(u64 program_id, AppListOpenTarget target);
     void OpenDirectory(QString directory);
     void AddDirectory();
     void ShowList(bool show);
@@ -80,36 +80,36 @@ private slots:
     void onUpdateThemedIcons();
 
 private:
-    void AddDirEntry(GameListDir* entry_items);
-    void AddEntry(const QList<QStandardItem*>& entry_items, GameListDir* parent);
+    void AddDirEntry(AppListDir* entry_items);
+    void AddEntry(const QList<QStandardItem*>& entry_items, AppListDir* parent);
     void ValidateEntry(const QModelIndex& item);
     void DonePopulating(QStringList watch_list);
 
     void PopupContextMenu(const QPoint& menu_location);
-    void AddGamePopup(QMenu& context_menu, QStandardItem* child);
+    void AddAppPopup(QMenu& context_menu, QStandardItem* child);
     void AddCustomDirPopup(QMenu& context_menu, QStandardItem* child);
     void AddPermDirPopup(QMenu& context_menu, QStandardItem* child);
 
-    QString FindGameByProgramID(QStandardItem* current_item, u64 program_id);
+    QString FindApplicationByProgramID(QStandardItem* current_item, u64 program_id);
 
-    GameListSearchField* search_field;
+    AppListSearchField* search_field;
     GMainWindow* main_window;
     QVBoxLayout* layout;
     QTreeView* tree_view;
     QStandardItemModel* item_model;
-    GameListWorker* current_worker;
+    AppListWorker* current_worker;
     QFileSystemWatcher* watcher;
 
-    friend class GameListSearchField;
+    friend class AppListSearchField;
 };
 
-Q_DECLARE_METATYPE(GameListOpenTarget);
+Q_DECLARE_METATYPE(AppListOpenTarget);
 
-class GameListPlaceholder : public QWidget {
+class AppListPlaceholder : public QWidget {
     Q_OBJECT
 public:
-    explicit GameListPlaceholder(GMainWindow* parent = nullptr);
-    ~GameListPlaceholder();
+    explicit AppListPlaceholder(GMainWindow* parent = nullptr);
+    ~AppListPlaceholder();
 
 signals:
     void AddDirectory();

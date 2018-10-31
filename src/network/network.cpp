@@ -9,8 +9,8 @@
 
 namespace Network {
 
-static std::shared_ptr<RoomMember> g_room_member; ///< RoomMember (Client) for network games
-static std::shared_ptr<Room> g_room;              ///< Room (Server) for network games
+static std::shared_ptr<RoomMember> g_room_member; ///< Client
+static std::shared_ptr<Room> g_room;              ///< Server
 // TODO: Put these globals into a networking class
 
 bool Init() {
@@ -34,15 +34,13 @@ std::weak_ptr<RoomMember> GetRoomMember() {
 
 void Shutdown() {
     if (g_room_member) {
-        if (g_room_member->IsConnected()) {
+        if (g_room_member->IsConnected())
             g_room_member->Leave();
-        }
         g_room_member.reset();
     }
     if (g_room) {
-        if (g_room->IsOpen()) {
+        if (g_room->IsOpen())
             g_room->Destroy();
-        }
         g_room.reset();
     }
     enet_deinitialize();

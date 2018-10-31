@@ -13,15 +13,15 @@
 #include "common/common_types.h"
 
 /**
- * Asynchronous worker object for populating the game list.
+ * Asynchronous worker object for populating the application list.
  * Communicates with other threads through Qt's signal/slot system.
  */
-class GameListWorker : public QObject, public QRunnable {
+class AppListWorker : public QObject, public QRunnable {
     Q_OBJECT
 
 public:
-    explicit GameListWorker(QList<UISettings::GameDir>& game_dirs)
-        : QObject{}, QRunnable{}, game_dirs{game_dirs} {}
+    explicit AppListWorker(QList<UISettings::AppDir>& app_dirs)
+        : QObject{}, QRunnable{}, app_dirs{app_dirs} {}
 
 public slots:
     /// Starts the processing of directory tree information.
@@ -33,24 +33,24 @@ public slots:
 signals:
     /**
      * The `EntryReady` signal is emitted once an entry has been prepared and is ready
-     * to be added to the game list.
+     * to be added to the application list.
      * @param entry_items a list with `QStandardItem`s that make up the columns of the new
      * entry.
      */
-    void DirEntryReady(GameListDir* entry_items);
-    void EntryReady(QList<QStandardItem*> entry_items, GameListDir* parent_dir);
+    void DirEntryReady(AppListDir* entry_items);
+    void EntryReady(QList<QStandardItem*> entry_items, AppListDir* parent_dir);
 
     /**
-     * After the worker has traversed the game directory looking for entries, this signal is
+     * After the worker has traversed the application directory looking for entries, this signal is
      * emitted with a list of folders that should be watched for changes as well.
      */
     void Finished(QStringList watch_list);
 
 private:
     QStringList watch_list;
-    QList<UISettings::GameDir>& game_dirs;
+    QList<UISettings::AppDir>& app_dirs;
     std::atomic_bool stop_processing{};
 
-    void AddFstEntriesToGameList(const std::string& dir_path, unsigned int recursion,
-                                 GameListDir* parent_dir);
+    void AddFstEntriesToAppList(const std::string& dir_path, unsigned int recursion,
+                                AppListDir* parent_dir);
 };

@@ -33,7 +33,7 @@ struct RasterizerRegs {
 
     INSERT_PADDING_WORDS(0x3);
 
-    BitField<0, 1, u32> clip_enable;
+    BitField<0, 1, u32> clip_enabled;
     BitField<0, 24, u32> clip_coef[4]; // float24
 
     Math::Vec4<float24> GetClipCoef() const {
@@ -130,7 +130,7 @@ struct RasterizerRegs {
         WBuffering = 0,
         ZBuffering = 1,
     };
-    BitField<0, 1, DepthBuffering> depthmap_enable;
+    BitField<0, 1, DepthBuffering> depthmap_enabled;
 
     INSERT_PADDING_WORDS(0x12);
 };

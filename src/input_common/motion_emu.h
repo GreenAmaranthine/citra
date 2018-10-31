@@ -22,15 +22,15 @@ public:
 
     /**
      * Signals that a motion sensor tilt has begun.
-     * @param x the x-coordinate of the cursor
-     * @param y the y-coordinate of the cursor
+     * @param x The X-coordinate of the cursor
+     * @param y The Y-coordinate of the cursor
      */
     void BeginTilt(int x, int y);
 
     /**
      * Signals that a motion sensor tilt is occurring.
-     * @param x the x-coordinate of the cursor
-     * @param y the y-coordinate of the cursor
+     * @param x The X-coordinate of the cursor
+     * @param y The Y-coordinate of the cursor
      */
     void Tilt(int x, int y);
 

@@ -56,19 +56,14 @@ std::array<u16, 0x40> SMDH::GetPublisher(Loader::SMDH::TitleLanguage language) c
     return titles[static_cast<int>(language)].publisher;
 }
 
-SMDH::GameRegion SMDH::GetRegion() const {
-    if (region_lockout == 0x7fffffff) {
-        return GameRegion::RegionFree;
-    }
-
+SMDH::Region SMDH::GetRegion() const {
+    if (region_lockout == 0x7fffffff)
+        return Region::RegionFree;
     constexpr u32 REGION_COUNT{7};
-    for (u32 region{}; region < REGION_COUNT; ++region) {
-        if (region_lockout & (1 << region)) {
-            return static_cast<GameRegion>(region);
-        }
-    }
-
-    return GameRegion::Invalid;
+    for (u32 region{}; region < REGION_COUNT; ++region)
+        if (region_lockout & (1 << region))
+            return static_cast<Region>(region);
+    return Region::Invalid;
 }
 
 } // namespace Loader

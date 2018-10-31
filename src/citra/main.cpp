@@ -28,6 +28,7 @@
 #endif
 #include <fmt/format.h>
 #include "citra/aboutdialog.h"
+#include "citra/app_list.h"
 #include "citra/bootmanager.h"
 #include "citra/camera/qt_multimedia_camera.h"
 #include "citra/camera/still_image_camera.h"
@@ -35,7 +36,6 @@
 #include "citra/configuration/config.h"
 #include "citra/configuration/configure_dialog.h"
 #include "citra/control_panel.h"
-#include "citra/game_list.h"
 #include "citra/hotkeys.h"
 #include "citra/main.h"
 #include "citra/mii_selector.h"
@@ -131,10 +131,10 @@ GMainWindow::GMainWindow() : config{new Config()} {
         closeEvent(nullptr);
     }
 #endif
-    game_list->PopulateAsync(UISettings::values.game_dirs);
+    app_list->PopulateAsync(UISettings::values.app_dirs);
     QStringList args{QApplication::arguments()};
     if (args.length() >= 2)
-        BootGame(args[1].toStdString());
+        BootApplication(args[1].toStdString());
 }
 
 GMainWindow::~GMainWindow() {
@@ -148,15 +148,15 @@ void GMainWindow::InitializeWidgets() {
     screens = new Screens(this, emu_thread.get());
     screens->hide();
 
-    game_list = new GameList(this);
-    ui.horizontalLayout->addWidget(game_list);
+    app_list = new AppList(this);
+    ui.horizontalLayout->addWidget(app_list);
 
-    game_list_placeholder = new GameListPlaceholder(this);
-    ui.horizontalLayout->addWidget(game_list_placeholder);
-    game_list_placeholder->setVisible(false);
+    app_list_placeholder = new AppListPlaceholder(this);
+    ui.horizontalLayout->addWidget(app_list_placeholder);
+    app_list_placeholder->setVisible(false);
 
-    multiplayer_state = new MultiplayerState(this, game_list->GetModel(), ui.action_Leave_Room,
-                                             ui.action_Show_Room);
+    multiplayer_state =
+        new MultiplayerState(this, app_list->GetModel(), ui.action_Leave_Room, ui.action_Show_Room);
     multiplayer_state->setVisible(false);
 
     // Create status bar
@@ -174,12 +174,17 @@ void GMainWindow::InitializeWidgets() {
     progress_bar->hide();
     statusBar()->addPermanentWidget(progress_bar);
 
-    perf_label = new QLabel();
-    perf_label->setToolTip("Performance information (Speed | FPS | Frametime)");
-    perf_label->setVisible(false);
-    perf_label->setFrameStyle(QFrame::NoFrame);
-    perf_label->setContentsMargins(4, 0, 4, 0);
-    statusBar()->addPermanentWidget(perf_label, 0);
+    touch_label = new QLabel();
+    touch_label->hide();
+
+    perf_stats_label = new QLabel();
+    perf_stats_label->hide();
+    perf_stats_label->setToolTip("Performance information (Speed | FPS | Frametime)");
+    perf_stats_label->setFrameStyle(QFrame::NoFrame);
+    perf_stats_label->setContentsMargins(4, 0, 4, 0);
+
+    statusBar()->addPermanentWidget(touch_label, 0);
+    statusBar()->addPermanentWidget(perf_stats_label, 0);
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusIcon(), 0);
     statusBar()->setVisible(true);
 
@@ -255,15 +260,15 @@ void GMainWindow::InitializeHotkeys() {
     connect(GetHotkey("Main Window", "Continue/Pause", this), &QShortcut::activated, this, [&] {
         if (system.IsPoweredOn()) {
             if (system.IsRunning())
-                OnPauseGame();
+                OnPauseApplication();
             else
-                OnStartGame();
+                OnStartApplication();
         }
     });
     connect(GetHotkey("Main Window", "Restart", this), &QShortcut::activated, this, [this] {
         if (!system.IsPoweredOn())
             return;
-        BootGame(system.GetFilePath());
+        BootApplication(system.GetFilePath());
     });
     connect(GetHotkey("Main Window", "Swap Screens", screens), &QShortcut::activated,
             ui.action_Screen_Layout_Swap_Screens, &QAction::trigger);
@@ -281,21 +286,21 @@ void GMainWindow::InitializeHotkeys() {
     });
     connect(GetHotkey("Main Window", "Toggle Speed Limit", this), &QShortcut::activated, this, [&] {
         Settings::values.use_frame_limit = !Settings::values.use_frame_limit;
-        UpdateStatusBar();
+        UpdatePerformanceStats();
     });
     constexpr u16 SPEED_LIMIT_STEP{5};
     connect(GetHotkey("Main Window", "Increase Speed Limit", this), &QShortcut::activated, this,
             [&] {
                 if (Settings::values.frame_limit < 9999 - SPEED_LIMIT_STEP) {
                     Settings::values.frame_limit += SPEED_LIMIT_STEP;
-                    UpdateStatusBar();
+                    UpdatePerformanceStats();
                 }
             });
     connect(GetHotkey("Main Window", "Decrease Speed Limit", this), &QShortcut::activated, this,
             [&] {
                 if (Settings::values.frame_limit > SPEED_LIMIT_STEP) {
                     Settings::values.frame_limit -= SPEED_LIMIT_STEP;
-                    UpdateStatusBar();
+                    UpdatePerformanceStats();
                 }
             });
     connect(GetHotkey("Main Window", "Increase Internal Resolution", this), &QShortcut::activated,
@@ -360,14 +365,14 @@ void GMainWindow::RestoreUIState() {
     restoreGeometry(UISettings::values.geometry);
     restoreState(UISettings::values.state);
     screens->restoreGeometry(UISettings::values.screens_geometry);
-    game_list->LoadInterfaceLayout();
+    app_list->LoadInterfaceLayout();
     screens->BackupGeometry();
     ui.horizontalLayout->addWidget(screens);
     screens->setFocusPolicy(Qt::ClickFocus);
     ui.action_Fullscreen->setChecked(UISettings::values.fullscreen);
     SyncMenuUISettings();
     ui.action_Show_Filter_Bar->setChecked(UISettings::values.show_filter_bar);
-    game_list->setFilterVisible(ui.action_Show_Filter_Bar->isChecked());
+    app_list->setFilterVisible(ui.action_Show_Filter_Bar->isChecked());
     ui.action_Show_Status_Bar->setChecked(UISettings::values.show_status_bar);
     statusBar()->setVisible(ui.action_Show_Status_Bar->isChecked());
     ui.action_NAND_Default->setChecked(Settings::values.nand_dir.empty());
@@ -377,16 +382,16 @@ void GMainWindow::RestoreUIState() {
 }
 
 void GMainWindow::ConnectWidgetEvents() {
-    connect(game_list, &GameList::GameChosen, this, &GMainWindow::OnGameListLoadFile);
-    connect(game_list, &GameList::OpenDirectory, this, &GMainWindow::OnGameListOpenDirectory);
-    connect(game_list, &GameList::OpenFolderRequested, this, &GMainWindow::OnGameListOpenFolder);
-    connect(game_list, &GameList::AddDirectory, this, &GMainWindow::OnGameListAddDirectory);
-    connect(game_list_placeholder, &GameListPlaceholder::AddDirectory, this,
-            &GMainWindow::OnGameListAddDirectory);
-    connect(game_list, &GameList::ShowList, this, &GMainWindow::OnGameListShowList);
+    connect(app_list, &AppList::ApplicationChosen, this, &GMainWindow::OnAppListLoadFile);
+    connect(app_list, &AppList::OpenDirectory, this, &GMainWindow::OnAppListOpenDirectory);
+    connect(app_list, &AppList::OpenFolderRequested, this, &GMainWindow::OnAppListOpenFolder);
+    connect(app_list, &AppList::AddDirectory, this, &GMainWindow::OnAppListAddDirectory);
+    connect(app_list_placeholder, &AppListPlaceholder::AddDirectory, this,
+            &GMainWindow::OnAppListAddDirectory);
+    connect(app_list, &AppList::ShowList, this, &GMainWindow::OnAppListShowList);
     connect(this, &GMainWindow::EmulationStarting, screens, &Screens::OnEmulationStarting);
     connect(this, &GMainWindow::EmulationStopping, screens, &Screens::OnEmulationStopping);
-    connect(&status_bar_update_timer, &QTimer::timeout, this, &GMainWindow::UpdateStatusBar);
+    connect(&status_bar_update_timer, &QTimer::timeout, this, &GMainWindow::UpdatePerformanceStats);
     connect(this, &GMainWindow::UpdateProgress, this, &GMainWindow::OnUpdateProgress);
     connect(this, &GMainWindow::CIAInstallReport, this, &GMainWindow::OnCIAInstallReport);
     connect(this, &GMainWindow::CIAInstallFinished, this, &GMainWindow::OnCIAInstallFinished);
@@ -410,11 +415,11 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_SDMC_Custom, &QAction::triggered, this, &GMainWindow::OnSDMCCustom);
 
     // Emulation
-    connect(ui.action_Start, &QAction::triggered, this, &GMainWindow::OnStartGame);
-    connect(ui.action_Pause, &QAction::triggered, this, &GMainWindow::OnPauseGame);
-    connect(ui.action_Stop, &QAction::triggered, this, &GMainWindow::OnStopGame);
+    connect(ui.action_Start, &QAction::triggered, this, &GMainWindow::OnStartApplication);
+    connect(ui.action_Pause, &QAction::triggered, this, &GMainWindow::OnPauseApplication);
+    connect(ui.action_Stop, &QAction::triggered, this, &GMainWindow::OnStopApplication);
     connect(ui.action_Restart, &QAction::triggered, this,
-            [this] { BootGame(system.GetFilePath()); });
+            [this] { BootApplication(system.GetFilePath()); });
     connect(ui.action_Sleep_Mode, &QAction::triggered, this, &GMainWindow::ToggleSleepMode);
     connect(ui.action_Configuration, &QAction::triggered, this, &GMainWindow::OnOpenConfiguration);
     connect(ui.action_Cheats, &QAction::triggered, this, &GMainWindow::OnCheats);
@@ -483,7 +488,7 @@ void GMainWindow::ConnectMenuEvents() {
 bool GMainWindow::LoadROM(const std::string& filename) {
     // Shutdown previous session if the emu thread is still active...
     if (emu_thread)
-        ShutdownGame();
+        ShutdownApplication();
     screens->InitRenderTarget();
     screens->MakeCurrent();
     if (!gladLoadGL()) {
@@ -584,7 +589,6 @@ bool GMainWindow::LoadROM(const std::string& filename) {
         Discord_Initialize("472104565165260826", &handlers, 0, NULL);
         DiscordRichPresence presence{};
         presence.state = short_title.empty() ? "Unknown game" : short_title.c_str();
-        presence.details = "Playing";
         presence.startTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
                                       std::chrono::system_clock::now().time_since_epoch())
                                       .count();
@@ -599,7 +603,7 @@ bool GMainWindow::LoadROM(const std::string& filename) {
     return true;
 }
 
-void GMainWindow::BootGame(const std::string& filename) {
+void GMainWindow::BootApplication(const std::string& filename) {
     LOG_INFO(Frontend, "Booting {}", filename);
     StoreRecentFile(QString::fromStdString(filename)); // Put the filename on top of the list
     if (movie_record_on_start)
@@ -613,11 +617,12 @@ void GMainWindow::BootGame(const std::string& filename) {
     screens->moveContext();
     emu_thread->start();
 
-    connect(screens, &Screens::Closed, this, &GMainWindow::OnStopGame);
+    connect(screens, &Screens::Closed, this, &GMainWindow::OnStopApplication);
+    connect(screens, &Screens::TouchChanged, this, &GMainWindow::OnTouchChanged);
 
     // Update the GUI
-    game_list->hide();
-    game_list_placeholder->hide();
+    app_list->hide();
+    app_list_placeholder->hide();
     ui.action_Sleep_Mode->setEnabled(true);
     ui.action_Sleep_Mode->setChecked(false);
 
@@ -626,7 +631,7 @@ void GMainWindow::BootGame(const std::string& filename) {
     screens->setFocus();
     if (ui.action_Fullscreen->isChecked())
         ShowFullscreen();
-    OnStartGame();
+    OnStartApplication();
     HLE::Applets::ErrEula::cb = [this](HLE::Applets::ErrEulaConfig& config, bool& open) {
         ErrEulaCallback(config, open);
     };
@@ -642,7 +647,7 @@ void GMainWindow::BootGame(const std::string& filename) {
     Service::NWM::NWM_EXT::update_control_panel = [this] { UpdateControlPanelNetwork(); };
 }
 
-void GMainWindow::ShutdownGame() {
+void GMainWindow::ShutdownApplication() {
     OnStopRecordingPlayback();
     emu_thread->RequestStop();
 
@@ -658,7 +663,7 @@ void GMainWindow::ShutdownGame() {
     Camera::QtMultimediaCameraHandler::ReleaseHandlers();
 
     // The emulation is stopped, so closing the window or not doesn't matter anymore
-    disconnect(screens, &Screens::Closed, this, &GMainWindow::OnStopGame);
+    disconnect(screens, &Screens::Closed, this, &GMainWindow::OnStopApplication);
 
     // Update the GUI
     ui.action_Start->setEnabled(false);
@@ -680,16 +685,17 @@ void GMainWindow::ShutdownGame() {
     ui.action_Sleep_Mode->setEnabled(false);
     ui.action_Sleep_Mode->setChecked(false);
     screens->hide();
-    if (game_list->isEmpty())
-        game_list_placeholder->show();
+    if (app_list->isEmpty())
+        app_list_placeholder->show();
     else
-        game_list->show();
-    game_list->setFilterFocus();
+        app_list->show();
+    app_list->setFilterFocus();
 
     // Disable status bar updates
     status_bar_update_timer.stop();
     message_label->setVisible(false);
-    perf_label->setVisible(false);
+    perf_stats_label->setVisible(false);
+    touch_label->setVisible(false);
 
     short_title.clear();
     SetupUIStrings();
@@ -818,31 +824,31 @@ void GMainWindow::UpdateRecentFiles() {
     ui.menu_recent_files->setEnabled(num_recent_files != 0);
 }
 
-void GMainWindow::OnGameListLoadFile(const QString& path) {
-    BootGame(path.toStdString());
+void GMainWindow::OnAppListLoadFile(const QString& path) {
+    BootApplication(path.toStdString());
 }
 
-void GMainWindow::OnGameListOpenFolder(u64 data_id, GameListOpenTarget target) {
+void GMainWindow::OnAppListOpenFolder(u64 data_id, AppListOpenTarget target) {
     std::string path, open_target;
     switch (target) {
-    case GameListOpenTarget::SAVE_DATA:
+    case AppListOpenTarget::SaveData:
         open_target = "Save Data";
         path = FileSys::ArchiveSource_SDSaveData::GetSaveDataPathFor(
             FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir, Settings::values.sdmc_dir + "/"),
             data_id);
         break;
-    case GameListOpenTarget::EXT_DATA:
+    case AppListOpenTarget::ExtData:
         open_target = "Extra Data";
         path = FileSys::GetExtDataPathFromId(
             FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir, Settings::values.sdmc_dir + "/"),
             data_id);
         break;
-    case GameListOpenTarget::APPLICATION:
+    case AppListOpenTarget::Application:
         open_target = "Application";
         path = Service::AM::GetTitlePath(Service::AM::GetTitleMediaType(data_id), data_id) +
                "content/";
         break;
-    case GameListOpenTarget::UPDATE_DATA:
+    case AppListOpenTarget::UpdateData:
         open_target = "Update Data";
         path = Service::AM::GetTitlePath(Service::FS::MediaType::SDMC, data_id + 0xe00000000) +
                "content/";
@@ -865,7 +871,7 @@ void GMainWindow::OnGameListOpenFolder(u64 data_id, GameListOpenTarget target) {
     QDesktopServices::openUrl(QUrl::fromLocalFile(qpath));
 }
 
-void GMainWindow::OnGameListOpenDirectory(const QString& directory) {
+void GMainWindow::OnAppListOpenDirectory(const QString& directory) {
     QString path;
     if (directory == "INSTALLED")
         path = QString::fromStdString(
@@ -886,32 +892,32 @@ void GMainWindow::OnGameListOpenDirectory(const QString& directory) {
     QDesktopServices::openUrl(QUrl::fromLocalFile(path));
 }
 
-void GMainWindow::OnGameListAddDirectory() {
+void GMainWindow::OnAppListAddDirectory() {
     QString dir_path{QFileDialog::getExistingDirectory(this, "Select Directory")};
     if (dir_path.isEmpty())
         return;
-    UISettings::GameDir game_dir{dir_path, false, true};
-    if (!UISettings::values.game_dirs.contains(game_dir)) {
-        UISettings::values.game_dirs.append(game_dir);
-        game_list->PopulateAsync(UISettings::values.game_dirs);
+    UISettings::AppDir app_dir{dir_path, false, true};
+    if (!UISettings::values.app_dirs.contains(app_dir)) {
+        UISettings::values.app_dirs.append(app_dir);
+        app_list->PopulateAsync(UISettings::values.app_dirs);
     } else
-        LOG_WARNING(Frontend, "Selected directory is already in the game list");
+        LOG_WARNING(Frontend, "Selected directory is already in the application list");
 }
 
-void GMainWindow::OnGameListShowList(bool show) {
+void GMainWindow::OnAppListShowList(bool show) {
     if (system.IsPoweredOn())
         return;
-    game_list->setVisible(show);
-    game_list_placeholder->setVisible(!show);
+    app_list->setVisible(show);
+    app_list_placeholder->setVisible(!show);
 }
 
 void GMainWindow::OnMenuLoadFile() {
-    const QString extensions{QString("*.").append(GameList::supported_file_extensions.join(" *."))};
+    const QString extensions{QString("*.").append(AppList::supported_file_extensions.join(" *."))};
     const QString file_filter{QString("3DS Executable (%1);;All Files (*.*)").arg(extensions)};
     const QString filename{QFileDialog::getOpenFileName(this, "Load File", ".", file_filter)};
     if (filename.isEmpty())
         return;
-    BootGame(filename.toStdString());
+    BootApplication(filename.toStdString());
 }
 
 void GMainWindow::OnMenuInstallCIA() {
@@ -921,7 +927,7 @@ void GMainWindow::OnMenuInstallCIA() {
         return;
 
     ui.action_Install_CIA->setEnabled(false);
-    game_list->setDirectoryWatcherEnabled(false);
+    app_list->setDirectoryWatcherEnabled(false);
     progress_bar->show();
 
     QtConcurrent::run([&, filepaths] {
@@ -957,7 +963,7 @@ void GMainWindow::OnMenuAddSeed() {
     db.Load();
     db.Add(seed);
     db.Save();
-    game_list->PopulateAsync(UISettings::values.game_dirs);
+    app_list->PopulateAsync(UISettings::values.app_dirs);
 }
 
 void GMainWindow::OnUpdateProgress(std::size_t written, std::size_t total) {
@@ -996,9 +1002,9 @@ void GMainWindow::OnCIAInstallReport(Service::AM::InstallStatus status, const QS
 void GMainWindow::OnCIAInstallFinished() {
     progress_bar->hide();
     progress_bar->setValue(0);
-    game_list->setDirectoryWatcherEnabled(true);
+    app_list->setDirectoryWatcherEnabled(true);
     ui.action_Install_CIA->setEnabled(true);
-    game_list->PopulateAsync(UISettings::values.game_dirs);
+    app_list->PopulateAsync(UISettings::values.app_dirs);
     if (system.IsPoweredOn()) {
         auto am{system.ServiceManager().GetService<Service::AM::AM_U>("am:u")->GetModule()};
         am->ScanForAllTitles();
@@ -1010,7 +1016,7 @@ void GMainWindow::OnMenuRecentFile() {
     ASSERT(action);
     const QString filename{action->data().toString()};
     if (QFileInfo::exists(filename))
-        BootGame(filename.toStdString());
+        BootApplication(filename.toStdString());
     else {
         // Display an error message and remove the file from the list.
         QMessageBox::information(this, "File not found",
@@ -1020,7 +1026,7 @@ void GMainWindow::OnMenuRecentFile() {
     }
 }
 
-void GMainWindow::OnStartGame() {
+void GMainWindow::OnStartApplication() {
     Camera::QtMultimediaCameraHandler::ResumeCameras();
     if (movie_record_on_start) {
         Core::Movie::GetInstance().StartRecording(movie_record_path.toStdString());
@@ -1046,7 +1052,7 @@ void GMainWindow::OnStartGame() {
     ui.action_Enable_Frame_Advancing->setEnabled(true);
 }
 
-void GMainWindow::OnPauseGame() {
+void GMainWindow::OnPauseApplication() {
     system.SetRunning(false);
     Camera::QtMultimediaCameraHandler::StopCameras();
     ui.action_Start->setEnabled(true);
@@ -1054,10 +1060,15 @@ void GMainWindow::OnPauseGame() {
     ui.action_Stop->setEnabled(true);
 }
 
-void GMainWindow::OnStopGame() {
-    ShutdownGame();
+void GMainWindow::OnStopApplication() {
+    ShutdownApplication();
     if (cheats_window)
         cheats_window->close();
+}
+
+void GMainWindow::OnTouchChanged(unsigned x, unsigned y) {
+    touch_label->setText(QString("Touch: %1, %2").arg(QString::number(x), QString::number(y)));
+    touch_label->setVisible(true);
 }
 
 void GMainWindow::ToggleFullscreen() {
@@ -1144,7 +1155,7 @@ void GMainWindow::OnOpenConfiguration() {
             UpdateUITheme();
             emit UpdateThemedIcons();
             SyncMenuUISettings();
-            game_list->RefreshGameDirectory();
+            app_list->Refresh();
         } else {
             configuration_dialog.ApplyConfiguration();
             if (UISettings::values.theme != old_theme) {
@@ -1152,7 +1163,7 @@ void GMainWindow::OnOpenConfiguration() {
                 emit UpdateThemedIcons();
             }
             SyncMenuUISettings();
-            game_list->RefreshGameDirectory();
+            app_list->Refresh();
             config->Save();
         }
     } else {
@@ -1190,7 +1201,7 @@ void GMainWindow::OnOpenUserDirectory() {
 
 void GMainWindow::OnNANDDefault() {
     Settings::values.nand_dir.clear();
-    game_list->PopulateAsync(UISettings::values.game_dirs);
+    app_list->PopulateAsync(UISettings::values.app_dirs);
 }
 
 void GMainWindow::OnNANDCustom() {
@@ -1198,12 +1209,12 @@ void GMainWindow::OnNANDCustom() {
     if (dir.isEmpty())
         return;
     Settings::values.nand_dir = dir.toStdString();
-    game_list->PopulateAsync(UISettings::values.game_dirs);
+    app_list->PopulateAsync(UISettings::values.app_dirs);
 }
 
 void GMainWindow::OnSDMCDefault() {
     Settings::values.sdmc_dir.clear();
-    game_list->PopulateAsync(UISettings::values.game_dirs);
+    app_list->PopulateAsync(UISettings::values.app_dirs);
 }
 
 void GMainWindow::OnSDMCCustom() {
@@ -1211,14 +1222,14 @@ void GMainWindow::OnSDMCCustom() {
     if (dir.isEmpty())
         return;
     Settings::values.sdmc_dir = dir.toStdString();
-    game_list->PopulateAsync(UISettings::values.game_dirs);
+    app_list->PopulateAsync(UISettings::values.app_dirs);
 }
 
 void GMainWindow::OnLoadAmiibo() {
-    OnPauseGame();
+    OnPauseApplication();
     const QString file_filter{QString("Amiibo File") + " (*.bin);;" + "All Files (*.*)"};
     const QString filename{QFileDialog::getOpenFileName(this, "Load Amiibo", ".", file_filter)};
-    OnStartGame();
+    OnStartApplication();
     if (!filename.isEmpty()) {
         std::string filename_std{filename.toStdString()};
         FileUtil::IOFile file{filename_std, "rb"};
@@ -1251,11 +1262,11 @@ void GMainWindow::OnRemoveAmiibo() {
 }
 
 void GMainWindow::OnToggleFilterBar() {
-    game_list->setFilterVisible(ui.action_Show_Filter_Bar->isChecked());
+    app_list->setFilterVisible(ui.action_Show_Filter_Bar->isChecked());
     if (ui.action_Show_Filter_Bar->isChecked())
-        game_list->setFilterFocus();
+        app_list->setFilterFocus();
     else
-        game_list->clearFilter();
+        app_list->clearFilter();
 }
 
 void GMainWindow::OnRecordMovie() {
@@ -1302,10 +1313,10 @@ bool GMainWindow::ValidateMovie(const QString& path, u64 program_id) {
         if (answer != QMessageBox::Yes)
             return false;
         break;
-    case Movie::ValidationResult::GameDismatch:
+    case Movie::ValidationResult::AppDismatch:
         answer = QMessageBox::question(
-            this, "Game Dismatch",
-            "The movie file you are trying to load was recorded with a different game."
+            this, "Application Dismatch",
+            "The movie file you are trying to load was recorded with a different application."
             "<br/>The playback may not work as expected, and it may cause unexpected results."
             "<br/><br/>Are you sure you still want to load the movie file?",
             QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
@@ -1345,8 +1356,8 @@ void GMainWindow::OnPlayMovie() {
             return;
     } else {
         u64 program_id{Core::Movie::GetInstance().GetMovieProgramID(path.toStdString())};
-        QString game_path{game_list->FindGameByProgramID(program_id)};
-        if (game_path.isEmpty()) {
+        QString app_path{app_list->FindApplicationByProgramID(program_id)};
+        if (app_path.isEmpty()) {
             const int num_recent_files{
                 std::min(UISettings::values.recent_files.size(), max_recent_files_item)};
             for (int i{}; i < num_recent_files; i++) {
@@ -1358,23 +1369,25 @@ void GMainWindow::OnPlayMovie() {
                         if (loader->ReadProgramId(program_id_file) ==
                                 Loader::ResultStatus::Success &&
                             program_id_file == program_id)
-                            game_path = action_path;
+                            app_path = action_path;
                     }
                 }
             }
-            if (game_path.isEmpty()) {
-                QMessageBox::warning(this, "Game Not Found",
-                                     "The movie you are trying to play is from a game that isn't "
-                                     "in the game list and isn't in the recent files. If you own "
-                                     "the game, add the game folder to the game list or open the "
-                                     "game and try to play the movie again.");
+            if (app_path.isEmpty()) {
+                QMessageBox::warning(
+                    this, "Application Not Found",
+                    "The movie you are trying to play is from a application that isn't "
+                    "in the application list and isn't in the recent files. If you have "
+                    "the application, add the folder containing it to the application list or open "
+                    "the "
+                    "application and try to play the movie again.");
                 return;
             }
         }
         if (!ValidateMovie(path, program_id))
             return;
         Core::Movie::GetInstance().PrepareForPlayback(path.toStdString());
-        BootGame(game_path.toStdString());
+        BootApplication(app_path.toStdString());
     }
     Core::Movie::GetInstance().StartPlayback(path.toStdString(), [this] {
         QMetaObject::invokeMethod(this, "OnMoviePlaybackCompleted");
@@ -1401,33 +1414,33 @@ void GMainWindow::OnStopRecordingPlayback() {
 }
 
 void GMainWindow::OnCaptureScreenshot() {
-    OnPauseGame();
+    OnPauseApplication();
     const QString path{
         QFileDialog::getSaveFileName(this, "Capture Screenshot", ".", "PNG Image (*.png)")};
-    OnStartGame();
+    OnStartApplication();
     if (path.isEmpty())
         return;
     screens->CaptureScreenshot(UISettings::values.screenshot_resolution_factor, path);
 }
 
-void GMainWindow::UpdateStatusBar() {
+void GMainWindow::UpdatePerformanceStats() {
     if (!emu_thread) {
         status_bar_update_timer.stop();
         return;
     }
     auto results{system.GetAndResetPerfStats()};
     if (Settings::values.use_frame_limit)
-        perf_label->setText(QString("%1 % / %2 % | %3 FPS | %4 ms")
-                                .arg(results.emulation_speed * 100.0, 0, 'f', 0)
-                                .arg(Settings::values.frame_limit)
-                                .arg(results.game_fps, 0, 'f', 0)
-                                .arg(results.frametime * 1000.0, 0, 'f', 2));
+        perf_stats_label->setText(QString("%1 % / %2 % | %3 FPS | %4 ms")
+                                      .arg(results.emulation_speed * 100.0, 0, 'f', 0)
+                                      .arg(Settings::values.frame_limit)
+                                      .arg(results.app_fps, 0, 'f', 0)
+                                      .arg(results.frametime * 1000.0, 0, 'f', 2));
     else
-        perf_label->setText(QString("%1 % | %2 FPS | %3 ms")
-                                .arg(results.emulation_speed * 100.0, 0, 'f', 0)
-                                .arg(results.game_fps, 0, 'f', 0)
-                                .arg(results.frametime * 1000.0, 0, 'f', 2));
-    perf_label->setVisible(true);
+        perf_stats_label->setText(QString("%1 % | %2 FPS | %3 ms")
+                                      .arg(results.emulation_speed * 100.0, 0, 'f', 0)
+                                      .arg(results.app_fps, 0, 'f', 0)
+                                      .arg(results.frametime * 1000.0, 0, 'f', 2));
+    perf_stats_label->setVisible(true);
 }
 
 void GMainWindow::OnCoreError(Core::System::ResultStatus result, const std::string& details) {
@@ -1472,9 +1485,9 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, const std::stri
     if (result == Core::System::ResultStatus::ShutdownRequested ||
         message_box.clickedButton() == abort_button) {
         if (emu_thread) {
-            ShutdownGame();
+            ShutdownApplication();
             if (!system.set_application_file_path.empty()) {
-                BootGame(system.set_application_file_path);
+                BootApplication(system.set_application_file_path);
                 system.set_application_file_path.clear();
             }
         }
@@ -1515,11 +1528,11 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     UISettings::values.fullscreen = ui.action_Fullscreen->isChecked();
     UISettings::values.show_filter_bar = ui.action_Show_Filter_Bar->isChecked();
     UISettings::values.show_status_bar = ui.action_Show_Status_Bar->isChecked();
-    game_list->SaveInterfaceLayout();
+    app_list->SaveInterfaceLayout();
     SaveHotkeys();
     // Shutdown session if the emu thread is active...
     if (emu_thread)
-        ShutdownGame();
+        ShutdownApplication();
     screens->close();
     multiplayer_state->Close();
     QWidget::closeEvent(event);
@@ -1531,24 +1544,23 @@ static bool IsSingleFileDropEvent(QDropEvent* event) {
 }
 
 void GMainWindow::dropEvent(QDropEvent* event) {
-    if (IsSingleFileDropEvent(event) && ConfirmChangeGame()) {
+    if (IsSingleFileDropEvent(event) && ConfirmChangeApplication()) {
         const QMimeData* mimeData{event->mimeData()};
         QString filename{mimeData->urls().at(0).toLocalFile()};
-        BootGame(filename.toStdString());
+        BootApplication(filename.toStdString());
     }
 }
 
 void GMainWindow::dragEnterEvent(QDragEnterEvent* event) {
-    if (IsSingleFileDropEvent(event)) {
+    if (IsSingleFileDropEvent(event))
         event->acceptProposedAction();
-    }
 }
 
 void GMainWindow::dragMoveEvent(QDragMoveEvent* event) {
     event->acceptProposedAction();
 }
 
-bool GMainWindow::ConfirmChangeGame() {
+bool GMainWindow::ConfirmChangeApplication() {
     if (!emu_thread)
         return true;
     auto answer{QMessageBox::question(

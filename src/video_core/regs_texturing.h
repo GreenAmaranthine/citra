@@ -90,48 +90,44 @@ struct TexturingRegs {
         IA4 = 9,
         I4 = 10,
         A4 = 11,
-        ETC1 = 12,   // compressed
-        ETC1A4 = 13, // compressed
+        ETC1 = 12,   // Compressed
+        ETC1A4 = 13, // Compressed
     };
 
     static unsigned NibblesPerPixel(TextureFormat format) {
         switch (format) {
         case TextureFormat::RGBA8:
             return 8;
-
         case TextureFormat::RGB8:
             return 6;
-
         case TextureFormat::RGB5A1:
         case TextureFormat::RGB565:
         case TextureFormat::RGBA4:
         case TextureFormat::IA8:
         case TextureFormat::RG8:
             return 4;
-
         case TextureFormat::I4:
         case TextureFormat::A4:
             return 1;
-
         case TextureFormat::I8:
         case TextureFormat::A8:
         case TextureFormat::IA4:
-
-        default: // placeholder for yet unknown formats
+        default: // Placeholder for yet unknown formats
             UNIMPLEMENTED();
             return 0;
         }
     }
 
     union {
-        BitField<0, 1, u32> texture0_enable;
-        BitField<1, 1, u32> texture1_enable;
-        BitField<2, 1, u32> texture2_enable;
+        BitField<0, 1, u32> texture0_enabled;
+        BitField<1, 1, u32> texture1_enabled;
+        BitField<2, 1, u32> texture2_enabled;
         BitField<8, 2, u32> texture3_coordinates;
-        BitField<10, 1, u32> texture3_enable;
+        BitField<10, 1, u32> texture3_enabled;
         BitField<13, 1, u32> texture2_use_coord1;
-        BitField<16, 1, u32> clear_texture_cache; // TODO: unimplemented
+        BitField<16, 1, u32> clear_texture_cache; // Unimplemented for performance reasons
     } main_config;
+
     TextureConfig texture0;
 
     enum class CubeFace {
@@ -165,7 +161,7 @@ struct TexturingRegs {
 
     INSERT_PADDING_WORDS(0x2);
     BitField<0, 4, TextureFormat> texture0_format;
-    BitField<0, 1, u32> fragment_lighting_enable;
+    BitField<0, 1, u32> fragment_lighting_enabled;
     INSERT_PADDING_WORDS(0x1);
     TextureConfig texture1;
     BitField<0, 4, TextureFormat> texture1_format;
@@ -179,11 +175,12 @@ struct TexturingRegs {
         const TextureConfig config;
         const TextureFormat format;
     };
+
     const std::array<FullTextureConfig, 3> GetTextures() const {
         return {{
-            {main_config.texture0_enable.ToBool(), texture0, texture0_format},
-            {main_config.texture1_enable.ToBool(), texture1, texture1_format},
-            {main_config.texture2_enable.ToBool(), texture2, texture2_format},
+            {main_config.texture0_enabled.ToBool(), texture0, texture0_format},
+            {main_config.texture1_enabled.ToBool(), texture1, texture1_format},
+            {main_config.texture2_enabled.ToBool(), texture2, texture2_format},
         }};
     }
 
@@ -221,7 +218,7 @@ struct TexturingRegs {
         BitField<6, 4, ProcTexCombiner> color_combiner;
         BitField<10, 4, ProcTexCombiner> alpha_combiner;
         BitField<14, 1, u32> separate_alpha;
-        BitField<15, 1, u32> noise_enable;
+        BitField<15, 1, u32> noise_enabled;
         BitField<16, 2, ProcTexShift> u_shift;
         BitField<18, 2, ProcTexShift> v_shift;
         BitField<20, 8, u32> bias_low; // float16 TODO: unimplemented

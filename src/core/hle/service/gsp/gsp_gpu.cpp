@@ -263,7 +263,7 @@ ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
         base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].active_fb)),
         info.shown_fb);
     if (screen_id == 0)
-        Core::System::GetInstance().perf_stats.EndGameFrame();
+        Core::System::GetInstance().perf_stats.EndAppFrame();
     return RESULT_SUCCESS;
 }
 
@@ -474,15 +474,13 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         WriteGPURegister((u32)GPU_REG_INDEX(display_transfer_config.texture_copy.output_size),
                          params.out_width_gap);
         WriteGPURegister((u32)GPU_REG_INDEX(display_transfer_config.flags), params.flags);
-
         // NOTE: Actual GSP ORs 1 with current register instead of overwriting. Doesn't seem to
         // matter.
         WriteGPURegister((u32)GPU_REG_INDEX(display_transfer_config.trigger), 1);
         break;
     }
     case CommandId::CACHE_FLUSH: {
-        // NOTE: Rasterizer flushing handled elsewhere in CPU read/write and other GPU handlers
-        // Use command.cache_flush.regions to implement this handler
+        // Unimplemented for performance reasons
         break;
     }
     default:
@@ -508,12 +506,11 @@ void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
     for (unsigned thread_id{}; thread_id < 0x4; ++thread_id) {
         CommandBuffer* command_buffer{(CommandBuffer*)GetCommandBuffer(shared_memory, thread_id)};
         // Iterate through each command...
-        for (unsigned i{}; i < command_buffer->number_commands; ++i) {
+        for (unsigned i{}; i < command_buffer->number_commands; ++i)
             // Decode and execute command
             ExecuteCommand(command_buffer->commands[i], thread_id);
-            // Indicates that command has completed
-            command_buffer->number_commands.Assign(command_buffer->number_commands - 1);
-        }
+        // Indicates that commands has completed
+        command_buffer->number_commands.Assign(0);
     }
     IPC::ResponseBuilder rb{ctx, 0xC, 1, 0};
     rb.Push(RESULT_SUCCESS);

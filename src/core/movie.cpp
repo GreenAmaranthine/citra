@@ -337,7 +337,7 @@ Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header, u64 progr
         Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id);
     if (program_id != header.program_id) {
         LOG_WARNING(Movie, "This movie was recorded using a ROM with a different program id");
-        return ValidationResult::GameDismatch;
+        return ValidationResult::AppDismatch;
     }
     if (revision != Common::g_scm_rev) {
         LOG_WARNING(Movie,

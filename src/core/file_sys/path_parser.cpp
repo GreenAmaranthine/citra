@@ -15,13 +15,11 @@ PathParser::PathParser(const Path& path) {
         is_valid = false;
         return;
     }
-
     auto path_string{path.AsString()};
     if (path_string.size() == 0 || path_string[0] != '/') {
         is_valid = false;
         return;
     }
-
     // Filter out invalid characters for the host system.
     // Although some of these characters are valid on 3DS, they are unlikely to be used by games.
     if (std::find_if(path_string.begin(), path_string.end(), [](char c) {
@@ -31,14 +29,11 @@ PathParser::PathParser(const Path& path) {
         is_valid = false;
         return;
     }
-
     Common::SplitString(path_string, '/', path_sequence);
-
     auto begin{path_sequence.begin()};
     auto end{path_sequence.end()};
     end = std::remove_if(begin, end, [](std::string& str) { return str == "" || str == "."; });
     path_sequence = std::vector<std::string>(begin, end);
-
     // Checks if the path is out of bounds.
     int level{};
     for (auto& node : path_sequence) {
@@ -48,11 +43,9 @@ PathParser::PathParser(const Path& path) {
                 is_valid = false;
                 return;
             }
-        } else {
+        } else
             ++level;
-        }
     }
-
     is_valid = true;
     is_root = level == 0;
 }

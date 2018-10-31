@@ -17,8 +17,8 @@ struct Room {
     struct Member {
         std::string name;
         MacAddress mac_address;
-        std::string game_name;
-        u64 game_id;
+        std::string app_name;
+        u64 app_id;
     };
     std::string name;
     std::string UID;
@@ -28,8 +28,8 @@ struct Room {
     u32 max_player;
     u32 net_version;
     bool has_password;
-    std::string preferred_game;
-    u64 preferred_game_id;
+    std::string preferred_app;
+    u64 preferred_app_id;
     std::vector<Member> members;
 };
 using RoomList = std::vector<Room>;
@@ -49,23 +49,23 @@ public:
      * @param port The port of the room
      * @param net_version The version of the libNetwork that gets used
      * @param has_password True if the room is passowrd protected
-     * @param preferred_game The preferred game of the room
-     * @param preferred_game_id The title id of the preferred game
+     * @param preferred_app The preferred app of the room
+     * @param preferred_app_id The title id of the preferred app
      */
     virtual void SetRoomInformation(const std::string& uid, const std::string& name, const u16 port,
                                     const u32 max_player, const u32 net_version,
-                                    const bool has_password, const std::string& preferred_game,
-                                    const u64 preferred_game_id) = 0;
+                                    const bool has_password, const std::string& preferred_app,
+                                    const u64 preferred_app_id) = 0;
 
     /**
      * Adds a player information to the data that gets announced
      * @param nickname The nickname of the player
      * @param mac_address The MAC Address of the player
-     * @param game_id The title id of the game the player plays
-     * @param game_name The name of the game the player plays
+     * @param app_id The Title ID of the application the player runs
+     * @param app_name The name of the application the player runs
      */
     virtual void AddPlayer(const std::string& nickname, const MacAddress& mac_address,
-                           const u64 game_id, const std::string& game_name) = 0;
+                           const u64 app_id, const std::string& app_name) = 0;
 
     /**
      * Send the data to the announce service
@@ -96,11 +96,11 @@ public:
 
     void SetRoomInformation(const std::string& /*uid*/, const std::string& /*name*/,
                             const u16 /*port*/, const u32 /*max_player*/, const u32 /*net_version*/,
-                            const bool /*has_password*/, const std::string& /*preferred_game*/,
-                            const u64 /*preferred_game_id*/) override {}
+                            const bool /*has_password*/, const std::string& /*preferred_app*/,
+                            const u64 /*preferred_app_id*/) override {}
 
     void AddPlayer(const std::string& /*nickname*/, const MacAddress& /*mac_address*/,
-                   const u64 /*game_id*/, const std::string& /*game_name*/) override {}
+                   const u64 /*app_id*/, const std::string& /*app_name*/) override {}
 
     Common::WebResult Announce() override {
         return Common::WebResult{Common::WebResult::Code::NoWebservice, "WebService is missing"};

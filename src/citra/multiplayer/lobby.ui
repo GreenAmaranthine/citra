@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>903</width>
-    <height>487</height>
+    <width>876</width>
+    <height>502</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -71,9 +71,9 @@
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="games_owned">
+          <widget class="QCheckBox" name="applications_i_have">
            <property name="text">
-            <string>Games I Own</string>
+            <string>Application I Have</string>
            </property>
           </widget>
          </item>

@@ -6,7 +6,7 @@
 #include <QIcon>
 #include <QMessageBox>
 #include <QStandardItemModel>
-#include "citra/game_list.h"
+#include "citra/app_list.h"
 #include "citra/multiplayer/client_room.h"
 #include "citra/multiplayer/direct_connect.h"
 #include "citra/multiplayer/host_room.h"
@@ -18,9 +18,9 @@
 #include "common/logging/log.h"
 #include "network/network.h"
 
-MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* game_list_model,
+MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* app_list_model,
                                    QAction* leave_room, QAction* show_room)
-    : QWidget{parent}, game_list_model{game_list_model}, leave_room{leave_room}, show_room{
+    : QWidget{parent}, app_list_model{app_list_model}, leave_room{leave_room}, show_room{
                                                                                      show_room} {
     if (auto member{Network::GetRoomMember().lock()}) {
         // register the network structs to use in slots and signals
@@ -131,13 +131,13 @@ static void BringWidgetToFront(QWidget* widget) {
 
 void MultiplayerState::OnViewLobby() {
     if (!lobby)
-        lobby = new Lobby(this, game_list_model, announce_multiplayer_session);
+        lobby = new Lobby(this, app_list_model, announce_multiplayer_session);
     BringWidgetToFront(lobby);
 }
 
 void MultiplayerState::OnCreateRoom() {
     if (!host_room)
-        host_room = new HostRoomWindow(this, game_list_model, announce_multiplayer_session);
+        host_room = new HostRoomWindow(this, app_list_model, announce_multiplayer_session);
     BringWidgetToFront(host_room);
 }
 

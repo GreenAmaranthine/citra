@@ -70,7 +70,8 @@ void KernelSystem::MemoryInit(u32 mem_type) {
     config_mem = std::make_unique<ConfigMem::ConfigMemDef>();
     config_mem->app_mem_type = mem_type;
     // app_mem_alloc does not always match the configured size for memory_region[0]: in case the
-    // n3DS type override is in effect it reports the size the game expects, not the real one.
+    // n3DS type override is in effect it reports the size the application expects, not the real
+    // one.
     config_mem->app_mem_alloc = memory_region_sizes[mem_type][0];
     config_mem->sys_mem_alloc = memory_regions[1].size;
     config_mem->base_mem_alloc = memory_regions[2].size;

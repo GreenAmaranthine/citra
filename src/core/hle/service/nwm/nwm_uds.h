@@ -76,7 +76,7 @@ struct NetworkInfo {
     INSERT_PADDING_BYTES(3);
     std::array<u8, 3> oui_value;
     u8 oui_type;
-    u32_be wlan_comm_id; ///< This field is received as BigEndian from the game.
+    u32_be wlan_comm_id; ///< This field is received as BigEndian from the application.
     u8 id;
     INSERT_PADDING_BYTES(1);
     u16_be attributes;

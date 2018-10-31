@@ -24,8 +24,8 @@ public:
         /// System FPS (LCD VBlanks) in Hz
         double system_fps;
 
-        /// Game FPS (GSP frame submissions) in Hz
-        double game_fps;
+        /// App FPS (GSP frame submissions) in Hz
+        double app_fps;
 
         /// Walltime per system frame, in seconds, excluding any waits
         double frametime;
@@ -36,7 +36,7 @@ public:
 
     void BeginSystemFrame();
     void EndSystemFrame();
-    void EndGameFrame();
+    void EndAppFrame();
 
     Results GetAndResetStats(std::chrono::microseconds current_system_time_us);
 
@@ -61,8 +61,8 @@ private:
     /// Cumulative number of system frames (LCD VBlanks) presented since last reset
     u32 system_frames{};
 
-    /// Cumulative number of game frames (GSP frame submissions) since last reset
-    u32 game_frames{};
+    /// Cumulative number of application frames (GSP frame submissions) since last reset
+    u32 app_frames{};
 
     /// Point when the previous system frame ended
     Clock::time_point previous_frame_end{reset_point};

@@ -4,7 +4,7 @@ import random
 import enum
 
 CURRENT_REQUEST_VERSION = 1
-MAX_REQUEST_DATA_SIZE = 200
+MAX_REQUEST_DATA_SIZE = 32
 
 
 class RequestType(enum.IntEnum):
@@ -78,6 +78,10 @@ class Citra:
             return raw_reply[4*4:]
         return None
 
+    # Reads memory.
+    #   read_address: Address.
+    #   read_size: Size.
+    # Returns the data read.
     def read_memory(self, read_address, read_size):
         result = bytes()
         while read_size > 0:
@@ -101,6 +105,9 @@ class Citra:
 
         return result
 
+    # Writes memory.
+    #   write_address: Address.
+    #   write_contents: Contents to write.
     def write_memory(self, write_address, write_contents):
         write_size = len(write_contents)
         while write_size > 0:
@@ -124,6 +131,8 @@ class Citra:
                 return False
         return True
 
+    # Sets the pad state.
+    #   pad_state: Raw pressed buttons (Use Key enum)
     def set_pad_state(self, pad_state):
         request_data = struct.pack("III", 0, 0, pad_state)
         request, request_id = self._generate_header(
@@ -132,6 +141,10 @@ class Citra:
         self.socket.send(request)
         self.socket.recv()
 
+    # Sets the touch state.
+    #   x: X-coordinate.
+    #   y: Y-coordinate.
+    #   valid: This is written to HID Shared Memory.
     def set_touch_state(self, x, y, valid):
         request_data = struct.pack("IIhh?", 0, 0, x, y, valid)
         request, request_id = self._generate_header(
@@ -140,6 +153,13 @@ class Citra:
         self.socket.send(request)
         self.socket.recv()
 
+    # Sets the motion state.
+    #   x: X-coordinate.
+    #   y: Y-coordinate.
+    #   z: Z-coordinate.
+    #   roll: Roll.
+    #   pitch: Pitch.
+    #   yaw: Yaw.
     def set_motion_state(self, x, y, z, roll, pitch, yaw):
         request_data = struct.pack("IIhhhhhh", 0, 0, x, y, z, roll, pitch, yaw)
         request, request_id = self._generate_header(
@@ -148,6 +168,9 @@ class Citra:
         self.socket.send(request)
         self.socket.recv()
 
+    # Sets the Circle Pad state.
+    #   x: X-coordinate.
+    #   y: Y-coordinate.
     def set_circle_state(self, x, y):
         request_data = struct.pack("IIhh", 0, 0, x, y)
         request, request_id = self._generate_header(
@@ -156,7 +179,11 @@ class Citra:
         self.socket.send(request)
         self.socket.recv()
 
+    # Sets resolution.
+    #   resolution: Resolution.
     def set_resolution(self, resolution):
+        if resolution == 0:
+            raise Exception("Invalid resolution")
         request_data = struct.pack("IIh", 0, 0, resolution)
         request, request_id = self._generate_header(
             RequestType.SetResolution, len(request_data))
@@ -164,6 +191,8 @@ class Citra:
         self.socket.send(request)
         self.socket.recv()
 
+    # Sets game.
+    #   path: Full path to the application.
     def set_application(self, path):
         request_data = struct.pack("II", 0, 0)
         request_data += str.encode(path)
@@ -173,6 +202,11 @@ class Citra:
         self.socket.send(request)
         self.socket.recv()
 
+    # Sets override controls.
+    #   pad: Use overriden pad state.
+    #   touch: Use overriden touch state.
+    #   motion: Use overriden motion state.
+    #   circle: Use overriden Circle Pad state.
     def set_override_controls(self, pad, touch, motion, circle):
         request_data = struct.pack("II????", 0, 0, pad, touch, motion, circle)
         request, request_id = self._generate_header(
@@ -181,6 +215,7 @@ class Citra:
         self.socket.send(request)
         self.socket.recv()
 
+    # Pause the application.
     def pause(self):
         request_data = struct.pack("II", 0, 0)
         request, request_id = self._generate_header(
@@ -189,6 +224,7 @@ class Citra:
         self.socket.send(request)
         self.socket.recv()
 
+    # Resume the application.
     def resume(self):
         request_data = struct.pack("II", 0, 0)
         request, request_id = self._generate_header(
@@ -197,6 +233,7 @@ class Citra:
         self.socket.send(request)
         self.socket.recv()
 
+    # Restarts the application.
     def restart(self):
         request_data = struct.pack("II", 0, 0)
         request, request_id = self._generate_header(
@@ -205,6 +242,8 @@ class Citra:
         self.socket.send(request)
         self.socket.recv()
 
+    # Sets the speed limit.
+    #   speed_limit: Speed limit.
     def set_speed_limit(self, speed_limit):
         request_data = struct.pack("IIh", 0, 0, speed_limit)
         request, request_id = self._generate_header(
@@ -213,6 +252,10 @@ class Citra:
         self.socket.send(request)
         self.socket.recv()
 
+    # Sets the background color.
+    #   r: Red.
+    #   g: Gree
+    #   b: Blue.
     def set_background_color(self, r, g, b):
         request_data = struct.pack("IIfff", 0, 0, r, g, b)
         request, request_id = self._generate_header(
@@ -221,6 +264,8 @@ class Citra:
         self.socket.send(request)
         self.socket.recv()
 
+    # Sets the screen refresh rate.
+    #   rate: Screen refresh rate.
     def set_screen_refresh_rate(self, rate):
         if rate == 0:
             raise Exception("Invalid screen refresh rate")
@@ -231,6 +276,8 @@ class Citra:
         self.socket.send(request)
         self.socket.recv()
 
+    # Sets whether shadows are enabled.
+    #   enabled: True to enable, False to disable.
     def set_shadows_enabled(self, enabled):
         request_data = struct.pack("II?", 0, 0, enabled)
         request, request_id = self._generate_header(
@@ -239,6 +286,9 @@ class Citra:
         self.socket.send(request)
         self.socket.recv()
 
+    # Gets whether a button is currently pressed.
+    #   button: Button (use Button enum).
+    # Returns: True if the button is pressed or False if the button is not pressed.
     def is_button_pressed(self, button):
         request_data = struct.pack("IIi", 0, 0, button)
         request, request_id = self._generate_header(
@@ -250,14 +300,17 @@ class Citra:
             raw_reply, request_id, RequestType.IsButtonPressed)
         return pressed[0] == 1
 
+    # Sets whether frame advancing is enabled.
+    #   enabled: True to enable, False to disable.
     def set_frame_advancing(self, enable):
-        request_data = struct.pack("II?", 0, 0, enable)
+        request_data = struct.pack("II?", 0, 0, enabled)
         request, request_id = self._generate_header(
             RequestType.SetFrameAdvancing, len(request_data))
         request += request_data
         self.socket.send(request)
         self.socket.recv()
 
+    # Advances a frame. Enables frame advancing if not enabled.
     def advance_frame(self):
         request_data = struct.pack("II", 0, 0)
         request, request_id = self._generate_header(

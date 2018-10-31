@@ -29,7 +29,7 @@ using VSOutputAttributes = RasterizerRegs::VSOutputAttributes;
 
 namespace GLShader {
 
-static const std::string UniformBlockDef = R"(
+static const std::string UniformBlockDef{R"(
 #define NUM_TEV_STAGES 6
 #define NUM_LIGHTS 8
 #define NUM_LIGHTING_SAMPLERS 24
@@ -74,18 +74,15 @@ layout (std140) uniform shader_data {
     vec4 tev_combiner_buffer_color;
     vec4 clip_coef;
 };
-)";
+)"};
 
 static std::string GetVertexInterfaceDeclaration(bool is_output, bool separable_shader) {
     std::string out;
-
-    auto append_variable = [&](const char* var, int location) {
-        if (separable_shader) {
+    auto append_variable{[&](const char* var, int location) {
+        if (separable_shader)
             out += "layout (location=" + std::to_string(location) + ") ";
-        }
         out += std::string(is_output ? "out " : "in ") + var + ";\n";
-    };
-
+    }};
     append_variable("vec4 primary_color", ATTRIBUTE_COLOR);
     append_variable("vec2 texcoord0", ATTRIBUTE_TEXCOORD0);
     append_variable("vec2 texcoord1", ATTRIBUTE_TEXCOORD1);
@@ -93,7 +90,6 @@ static std::string GetVertexInterfaceDeclaration(bool is_output, bool separable_
     append_variable("float texcoord0_w", ATTRIBUTE_TEXCOORD0_W);
     append_variable("vec4 normquat", ATTRIBUTE_NORMQUAT);
     append_variable("vec3 view", ATTRIBUTE_VIEW);
-
     if (is_output && separable_shader) {
         // gl_PerVertex redeclaration is required for separate shader object
         out += R"(
@@ -103,27 +99,19 @@ out gl_PerVertex {
 };
 )";
     }
-
     return out;
 }
 
 PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs) {
     PicaFSConfig res;
-
-    auto& state = res.state;
-
+    auto& state{res.state};
     state.scissor_test_mode = regs.rasterizer.scissor_test.mode;
-
-    state.depthmap_enable = regs.rasterizer.depthmap_enable;
-
-    state.alpha_test_func = regs.framebuffer.output_merger.alpha_test.enable
+    state.depthmap_enabled = regs.rasterizer.depthmap_enabled;
+    state.alpha_test_func = regs.framebuffer.output_merger.alpha_test.enabled
                                 ? regs.framebuffer.output_merger.alpha_test.func.Value()
                                 : Pica::FramebufferRegs::CompareFunc::Always;
-
     state.texture0_type = regs.texturing.texture0.type;
-
     state.texture2_use_coord1 = regs.texturing.main_config.texture2_use_coord1 != 0;
-
     // Copy relevant tev stages fields.
     // We don't sync const_color here because of the high variance, it is a
     // shader uniform instead.
@@ -136,70 +124,57 @@ PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs) {
         state.tev_stages[i].ops_raw = tev_stage.ops_raw;
         state.tev_stages[i].scales_raw = tev_stage.scales_raw;
     }
-
     state.fog_mode = regs.texturing.fog_mode;
     state.fog_flip = regs.texturing.fog_flip != 0;
-
     state.combiner_buffer_input = regs.texturing.tev_combiner_buffer_input.update_mask_rgb.Value() |
                                   regs.texturing.tev_combiner_buffer_input.update_mask_a.Value()
                                       << 4;
-
     // Fragment lighting
-
-    state.lighting.enable = !regs.lighting.disable;
+    state.lighting.enabled = !regs.lighting.disable;
     state.lighting.src_num = regs.lighting.max_light_index + 1;
-
     for (unsigned light_index{}; light_index < state.lighting.src_num; ++light_index) {
-        unsigned num{regs.lighting.light_enable.GetNum(light_index)};
+        unsigned num{regs.lighting.light_enabled.GetNum(light_index)};
         const auto& light{regs.lighting.light[num]};
         state.lighting.light[light_index].num = num;
         state.lighting.light[light_index].directional = light.config.directional != 0;
         state.lighting.light[light_index].two_sided_diffuse = light.config.two_sided_diffuse != 0;
         state.lighting.light[light_index].geometric_factor_0 = light.config.geometric_factor_0 != 0;
         state.lighting.light[light_index].geometric_factor_1 = light.config.geometric_factor_1 != 0;
-        state.lighting.light[light_index].dist_atten_enable =
+        state.lighting.light[light_index].dist_atten_enabled =
             !regs.lighting.IsDistAttenDisabled(num);
-        state.lighting.light[light_index].spot_atten_enable =
+        state.lighting.light[light_index].spot_atten_enabled =
             !regs.lighting.IsSpotAttenDisabled(num);
-        state.lighting.light[light_index].shadow_enable = !regs.lighting.IsShadowDisabled(num);
+        state.lighting.light[light_index].shadow_enabled = !regs.lighting.IsShadowDisabled(num);
     }
-
-    state.lighting.lut_d0.enable = regs.lighting.config1.disable_lut_d0 == 0;
+    state.lighting.lut_d0.enabled = regs.lighting.config1.disable_lut_d0 == 0;
     state.lighting.lut_d0.abs_input = regs.lighting.abs_lut_input.disable_d0 == 0;
     state.lighting.lut_d0.type = regs.lighting.lut_input.d0.Value();
     state.lighting.lut_d0.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d0);
-
-    state.lighting.lut_d1.enable = regs.lighting.config1.disable_lut_d1 == 0;
+    state.lighting.lut_d1.enabled = regs.lighting.config1.disable_lut_d1 == 0;
     state.lighting.lut_d1.abs_input = regs.lighting.abs_lut_input.disable_d1 == 0;
     state.lighting.lut_d1.type = regs.lighting.lut_input.d1.Value();
     state.lighting.lut_d1.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d1);
-
-    // this is a dummy field due to lack of the corresponding register
-    state.lighting.lut_sp.enable = true;
+    state.lighting.lut_sp.enabled =
+        true; ///< This is a dummy field due to lack of the corresponding register
     state.lighting.lut_sp.abs_input = regs.lighting.abs_lut_input.disable_sp == 0;
     state.lighting.lut_sp.type = regs.lighting.lut_input.sp.Value();
     state.lighting.lut_sp.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.sp);
-
-    state.lighting.lut_fr.enable = regs.lighting.config1.disable_lut_fr == 0;
+    state.lighting.lut_fr.enabled = regs.lighting.config1.disable_lut_fr == 0;
     state.lighting.lut_fr.abs_input = regs.lighting.abs_lut_input.disable_fr == 0;
     state.lighting.lut_fr.type = regs.lighting.lut_input.fr.Value();
     state.lighting.lut_fr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.fr);
-
-    state.lighting.lut_rr.enable = regs.lighting.config1.disable_lut_rr == 0;
+    state.lighting.lut_rr.enabled = regs.lighting.config1.disable_lut_rr == 0;
     state.lighting.lut_rr.abs_input = regs.lighting.abs_lut_input.disable_rr == 0;
     state.lighting.lut_rr.type = regs.lighting.lut_input.rr.Value();
     state.lighting.lut_rr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rr);
-
-    state.lighting.lut_rg.enable = regs.lighting.config1.disable_lut_rg == 0;
+    state.lighting.lut_rg.enabled = regs.lighting.config1.disable_lut_rg == 0;
     state.lighting.lut_rg.abs_input = regs.lighting.abs_lut_input.disable_rg == 0;
     state.lighting.lut_rg.type = regs.lighting.lut_input.rg.Value();
     state.lighting.lut_rg.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rg);
-
-    state.lighting.lut_rb.enable = regs.lighting.config1.disable_lut_rb == 0;
+    state.lighting.lut_rb.enabled = regs.lighting.config1.disable_lut_rb == 0;
     state.lighting.lut_rb.abs_input = regs.lighting.abs_lut_input.disable_rb == 0;
     state.lighting.lut_rb.type = regs.lighting.lut_input.rb.Value();
     state.lighting.lut_rb.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rb);
-
     state.lighting.config = regs.lighting.config0.config;
     state.lighting.enable_primary_alpha = regs.lighting.config0.enable_primary_alpha;
     state.lighting.enable_secondary_alpha = regs.lighting.config0.enable_secondary_alpha;
@@ -207,23 +182,22 @@ PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs) {
     state.lighting.bump_selector = regs.lighting.config0.bump_selector;
     state.lighting.bump_renorm = regs.lighting.config0.disable_bump_renorm == 0;
     state.lighting.clamp_highlights = regs.lighting.config0.clamp_highlights != 0;
-
     state.lighting.enable_shadow = regs.lighting.config0.enable_shadow != 0;
     state.lighting.shadow_primary = regs.lighting.config0.shadow_primary != 0;
     state.lighting.shadow_secondary = regs.lighting.config0.shadow_secondary != 0;
     state.lighting.shadow_invert = regs.lighting.config0.shadow_invert != 0;
     state.lighting.shadow_alpha = regs.lighting.config0.shadow_alpha != 0;
     state.lighting.shadow_selector = regs.lighting.config0.shadow_selector;
-
-    state.proctex.enable = regs.texturing.main_config.texture3_enable;
-    if (state.proctex.enable) {
+    // ProcTex
+    state.proctex.enabled = regs.texturing.main_config.texture3_enabled;
+    if (state.proctex.enabled) {
         state.proctex.coord = regs.texturing.main_config.texture3_coordinates;
         state.proctex.u_clamp = regs.texturing.proctex.u_clamp;
         state.proctex.v_clamp = regs.texturing.proctex.v_clamp;
         state.proctex.color_combiner = regs.texturing.proctex.color_combiner;
         state.proctex.alpha_combiner = regs.texturing.proctex.alpha_combiner;
         state.proctex.separate_alpha = regs.texturing.proctex.separate_alpha;
-        state.proctex.noise_enable = regs.texturing.proctex.noise_enable;
+        state.proctex.noise_enabled = regs.texturing.proctex.noise_enabled;
         state.proctex.u_shift = regs.texturing.proctex.u_shift;
         state.proctex.v_shift = regs.texturing.proctex.v_shift;
         state.proctex.lut_width = regs.texturing.proctex_lut.width;
@@ -235,13 +209,11 @@ PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs) {
         state.proctex.lod_max = regs.texturing.proctex_lut.lod_max;
         state.proctex.lut_filter = regs.texturing.proctex_lut.filter;
     }
-
+    // Shadow
     state.shadow_rendering = regs.framebuffer.output_merger.fragment_operation_mode ==
                              Pica::FramebufferRegs::FragmentOperationMode::Shadow;
-
     state.shadow_texture_orthographic = regs.texturing.shadow.orthographic != 0;
     state.shadow_texture_bias = regs.texturing.shadow.bias << 1;
-
     return res;
 }
 
@@ -329,7 +301,7 @@ static std::string SampleTexture(const PicaFSConfig& config, unsigned texture_un
         else
             return "texture(tex2, texcoord2)";
     case 3:
-        if (state.proctex.enable)
+        if (state.proctex.enabled)
             return "ProcTex()";
         else {
             LOG_DEBUG(Render, "Using Texture3 without enabling it");
@@ -781,7 +753,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
             out += "clamp_highlights = sign(dot_product);\n";
         // If enabled, compute spot light attenuation value
         std::string spot_atten{"1.0"};
-        if (light_config.spot_atten_enable &&
+        if (light_config.spot_atten_enabled &&
             LightingRegs::IsLightingSamplerSupported(
                 lighting.config, LightingRegs::LightingSampler::SpotlightAttenuation)) {
             std::string value{
@@ -791,7 +763,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
         }
         // If enabled, compute distance attenuation value
         std::string dist_atten{"1.0"};
-        if (light_config.dist_atten_enable) {
+        if (light_config.dist_atten_enabled) {
             std::string index = "clamp(" + light_src + ".dist_atten_scale * length(-view - " +
                                 light_src + ".position) + " + light_src +
                                 ".dist_atten_bias, 0.0, 1.0)";
@@ -805,7 +777,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
                    "dot_product / geo_factor, 1.0);\n";
         // Specular 0 component
         std::string d0_lut_value{"1.0"};
-        if (lighting.lut_d0.enable &&
+        if (lighting.lut_d0.enabled &&
             LightingRegs::IsLightingSamplerSupported(
                 lighting.config, LightingRegs::LightingSampler::Distribution0)) {
             // Lookup specular "distribution 0" LUT value
@@ -818,7 +790,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
         if (light_config.geometric_factor_0)
             specular_0 = "(" + specular_0 + " * geo_factor)";
         // If enabled, lookup ReflectRed value, otherwise, 1.0 is used
-        if (lighting.lut_rr.enable &&
+        if (lighting.lut_rr.enabled &&
             LightingRegs::IsLightingSamplerSupported(lighting.config,
                                                      LightingRegs::LightingSampler::ReflectRed)) {
             std::string value{GetLutValue(LightingRegs::LightingSampler::ReflectRed,
@@ -829,7 +801,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
         } else
             out += "refl_value.r = 1.0;\n";
         // If enabled, lookup ReflectGreen value, otherwise, ReflectRed value is used
-        if (lighting.lut_rg.enable &&
+        if (lighting.lut_rg.enabled &&
             LightingRegs::IsLightingSamplerSupported(lighting.config,
                                                      LightingRegs::LightingSampler::ReflectGreen)) {
             std::string value{GetLutValue(LightingRegs::LightingSampler::ReflectGreen,
@@ -840,7 +812,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
         } else
             out += "refl_value.g = refl_value.r;\n";
         // If enabled, lookup ReflectBlue value, otherwise, ReflectRed value is used
-        if (lighting.lut_rb.enable &&
+        if (lighting.lut_rb.enabled &&
             LightingRegs::IsLightingSamplerSupported(lighting.config,
                                                      LightingRegs::LightingSampler::ReflectBlue)) {
             std::string value{GetLutValue(LightingRegs::LightingSampler::ReflectBlue,
@@ -852,7 +824,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
             out += "refl_value.b = refl_value.r;\n";
         // Specular 1 component
         std::string d1_lut_value{"1.0"};
-        if (lighting.lut_d1.enable &&
+        if (lighting.lut_d1.enabled &&
             LightingRegs::IsLightingSamplerSupported(
                 lighting.config, LightingRegs::LightingSampler::Distribution1)) {
             // Lookup specular "distribution 1" LUT value
@@ -867,7 +839,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
             specular_1 = "(" + specular_1 + " * geo_factor)";
         // Fresnel
         // Note: only the last entry in the light slots applies the Fresnel factor
-        if (light_index == lighting.src_num - 1 && lighting.lut_fr.enable &&
+        if (light_index == lighting.src_num - 1 && lighting.lut_fr.enabled &&
             LightingRegs::IsLightingSamplerSupported(lighting.config,
                                                      LightingRegs::LightingSampler::Fresnel)) {
             // Lookup fresnel LUT value
@@ -882,8 +854,8 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
                 out += "specular_sum.a = " + value + ";\n";
         }
         // Shadow
-        bool shadow_primary_enable{lighting.shadow_primary && light_config.shadow_enable};
-        bool shadow_secondary_enable{lighting.shadow_secondary && light_config.shadow_enable};
+        bool shadow_primary_enable{lighting.shadow_primary && light_config.shadow_enabled};
+        bool shadow_secondary_enable{lighting.shadow_secondary && light_config.shadow_enabled};
         std::string shadow_primary{shadow_primary_enable ? " * shadow.rgb" : ""};
         std::string shadow_secondary{shadow_secondary_enable ? " * shadow.rgb" : ""};
         // Compute primary fragment color (diffuse lighting) function
@@ -1016,7 +988,7 @@ float ProcTexLookupLUT(int offset, float coord) {
 }
     )";
     // Noise utility
-    if (config.state.proctex.noise_enable) {
+    if (config.state.proctex.noise_enabled) {
         out += R"(
 int ProcTexNoiseRand1D(int v) {
     const int table[] = int[](0,4,10,8,4,9,7,12,5,15,13,14,11,15,2,11);
@@ -1114,7 +1086,7 @@ float ProcTexNoiseCoef(vec2 x) {
                              config.state.proctex.v_clamp);
     out += ";\n";
     // Generate noise
-    if (config.state.proctex.noise_enable) {
+    if (config.state.proctex.noise_enabled) {
         out += "uv += proctex_noise_a * ProcTexNoiseCoef(uv);\n";
         out += "uv = abs(uv);\n";
     }
@@ -1373,7 +1345,7 @@ vec4 shadowTextureCube(vec2 uv, float w) {
 
 #endif
 )";
-    if (config.state.proctex.enable)
+    if (config.state.proctex.enabled)
         AppendProcTexSampler(out, config);
     // We round the interpolated primary color to the nearest 1/255th
     // This maintains the PICA's 8 bits of precision
@@ -1404,9 +1376,9 @@ vec4 secondary_fragment_color = vec4(0.0);
     // do our own transformation according to PICA specification.
     out += "float z_over_w = 2.0 * gl_FragCoord.z - 1.0;\n";
     out += "float depth = z_over_w * depth_scale + depth_offset;\n";
-    if (state.depthmap_enable == RasterizerRegs::DepthBuffering::WBuffering)
+    if (state.depthmap_enabled == RasterizerRegs::DepthBuffering::WBuffering)
         out += "depth /= gl_FragCoord.w;\n";
-    if (state.lighting.enable)
+    if (state.lighting.enabled)
         WriteLighting(out, config);
     out += "vec4 combiner_buffer = vec4(0.0);\n";
     out += "vec4 next_combiner_buffer = tev_combiner_buffer_color;\n";

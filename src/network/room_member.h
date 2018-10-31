@@ -40,8 +40,8 @@ struct ChatEntry {
 
 /**
  * This is what a client [person joining a server] would use.
- * It also has to be used if you host a game yourself (You'd create both, a Room and a
- * RoomMembership for yourself)
+ * It also has to be used if you host a room yourself (You'd create both, a Room and a
+ * RoomMember for yourself)
  */
 class RoomMember final {
 public:
@@ -62,11 +62,13 @@ public:
     };
 
     struct MemberInformation {
-        std::string nickname;   ///< Nickname of the member.
-        GameInfo game_info;     ///< Name of the game they're currently playing, or empty if they're
-                                /// not playing anything.
+        std::string nickname; ///< Nickname of the member.
+        AppInfo app_info;     ///< Information of the application they're currently running, name is
+                              ///< empty if they're
+                              /// not running anything.
         MacAddress mac_address; ///< MAC address associated with this member.
     };
+
     using MemberList = std::vector<MemberInformation>;
 
     // The handle for the callback functions
@@ -134,10 +136,10 @@ public:
     void SendChatMessage(const std::string& message);
 
     /**
-     * Sends the current game info to the room.
-     * @param game_info The game information.
+     * Sends the current application info to the room.
+     * @param app_info The application information.
      */
-    void SendGameInfo(const GameInfo& game_info);
+    void SendAppInfo(const AppInfo& app_info);
 
     /**
      * Binds a function to an event that will be triggered every time the State of the member

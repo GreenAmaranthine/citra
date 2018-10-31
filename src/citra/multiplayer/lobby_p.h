@@ -14,7 +14,7 @@ namespace Column {
 enum List {
     EXPAND,
     ROOM_NAME,
-    GAME_NAME,
+    APP_NAME,
     HOST,
     MEMBER,
     TOTAL,
@@ -56,38 +56,36 @@ public:
     static const int PasswordRole{Qt::UserRole + 2};
 };
 
-class LobbyItemGame : public LobbyItem {
+class LobbyItemApp : public LobbyItem {
 public:
-    LobbyItemGame() = default;
+    LobbyItemApp() = default;
 
-    explicit LobbyItemGame(u64 title_id, QString game_name, QPixmap smdh_icon) {
+    explicit LobbyItemApp(u64 title_id, QString app_name, QPixmap smdh_icon) {
         setData(static_cast<unsigned long long>(title_id), TitleIDRole);
-        setData(game_name, GameNameRole);
-        if (!smdh_icon.isNull()) {
-            setData(smdh_icon, GameIconRole);
-        }
+        setData(app_name, AppNameRole);
+        if (!smdh_icon.isNull())
+            setData(smdh_icon, IconRole);
     }
 
     QVariant data(int role) const override {
         if (role == Qt::DecorationRole) {
-            auto val{data(GameIconRole)};
+            auto val{data(IconRole)};
             if (val.isValid())
                 val = val.value<QPixmap>().scaled(16, 16, Qt::KeepAspectRatio);
             return val;
         } else if (role != Qt::DisplayRole)
             return LobbyItem::data(role);
-        return data(GameNameRole).toString();
+        return data(AppNameRole).toString();
     }
 
     bool operator<(const QStandardItem& other) const override {
-        return data(GameNameRole)
-                   .toString()
-                   .localeAwareCompare(other.data(GameNameRole).toString()) < 0;
+        return data(AppNameRole).toString().localeAwareCompare(other.data(AppNameRole).toString()) <
+               0;
     }
 
     static const int TitleIDRole{Qt::UserRole + 1};
-    static const int GameNameRole{Qt::UserRole + 2};
-    static const int GameIconRole{Qt::UserRole + 3};
+    static const int AppNameRole{Qt::UserRole + 2};
+    static const int IconRole{Qt::UserRole + 3};
 };
 
 class LobbyItemHost : public LobbyItem {
@@ -122,27 +120,27 @@ public:
     LobbyMember() = default;
     LobbyMember(const LobbyMember& other) = default;
 
-    explicit LobbyMember(QString username, u64 title_id, QString game_name)
-        : username{std::move(username)}, title_id{title_id}, game_name{std::move(game_name)} {}
+    explicit LobbyMember(QString username, u64 title_id, QString app_name)
+        : username{std::move(username)}, title_id{title_id}, app_name{std::move(app_name)} {}
 
     ~LobbyMember() = default;
-
-    QString GetUsername() const {
-        return username;
-    }
 
     u64 GetTitleId() const {
         return title_id;
     }
 
-    QString GetGameName() const {
-        return game_name;
+    QString GetUsername() const {
+        return username;
+    }
+
+    QString GetAppName() const {
+        return app_name;
     }
 
 private:
     QString username;
     u64 title_id;
-    QString game_name;
+    QString app_name;
 };
 
 Q_DECLARE_METATYPE(LobbyMember);
@@ -185,9 +183,8 @@ public:
     }
 
     QVariant data(int role) const override {
-        if (role != Qt::DisplayRole) {
+        if (role != Qt::DisplayRole)
             return LobbyItem::data(role);
-        }
         auto members = data(MemberListRole).toList();
         QString out;
         bool first{true};
@@ -195,10 +192,10 @@ public:
             if (!first)
                 out += '\n';
             const auto& m{member.value<LobbyMember>()};
-            if (m.GetGameName().isEmpty())
-                out += QString("%1 isn't playing a game").arg(m.GetUsername());
+            if (m.GetAppName().isEmpty())
+                out += QString("%1 isn't runnning a application").arg(m.GetUsername());
             else
-                out += QString("%1 is playing %2").arg(m.GetUsername(), m.GetGameName());
+                out += QString("%1 is running %2").arg(m.GetUsername(), m.GetAppName());
             first = false;
         }
         return out;

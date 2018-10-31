@@ -13,7 +13,7 @@
 #include <QMetaType>
 #include <QTime>
 #include <QtConcurrent/QtConcurrentRun>
-#include "citra/game_list_p.h"
+#include "citra/app_list_p.h"
 #include "citra/multiplayer/chat_room.h"
 #include "citra/multiplayer/message.h"
 #include "citra/multiplayer/state.h"
@@ -68,37 +68,30 @@ private:
 
 ChatRoom::ChatRoom(QWidget* parent) : QWidget{parent}, ui{std::make_unique<Ui::ChatRoom>()} {
     ui->setupUi(this);
-
-    // set the item_model for player_view
+    // Set the item_model for player_view
     enum {
         COLUMN_NAME,
-        COLUMN_GAME,
+        COLUMN_APP,
         COLUMN_COUNT, // Number of columns
     };
-
     player_list = new QStandardItemModel(ui->player_view);
     ui->player_view->setModel(player_list);
     ui->player_view->setContextMenuPolicy(Qt::CustomContextMenu);
     player_list->insertColumns(0, COLUMN_COUNT);
     player_list->setHeaderData(COLUMN_NAME, Qt::Horizontal, "Name");
-    player_list->setHeaderData(COLUMN_GAME, Qt::Horizontal, "Game");
-
+    player_list->setHeaderData(COLUMN_APP, Qt::Horizontal, "Application");
     ui->chat_history->document()->setMaximumBlockCount(max_chat_lines);
-
-    // register the network structs to use in slots and signals
+    // Register the network structs to use in slots and signals
     qRegisterMetaType<Network::ChatEntry>();
     qRegisterMetaType<Network::RoomInformation>();
     qRegisterMetaType<Network::RoomMember::State>();
-
-    // setup the callbacks for network updates
+    // Setup the callbacks for network updates
     if (auto member{Network::GetRoomMember().lock()}) {
         member->BindOnChatMessageRecieved(
             [this](const Network::ChatEntry& chat) { emit ChatReceived(chat); });
         connect(this, &ChatRoom::ChatReceived, this, &ChatRoom::OnChatReceive);
-    } else {
-        // TODO: network was not initialized?
     }
-
+    // TODO: network was not initialized?
     // Connect all the widgets to the appropriate events
     connect(ui->player_view, &QTreeView::customContextMenuRequested, this,
             &ChatRoom::PopupContextMenu);
@@ -120,24 +113,20 @@ void ChatRoom::AppendStatusMessage(const QString& msg) {
 
 bool ChatRoom::Send(const QString& msg) {
     if (auto member{Network::GetRoomMember().lock()}) {
-        if (member->GetState() != Network::RoomMember::State::Joined) {
+        if (member->GetState() != Network::RoomMember::State::Joined)
             return false;
-        }
         auto message{msg.toStdString()};
-        if (!ValidateMessage(message)) {
+        if (!ValidateMessage(message))
             return false;
-        }
         auto nick{member->GetNickname()};
         Network::ChatEntry chat{nick, message};
-
         auto members{member->GetMemberInformation()};
         auto it{std::find_if(members.begin(), members.end(),
                              [&chat](const Network::RoomMember::MemberInformation& member) {
                                  return member.nickname == chat.nickname;
                              })};
-        if (it == members.end()) {
+        if (it == members.end())
             LOG_INFO(Network, "Cannot find self in the player list when sending a message.");
-        }
         auto player{std::distance(members.begin(), it)};
         ChatMessage m{chat};
         member->SendChatMessage(message);
@@ -150,9 +139,8 @@ bool ChatRoom::Send(const QString& msg) {
 void ChatRoom::HandleNewMessage(const QString& msg) {
     const auto& replies{static_cast<MultiplayerState*>(parentWidget()->parent())->GetReplies()};
     auto itr{replies.find(msg.toStdString())};
-    if (itr != replies.end()) {
+    if (itr != replies.end())
         Send(QString::fromStdString(itr->second));
-    }
 }
 
 void ChatRoom::AppendChatMessage(const QString& msg) {
@@ -227,7 +215,7 @@ void ChatRoom::SetPlayerList(const Network::RoomMember::MemberList& member_list)
             continue;
         }
         QList<QStandardItem*> l;
-        std::vector<std::string> elements{member.nickname, member.game_info.name};
+        std::vector<std::string> elements{member.nickname, member.app_info.name};
         for (const auto& item : elements) {
             QStandardItem* child{new QStandardItem(QString::fromStdString(item))};
             child->setEditable(false);

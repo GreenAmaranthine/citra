@@ -20,15 +20,15 @@ constexpr u32 MaxConcurrentConnections{
 constexpr std::size_t NumChannels{1}; // Number of channels used for the connection
 
 struct RoomInformation {
-    std::string name;           ///< Name of the server
-    u32 member_slots;           ///< Maximum number of members in this room
-    std::string uid;            ///< The unique ID of the room
-    u16 port;                   ///< The port of this room
-    std::string preferred_game; ///< Game to advertise that you want to play
-    u64 preferred_game_id;      ///< Title ID for the advertised game
+    std::string name;          ///< Name of the server
+    u32 member_slots;          ///< Maximum number of members in this room
+    std::string uid;           ///< The unique ID of the room
+    u16 port;                  ///< The port of this room
+    std::string preferred_app; ///< Preferred application name
+    u64 preferred_app_id;      ///< Preferred application's ID
 };
 
-struct GameInfo {
+struct AppInfo {
     std::string name{};
     u64 id{};
 };
@@ -38,7 +38,7 @@ enum RoomMessageTypes : u8 {
     IdJoinRequest = 1,
     IdJoinSuccess,
     IdRoomInformation,
-    IdSetGameInfo,
+    IdSetAppInfo,
     IdWifiPacket,
     IdChatMessage,
     IdNameCollision,
@@ -53,7 +53,7 @@ class Room final {
 public:
     struct Member {
         std::string nickname;   ///< The nickname of the member.
-        GameInfo game_info;     ///< The current game of the member
+        AppInfo app_info;       ///< The current application of the member.
         MacAddress mac_address; ///< The assigned mac address of the member.
     };
 
@@ -87,7 +87,7 @@ public:
     bool Create(const std::string& name, const std::string& server = "",
                 u16 server_port = DefaultRoomPort, const std::string& password = "",
                 const u32 max_connections = MaxConcurrentConnections,
-                const std::string& preferred_game = "", u64 preferred_game_id = 0);
+                const std::string& preferred_app = "", u64 preferred_app_id = 0);
 
     /**
      * Destroys the socket

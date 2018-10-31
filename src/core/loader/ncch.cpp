@@ -61,65 +61,52 @@ std::pair<std::optional<u32>, ResultStatus> AppLoader_NCCH::LoadKernelSystemMode
 ResultStatus AppLoader_NCCH::LoadExec(Kernel::SharedPtr<Kernel::Process>& process) {
     using Kernel::CodeSet;
     using Kernel::SharedPtr;
-
     if (!is_loaded)
         return ResultStatus::ErrorNotLoaded;
-
     std::vector<u8> code;
     u64_le program_id;
     if (ResultStatus::Success == ReadCode(code) &&
         ResultStatus::Success == ReadProgramId(program_id)) {
         std::string process_name{Common::StringFromFixedZeroTerminatedBuffer(
             (const char*)overlay_ncch->exheader_header.codeset_info.name, 8)};
-
         SharedPtr<CodeSet> codeset{
             Core::System::GetInstance().Kernel().CreateCodeSet(process_name, program_id)};
-
         codeset->CodeSegment().offset = 0;
         codeset->CodeSegment().addr = overlay_ncch->exheader_header.codeset_info.text.address;
         codeset->CodeSegment().size =
             overlay_ncch->exheader_header.codeset_info.text.num_max_pages * Memory::PAGE_SIZE;
-
         codeset->RODataSegment().offset =
             codeset->CodeSegment().offset + codeset->CodeSegment().size;
         codeset->RODataSegment().addr = overlay_ncch->exheader_header.codeset_info.ro.address;
         codeset->RODataSegment().size =
             overlay_ncch->exheader_header.codeset_info.ro.num_max_pages * Memory::PAGE_SIZE;
-
         // TODO: Not sure if the bss size is added to the page-aligned .data size or just
         //               to the regular size. Playing it safe for now.
         u32 bss_page_size{(overlay_ncch->exheader_header.codeset_info.bss_size + 0xFFF) & ~0xFFF};
         code.resize(code.size() + bss_page_size, 0);
-
         codeset->DataSegment().offset =
             codeset->RODataSegment().offset + codeset->RODataSegment().size;
         codeset->DataSegment().addr = overlay_ncch->exheader_header.codeset_info.data.address;
         codeset->DataSegment().size =
             overlay_ncch->exheader_header.codeset_info.data.num_max_pages * Memory::PAGE_SIZE +
             bss_page_size;
-
         codeset->entrypoint = codeset->CodeSegment().addr;
         codeset->memory = std::make_shared<std::vector<u8>>(std::move(code));
-
         process = Core::System::GetInstance().Kernel().CreateProcess(std::move(codeset));
-
         // Attach a resource limit to the process based on the resource limit category
         process->resource_limit =
             Core::System::GetInstance().Kernel().ResourceLimit().GetForCategory(
                 static_cast<Kernel::ResourceLimitCategory>(
                     overlay_ncch->exheader_header.arm11_system_local_caps.resource_limit_category));
-
         // Set the default CPU core for this process
         process->ideal_processor =
             overlay_ncch->exheader_header.arm11_system_local_caps.ideal_processor;
-
         // Copy data while converting endianness
         std::array<u32, ARRAY_SIZE(overlay_ncch->exheader_header.arm11_kernel_caps.descriptors)>
             kernel_caps;
         std::copy_n(overlay_ncch->exheader_header.arm11_kernel_caps.descriptors, kernel_caps.size(),
                     begin(kernel_caps));
         process->ParseKernelCaps(kernel_caps.data(), kernel_caps.size());
-
         s32 priority{overlay_ncch->exheader_header.arm11_system_local_caps.priority};
         u32 stack_size{overlay_ncch->exheader_header.codeset_info.stack_size};
         process->Run(priority, stack_size);
@@ -171,10 +158,10 @@ ResultStatus AppLoader_NCCH::Load(Kernel::SharedPtr<Kernel::Process>& process) {
         overlay_ncch = &update_ncch;
 
     if (auto member{Network::GetRoomMember().lock()}) {
-        Network::GameInfo game_info;
-        ReadShortTitle(game_info.name);
-        game_info.id = ncch_program_id;
-        member->SendGameInfo(game_info);
+        Network::AppInfo app_info;
+        ReadShortTitle(app_info.name);
+        app_info.id = ncch_program_id;
+        member->SendAppInfo(app_info);
     }
 
     is_loaded = true; // Set state to loaded

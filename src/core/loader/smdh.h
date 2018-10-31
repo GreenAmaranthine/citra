@@ -46,7 +46,7 @@ struct SMDH {
     std::array<u8, 0x480> small_icon;
     std::array<u8, 0x1200> large_icon;
 
-    /// indicates the language used for each title entry
+    /// Indicates the language used for each title entry
     enum class TitleLanguage {
         Japanese = 0,
         English = 1,
@@ -62,7 +62,7 @@ struct SMDH {
         TraditionalChinese = 11
     };
 
-    enum class GameRegion {
+    enum class Region {
         Invalid = -1,
         Japan = 0,
         NorthAmerica = 1,
@@ -75,21 +75,21 @@ struct SMDH {
     };
 
     /**
-     * Gets game icon from SMDH
+     * Gets icon from SMDH
      * @param large If true, returns large icon (48x48), otherwise returns small icon (24x24)
      * @return vector of RGB565 data
      */
     std::vector<u16> GetIcon(bool large) const;
 
     /**
-     * Gets the short game title from SMDH
+     * Gets the short title from SMDH
      * @param language title language
      * @return UTF-16 array of the short title
      */
     std::array<u16, 0x40> GetShortTitle(Loader::SMDH::TitleLanguage language) const;
 
     /**
-     * Gets the long game title from SMDH
+     * Gets the long title from SMDH
      * @param language title language
      * @return UTF-16 array of the long title
      */
@@ -102,7 +102,7 @@ struct SMDH {
      */
     std::array<u16, 0x40> GetPublisher(Loader::SMDH::TitleLanguage language) const;
 
-    GameRegion GetRegion() const;
+    Region GetRegion() const;
 };
 static_assert(sizeof(SMDH) == 0x36C0, "SMDH structure size is wrong");
 

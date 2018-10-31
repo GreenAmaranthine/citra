@@ -39,8 +39,8 @@ static void PrintHelp(const char* argv0) {
                  "--port              The port used for the room\n"
                  "--max_members       The maximum number of players for this room\n"
                  "--password          The password for the room\n"
-                 "--preferred-game    The preferred game for this room\n"
-                 "--preferred-game-id The preferred game-id for this room\n"
+                 "--preferred-app     The preferred application for this room\n"
+                 "--preferred-app-id  The preferred application's ID for this room\n"
                  "--username          The username used for announce\n"
                  "--token             The token used for announce\n"
                  "--web-api-url       Citra Web API url\n"
@@ -64,11 +64,11 @@ int main(int argc, char** argv) {
 
     std::string room_name;
     std::string password;
-    std::string preferred_game;
+    std::string preferred_app;
     std::string username;
     std::string token;
     std::string web_api_url;
-    u64 preferred_game_id{};
+    u64 preferred_app_id{};
     u32 port{Network::DefaultRoomPort};
     u32 max_members{16};
 
@@ -77,8 +77,8 @@ int main(int argc, char** argv) {
         {"port", required_argument, 0, 'p'},
         {"max_members", required_argument, 0, 'm'},
         {"password", required_argument, 0, 'w'},
-        {"preferred-game", required_argument, 0, 'g'},
-        {"preferred-game-id", required_argument, 0, 'i'},
+        {"preferred-app", required_argument, 0, 'g'},
+        {"preferred-app-id", required_argument, 0, 'i'},
         {"username", required_argument, 0, 'u'},
         {"token", required_argument, 0, 't'},
         {"web-api-url", required_argument, 0, 'a'},
@@ -104,10 +104,10 @@ int main(int argc, char** argv) {
                 password.assign(optarg);
                 break;
             case 'g':
-                preferred_game.assign(optarg);
+                preferred_app.assign(optarg);
                 break;
             case 'i':
-                preferred_game_id = strtoull(optarg, &endarg, 16);
+                preferred_app_id = strtoull(optarg, &endarg, 16);
                 break;
             case 'u':
                 username.assign(optarg);
@@ -133,14 +133,14 @@ int main(int argc, char** argv) {
         PrintHelp(argv[0]);
         return -1;
     }
-    if (preferred_game.empty()) {
-        std::cout << "preferred game is empty!\n\n";
+    if (preferred_app.empty()) {
+        std::cout << "preferred application is empty!\n\n";
         PrintHelp(argv[0]);
         return -1;
     }
-    if (preferred_game_id == 0) {
-        std::cout << "preferred-game-id not set!\nThis should get set to allow users to find your "
-                     "room.\nSet with --preferred-game-id id\n\n";
+    if (preferred_app_id == 0) {
+        std::cout << "preferred-app-id not set!\nThis should get set to allow users to find your "
+                     "room.\nSet with --preferred-app-id id\n\n";
     }
     if (max_members >= Network::MaxConcurrentConnections || max_members < 2) {
         std::cout << "max_members needs to be in the range 2 - "
@@ -172,26 +172,23 @@ int main(int argc, char** argv) {
         Settings::values.citra_username = username;
         Settings::values.citra_token = token;
     }
-
     Network::Init();
     if (auto room{Network::GetRoom().lock()}) {
-        if (!room->Create(room_name, "", port, password, max_members, preferred_game,
-                          preferred_game_id)) {
+        if (!room->Create(room_name, "", port, password, max_members, preferred_app,
+                          preferred_app_id)) {
             std::cout << "Failed to create room: \n\n";
             return -1;
         }
         std::cout << "Room is open. Close with Q+Enter...\n\n";
         auto announce_session{std::make_unique<Core::AnnounceMultiplayerSession>()};
-        if (announce) {
+        if (announce)
             announce_session->Start();
-        }
         while (room->IsOpen()) {
             std::string in;
             std::cin >> in;
             if (in.size() > 0) {
-                if (announce) {
+                if (announce)
                     announce_session->Stop();
-                }
                 announce_session.reset();
                 room->Destroy();
                 Network::Shutdown();
@@ -199,9 +196,8 @@ int main(int argc, char** argv) {
             }
             std::this_thread::sleep_for(std::chrono::milliseconds{100});
         }
-        if (announce) {
+        if (announce)
             announce_session->Stop();
-        }
         announce_session.reset();
         room->Destroy();
     }

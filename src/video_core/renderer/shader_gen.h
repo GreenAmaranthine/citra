@@ -56,7 +56,7 @@ struct PicaFSConfigState {
     std::array<TevStageConfigRaw, 6> tev_stages;
     u8 combiner_buffer_input;
 
-    Pica::RasterizerRegs::DepthBuffering depthmap_enable;
+    Pica::RasterizerRegs::DepthBuffering depthmap_enabled;
     Pica::TexturingRegs::FogMode fog_mode;
     bool fog_flip;
 
@@ -65,14 +65,14 @@ struct PicaFSConfigState {
             unsigned num;
             bool directional;
             bool two_sided_diffuse;
-            bool dist_atten_enable;
-            bool spot_atten_enable;
+            bool dist_atten_enabled;
+            bool spot_atten_enabled;
             bool geometric_factor_0;
             bool geometric_factor_1;
-            bool shadow_enable;
+            bool shadow_enabled;
         } light[8];
 
-        bool enable;
+        bool enabled;
         unsigned src_num;
         Pica::LightingRegs::LightingBumpMode bump_mode;
         unsigned bump_selector;
@@ -91,7 +91,7 @@ struct PicaFSConfigState {
         unsigned shadow_selector;
 
         struct {
-            bool enable;
+            bool enabled;
             bool abs_input;
             Pica::LightingRegs::LightingLutInput type;
             float scale;
@@ -99,12 +99,12 @@ struct PicaFSConfigState {
     } lighting;
 
     struct {
-        bool enable;
+        bool enabled;
         u32 coord;
         Pica::TexturingRegs::ProcTexClamp u_clamp, v_clamp;
         Pica::TexturingRegs::ProcTexCombiner color_combiner, alpha_combiner;
         bool separate_alpha;
-        bool noise_enable;
+        bool noise_enabled;
         Pica::TexturingRegs::ProcTexShift u_shift, v_shift;
         u32 lut_width;
         u32 lut_offset0;

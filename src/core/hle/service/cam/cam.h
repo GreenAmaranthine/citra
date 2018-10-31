@@ -326,18 +326,18 @@ private:
     struct PortConfig {
         int camera_id;
 
-        bool is_active;            // set when the port is activated by an Activate call.
-        bool is_pending_receiving; // set if SetReceiving is called when is_busy = false. When
-        // StartCapture is called then, this will trigger a receiving
-        // process and reset itself.
-        bool is_busy;      // set when StartCapture is called and reset when StopCapture is called.
-        bool is_receiving; // set when there is an ongoing receiving process.
+        bool is_active;            ///< Set when the port is activated by an Activate call.
+        bool is_pending_receiving; ///< Set if SetReceiving is called when is_busy = false. When
+                                   /// StartCapture is called then, this will trigger a receiving
+                                   /// process and reset itself.
+        bool is_busy; ///< Set when StartCapture is called and reset when StopCapture is called.
+        bool is_receiving; ///< Set when there is an ongoing receiving process.
 
         bool is_trimming;
-        u16 x0; // x-coordinate of starting position for trimming
-        u16 y0; // y-coordinate of starting position for trimming
-        u16 x1; // x-coordinate of ending position for trimming
-        u16 y1; // y-coordinate of ending position for trimming
+        u16 x0; ///< X-coordinate of starting position for trimming
+        u16 y0; ///< Y-coordinate of starting position for trimming
+        u16 x1; ///< X-coordinate of ending position for trimming
+        u16 y1; ///< Y-coordinate of ending position for trimming
 
         u16 transfer_bytes;
 
@@ -345,10 +345,10 @@ private:
         Kernel::SharedPtr<Kernel::Event> buffer_error_interrupt_event;
         Kernel::SharedPtr<Kernel::Event> vsync_interrupt_event;
 
-        std::future<std::vector<u16>> capture_result; // will hold the received frame.
+        std::future<std::vector<u16>> capture_result; ///< Vill hold the received frame.
         Kernel::Process* dest_process;
-        VAddr dest;    // the destination address of the receiving process
-        u32 dest_size; // the destination size of the receiving process
+        VAddr dest;    ///< The destination address of the receiving process
+        u32 dest_size; ///< The destination size of the receiving process
 
         void Clear();
     };

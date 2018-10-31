@@ -314,7 +314,7 @@ struct LightingRegs {
                                           slot_4, slot_5, slot_6, slot_7};
             return enable_slots[index];
         }
-    } light_enable;
+    } light_enabled;
 
     INSERT_PADDING_WORDS(0x26);
 };

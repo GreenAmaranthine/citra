@@ -1,3 +1,2 @@
-dist/languages/* linguist-generated=true
-dist/qt_themes/* linguist-vendored
+dist/themes/* linguist-vendored
 externals/* linguist-vendored

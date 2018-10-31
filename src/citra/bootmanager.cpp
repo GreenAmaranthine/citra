@@ -39,7 +39,6 @@ void EmuThread::run() {
             emit ErrorThrown(result, system.GetStatusDetails());
         }
     }
-
     // Shutdown the core emulation
     system.Shutdown();
     screens->moveContext();
@@ -65,7 +64,6 @@ private:
 
 Screens::Screens(QWidget* parent, EmuThread* emu_thread) : QWidget{parent}, emu_thread{emu_thread} {
     setAttribute(Qt::WA_AcceptTouchEvents);
-
     InputCommon::Init();
 }
 
@@ -75,7 +73,6 @@ Screens::~Screens() {
 
 void Screens::moveContext() {
     DoneCurrent();
-
     // If the thread started running, move the GL Context to the new thread. Otherwise, move it
     // back.
     auto thread{(QThread::currentThread() == qApp->thread() && emu_thread) ? emu_thread
@@ -167,32 +164,32 @@ void Screens::keyReleaseEvent(QKeyEvent* event) {
 void Screens::mousePressEvent(QMouseEvent* event) {
     if (event->source() == Qt::MouseEventSynthesizedBySystem)
         return; // Touch input is handled in TouchBeginEvent
-
     auto pos{event->pos()};
     if (event->button() == Qt::LeftButton) {
         const auto [x, y]{ScaleTouch(pos)};
-        TouchPressed(x, y);
-    } else if (event->button() == Qt::RightButton) {
+        const auto [x2, y2]{TouchPressed(x, y)};
+        emit TouchChanged(x2, y2);
+    } else if (event->button() == Qt::RightButton)
         InputCommon::GetMotionEmu()->BeginTilt(pos.x(), pos.y());
-    }
 }
 
 void Screens::mouseMoveEvent(QMouseEvent* event) {
     if (event->source() == Qt::MouseEventSynthesizedBySystem)
         return; // Touch input is handled in TouchUpdateEvent
-
     auto pos{event->pos()};
     const auto [x, y]{ScaleTouch(pos)};
-    TouchMoved(x, y);
+    const auto [x2, y2]{TouchMoved(x, y)};
     InputCommon::GetMotionEmu()->Tilt(pos.x(), pos.y());
+    emit TouchChanged(x2, y2);
 }
 
 void Screens::mouseReleaseEvent(QMouseEvent* event) {
     if (event->source() == Qt::MouseEventSynthesizedBySystem)
         return; // Touch input is handled in TouchEndEvent
-    if (event->button() == Qt::LeftButton)
+    if (event->button() == Qt::LeftButton) {
         TouchReleased();
-    else if (event->button() == Qt::RightButton)
+        emit TouchChanged(0, 0);
+    } else if (event->button() == Qt::RightButton)
         InputCommon::GetMotionEmu()->EndTilt();
 }
 
@@ -206,12 +203,11 @@ void Screens::TouchUpdateEvent(const QTouchEvent* event) {
     QPointF pos;
     int active_points{};
     // Average all active touch points
-    for (const auto tp : event->touchPoints()) {
+    for (const auto tp : event->touchPoints())
         if (tp.state() & (Qt::TouchPointPressed | Qt::TouchPointMoved | Qt::TouchPointStationary)) {
             active_points++;
             pos += tp.pos();
         }
-    }
     pos /= active_points;
     const auto [x, y]{ScaleTouch(pos)};
     TouchMoved(x, y);
@@ -287,7 +283,6 @@ void Screens::OnEmulationStopping() {
 
 void Screens::showEvent(QShowEvent* event) {
     QWidget::showEvent(event);
-
     // windowHandle() isn't initialized until the Window is shown, so we connect it here.
     connect(windowHandle(), &QWindow::screenChanged, this, &Screens::OnFramebufferSizeChanged,
             Qt::UniqueConnection);

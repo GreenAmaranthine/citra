@@ -334,7 +334,7 @@ void FS_USER::FormatSaveData(Kernel::HLERequestContext& ctx) {
         return;
     }
     if (archive_path.GetType() != FileSys::LowPathType::Empty) {
-        // TODO: Implement formatting the SaveData of other games
+        // TODO: Implement formatting the SaveData of other application
         LOG_ERROR(Service_FS, "archive LowPath type other than empty is currently unsupported");
         rb.Push(UnimplementedFunction(ErrorModule::FS));
         return;

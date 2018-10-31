@@ -90,8 +90,9 @@ struct FramebufferRegs {
     struct {
         union {
             BitField<0, 2, FragmentOperationMode> fragment_operation_mode;
+
             // If false, logic blending is used
-            BitField<8, 1, u32> alphablend_enable;
+            BitField<8, 1, u32> alphablend_enabled;
         };
 
         union {
@@ -118,7 +119,7 @@ struct FramebufferRegs {
         } blend_const;
 
         union {
-            BitField<0, 1, u32> enable;
+            BitField<0, 1, u32> enabled;
             BitField<4, 3, CompareFunc> func;
             BitField<8, 8, u32> ref;
         } alpha_test;
@@ -129,7 +130,7 @@ struct FramebufferRegs {
                 u32 raw_func;
 
                 // If true, enable stencil testing
-                BitField<0, 1, u32> enable;
+                BitField<0, 1, u32> enabled;
 
                 // Comparison operation for stencil testing
                 BitField<4, 3, CompareFunc> func;
@@ -160,13 +161,13 @@ struct FramebufferRegs {
         } stencil_test;
 
         union {
-            BitField<0, 1, u32> depth_test_enable;
+            BitField<0, 1, u32> depth_test_enabled;
             BitField<4, 3, CompareFunc> depth_test_func;
-            BitField<8, 1, u32> red_enable;
-            BitField<9, 1, u32> green_enable;
-            BitField<10, 1, u32> blue_enable;
-            BitField<11, 1, u32> alpha_enable;
-            BitField<12, 1, u32> depth_write_enable;
+            BitField<8, 1, u32> red_enabled;
+            BitField<9, 1, u32> green_enabled;
+            BitField<10, 1, u32> blue_enabled;
+            BitField<11, 1, u32> alpha_enabled;
+            BitField<12, 1, u32> depth_write_enabled;
         };
 
         INSERT_PADDING_WORDS(0x8);

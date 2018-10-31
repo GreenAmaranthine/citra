@@ -48,15 +48,15 @@ private:
     void UpdateReplies();
 
     std::weak_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
-    QStandardItemModel* game_list;
+    QStandardItemModel* app_list;
     ComboBoxProxyModel* proxy;
     std::unique_ptr<Ui::HostRoom> ui;
     Validation validation;
 };
 
 /**
- * Proxy Model for the game list combo box so we can reuse the game list model while still
- * displaying the fields slightly differently
+ * Proxy Model for the application list combo box so we can reuse the application list model while
+ * still displaying the fields slightly differently
  */
 class ComboBoxProxyModel : public QSortFilterProxyModel {
     Q_OBJECT

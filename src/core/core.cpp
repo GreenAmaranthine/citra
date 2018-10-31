@@ -213,8 +213,8 @@ void System::Shutdown() {
     CoreTiming::Shutdown();
     app_loader.reset();
     if (auto member{Network::GetRoomMember().lock()}) {
-        Network::GameInfo game_info{};
-        member->SendGameInfo(game_info);
+        Network::AppInfo app_info{};
+        member->SendAppInfo(app_info);
     }
     LOG_DEBUG(Core, "Shutdown OK");
 }

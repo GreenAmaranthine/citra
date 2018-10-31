@@ -286,43 +286,42 @@ void Config::Load() {
     UISettings::values.geometry = qt_config->value("geometry").toByteArray();
     UISettings::values.state = qt_config->value("state").toByteArray();
     UISettings::values.screens_geometry = qt_config->value("geometryScreens").toByteArray();
-    UISettings::values.gamelist_header_state =
-        qt_config->value("gameListHeaderState").toByteArray();
+    UISettings::values.applist_header_state = qt_config->value("appListHeaderState").toByteArray();
     qt_config->endGroup();
-    qt_config->beginGroup("GameList");
+    qt_config->beginGroup("AppList");
     int icon_size{qt_config->value("iconSize", 2).toInt()};
     if (icon_size < 0 || icon_size > 2)
         icon_size = 2;
-    UISettings::values.game_list_icon_size = UISettings::GameListIconSize{icon_size};
+    UISettings::values.app_list_icon_size = UISettings::AppListIconSize{icon_size};
     int row_1{qt_config->value("row1", 2).toInt()};
     if (row_1 < 0 || row_1 > 4)
         row_1 = 2;
-    UISettings::values.game_list_row_1 = UISettings::GameListText{row_1};
+    UISettings::values.app_list_row_1 = UISettings::AppListText{row_1};
     int row_2{qt_config->value("row2", 0).toInt()};
     if (row_2 < -1 || row_2 > 4)
         row_2 = 0;
-    UISettings::values.game_list_row_2 = UISettings::GameListText{row_2};
-    UISettings::values.game_list_hide_no_icon = qt_config->value("hideNoIcon", false).toBool();
+    UISettings::values.app_list_row_2 = UISettings::AppListText{row_2};
+    UISettings::values.app_list_hide_no_icon = qt_config->value("hideNoIcon", false).toBool();
     qt_config->endGroup();
     qt_config->beginGroup("Paths");
-    size = qt_config->beginReadArray("gamedirs");
+    size = qt_config->beginReadArray("appdirs");
     for (int i{}; i < size; ++i) {
         qt_config->setArrayIndex(i);
-        UISettings::GameDir game_dir;
-        game_dir.path = qt_config->value("path").toString();
-        game_dir.deep_scan = qt_config->value("deep_scan", false).toBool();
-        game_dir.expanded = qt_config->value("expanded", true).toBool();
-        UISettings::values.game_dirs.append(game_dir);
+        UISettings::AppDir app_dir;
+        app_dir.path = qt_config->value("path").toString();
+        app_dir.deep_scan = qt_config->value("deep_scan", false).toBool();
+        app_dir.expanded = qt_config->value("expanded", true).toBool();
+        UISettings::values.app_dirs.append(app_dir);
     }
     qt_config->endArray();
     // Create NAND and SD card directories if empty, these aren't removable through the UI
-    if (UISettings::values.game_dirs.isEmpty()) {
-        UISettings::GameDir game_dir{};
-        game_dir.path = "INSTALLED";
-        game_dir.expanded = true;
-        UISettings::values.game_dirs.append(game_dir);
-        game_dir.path = "SYSTEM";
-        UISettings::values.game_dirs.append(game_dir);
+    if (UISettings::values.app_dirs.isEmpty()) {
+        UISettings::AppDir app_dir{};
+        app_dir.path = "INSTALLED";
+        app_dir.expanded = true;
+        UISettings::values.app_dirs.append(app_dir);
+        app_dir.path = "SYSTEM";
+        UISettings::values.app_dirs.append(app_dir);
     }
     UISettings::values.recent_files = qt_config->value("recentFiles").toStringList();
     qt_config->endGroup();
@@ -359,7 +358,7 @@ void Config::Load() {
     if (!ok)
         UISettings::values.host_type = 0;
     UISettings::values.max_player = qt_config->value("max_player", 8).toUInt();
-    UISettings::values.game_id = qt_config->value("game_id", 0).toULongLong();
+    UISettings::values.app_id = qt_config->value("app_id", 0).toULongLong();
     qt_config->endGroup();
     qt_config->endGroup();
 }
@@ -494,22 +493,22 @@ void Config::Save() {
     qt_config->setValue("geometry", UISettings::values.geometry);
     qt_config->setValue("state", UISettings::values.state);
     qt_config->setValue("geometryScreens", UISettings::values.screens_geometry);
-    qt_config->setValue("gameListHeaderState", UISettings::values.gamelist_header_state);
+    qt_config->setValue("appListHeaderState", UISettings::values.applist_header_state);
     qt_config->endGroup();
-    qt_config->beginGroup("GameList");
-    qt_config->setValue("iconSize", static_cast<int>(UISettings::values.game_list_icon_size));
-    qt_config->setValue("row1", static_cast<int>(UISettings::values.game_list_row_1));
-    qt_config->setValue("row2", static_cast<int>(UISettings::values.game_list_row_2));
-    qt_config->setValue("hideNoIcon", UISettings::values.game_list_hide_no_icon);
+    qt_config->beginGroup("AppList");
+    qt_config->setValue("iconSize", static_cast<int>(UISettings::values.app_list_icon_size));
+    qt_config->setValue("row1", static_cast<int>(UISettings::values.app_list_row_1));
+    qt_config->setValue("row2", static_cast<int>(UISettings::values.app_list_row_2));
+    qt_config->setValue("hideNoIcon", UISettings::values.app_list_hide_no_icon);
     qt_config->endGroup();
     qt_config->beginGroup("Paths");
-    qt_config->beginWriteArray("gamedirs");
-    for (int i{}; i < UISettings::values.game_dirs.size(); ++i) {
+    qt_config->beginWriteArray("appdirs");
+    for (int i{}; i < UISettings::values.app_dirs.size(); ++i) {
         qt_config->setArrayIndex(i);
-        const auto& game_dir{UISettings::values.game_dirs.at(i)};
-        qt_config->setValue("path", game_dir.path);
-        qt_config->setValue("deep_scan", game_dir.deep_scan);
-        qt_config->setValue("expanded", game_dir.expanded);
+        const auto& app_dir{UISettings::values.app_dirs.at(i)};
+        qt_config->setValue("path", app_dir.path);
+        qt_config->setValue("deep_scan", app_dir.deep_scan);
+        qt_config->setValue("expanded", app_dir.expanded);
     }
     qt_config->endArray();
     qt_config->setValue("recentFiles", UISettings::values.recent_files);
@@ -534,7 +533,7 @@ void Config::Save() {
     qt_config->setValue("room_port", UISettings::values.room_port);
     qt_config->setValue("host_type", UISettings::values.host_type);
     qt_config->setValue("max_player", UISettings::values.max_player);
-    qt_config->setValue("game_id", UISettings::values.game_id);
+    qt_config->setValue("app_id", UISettings::values.app_id);
     qt_config->endGroup();
     qt_config->endGroup();
 }

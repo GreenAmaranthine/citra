@@ -633,7 +633,7 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
 void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x1B, 12, 2};
     u32 sharedmem_size{rp.Pop<u32>()};
-    // Update the node information with the data the game gave us.
+    // Update the node information with the data the application gave us.
     rp.PopRaw(current_node);
     u16 version{rp.Pop<u16>()};
     recv_buffer_memory = rp.PopObject<Kernel::SharedMemory>();
@@ -666,7 +666,7 @@ void NWM_UDS::GetConnectionStatus(Kernel::HLERequestContext& ctx) {
         std::lock_guard<std::mutex> lock{connection_status_mutex};
         rb.PushRaw(connection_status);
         // Reset the bitmask of changed nodes after each call to this
-        // function to prevent falsely informing games of outstanding
+        // function to prevent falsely informing applications of outstanding
         // changes in subsequent calls.
         // TODO: Find exactly where the NWM module resets this value.
         connection_status.changed_nodes = 0;

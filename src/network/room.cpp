@@ -29,7 +29,7 @@ public:
 
     struct Member {
         std::string nickname;   ///< The nickname of the member.
-        GameInfo game_info;     ///< The current game of the member
+        AppInfo app_info;       ///< The current application of the member.
         MacAddress mac_address; ///< The assigned mac address of the member.
         ENetPeer* peer;         ///< The remote peer.
     };
@@ -97,7 +97,7 @@ public:
      * This is followed by the following three values for each member:
      * <String> nickname of that member
      * <MacAddress> mac_address of that member
-     * <String> game_name of that member
+     * <String> app_name of that member
      */
     void BroadcastRoomInformation();
 
@@ -117,10 +117,10 @@ public:
     void HandleChatPacket(const ENetEvent* event);
 
     /**
-     * Extracts the game information from a received ENet packet and broadcasts it.
+     * Extracts the application information from a received ENet packet and broadcasts it.
      * @param event The ENet event that was received.
      */
-    void HandleGameInfoPacket(const ENetEvent* event);
+    void HandleAppInfoPacket(const ENetEvent* event);
 
     /**
      * Removes the client from the members list if it was in it and announces the change
@@ -143,8 +143,8 @@ void Room::RoomImpl::ServerLoop() {
                 case IdJoinRequest:
                     HandleJoinRequest(&event);
                     break;
-                case IdSetGameInfo:
-                    HandleGameInfoPacket(&event);
+                case IdSetAppInfo:
+                    HandleAppInfoPacket(&event);
                     break;
                 case IdWifiPacket:
                     HandleWifiPacket(&event);
@@ -303,15 +303,15 @@ void Room::RoomImpl::BroadcastRoomInformation() {
     packet << room_information.member_slots;
     packet << room_information.uid;
     packet << room_information.port;
-    packet << room_information.preferred_game;
+    packet << room_information.preferred_app;
     packet << static_cast<u32>(members.size());
     {
         std::lock_guard<std::mutex> lock{member_mutex};
         for (const auto& member : members) {
             packet << member.nickname;
             packet << member.mac_address;
-            packet << member.game_info.name;
-            packet << member.game_info.id;
+            packet << member.app_info.name;
+            packet << member.app_info.id;
         }
     }
     ENetPacket* enet_packet{
@@ -408,13 +408,13 @@ void Room::RoomImpl::HandleChatPacket(const ENetEvent* event) {
     enet_host_flush(server);
 }
 
-void Room::RoomImpl::HandleGameInfoPacket(const ENetEvent* event) {
+void Room::RoomImpl::HandleAppInfoPacket(const ENetEvent* event) {
     Packet in_packet;
     in_packet.Append(event->packet->data, event->packet->dataLength);
     in_packet.IgnoreBytes(sizeof(u8)); // Ignore the message type
-    GameInfo game_info;
-    in_packet >> game_info.name;
-    in_packet >> game_info.id;
+    AppInfo app_info;
+    in_packet >> app_info.name;
+    in_packet >> app_info.id;
     {
         std::lock_guard<std::mutex> lock{member_mutex};
         auto member{
@@ -422,7 +422,7 @@ void Room::RoomImpl::HandleGameInfoPacket(const ENetEvent* event) {
                 return member.peer == event->peer;
             })};
         if (member != members.end())
-            member->game_info = game_info;
+            member->app_info = app_info;
     }
     BroadcastRoomInformation();
 }
@@ -461,7 +461,7 @@ Room::~Room() = default;
 
 bool Room::Create(const std::string& name, const std::string& server_address, u16 server_port,
                   const std::string& password, const u32 max_connections,
-                  const std::string& preferred_game, u64 preferred_game_id) {
+                  const std::string& preferred_app, u64 preferred_app_id) {
     ENetAddress address;
     address.host = ENET_HOST_ANY;
     if (!server_address.empty())
@@ -474,8 +474,8 @@ bool Room::Create(const std::string& name, const std::string& server_address, u1
     room_impl->room_information.name = name;
     room_impl->room_information.member_slots = max_connections;
     room_impl->room_information.port = server_port;
-    room_impl->room_information.preferred_game = preferred_game;
-    room_impl->room_information.preferred_game_id = preferred_game_id;
+    room_impl->room_information.preferred_app = preferred_app;
+    room_impl->room_information.preferred_app_id = preferred_app_id;
     room_impl->password = password;
     room_impl->CreateUniqueID();
     room_impl->StartLoop();
@@ -497,7 +497,7 @@ std::vector<Room::Member> Room::GetRoomMemberList() const {
         Member member;
         member.nickname = member_impl.nickname;
         member.mac_address = member_impl.mac_address;
-        member.game_info = member_impl.game_info;
+        member.app_info = member_impl.app_info;
         member_list.push_back(member);
     }
     return member_list;

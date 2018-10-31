@@ -18,8 +18,8 @@
 class LobbyModel;
 class LobbyFilterProxyModel;
 
-// Listing of all public games pulled from services. The lobby should be simple enough for users to
-// find the game they want to play, and join it.
+// Listing of all public rooms pulled from services. The lobby should be simple enough for users to
+// find the application, and join it.
 class Lobby : public QDialog {
     Q_OBJECT
 
@@ -69,7 +69,7 @@ private:
     QString PasswordPrompt();
 
     QStandardItemModel* model;
-    QStandardItemModel* game_list;
+    QStandardItemModel* app_list;
     LobbyFilterProxyModel* proxy;
 
     QFutureWatcher<AnnounceMultiplayerRoom::RoomList> room_list_watcher;
@@ -94,8 +94,8 @@ public slots:
     void SetFilterSearch(const QString&);
 
 private:
-    QStandardItemModel* game_list;
-    bool filter_owned{};
+    QStandardItemModel* app_list;
+    bool filter_have{};
     bool filter_full{};
     QString filter_search;
 };
