@@ -268,7 +268,7 @@ void LobbyFilterProxyModel::sort(int column, Qt::SortOrder order) {
 }
 
 void LobbyFilterProxyModel::SetFilterOwned(bool filter) {
-    filter_have = filter;
+    filter_has = filter;
     invalidate();
 }
 

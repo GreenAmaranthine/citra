@@ -95,7 +95,7 @@ public slots:
 
 private:
     QStandardItemModel* app_list;
-    bool filter_have{};
+    bool filter_has{};
     bool filter_full{};
     QString filter_search;
 };
