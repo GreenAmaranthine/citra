@@ -21,7 +21,7 @@
 MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* app_list_model,
                                    QAction* leave_room, QAction* show_room)
     : QWidget{parent}, app_list_model{app_list_model}, leave_room{leave_room}, show_room{
-                                                                                     show_room} {
+                                                                                   show_room} {
     if (auto member{Network::GetRoomMember().lock()}) {
         // register the network structs to use in slots and signals
         state_callback_handle = member->BindOnStateChanged(

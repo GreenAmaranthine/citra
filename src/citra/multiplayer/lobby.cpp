@@ -241,23 +241,23 @@ bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& s
         if (!preferred_app_match && !room_name_match && !username_match)
             return false;
     }
-    // Filter by applications that user have
-    if (filter_have) {
+    // Filter by applications user has
+    if (filter_has) {
         QModelIndex app_name{sourceModel()->index(sourceRow, Column::APP_NAME, sourceParent)};
-        QList<QModelIndex> applications_user_have;
+        QList<QModelIndex> apps;
         for (int r{}; r < app_list->rowCount(); ++r)
-            applications_user_have.append(QModelIndex(app_list->index(r, 0)));
+            apps.append(QModelIndex(app_list->index(r, 0)));
         auto current_id{sourceModel()->data(app_name, LobbyItemApp::TitleIDRole).toLongLong()};
         if (current_id == 0)
-            // TODO: Homebrew often doesn't have a title ID and this hides them
+            // Homebrew often doesn't have a title ID and this hides them
             return false;
-        bool have{};
-        for (const auto& app : applications_user_have) {
+        bool has{};
+        for (const auto& app : apps) {
             auto app_id{app_list->data(app, AppListItemPath::ProgramIdRole).toLongLong()};
             if (current_id == app_id)
-                have = true;
+                has = true;
         }
-        if (!have)
+        if (!has)
             return false;
     }
     return true;
