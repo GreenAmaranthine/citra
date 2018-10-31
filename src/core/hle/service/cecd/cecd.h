@@ -288,7 +288,7 @@ private:
 
     const std::vector<u8> cecd_system_savedata_id{0x00, 0x00, 0x00, 0x00, 0x26, 0x00, 0x01, 0x00};
 
-    /// Encoding function used for the message id
+    /// Encoding function used for the message ID
     std::string EncodeBase64(const std::vector<u8>& in) const;
 
     std::string GetCecDataPathTypeAsString(const CecDataPathType type, const u32 program_id,

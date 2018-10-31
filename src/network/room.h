@@ -38,6 +38,7 @@ enum RoomMessageTypes : u8 {
     IdStatusMessage,
     IdNameCollision,
     IdMacCollision,
+    IdConsoleIdCollision,
     IdVersionMismatch,
     IdWrongPassword,
     IdCloseRoom,

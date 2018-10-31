@@ -15,6 +15,7 @@
 #include "citra/multiplayer/state.h"
 #include "citra/multiplayer/validation.h"
 #include "citra/ui_settings.h"
+#include "core/hle/service/cfg/cfg.h"
 #include "core/settings.h"
 #include "network/room.h"
 #include "ui_direct_connect.h"
@@ -75,9 +76,10 @@ void DirectConnectWindow::Connect() {
                                   ? ui->port->text()
                                   : UISettings::values.port;
     // Attempt to connect in a different thread
-    QFuture<void> f{QtConcurrent::run([&] {
+    auto f{QtConcurrent::run([&] {
         auto port{UISettings::values.port.toUInt()};
         system.RoomMember().Join(ui->nickname->text().toStdString(),
+                                 Service::CFG::GetConsoleId(system),
                                  ui->ip->text().toStdString().c_str(), port, BroadcastMac,
                                  ui->password->text().toStdString().c_str());
     })};

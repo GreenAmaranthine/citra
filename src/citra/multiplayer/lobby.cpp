@@ -15,6 +15,7 @@
 #include "citra/program_list_p.h"
 #include "citra/ui_settings.h"
 #include "common/logging/log.h"
+#include "core/hle/service/cfg/cfg.h"
 #include "core/settings.h"
 #include "network/room_member.h"
 
@@ -104,7 +105,8 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
     int port{proxy->data(connection_index, LobbyItemHost::HostPortRole).toInt()};
     // Attempt to connect in a different thread
     auto f{QtConcurrent::run([this, nickname, ip, port, password] {
-        system.RoomMember().Join(nickname, ip.c_str(), port, BroadcastMac, password);
+        system.RoomMember().Join(nickname, Service::CFG::GetConsoleId(system), ip.c_str(), port,
+                                 BroadcastMac, password);
     })};
     watcher->setFuture(f);
     // TODO: disable widgets and display a connecting while we wait
@@ -145,16 +147,16 @@ void Lobby::OnRefreshLobby() {
             members.append(var);
         }
         auto first_item{new LobbyItem()};
-        auto row{QList<QStandardItem*>({
+        QList<QStandardItem*> row{
             first_item,
             new LobbyItemName(room.has_password, QString::fromStdString(room.name)),
             new LobbyItemHost(QString::fromStdString(room.creator), QString::fromStdString(room.ip),
                               room.port),
             new LobbyItemMemberList(members, room.max_members),
-        })};
+        };
         model->appendRow(row);
         // To make the rows expandable, add the member data as a child of the first column of the
-        // rows with people in them and have qt set them to colspan after the model is finished
+        // rows with people in them and have Qt set them to colspan after the model is finished
         // resetting
         if (!room.description.empty())
             first_item->appendRow(

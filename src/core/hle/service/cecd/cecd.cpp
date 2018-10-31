@@ -1071,7 +1071,7 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
         if (obindex_header.message_num == 0) {
             if (file_size > sizeof(CecOBIndexHeader)) {
                 LOG_DEBUG(Service_CECD, "CecOBIndexHeader message number isn't set");
-                obindex_header.message_num = (file_size % 8) - 1; // 8 byte message id - 1 header
+                obindex_header.message_num = (file_size % 8) - 1; // 8 byte message ID - 1 header
             }
         } else if (obindex_header.message_num != (file_size % 8) - 1) {
             LOG_DEBUG(Service_CECD, "CecOBIndexHeader message number is incorrect: {}",
@@ -1110,7 +1110,7 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
                 std::vector<u8> buffer(message_size);
                 message->Read(0, message_size, buffer.data()).Unwrap();
                 message->Close();
-                // Message id is at offset 0x20, and is 8 bytes
+                // message ID is at offset 0x20, and is 8 bytes
                 std::memcpy(&message_ids[obindex_header.message_num++], buffer.data() + 0x20, 8);
             }
         }

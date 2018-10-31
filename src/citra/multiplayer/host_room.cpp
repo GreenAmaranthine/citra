@@ -21,6 +21,7 @@
 #include "citra/ui_settings.h"
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
+#include "core/hle/service/cfg/cfg.h"
 #include "core/settings.h"
 #include "ui_host_room.h"
 
@@ -89,7 +90,8 @@ void HostRoomWindow::Host() {
         ui->host->setEnabled(true);
         return;
     }
-    member.Join(ui->username->text().toStdString(), "127.0.0.1", port, BroadcastMac, password);
+    member.Join(ui->username->text().toStdString(), Service::CFG::GetConsoleId(system), "127.0.0.1",
+                port, BroadcastMac, password);
     // Store settings
     UISettings::values.room_nickname = ui->username->text();
     UISettings::values.room_name = ui->room_name->text();
@@ -103,7 +105,7 @@ void HostRoomWindow::Host() {
 }
 
 void HostRoomWindow::AddReply() {
-    QString message{QInputDialog::getText(this, "Add Reply", "Message:")};
+    auto message{QInputDialog::getText(this, "Add Reply", "Message:")};
     if (message.isEmpty())
         return;
     auto parent{static_cast<MultiplayerState*>(parentWidget())};
@@ -112,7 +114,7 @@ void HostRoomWindow::AddReply() {
         QMessageBox::critical(this, "Error", "A reply with this message already exists.");
         return;
     }
-    QString reply{QInputDialog::getText(this, "Add Reply", "Reply:")};
+    auto reply{QInputDialog::getText(this, "Add Reply", "Reply:")};
     if (reply.isEmpty())
         return;
     int row{ui->tableReplies->rowCount()};

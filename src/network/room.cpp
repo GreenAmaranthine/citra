@@ -26,7 +26,8 @@ struct Room::RoomImpl {
     std::string password; ///< The password required to connect to this room.
 
     struct Member {
-        std::string nickname;   ///< The nickname of the member.
+        std::string nickname; ///< The nickname of the member.
+        u64 console_id;
         std::string program;    ///< The current program of the member.
         MACAddress mac_address; ///< The assigned MAC address of the member.
         ENetPeer* peer;         ///< The remote peer.
@@ -61,6 +62,12 @@ struct Room::RoomImpl {
     /// room.
     bool IsValidMacAddress(const MACAddress& address) const;
 
+    /**
+     * Returns whether the console ID is valid, ie. isn't already taken by someone else in
+     * the room.
+     */
+    bool IsValidConsoleId(u64 console_id) const;
+
     /// Sends a ID_ROOM_IS_FULL message telling the client that the room is full.
     void SendRoomIsFull(ENetPeer* client);
 
@@ -69,6 +76,12 @@ struct Room::RoomImpl {
 
     /// Sends a ID_ROOM_MAC_COLLISION message telling the client that the MAC is invalid.
     void SendMacCollision(ENetPeer* client);
+
+    /**
+     * Sends a IdConsoleIdCollison message telling the client that another member with the same
+     * console ID exists.
+     */
+    void SendConsoleIdCollision(ENetPeer* client);
 
     /// Sends a ID_ROOM_VERSION_MISMATCH message telling the client that the version is invalid.
     void SendVersionMismatch(ENetPeer* client);
@@ -191,6 +204,8 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
     packet >> nickname;
     MACAddress preferred_mac;
     packet >> preferred_mac;
+    u64 console_id;
+    packet >> console_id;
     u32 client_version;
     packet >> client_version;
     std::string pass;
@@ -212,6 +227,10 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
     } else
         // Assign a MAC address of this client automatically
         preferred_mac = GenerateMACAddress();
+    if (!IsValidConsoleId(console_id)) {
+        SendConsoleIdCollision(event->peer);
+        return;
+    }
     if (client_version != network_version) {
         SendVersionMismatch(event->peer);
         return;
@@ -219,6 +238,7 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
     // At this point the client is ready to be added to the room.
     Member member;
     member.mac_address = preferred_mac;
+    member.console_id = console_id;
     member.nickname = nickname;
     member.peer = event->peer;
     // Notify everyone that the user has joined.
@@ -247,6 +267,14 @@ bool Room::RoomImpl::IsValidMacAddress(const MACAddress& address) const {
                        [&address](const auto& member) { return member.mac_address != address; });
 }
 
+bool Room::RoomImpl::IsValidConsoleId(u64 console_id) const {
+    // A Console ID is valid if it is not already taken by anybody else in the room.
+    std::lock_guard<std::mutex> lock(member_mutex);
+    return std::all_of(members.begin(), members.end(), [&console_id](const auto& member) {
+        return member.console_id != console_id;
+    });
+}
+
 void Room::RoomImpl::SendNameCollision(ENetPeer* client) {
     Packet packet;
     packet << static_cast<u8>(IdNameCollision);
@@ -261,6 +289,16 @@ void Room::RoomImpl::SendMacCollision(ENetPeer* client) {
     packet << static_cast<u8>(IdMacCollision);
     auto packet{
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE)};
+    enet_peer_send(client, 0, enet_packet);
+    enet_host_flush(server);
+}
+
+void Room::RoomImpl::SendConsoleIdCollision(ENetPeer* client) {
+    Packet packet;
+    packet << static_cast<u8>(IdConsoleIdCollision);
+
+    ENetPacket* enet_packet =
+        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
     enet_peer_send(client, 0, enet_packet);
     enet_host_flush(server);
 }

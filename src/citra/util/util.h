@@ -11,6 +11,6 @@ QString ReadableByteSize(qulonglong size);
 
 /**
  * Uses the WINAPI to hide or show the stderr console. This function is a placeholder until we can
- * get a real qt logging window which would work for all platforms.
+ * get a real Qt logging window which would work for all platforms.
  */
 void ToggleConsole();

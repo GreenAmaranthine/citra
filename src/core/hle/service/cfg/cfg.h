@@ -316,4 +316,7 @@ private:
 
 void InstallInterfaces(Core::System& system);
 
+/// Convenience function for getting the console ID
+u64 GetConsoleId(Core::System& system);
+
 } // namespace Service::CFG

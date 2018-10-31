@@ -37,6 +37,9 @@ const ConnectionError GENERIC_ERROR{
     "An unknown error occured. If this error continues to occur, please open an issue"};
 const ConnectionError LOST_CONNECTION{"Connection to room lost. Try to reconnect."};
 const ConnectionError MAC_COLLISION{"MAC address is already in use. Please choose another."};
+const ConnectionError CONSOLE_ID_COLLISION{
+    "Your Console ID conflicted with someone else's in the room.\n\nPlease go to Emulation "
+    "> Configure > System to regenerate your Console ID."};
 
 static bool WarnMessage(const std::string& title, const std::string& text) {
     return QMessageBox::warning(nullptr, QString::fromStdString(title),
