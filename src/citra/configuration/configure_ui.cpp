@@ -4,7 +4,6 @@
 
 #include "citra/configuration/configure_ui.h"
 #include "citra/ui_settings.h"
-#include "core/core.h"
 #include "ui_configure_ui.h"
 
 ConfigureUi::ConfigureUi(QWidget* parent)
@@ -13,7 +12,6 @@ ConfigureUi::ConfigureUi(QWidget* parent)
 #ifndef ENABLE_DISCORD_RPC
     ui->enable_discord_rpc->hide();
 #endif
-    ui->enable_discord_rpc->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     for (const auto& theme : UISettings::themes)
         ui->theme_combobox->addItem(theme.first, theme.second);
     LoadConfiguration();

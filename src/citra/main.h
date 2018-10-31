@@ -39,11 +39,11 @@ class GMainWindow : public QMainWindow {
     static const int max_recent_files_item{10};
 
 public:
-    void filterBarSetChecked(bool state);
-    void UpdateUITheme();
-
     GMainWindow();
     ~GMainWindow();
+
+    void filterBarSetChecked(bool state);
+    void UpdateUITheme();
 
 signals:
     /**
@@ -68,52 +68,6 @@ signals:
 
     // Signal that tells widgets to update icons to use the current theme
     void UpdateThemedIcons();
-
-private:
-    void InitializeWidgets();
-    void InitializeRecentFileMenuActions();
-    void InitializeHotkeys();
-    void SetDefaultUIGeometry();
-
-    void SyncMenuUISettings();
-    void RestoreUIState();
-
-    void ConnectWidgetEvents();
-    void ConnectMenuEvents();
-
-    bool LoadROM(const std::string& filename);
-    void BootApplication(const std::string& filename);
-    void ShutdownApplication();
-
-    /**
-     * Stores the filename in the recently loaded files list.
-     * The new filename is stored at the beginning of the recently loaded files list.
-     * After inserting the new entry, duplicates are removed meaning that if
-     * this was inserted from OnMenuRecentFile(), the entry will be put on top
-     * and remove from its previous position.
-     *
-     * Finally, this function calls \a UpdateRecentFiles() to update the UI.
-     *
-     * @param filename the filename to store
-     */
-    void StoreRecentFile(const QString& filename);
-
-    /**
-     * Updates the recent files menu.
-     * Menu entries are rebuilt from the configuration file.
-     * If there is no entry in the menu, the menu is greyed out.
-     */
-    void UpdateRecentFiles();
-
-    /**
-     * If the emulation is running,
-     * asks the user if he really want to close the emulator
-     *
-     * @return true if the user confirmed
-     */
-    bool ConfirmClose();
-    bool ConfirmChangeApplication();
-    void closeEvent(QCloseEvent* event) override;
 
 private slots:
     void OnStartApplication();
@@ -164,6 +118,53 @@ private slots:
     void OnMenuAboutCitra();
 
 private:
+    void InitializeDiscordRPC();
+    void ShutdownDiscordRPC();
+    void UpdateDiscordRPC();
+
+    void InitializeWidgets();
+    void InitializeRecentFileMenuActions();
+    void InitializeHotkeys();
+    void SetDefaultUIGeometry();
+    void SyncMenuUISettings();
+    void RestoreUIState();
+    void ConnectWidgetEvents();
+    void ConnectMenuEvents();
+
+    bool LoadROM(const std::string& filename);
+    void BootApplication(const std::string& filename);
+    void ShutdownApplication();
+
+    /**
+     * Stores the filename in the recently loaded files list.
+     * The new filename is stored at the beginning of the recently loaded files list.
+     * After inserting the new entry, duplicates are removed meaning that if
+     * this was inserted from OnMenuRecentFile(), the entry will be put on top
+     * and remove from its previous position.
+     *
+     * Finally, this function calls \a UpdateRecentFiles() to update the UI.
+     *
+     * @param filename the filename to store
+     */
+    void StoreRecentFile(const QString& filename);
+
+    /**
+     * Updates the recent files menu.
+     * Menu entries are rebuilt from the configuration file.
+     * If there is no entry in the menu, the menu is greyed out.
+     */
+    void UpdateRecentFiles();
+
+    /**
+     * If the emulation is running,
+     * asks the user if he really want to close the emulator
+     *
+     * @return true if the user confirmed
+     */
+    bool ConfirmClose();
+    bool ConfirmChangeApplication();
+    void closeEvent(QCloseEvent* event) override;
+
     bool ValidateMovie(const QString& path, u64 program_id = 0);
     void UpdatePerformanceStats();
     void SetupUIStrings();
@@ -191,7 +192,10 @@ private:
     QLabel* perf_stats_label;
     QLabel* touch_label;
 
-    QTimer status_bar_update_timer;
+    s64 discord_rpc_start_time;
+
+    QTimer perf_stats_update_timer;
+    QTimer discord_rpc_update_timer;
     QTimer movie_play_timer;
 
     MultiplayerState* multiplayer_state;

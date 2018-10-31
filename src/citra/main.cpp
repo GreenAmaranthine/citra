@@ -135,6 +135,7 @@ GMainWindow::GMainWindow() : config{new Config()} {
     QStringList args{QApplication::arguments()};
     if (args.length() >= 2)
         BootApplication(args[1].toStdString());
+    InitializeDiscordRPC();
 }
 
 GMainWindow::~GMainWindow() {
@@ -142,6 +143,10 @@ GMainWindow::~GMainWindow() {
     if (!screens->parent())
         delete screens;
     Network::Shutdown();
+#ifdef ENABLE_DISCORD_RPC
+    if (UISettings::values.enable_discord_rpc)
+        ShutdownDiscordRPC();
+#endif
 }
 
 void GMainWindow::InitializeWidgets() {
@@ -391,7 +396,8 @@ void GMainWindow::ConnectWidgetEvents() {
     connect(app_list, &AppList::ShowList, this, &GMainWindow::OnAppListShowList);
     connect(this, &GMainWindow::EmulationStarting, screens, &Screens::OnEmulationStarting);
     connect(this, &GMainWindow::EmulationStopping, screens, &Screens::OnEmulationStopping);
-    connect(&status_bar_update_timer, &QTimer::timeout, this, &GMainWindow::UpdatePerformanceStats);
+    connect(&perf_stats_update_timer, &QTimer::timeout, this, &GMainWindow::UpdatePerformanceStats);
+    connect(&discord_rpc_update_timer, &QTimer::timeout, this, &GMainWindow::UpdateDiscordRPC);
     connect(this, &GMainWindow::UpdateProgress, this, &GMainWindow::OnUpdateProgress);
     connect(this, &GMainWindow::CIAInstallReport, this, &GMainWindow::OnCIAInstallReport);
     connect(this, &GMainWindow::CIAInstallFinished, this, &GMainWindow::OnCIAInstallFinished);
@@ -581,21 +587,6 @@ bool GMainWindow::LoadROM(const std::string& filename) {
     }
     system.GetAppLoader().ReadShortTitle(short_title);
     SetupUIStrings();
-#ifdef ENABLE_DISCORD_RPC
-    if (UISettings::values.enable_discord_rpc) {
-        DiscordEventHandlers handlers{};
-        handlers.disconnected = HandleDiscordDisconnected;
-        handlers.errored = HandleDiscordError;
-        Discord_Initialize("472104565165260826", &handlers, 0, NULL);
-        DiscordRichPresence presence{};
-        presence.state = short_title.empty() ? "Unknown game" : short_title.c_str();
-        presence.startTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
-                                      std::chrono::system_clock::now().time_since_epoch())
-                                      .count();
-        presence.largeImageKey = "icon";
-        Discord_UpdatePresence(&presence);
-    }
-#endif
     if (cheats_window)
         cheats_window->UpdateTitleID();
     else
@@ -626,7 +617,7 @@ void GMainWindow::BootApplication(const std::string& filename) {
     ui.action_Sleep_Mode->setEnabled(true);
     ui.action_Sleep_Mode->setChecked(false);
 
-    status_bar_update_timer.start(2000);
+    perf_stats_update_timer.start(2000);
     screens->show();
     screens->setFocus();
     if (ui.action_Fullscreen->isChecked())
@@ -692,19 +683,13 @@ void GMainWindow::ShutdownApplication() {
     app_list->setFilterFocus();
 
     // Disable status bar updates
-    status_bar_update_timer.stop();
+    perf_stats_update_timer.stop();
     message_label->setVisible(false);
     perf_stats_label->setVisible(false);
     touch_label->setVisible(false);
 
     short_title.clear();
     SetupUIStrings();
-#ifdef ENABLE_DISCORD_RPC
-    if (UISettings::values.enable_discord_rpc) {
-        Discord_ClearPresence();
-        Discord_Shutdown();
-    }
-#endif
 }
 
 void GMainWindow::StoreRecentFile(const QString& filename) {
@@ -1146,8 +1131,9 @@ void GMainWindow::ToggleSleepMode() {
 void GMainWindow::OnOpenConfiguration() {
     ConfigurationDialog configuration_dialog{this};
     auto old_theme{UISettings::values.theme};
-    int old_profile{Settings::values.profile};
+    auto old_profile{Settings::values.profile};
     auto old_profiles{Settings::values.profiles};
+    auto old_enable_discord_rpc{UISettings::values.enable_discord_rpc};
     auto result{configuration_dialog.exec()};
     if (result == QDialog::Accepted) {
         if (configuration_dialog.restore_defaults_requested) {
@@ -1166,6 +1152,13 @@ void GMainWindow::OnOpenConfiguration() {
             app_list->Refresh();
             config->Save();
         }
+#ifdef ENABLE_DISCORD_RPC
+        if (old_enable_discord_rpc != UISettings::values.enable_discord_rpc)
+            if (UISettings::values.enable_discord_rpc)
+                InitializeDiscordRPC();
+            else
+                ShutdownDiscordRPC();
+#endif
     } else {
         Settings::values.profiles = old_profiles;
         Settings::LoadProfile(old_profile);
@@ -1425,7 +1418,7 @@ void GMainWindow::OnCaptureScreenshot() {
 
 void GMainWindow::UpdatePerformanceStats() {
     if (!emu_thread) {
-        status_bar_update_timer.stop();
+        perf_stats_update_timer.stop();
         return;
     }
     auto results{system.GetAndResetPerfStats()};
@@ -1626,6 +1619,53 @@ void GMainWindow::SyncMenuUISettings() {
     ui.action_Screen_Layout_Side_by_Side->setChecked(Settings::values.layout_option ==
                                                      Settings::LayoutOption::SideScreen);
     ui.action_Screen_Layout_Swap_Screens->setChecked(Settings::values.swap_screen);
+}
+
+void GMainWindow::InitializeDiscordRPC() {
+#ifdef ENABLE_DISCORD_RPC
+    DiscordEventHandlers handlers{};
+    handlers.disconnected = HandleDiscordDisconnected;
+    handlers.errored = HandleDiscordError;
+    Discord_Initialize("472104565165260826", &handlers, 0, NULL);
+    discord_rpc_start_time = std::chrono::duration_cast<std::chrono::seconds>(
+                                 std::chrono::system_clock::now().time_since_epoch())
+                                 .count();
+    discord_rpc_update_timer.start(500);
+#endif
+}
+
+void GMainWindow::ShutdownDiscordRPC() {
+#ifdef ENABLE_DISCORD_RPC
+    discord_rpc_update_timer.stop();
+    Discord_ClearPresence();
+    Discord_Shutdown();
+#endif
+}
+
+void GMainWindow::UpdateDiscordRPC() {
+#ifdef ENABLE_DISCORD_RPC
+    if (UISettings::values.enable_discord_rpc) {
+        DiscordEventHandlers handlers{};
+        handlers.disconnected = HandleDiscordDisconnected;
+        handlers.errored = HandleDiscordError;
+        DiscordRichPresence presence{};
+        if (auto member{Network::GetRoomMember().lock()})
+            if (member->IsConnected()) {
+                const auto& member_info{member->GetMemberInformation()};
+                const auto& room_info{member->GetRoomInformation()};
+                presence.partySize = member_info.size();
+                presence.partyMax = room_info.member_slots;
+                static std::string room_name;
+                room_name = room_info.name;
+                presence.state = room_name.c_str();
+            }
+        if (!short_title.empty())
+            presence.details = short_title.c_str();
+        presence.startTimestamp = discord_rpc_start_time;
+        presence.largeImageKey = "icon";
+        Discord_UpdatePresence(&presence);
+    }
+#endif
 }
 
 #ifdef main
