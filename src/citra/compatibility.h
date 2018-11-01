@@ -40,7 +40,7 @@ static const std::unordered_map<u64, QStringList> compatibility_database{{
     {0x0004000000055D00, {GitHubIssue("citra-emu/citra", 3009)}}, // Pokémon X
     {0x0004000000055E00, {GitHubIssue("citra-emu/citra", 3009)}}, // Pokémon Y
     {0x000400000F700E00, {}},                                     // Super Mario World
-    {0x000400000F980000, {}},                                     // Test Program (CTRAging)
+    {0x000400000F980000, {"Crashes Citra when booting"}},         // Test Program (CTRAging)
 
     // EUR
     {0x00040000001A4900, {}}, // Ever Oasis
@@ -55,10 +55,10 @@ static const std::unordered_map<u64, QStringList> compatibility_database{{
     {0x00040000001A0500, {"Needs Nintendo Network support"}}, // Super Mario Maker for Nintendo 3DS
     {0x0004000000086400, {"Needs Nintendo Network support"}}, // Animal Crossing: New Leaf
     {0x0004000000030C00,
-     {"Needs Microphone", "Uses Pedometer"}}, // nintendogs + cats (Golden Retriever & New Friends)
-    {0x0004000000033600, {}},                 // The Legend of Zelda: Ocarina of Time 3D
-    {0x00040000001A4200, {}},                 // Poochy & Yoshi's Woolly World
-    {0x0004000000053F00, {}},                 // Super Mario 3D Land
+     {"Needs Microphone", "Needs Pedometer"}}, // nintendogs + cats (Golden Retriever & New Friends)
+    {0x0004000000033600, {}},                  // The Legend of Zelda: Ocarina of Time 3D
+    {0x00040000001A4200, {}},                  // Poochy & Yoshi's Woolly World
+    {0x0004000000053F00, {}},                  // Super Mario 3D Land
     {0x000400000008C400,
      {GitHubIssue("citra-valentin/citra", 277), GitHubIssue("citra-emu/citra", 4320),
       "Exchange Miis or Other Items - The name of the island flashes",
@@ -90,7 +90,7 @@ static const std::unordered_map<u64, QStringList> compatibility_database{{
     {0x0004000000030200, {}}, // Kid Icarus Uprising
     {0x00040000000A5F00, {}}, // Paper Mario Sticker Star
     {0x0004000000031600,
-     {"Needs Microphone", "Uses Pedometer"}}, // nintendogs + cats (Toy Poodle & New Friends)
+     {"Needs Microphone", "Needs Pedometer"}}, // nintendogs + cats (Toy Poodle & New Friends)
     {0x0004000000170B00, {"Softlocks when selecting a game"}}, // Teenage Mutant Ninja Turtles:
                                                                // Master Splinter's Training Pack
 
@@ -128,11 +128,11 @@ static const std::unordered_map<u64, QStringList> compatibility_database{{
     {0x0004000000030800,
      {"Local multiplayer needs DLP", "Needs Nintendo Network support"}}, // Mario Kart 7
     {0x0004000000139000, {}},                                            // 2048
-    {0x00040000001B2700, {}},                                  // YO-KAI WATCH 2: Psychic Specters
-    {0x0004000000112600, {}},                                  // Cut the Rope: Triple Treat
-    {0x00040000001B8700, {}},                                  // Minecraft
-    {0x0004000000062300, {"Multiplayer uses deprecated UDS"}}, // Sonic Generations
-    {0x0004000000126300, {}},                                  // MONSTER HUNTER 4 ULTIMATE
+    {0x00040000001B2700, {}},                                   // YO-KAI WATCH 2: Psychic Specters
+    {0x0004000000112600, {}},                                   // Cut the Rope: Triple Treat
+    {0x00040000001B8700, {}},                                   // Minecraft
+    {0x0004000000062300, {"Multiplayer needs deprecated UDS"}}, // Sonic Generations
+    {0x0004000000126300, {}},                                   // MONSTER HUNTER 4 ULTIMATE
     {0x00040000001D1900, {GitHubIssue("citra-emu/citra", 4330)}}, // Luigi's Mansion
 
     // USA (Demos)
