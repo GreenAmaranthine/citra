@@ -53,7 +53,6 @@ struct CheatLine {
         line = Common::Trim(line);
         try {
             std::string type_temp{line.substr(0, 1)};
-
             // 0xD types have extra subtype value, i.e. 0xDA
             std::string sub_type_temp{};
             if (type_temp == "D" || type_temp == "d")

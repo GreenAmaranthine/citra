@@ -26,9 +26,8 @@ static void CheatTickCallback(u64, int cycles_late) {
 
 void Init() {
     std::string cheats_dir{FileUtil::GetUserPath(FileUtil::UserPath::UserDir) + "cheats"};
-    if (!FileUtil::Exists(cheats_dir)) {
+    if (!FileUtil::Exists(cheats_dir))
         FileUtil::CreateDir(cheats_dir);
-    }
     tick_event = CoreTiming::RegisterEvent("CheatCore::tick_event", CheatTickCallback);
     CoreTiming::ScheduleEvent(BASE_CLOCK_RATE_ARM11, tick_event);
 }
@@ -60,10 +59,8 @@ std::vector<Cheat> Engine::ReadFileContents() {
     std::string file_path{GetFilePath()};
     std::string contents;
     FileUtil::ReadFileToString(true, file_path.c_str(), contents);
-
     std::vector<std::string> lines;
     Common::SplitString(contents, '\n', lines);
-
     std::vector<CheatLine> cheat_lines;
     std::vector<Cheat> cheats;
     std::string name;
@@ -118,9 +115,8 @@ void Engine::RefreshCheats() {
 }
 
 void Engine::Run() {
-    for (auto& cheat : cheats_list) {
+    for (auto& cheat : cheats_list)
         cheat.Execute();
-    }
 }
 
 void Cheat::Execute() {
@@ -159,7 +155,6 @@ void Cheat::Execute() {
             }
             continue;
         }
-
         switch (line.type) {
         case CheatType::Write32: { // 0XXXXXXX YYYYYYYY   word[XXXXXXX+offset] = YYYYYYYY
             addr = line.address + offset;
@@ -187,9 +182,8 @@ void Cheat::Execute() {
             if (line.value > val) {
                 if (if_flag > 0)
                     if_flag--;
-            } else {
+            } else
                 if_flag++;
-            }
             break;
         }
         case CheatType::LessThan32: { // 4XXXXXXX YYYYYYYY   IF YYYYYYYY < word[XXXXXXX]   ;unsigned
@@ -199,9 +193,8 @@ void Cheat::Execute() {
             if (line.value < val) {
                 if (if_flag > 0)
                     if_flag--;
-            } else {
+            } else
                 if_flag++;
-            }
             break;
         }
         case CheatType::EqualTo32: { // 5XXXXXXX YYYYYYYY   IF YYYYYYYY = word[XXXXXXX]
@@ -211,9 +204,8 @@ void Cheat::Execute() {
             if (line.value == val) {
                 if (if_flag > 0)
                     if_flag--;
-            } else {
+            } else
                 if_flag++;
-            }
             break;
         }
         case CheatType::NotEqualTo32: { // 6XXXXXXX YYYYYYYY   IF YYYYYYYY <> word[XXXXXXX]
@@ -223,9 +215,8 @@ void Cheat::Execute() {
             if (line.value != val) {
                 if (if_flag > 0)
                     if_flag--;
-            } else {
+            } else
                 if_flag++;
-            }
             break;
         }
         case CheatType::GreaterThan16: { // 7XXXXXXX ZZZZYYYY   IF YYYY > ((not ZZZZ) AND
@@ -239,9 +230,8 @@ void Cheat::Execute() {
             if (y > (u16)((~z) & val)) {
                 if (if_flag > 0)
                     if_flag--;
-            } else {
+            } else
                 if_flag++;
-            }
             break;
         }
         case CheatType::LessThan16: { // 8XXXXXXX ZZZZYYYY   IF YYYY < ((not ZZZZ) AND
@@ -255,9 +245,8 @@ void Cheat::Execute() {
             if (y < (u16)((~z) & val)) {
                 if (if_flag > 0)
                     if_flag--;
-            } else {
+            } else
                 if_flag++;
-            }
             break;
         }
         case CheatType::EqualTo16: { // 9XXXXXXX ZZZZYYYY   IF YYYY = ((not ZZZZ) AND half[XXXXXXX])
@@ -270,9 +259,8 @@ void Cheat::Execute() {
             if (y == (u16)((~z) & val)) {
                 if (if_flag > 0)
                     if_flag--;
-            } else {
+            } else
                 if_flag++;
-            }
             break;
         }
         case CheatType::NotEqualTo16: { // AXXXXXXX ZZZZYYYY   IF YYYY <> ((not ZZZZ) AND
@@ -286,9 +274,8 @@ void Cheat::Execute() {
             if (y != (u16)((~z) & val)) {
                 if (if_flag > 0)
                     if_flag--;
-            } else {
+            } else
                 if_flag++;
-            }
             break;
         }
         case CheatType::LoadOffset: { // BXXXXXXX 00000000   offset = word[XXXXXXX+offset]
@@ -380,9 +367,8 @@ void Cheat::Execute() {
             if (result) {
                 if (if_flag > 0)
                     if_flag--;
-            } else {
+            } else
                 if_flag++;
-            }
             break;
         }
         case CheatType::Patch: {
@@ -395,7 +381,7 @@ void Cheat::Execute() {
             {
                 u32 j{}, t{}, b{};
                 if (y > 0)
-                    i++; // skip over the current code
+                    i++; // Skip over the current code
                 while (y >= 4) {
                     u32 tmp{(t == 0) ? cheat_lines[i].address : cheat_lines[i].value};
                     if (t == 1)
