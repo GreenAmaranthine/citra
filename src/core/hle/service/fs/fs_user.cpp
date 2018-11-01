@@ -89,7 +89,8 @@ void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
     ASSERT(filename.size() == filename_size);
     FileSys::Path archive_path{archivename_type, archivename};
     FileSys::Path file_path{filename_type, filename};
-    LOG_DEBUG(Service_FS, "archive_id=0x{:08X} archive_path={} file_path={}, mode={} attributes={}",
+    LOG_DEBUG(Service_FS,
+              "archive_id=0x{:08X}, archive_path={}, file_path={}, mode={}, attributes={}",
               static_cast<u32>(archive_id), archive_path.DebugStr(), file_path.DebugStr(), mode.hex,
               attributes);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
@@ -147,7 +148,7 @@ void FS_USER::RenameFile(Kernel::HLERequestContext& ctx) {
     FileSys::Path src_file_path{src_filename_type, src_filename};
     FileSys::Path dest_file_path{dest_filename_type, dest_filename};
     LOG_DEBUG(Service_FS,
-              "src_type={} src_size={} src_data={} dest_type={} dest_size={} dest_data={}",
+              "src_type={}, src_size={}, src_data={}, dest_type={}, dest_size={}, dest_data={}",
               static_cast<u32>(src_filename_type), src_filename_size, src_file_path.DebugStr(),
               static_cast<u32>(dest_filename_type), dest_filename_size, dest_file_path.DebugStr());
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
@@ -179,7 +180,7 @@ void FS_USER::DeleteDirectoryRecursively(Kernel::HLERequestContext& ctx) {
     std::vector<u8> dirname{rp.PopStaticBuffer()};
     ASSERT(dirname.size() == dirname_size);
     FileSys::Path dir_path{dirname_type, dirname};
-    LOG_DEBUG(Service_FS, "type={} size={} data={}", static_cast<u32>(dirname_type), dirname_size,
+    LOG_DEBUG(Service_FS, "type={}, size={}, data={}", static_cast<u32>(dirname_type), dirname_size,
               dir_path.DebugStr());
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(archives.DeleteDirectoryRecursivelyFromArchive(archive_handle, dir_path));
@@ -212,7 +213,7 @@ void FS_USER::CreateDirectory(Kernel::HLERequestContext& ctx) {
     std::vector<u8> dirname{rp.PopStaticBuffer()};
     ASSERT(dirname.size() == dirname_size);
     FileSys::Path dir_path{dirname_type, dirname};
-    LOG_DEBUG(Service_FS, "type={} size={} data={}", static_cast<u32>(dirname_type), dirname_size,
+    LOG_DEBUG(Service_FS, "type={}, size={}, data={}", static_cast<u32>(dirname_type), dirname_size,
               dir_path.DebugStr());
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(archives.CreateDirectoryFromArchive(archive_handle, dir_path));
@@ -371,11 +372,10 @@ void FS_USER::GetFreeBytes(Kernel::HLERequestContext& ctx) {
     ResultVal<u64> bytes_res{archives.GetFreeBytesInArchive(archive_handle)};
     IPC::ResponseBuilder rb{rp.MakeBuilder(3, 0)};
     rb.Push(bytes_res.Code());
-    if (bytes_res.Succeeded()) {
+    if (bytes_res.Succeeded())
         rb.Push<u64>(bytes_res.Unwrap());
-    } else {
+    else
         rb.Push<u64>(0);
-    }
 }
 
 void FS_USER::GetCardType(Kernel::HLERequestContext& ctx) {
@@ -397,7 +397,7 @@ void FS_USER::DeleteSdmcRoot(Kernel::HLERequestContext& ctx) {
 void FS_USER::CreateExtSaveData(Kernel::HLERequestContext& ctx) {
     // TODO: Figure out the other parameters.
     IPC::RequestParser rp{ctx, 0x0851, 9, 2};
-    MediaType media_type{static_cast<MediaType>(rp.Pop<u32>())}; // the other bytes are unknown
+    MediaType media_type{rp.PopEnum<MediaType>()};
     u32 save_low{rp.Pop<u32>()};
     u32 save_high{rp.Pop<u32>()};
     u32 unknown{rp.Pop<u32>()};
@@ -424,7 +424,7 @@ void FS_USER::CreateExtSaveData(Kernel::HLERequestContext& ctx) {
 
 void FS_USER::DeleteExtSaveData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x852, 4, 0};
-    MediaType media_type{static_cast<MediaType>(rp.Pop<u32>())}; // the other bytes are unknown
+    MediaType media_type{rp.PopEnum<MediaType>()};
     u32 save_low{rp.Pop<u32>()};
     u32 save_high{rp.Pop<u32>()};
     u32 unknown{rp.Pop<u32>()}; // TODO: Figure out what this is
@@ -487,7 +487,7 @@ void FS_USER::CreateLegacySystemSaveData(Kernel::HLERequestContext& ctx) {
                 savedata_id, total_size, block_size, directories, files, directory_buckets,
                 file_buckets, duplicate);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-    // With this command, the SystemSaveData always has save_high = 0 (Always created in the NAND)
+    // With this command, the SystemSaveData always has save_high 0 (Always created in the NAND)
     rb.Push(archives.CreateSystemSaveData(0, savedata_id));
 }
 
@@ -650,7 +650,7 @@ void FS_USER::SetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_FS,
-                "(stubbed) value=0x{:016X}, secure_value_slot=0x{:08X} "
+                "(stubbed) value=0x{:016X}, secure_value_slot=0x{:08X}, "
                 "unique_id=0x{:08X}, title_variation=0x{:02X}",
                 value, secure_value_slot, unique_id, title_variation);
 }
@@ -667,8 +667,8 @@ void FS_USER::GetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(4, 0)};
     rb.Push(RESULT_SUCCESS);
     // TODO: Implement secure value lookup
-    rb.Push<bool>(false); // indicates that the secure value doesn't exist
-    rb.Push<u64>(0);      // the secure value
+    rb.Push<bool>(false); // Indicates that the secure value doesn't exist
+    rb.Push<u64>(0);      // The secure value
 }
 
 void FS_USER::GetThisSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
@@ -917,7 +917,7 @@ FS_USER::FS_USER(Core::System& system)
 }
 
 void InstallInterfaces(Core::System& system) {
-    auto& service_manager{system.ServiceManager()};
-    std::make_shared<FS_USER>(system)->InstallAsService(service_manager);
+    std::make_shared<FS_USER>(system)->InstallAsService(system.ServiceManager());
 }
+
 } // namespace Service::FS
