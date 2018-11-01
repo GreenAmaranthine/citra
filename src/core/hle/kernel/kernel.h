@@ -79,12 +79,14 @@ struct MemoryRegionInfo {
 
 class KernelSystem {
 public:
-    explicit KernelSystem(u32 system_mode);
+    KernelSystem();
     ~KernelSystem();
 
+    /// Initialize memory.
+    void InitializeMemory(u32 system_mode);
+
     /**
-     * Creates an address arbiter.
-     *
+     * Creates a address arbiter.
      * @param name Optional name used for debugging.
      * @returns The created AddressArbiter.
      */
@@ -135,7 +137,7 @@ public:
                                                     std::string name = "Unknown");
 
     /**
-     * Creates a timer
+     * Creates a timer.
      * @param reset_type ResetType describing how to create the timer
      * @param name Optional name of timer
      * @return The created Timer
@@ -144,7 +146,6 @@ public:
 
     /**
      * Creates a pair of ServerPort and an associated ClientPort.
-     *
      * @param max_sessions Maximum number of sessions to the port
      * @param name Optional name of the ports
      * @return The created port tuple

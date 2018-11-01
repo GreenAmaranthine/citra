@@ -138,20 +138,21 @@ void System::Reschedule() {
 System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     LOG_DEBUG(HW_Memory, "initialized OK");
     CoreTiming::Init();
-    kernel = std::make_unique<Kernel::KernelSystem>(system_mode);
+    kernel = std::make_unique<Kernel::KernelSystem>();
+    // Initialize FS, CFG and memory
+    service_manager = std::make_shared<Service::SM::ServiceManager>(*this);
+    archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
+    Service::FS::InstallInterfaces(*this);
+    Service::CFG::InstallInterfaces(*this);
+    kernel->InitializeMemory(system_mode);
     cpu_core = std::make_unique<Cpu>();
     dsp_core = std::make_unique<AudioCore::DspHle>();
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching);
 #ifdef ENABLE_SCRIPTING
     rpc_server = std::make_unique<RPC::RPCServer>();
 #endif
-    service_manager = std::make_shared<Service::SM::ServiceManager>(*this);
-    archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
     shutdown_requested = false;
     sleep_mode_enabled = false;
-    // Initialize FS and CFG
-    Service::FS::InstallInterfaces(*this);
-    Service::CFG::InstallInterfaces(*this);
     HW::Init();
     Service::Init(*this);
     CheatCore::Init();

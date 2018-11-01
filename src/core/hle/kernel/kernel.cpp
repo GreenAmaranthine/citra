@@ -15,14 +15,17 @@
 
 namespace Kernel {
 
-KernelSystem::KernelSystem(u32 system_mode) {
-    MemoryInit(system_mode);
+KernelSystem::KernelSystem() {
     resource_limits = std::make_unique<ResourceLimitList>(*this);
     thread_manager = std::make_unique<ThreadManager>();
     timer_manager = std::make_unique<TimerManager>();
 }
 
 KernelSystem::~KernelSystem() = default;
+
+void KernelSystem::InitializeMemory(u32 system_mode) {
+    MemoryInit(system_mode);
+}
 
 ResourceLimitList& KernelSystem::ResourceLimit() {
     return *resource_limits;

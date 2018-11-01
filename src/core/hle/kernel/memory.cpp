@@ -49,7 +49,7 @@ void KernelSystem::MemoryInit(u32 mem_type) {
         else if (mem_type <= 5)
             mem_type = 6;
     ASSERT(mem_type != 1);
-    // The kernel allocation regions (APPLICATION, SYSTEM and BASE) are laid out in sequence, with
+    // The kernel allocation regions (Application, System and Base) are laid out in sequence, with
     // the sizes specified in the memory_region_sizes table.
     VAddr base{};
     for (int i{}; i < 3; ++i) {
