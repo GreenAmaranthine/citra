@@ -95,11 +95,11 @@ APT_S::APT_S(std::shared_ptr<Module> apt)
         {0x00550040, &APT_S::SetScreenCapPostPermission, "SetScreenCapPostPermission"},
         {0x00560000, &APT_S::GetScreenCapPostPermission, "GetScreenCapPostPermission"},
         {0x00570044, nullptr, "WakeupApplication2"},
-        {0x00580002, nullptr, "GetProgramID"},
+        {0x00580002, &APT_S::GetProgramID, "GetProgramID"},
         {0x01010000, &APT_S::CheckNew3DSApp, "CheckNew3DSApp"},
         {0x01020000, &APT_S::CheckNew3DS, "CheckNew3DS"},
         {0x01040000, &APT_S::IsStandardMemoryLayout, "IsStandardMemoryLayout"},
-        {0x01050100, nullptr, "IsTitleAllowed"},
+        {0x01050100, &APT_S::IsTitleAllowed, "IsTitleAllowed"},
     };
     RegisterHandlers(functions);
 }

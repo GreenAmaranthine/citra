@@ -67,15 +67,17 @@ void KernelSystem::MemoryInit(u32 mem_type) {
         ASSERT(base == Memory::FCRAM_N3DS_SIZE);
     else
         ASSERT(base == Memory::FCRAM_SIZE);
-    config_mem = std::make_unique<ConfigMem::ConfigMemDef>();
-    config_mem->app_mem_type = mem_type;
+    // Create config mem
+    config_mem_handler = std::make_unique<ConfigMem::Handler>();
+    auto& config_mem{config_mem_handler->GetConfigMem()};
+    config_mem.app_mem_type = mem_type;
     // app_mem_alloc does not always match the configured size for memory_region[0]: in case the
     // n3DS type override is in effect it reports the size the application expects, not the real
     // one.
-    config_mem->app_mem_alloc = memory_region_sizes[mem_type][0];
-    config_mem->sys_mem_alloc = memory_regions[1].size;
-    config_mem->base_mem_alloc = memory_regions[2].size;
-
+    config_mem.app_mem_alloc = memory_region_sizes[mem_type][0];
+    config_mem.sys_mem_alloc = memory_regions[1].size;
+    config_mem.base_mem_alloc = memory_regions[2].size;
+    // Create shared page
     shared_page_handler = std::make_unique<SharedPage::Handler>();
 }
 
@@ -140,11 +142,12 @@ void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mappin
 }
 
 void KernelSystem::MapSharedPages(VMManager& address_space) {
-    auto cfg_mem_vma{address_space
-                         .MapBackingMemory(Memory::CONFIG_MEMORY_VADDR,
-                                           reinterpret_cast<u8*>(config_mem.get()),
-                                           Memory::CONFIG_MEMORY_SIZE, MemoryState::Shared)
-                         .Unwrap()};
+    auto cfg_mem_vma{
+        address_space
+            .MapBackingMemory(Memory::CONFIG_MEMORY_VADDR,
+                              reinterpret_cast<u8*>(&config_mem_handler->GetConfigMem()),
+                              Memory::CONFIG_MEMORY_SIZE, MemoryState::Shared)
+            .Unwrap()};
     address_space.Reprotect(cfg_mem_vma, VMAPermission::Read);
     auto shared_page_vma{
         address_space

@@ -356,7 +356,7 @@ void Module::Interface::StartApplication(Kernel::HLERequestContext& ctx) {
     u8 paused{rp.Pop<u8>()};
     argument = rp.PopStaticBuffer();
     argument.resize(parameter_size);
-    argument_source = Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id;
+    argument_source = apt->system.Kernel().GetCurrentProcess()->codeset->program_id;
     hmac = rp.PopStaticBuffer();
     hmac.resize(hmac_size);
     apt->system.SetApplication(AM::GetTitleContentPath(apt->jump_media, apt->jump_tid));
@@ -474,7 +474,7 @@ void Module::Interface::DoApplicationJump(Kernel::HLERequestContext& ctx) {
     u32 hmac_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x20))};
     argument = rp.PopStaticBuffer();
     argument.resize(parameter_size);
-    argument_source = Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id;
+    argument_source = apt->system.Kernel().GetCurrentProcess()->codeset->program_id;
     hmac = rp.PopStaticBuffer();
     if (apt->application_restart)
         // Restart system
@@ -714,20 +714,25 @@ void Module::Interface::CheckNew3DSApp(Kernel::HLERequestContext& ctx) {
         rb.Push<u32>(0);
     } else
         PTM::CheckNew3DS(rb);
+    LOG_DEBUG(Service_APT, "called");
 }
 
 void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x102, 2, 0};
     PTM::CheckNew3DS(rb);
+    LOG_DEBUG(Service_APT, "called");
 }
 
 void Module::Interface::IsStandardMemoryLayout(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x104, 2, 0};
     rb.Push(RESULT_SUCCESS);
     if (CFG::IsNewModeEnabled())
-        rb.Push<u32>((apt->system.Kernel().GetConfigMem().app_mem_type != 7) ? 1 : 0);
+        rb.Push<u32>(
+            (apt->system.Kernel().GetConfigMemHandler().GetConfigMem().app_mem_type != 7) ? 1 : 0);
     else
-        rb.Push<u32>((apt->system.Kernel().GetConfigMem().app_mem_type == 0) ? 1 : 0);
+        rb.Push<u32>(
+            (apt->system.Kernel().GetConfigMemHandler().GetConfigMem().app_mem_type == 0) ? 1 : 0);
+    LOG_DEBUG(Service_APT, "called");
 }
 
 void Module::Interface::ReplySleepQuery(Kernel::HLERequestContext& ctx) {
@@ -761,6 +766,7 @@ void Module::Interface::ReceiveDeliverArg(Kernel::HLERequestContext& ctx) {
         hmac.clear();
         argument_source = 0;
     }
+    LOG_DEBUG(Service_APT, "parameter_size={}, hmac_size={}", parameter_size, hmac_size);
 }
 
 void Module::Interface::SendDeliverArg(Kernel::HLERequestContext& ctx) {
@@ -769,11 +775,32 @@ void Module::Interface::SendDeliverArg(Kernel::HLERequestContext& ctx) {
     u32 hmac_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x20))};
     argument = rp.PopStaticBuffer();
     argument.resize(parameter_size);
-    argument_source = Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id;
+    argument_source = apt->system.Kernel().GetCurrentProcess()->codeset->program_id;
     hmac = rp.PopStaticBuffer();
     hmac.resize(hmac_size);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
+    LOG_DEBUG(Service_APT, "parameter_size={}, hmac_size={}", parameter_size, hmac_size);
+}
+
+void Module::Interface::GetProgramID(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x58, 0, 2};
+    u32 pid{rp.PopPID()};
+    auto process{apt->system.Kernel().GetProcessById(pid)};
+    IPC::ResponseBuilder rb{rp.MakeBuilder(3, 0)};
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(process->codeset->program_id);
+    LOG_DEBUG(Service_APT, "called");
+}
+
+void Module::Interface::IsTitleAllowed(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x105, 4, 0};
+    auto program_info{rp.PopRaw<FS::ProgramInfo>()};
+    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(true);
+    LOG_WARNING(Service_APT, "(stubbed) program_info.media_type={}, program_info.program_id={}",
+                program_info.media_type, program_info.program_id);
 }
 
 Module::Interface::Interface(std::shared_ptr<Module> apt, const char* name, u32 max_session)

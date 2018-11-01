@@ -14,7 +14,7 @@
 #include "core/hle/result.h"
 
 namespace ConfigMem {
-class ConfigMemDef;
+class Handler;
 } // namespace ConfigMem
 
 namespace SharedPage {
@@ -216,23 +216,23 @@ public:
     /// Adds a port to the named port table
     void AddNamedPort(std::string name, Kernel::SharedPtr<Kernel::ClientPort> port);
 
-    ThreadManager& GetThreadManager();
     const ThreadManager& GetThreadManager() const;
+    ThreadManager& GetThreadManager();
 
-    TimerManager& GetTimerManager();
     const TimerManager& GetTimerManager() const;
+    TimerManager& GetTimerManager();
 
     void MapSharedPages(VMManager& address_space);
 
-    SharedPage::Handler& GetSharedPageHandler();
     const SharedPage::Handler& GetSharedPageHandler() const;
+    SharedPage::Handler& GetSharedPageHandler();
 
     MemoryRegionInfo* GetMemoryRegion(MemoryRegion region);
 
     MemoryRegionInfo memory_regions[3];
 
-    ConfigMem::ConfigMemDef& GetConfigMem();
-    const ConfigMem::ConfigMemDef& GetConfigMem() const;
+    const ConfigMem::Handler& GetConfigMemHandler() const;
+    ConfigMem::Handler& GetConfigMemHandler();
 
 private:
     void MemoryInit(u32 mem_type);
@@ -249,7 +249,7 @@ private:
     std::unique_ptr<ThreadManager> thread_manager;
     std::unique_ptr<TimerManager> timer_manager;
 
-    std::unique_ptr<ConfigMem::ConfigMemDef> config_mem;
+    std::unique_ptr<ConfigMem::Handler> config_mem_handler;
     std::unique_ptr<SharedPage::Handler> shared_page_handler;
 };
 

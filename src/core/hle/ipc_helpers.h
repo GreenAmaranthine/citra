@@ -398,12 +398,14 @@ inline std::array<Kernel::SharedPtr<Kernel::Object>, N> RequestParser::PopGeneri
 }
 
 namespace detail {
+
 template <typename... T, std::size_t... I>
 std::tuple<Kernel::SharedPtr<T>...> PopObjectsHelper(
     std::array<Kernel::SharedPtr<Kernel::Object>, sizeof...(T)>&& pointers,
     std::index_sequence<I...>) {
     return std::make_tuple(Kernel::DynamicObjectCast<T>(std::move(pointers[I]))...);
 }
+
 } // namespace detail
 
 template <typename... T>

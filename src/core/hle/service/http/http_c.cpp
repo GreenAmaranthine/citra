@@ -300,11 +300,10 @@ std::string Context::GetRawResponseWithoutBody() const {
 void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x1, 1, 4};
     const u32 shmem_size{rp.Pop<u32>()};
-    u32 pid{rp.PopPID()};
+    rp.PopPID();
     shared_memory = rp.PopObject<Kernel::SharedMemory>();
-    if (shared_memory) {
+    if (shared_memory)
         shared_memory->name = "HTTP_C:shared_memory";
-    }
     auto* session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     if (session_data->initialized) {
@@ -317,13 +316,13 @@ void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
     session_data->session_id = ++session_counter;
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(Settings::values.n_wifi_status == 0 ? ERROR_NO_NETWORK_CONNECTION : RESULT_SUCCESS);
-    LOG_DEBUG(Service_HTTP, "shared memory size={}, pid={}", shmem_size, pid);
+    LOG_DEBUG(Service_HTTP, "shmem_size={}", shmem_size);
 }
 
 void HTTP_C::InitializeConnectionSession(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x8, 1, 2};
     const Context::Handle context_handle{rp.Pop<u32>()};
-    u32 pid{rp.PopPID()};
+    rp.PopPID();
     auto* session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     if (session_data->initialized) {
@@ -346,7 +345,7 @@ void HTTP_C::InitializeConnectionSession(Kernel::HLERequestContext& ctx) {
     session_data->current_http_context = context_handle;
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_DEBUG(Service_HTTP, "called, context_handle={}, pid={}", context_handle, pid);
+    LOG_DEBUG(Service_HTTP, "context_handle={}", context_handle);
 }
 
 void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
@@ -429,7 +428,7 @@ void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
         // The real HTTP module just silently fails in this case.
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
-        LOG_ERROR(Service_HTTP, "called, context {} not found", context_handle);
+        LOG_ERROR(Service_HTTP, "context {} not found", context_handle);
         return;
     }
     // TODO: Make sure that only the session that created the context can close it.
@@ -498,8 +497,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(value_buffer);
-    LOG_DEBUG(Service_HTTP, "called, name={}, value={}, context_handle={}", name, value,
-              context_handle);
+    LOG_DEBUG(Service_HTTP, "name={}, value={}, context_handle={}", name, value, context_handle);
 }
 
 void HTTP_C::OpenClientCertContext(Kernel::HLERequestContext& ctx) {
@@ -622,7 +620,7 @@ void HTTP_C::CloseClientCertContext(Kernel::HLERequestContext& ctx) {
     --session_data->num_client_certs;
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
-    LOG_DEBUG(Service_HTTP, "called, cert_handle={}", cert_handle);
+    LOG_DEBUG(Service_HTTP, "cert_handle={}", cert_handle);
 }
 
 void HTTP_C::GetRequestState(Kernel::HLERequestContext& ctx) {

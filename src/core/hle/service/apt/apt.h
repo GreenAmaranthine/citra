@@ -117,6 +117,8 @@ public:
         void ReplySleepQuery(Kernel::HLERequestContext& ctx);
         void SendDeliverArg(Kernel::HLERequestContext& ctx);
         void ReceiveDeliverArg(Kernel::HLERequestContext& ctx);
+        void GetProgramID(Kernel::HLERequestContext& ctx);
+        void IsTitleAllowed(Kernel::HLERequestContext& ctx);
 
     private:
         std::shared_ptr<Module> apt;

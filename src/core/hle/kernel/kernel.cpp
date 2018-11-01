@@ -47,36 +47,36 @@ void KernelSystem::SetCurrentProcess(SharedPtr<Process> process) {
     current_process = std::move(process);
 }
 
-ThreadManager& KernelSystem::GetThreadManager() {
-    return *thread_manager;
-}
-
 const ThreadManager& KernelSystem::GetThreadManager() const {
     return *thread_manager;
 }
 
-TimerManager& KernelSystem::GetTimerManager() {
-    return *timer_manager;
+ThreadManager& KernelSystem::GetThreadManager() {
+    return *thread_manager;
 }
 
 const TimerManager& KernelSystem::GetTimerManager() const {
     return *timer_manager;
 }
 
-SharedPage::Handler& KernelSystem::GetSharedPageHandler() {
-    return *shared_page_handler;
+TimerManager& KernelSystem::GetTimerManager() {
+    return *timer_manager;
 }
 
 const SharedPage::Handler& KernelSystem::GetSharedPageHandler() const {
     return *shared_page_handler;
 }
 
-ConfigMem::ConfigMemDef& KernelSystem::GetConfigMem() {
-    return *config_mem;
+SharedPage::Handler& KernelSystem::GetSharedPageHandler() {
+    return *shared_page_handler;
 }
 
-const ConfigMem::ConfigMemDef& KernelSystem::GetConfigMem() const {
-    return *config_mem;
+const ConfigMem::Handler& KernelSystem::GetConfigMemHandler() const {
+    return *config_mem_handler;
+}
+
+ConfigMem::Handler& KernelSystem::GetConfigMemHandler() {
+    return *config_mem_handler;
 }
 
 } // namespace Kernel

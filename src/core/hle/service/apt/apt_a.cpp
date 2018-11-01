@@ -34,7 +34,7 @@ APT_A::APT_A(std::shared_ptr<Module> apt)
         {0x00170040, nullptr, "FinishPreloadingLibraryApplet"},
         {0x00180040, &APT_A::PrepareToStartLibraryApplet, "PrepareToStartLibraryApplet"},
         {0x00190040, nullptr, "PrepareToStartSystemApplet"},
-        {0x001A0000, nullptr, "PrepareToStartNewestHomeMenu"},
+        {0x001A0000, &APT_A::PrepareToStartNewestHomeMenu, "PrepareToStartNewestHomeMenu"},
         {0x001B00C4, &APT_A::StartApplication, "StartApplication"},
         {0x001C0000, nullptr, "WakeupApplication"},
         {0x001D0000, nullptr, "CancelApplication"},
@@ -99,7 +99,7 @@ APT_A::APT_A(std::shared_ptr<Module> apt)
         {0x01010000, &APT_A::CheckNew3DSApp, "CheckNew3DSApp"},
         {0x01020000, &APT_A::CheckNew3DS, "CheckNew3DS"},
         {0x01040000, &APT_A::IsStandardMemoryLayout, "IsStandardMemoryLayout"},
-        {0x01050100, nullptr, "IsTitleAllowed"},
+        {0x01050100, &APT_A::IsTitleAllowed, "IsTitleAllowed"},
     };
     RegisterHandlers(functions);
 }

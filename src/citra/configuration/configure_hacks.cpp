@@ -13,6 +13,7 @@ ConfigureHacks::ConfigureHacks(QWidget* parent)
     LoadConfiguration();
     ui->toggle_priority_boost->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     ui->toggle_force_memory_mode_7->setEnabled(!Core::System::GetInstance().IsPoweredOn());
+    ui->disable_mh_2xmsaa->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     connect(ui->combo_ticks_mode,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
             [&](int index) { ui->spinbox_ticks->setEnabled(index == 2); });
@@ -27,6 +28,7 @@ void ConfigureHacks::LoadConfiguration() {
     ui->spinbox_ticks->setEnabled(Settings::values.ticks_mode == Settings::TicksMode::Custom);
     ui->toggle_bos->setChecked(Settings::values.use_bos);
     ui->toggle_force_memory_mode_7->setChecked(Settings::values.force_memory_mode_7);
+    ui->disable_mh_2xmsaa->setChecked(Settings::values.disable_mh_2xmsaa);
 }
 
 void ConfigureHacks::ApplyConfiguration() {
@@ -36,6 +38,7 @@ void ConfigureHacks::ApplyConfiguration() {
     Settings::values.ticks = static_cast<u64>(ui->spinbox_ticks->value());
     Settings::values.use_bos = ui->toggle_bos->isChecked();
     Settings::values.force_memory_mode_7 = ui->toggle_force_memory_mode_7->isChecked();
+    Settings::values.disable_mh_2xmsaa = ui->disable_mh_2xmsaa->isChecked();
     auto& system{Core::System::GetInstance()};
     if (system.IsPoweredOn())
         system.CPU().SyncSettings();

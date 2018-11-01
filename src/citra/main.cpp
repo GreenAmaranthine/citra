@@ -135,7 +135,8 @@ GMainWindow::GMainWindow() : config{new Config()} {
     QStringList args{QApplication::arguments()};
     if (args.length() >= 2)
         BootApplication(args[1].toStdString());
-    InitializeDiscordRPC();
+    if (UISettings::values.enable_discord_rpc)
+        InitializeDiscordRPC();
 }
 
 GMainWindow::~GMainWindow() {
@@ -1133,6 +1134,7 @@ void GMainWindow::OnOpenConfiguration() {
     auto old_theme{UISettings::values.theme};
     auto old_profile{Settings::values.profile};
     auto old_profiles{Settings::values.profiles};
+    auto old_disable_mh_2xmsaa{Settings::values.disable_mh_2xmsaa};
     auto old_enable_discord_rpc{UISettings::values.enable_discord_rpc};
     auto result{configuration_dialog.exec()};
     if (result == QDialog::Accepted) {
@@ -1147,6 +1149,12 @@ void GMainWindow::OnOpenConfiguration() {
             if (UISettings::values.theme != old_theme) {
                 UpdateUITheme();
                 emit UpdateThemedIcons();
+            }
+            if (Settings::values.disable_mh_2xmsaa != old_disable_mh_2xmsaa) {
+                if (system.IsPoweredOn())
+                    system.Kernel().GetSharedPageHandler().Update3DSettings();
+                if (control_panel)
+                    control_panel->Update3D();
             }
             SyncMenuUISettings();
             app_list->Refresh();

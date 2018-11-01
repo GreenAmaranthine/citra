@@ -350,12 +350,12 @@ void Module::Interface::UpdateStoredAmiiboData(Kernel::HLERequestContext& ctx) {
                            ErrorSummary::InvalidState, ErrorLevel::Status));
         return;
     }
-    Kernel::SharedPtr<Kernel::Process> process{nfc->system.Kernel().GetProcessById(pid)};
+    auto process{nfc->system.Kernel().GetProcessById(pid)};
     // TODO: update last-write date, the write counter and program ID (when a certain state field is
     // value 0x1)
     nfc->UpdateAmiiboData();
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_NFC, "stubbed");
+    LOG_WARNING(Service_NFC, "(stubbed) pid={}", pid);
 }
 
 void Module::Interface::GetAppDataInitStruct(Kernel::HLERequestContext& ctx) {
