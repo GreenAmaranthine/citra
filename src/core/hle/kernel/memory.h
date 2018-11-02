@@ -43,7 +43,7 @@ struct MemoryRegionInfo {
      * Allocates memory from the linear heap with specific address and size.
      * @param offset the address offset to the beginning of FCRAM.
      * @param size size of the memory to allocate.
-     * @returns true if the allocation is successful. false if the requested region is not free.
+     * @returns true if the allocation is successful. false if the requested region isn't free.
      */
     bool LinearAllocate(u32 offset, u32 size);
 

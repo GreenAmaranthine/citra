@@ -262,7 +262,7 @@ static void TextureCopy(const Regs::DisplayTransferConfig& config) {
     u8* dst_pointer{Memory::GetPhysicalPointer(dst_addr)};
     u32 remaining_size{Common::AlignDown(config.texture_copy.size, 16)};
     if (remaining_size == 0) {
-        // Real hardware freezes in this case. we do same
+        // Real hardware freezes in this case. we do the same
         for (;;)
             ;
     }
@@ -273,12 +273,12 @@ static void TextureCopy(const Regs::DisplayTransferConfig& config) {
     u32 input_width{input_gap == 0 ? remaining_size : config.texture_copy.input_width * 16};
     u32 output_width{output_gap == 0 ? remaining_size : config.texture_copy.output_width * 16};
     if (input_width == 0) {
-        // Real hardware freezes in this case. we do same
+        // Real hardware freezes in this case. we do the same
         for (;;)
             ;
     }
     if (output_width == 0) {
-        // Real hardware freezes in this case. we do same
+        // Real hardware freezes in this case. we do the same
         for (;;)
             ;
     }

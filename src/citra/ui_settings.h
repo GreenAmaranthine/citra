@@ -33,7 +33,7 @@ struct AppDir {
 };
 
 enum class AppListIconSize {
-    NoIcon,    ///< Do not display icons
+    NoIcon,    ///< Don't display icons
     SmallIcon, ///< Display a small (24x24) icon
     LargeIcon, ///< Display a large (48x48) icon
 };

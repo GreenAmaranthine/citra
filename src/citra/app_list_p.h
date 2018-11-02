@@ -158,7 +158,7 @@ public:
         setData(qulonglong(program_id), ProgramIdRole);
         setData(qulonglong(extdata_id), ExtdataIdRole);
         if (UISettings::values.app_list_icon_size == UISettings::AppListIconSize::NoIcon) {
-            // Do not display icons
+            // Don't display icons
             setData(QPixmap{}, Qt::DecorationRole);
         }
         bool large{UISettings::values.app_list_icon_size == UISettings::AppListIconSize::LargeIcon};

@@ -114,7 +114,7 @@ void DSP_DSP::ReadPipe(Kernel::HLERequestContext& ctx) {
     if (pipe_readable_size >= size)
         pipe_buffer = system.DSP().PipeRead(pipe, size);
     else {
-        // No more data is in pipe. Hardware hangs in this case. we do same
+        // No more data is in pipe. Hardware hangs in this case. we do the same
         for (;;)
             ;
     }

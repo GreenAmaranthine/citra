@@ -43,7 +43,7 @@ void ScanForAndUnmapBuffer(std::array<u32, IPC::COMMAND_BUFFER_LENGTH>& dst_cmd_
                 continue;
             }
             ASSERT(permissions == dest_permissions && size == dest_size);
-            // Readonly buffers do not need to be copied over to the target
+            // Readonly buffers don't need to be copied over to the target
             // process again because they were (presumably) not modified. This
             // behavior is consistent with the real kernel.
             if (permissions != IPC::MappedBufferPermissions::R)

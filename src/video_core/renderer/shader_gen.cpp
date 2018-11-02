@@ -1358,7 +1358,7 @@ vec4 rounded_primary_color = byteround(primary_color);
 vec4 primary_fragment_color = vec4(0.0);
 vec4 secondary_fragment_color = vec4(0.0);
 )";
-    // Do not do any sort of processing if it's obvious we're not going to pass the alpha test
+    // Don't do any sort of processing if it's obvious we're not going to pass the alpha test
     if (state.alpha_test_func == FramebufferRegs::CompareFunc::Never) {
         out += "discard; }";
         return out;

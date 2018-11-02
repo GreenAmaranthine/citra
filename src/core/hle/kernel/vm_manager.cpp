@@ -92,7 +92,7 @@ ResultVal<VAddr> VMManager::MapMemoryBlockToBase(VAddr base, u32 region_size,
         return vma_end > base && vma_end >= base + size;
     })};
     VAddr target{std::max(base, vma_handle->second.base)};
-    // Do not try to allocate the block if there are no available addresses within the desired
+    // Don't try to allocate the block if there are no available addresses within the desired
     // region.
     if (vma_handle == vma_map.end() || target + size > base + region_size)
         return ResultCode(ErrorDescription::OutOfMemory, ErrorModule::Kernel,

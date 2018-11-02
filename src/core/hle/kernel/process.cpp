@@ -237,9 +237,9 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
         // It seems that target is required to follow immediately after the allocated linear heap,
         // or cover the entire hole if there is any.
         // Right now we just ignore these checks because they are still unclear. Further more,
-        // games and homebrew only ever seem to pass target = 0 here (which lets the kernel decide
+        // games and homebrew only ever seem to pass target 0 here (which lets the kernel decide
         // the address), so this not important.
-        physical_offset = target - GetLinearHeapAreaAddress(); // relative to FCRAM
+        physical_offset = target - GetLinearHeapAreaAddress(); // Relative to FCRAM
         if (!memory_region->LinearAllocate(physical_offset, size)) {
             LOG_ERROR(Kernel, "Trying to allocate already allocated memory");
             return ERR_INVALID_ADDRESS_STATE;

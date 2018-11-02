@@ -519,7 +519,7 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
         objects[i] = object;
     }
     // we're also sending a command reply.
-    // Do not send a reply if the command id in the command buffer is 0xFFFF.
+    // Don't send a reply if the command id in the command buffer is 0xFFFF.
     Thread* thread{kernel.GetThreadManager().GetCurrentThread()};
     u32 cmd_buff_header{Memory::Read32(thread->GetCommandBufferAddress())};
     IPC::Header header{cmd_buff_header};

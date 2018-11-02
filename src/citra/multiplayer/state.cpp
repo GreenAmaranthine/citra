@@ -32,17 +32,14 @@ MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* app_list
         connect(this, &MultiplayerState::NetworkStateChanged, this,
                 &MultiplayerState::OnNetworkStateChanged);
     }
-
     qRegisterMetaType<Network::RoomMember::State>();
     qRegisterMetaType<Common::WebResult>();
     announce_multiplayer_session = std::make_shared<Core::AnnounceMultiplayerSession>();
     announce_multiplayer_session->BindErrorCallback(
         [this](const Common::WebResult& result) { emit AnnounceFailed(result); });
     connect(this, &MultiplayerState::AnnounceFailed, this, &MultiplayerState::OnAnnounceFailed);
-
     status_icon = new ClickableLabel(this);
     status_icon->setPixmap(QIcon::fromTheme("disconnected").pixmap(16));
-
     connect(status_icon, &ClickableLabel::clicked, this, &MultiplayerState::OnOpenNetworkRoom);
 }
 
