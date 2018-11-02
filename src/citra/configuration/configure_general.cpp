@@ -29,6 +29,7 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
             return;
         emit RestoreDefaultsRequested();
     });
+    ui->toggle_console->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     LoadConfiguration();
 }
 
@@ -36,7 +37,6 @@ ConfigureGeneral::~ConfigureGeneral() {}
 
 void ConfigureGeneral::LoadConfiguration() {
     ui->combobox_keyboard_mode->setCurrentIndex(static_cast<int>(Settings::values.keyboard_mode));
-    ui->toggle_console->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     ui->toggle_console->setChecked(UISettings::values.show_console);
     ui->log_filter_edit->setText(QString::fromStdString(Settings::values.log_filter));
 }

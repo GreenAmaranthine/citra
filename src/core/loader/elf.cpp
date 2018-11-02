@@ -367,12 +367,13 @@ ResultStatus AppLoader_ELF::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     ElfReader elf_reader{&buffer[0]};
     SharedPtr<CodeSet> codeset{elf_reader.LoadInto(Memory::PROCESS_IMAGE_VADDR)};
     codeset->name = filename;
-    process = Core::System::GetInstance().Kernel().CreateProcess(std::move(codeset));
+    auto& kernel{Core::System::GetInstance().Kernel()};
+    process = kernel.CreateProcess(std::move(codeset));
     process->svc_access_mask.set();
     process->address_mappings = default_address_mappings;
-    // Attach the default resource limit (APPLICATION) to the process
-    process->resource_limit = Core::System::GetInstance().Kernel().ResourceLimit().GetForCategory(
-        Kernel::ResourceLimitCategory::APPLICATION);
+    // Attach the default resource limit (Application) to the process
+    process->resource_limit =
+        kernel.ResourceLimit().GetForCategory(Kernel::ResourceLimitCategory::Application);
     process->Run(48, Kernel::DEFAULT_STACK_SIZE);
     is_loaded = true;
     return ResultStatus::Success;

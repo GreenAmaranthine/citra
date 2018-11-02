@@ -172,7 +172,7 @@ public:
     // Memory Management
     VMManager vm_manager;
 
-    u32 heap_used = 0, linear_heap_used = 0, misc_memory_used = 0;
+    u32 memory_used = 0;
 
     MemoryRegionInfo* memory_region{};
 

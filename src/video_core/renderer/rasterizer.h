@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstring>
 #include <memory>
+#include <optional>
 #include <vector>
 #include "common/bit_field.h"
 #include "common/common_types.h"
@@ -227,7 +228,7 @@ private:
     };
 
     /// Retrieve the range and the size of the input vertex
-    VertexArrayInfo AnalyzeVertexArray(bool is_indexed);
+    std::optional<VertexArrayInfo> AnalyzeVertexArray(bool is_indexed);
 
     /// Setup vertex array for AccelerateDrawBatch
     void SetupVertexArray(u8* array_ptr, GLintptr buffer_offset, GLuint vs_input_index_min,

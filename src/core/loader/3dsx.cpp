@@ -254,27 +254,22 @@ FileType AppLoader_THREEDSX::IdentifyType(FileUtil::IOFile& file) {
 ResultStatus AppLoader_THREEDSX::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
-
     if (!file.IsOpen())
         return ResultStatus::Error;
-
-    SharedPtr<CodeSet> codeset{};
+    SharedPtr<CodeSet> codeset;
     if (Load3DSXFile(file, Memory::PROCESS_IMAGE_VADDR, &codeset) != ERROR_NONE)
         return ResultStatus::Error;
     codeset->name = filename;
-
-    process = Core::System::GetInstance().Kernel().CreateProcess(std::move(codeset));
+    auto& system{Core::System::GetInstance()};
+    auto& kernel{system.Kernel()};
+    process = kernel.CreateProcess(std::move(codeset));
     process->svc_access_mask.set();
     process->address_mappings = default_address_mappings;
-
-    // Attach the default resource limit (APPLICATION) to the process
-    process->resource_limit = Core::System::GetInstance().Kernel().ResourceLimit().GetForCategory(
-        Kernel::ResourceLimitCategory::APPLICATION);
-
+    // Attach the default resource limit (Application) to the process
+    process->resource_limit =
+        kernel.ResourceLimit().GetForCategory(Kernel::ResourceLimitCategory::Application);
     process->Run(48, Kernel::DEFAULT_STACK_SIZE);
-
-    Core::System::GetInstance().ArchiveManager().RegisterSelfNCCH(*this);
-
+    system.ArchiveManager().RegisterSelfNCCH(*this);
     is_loaded = true;
     return ResultStatus::Success;
 }

@@ -17,6 +17,7 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
     : QWidget{parent}, ui{std::make_unique<Ui::ConfigureGraphics>()} {
     ui->setupUi(this);
     LoadConfiguration();
+    ui->enable_shadows->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     ui->frame_limit->setEnabled(Settings::values.use_frame_limit);
     connect(ui->toggle_frame_limit, &QCheckBox::stateChanged, ui->frame_limit,
             &QSpinBox::setEnabled);

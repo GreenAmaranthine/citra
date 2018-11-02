@@ -20,10 +20,10 @@ SharedPtr<ResourceLimit> ResourceLimit::Create(KernelSystem& kernel, std::string
 
 SharedPtr<ResourceLimit> ResourceLimitList::GetForCategory(ResourceLimitCategory category) {
     switch (category) {
-    case ResourceLimitCategory::APPLICATION:
-    case ResourceLimitCategory::SYS_APPLET:
-    case ResourceLimitCategory::LIB_APPLET:
-    case ResourceLimitCategory::OTHER:
+    case ResourceLimitCategory::Application:
+    case ResourceLimitCategory::SystemApplet:
+    case ResourceLimitCategory::LibraryApplet:
+    case ResourceLimitCategory::Other:
         return resource_limits[static_cast<u8>(category)];
     default:
         UNREACHABLE_MSG("Unknown resource limit category");
@@ -88,7 +88,7 @@ u32 ResourceLimit::GetMaxResourceValue(u32 resource) const {
 
 ResourceLimitList::ResourceLimitList(KernelSystem& kernel) {
     // Create the four resource limits that the system uses
-    // Create the APPLICATION resource limit
+    // Create the Applications resource limit
     SharedPtr<ResourceLimit> resource_limit{ResourceLimit::Create(kernel, "Applications")};
     resource_limit->max_priority = 0x18;
     resource_limit->max_commit = 0x4000000;
@@ -100,8 +100,8 @@ ResourceLimitList::ResourceLimitList(KernelSystem& kernel) {
     resource_limit->max_shared_mems = 0x10;
     resource_limit->max_address_arbiters = 0x2;
     resource_limit->max_cpu_time = 0x1E;
-    resource_limits[static_cast<u8>(ResourceLimitCategory::APPLICATION)] = resource_limit;
-    // Create the SYS_APPLET resource limit
+    resource_limits[static_cast<u8>(ResourceLimitCategory::Application)] = resource_limit;
+    // Create the System Applets resource limit
     resource_limit = ResourceLimit::Create(kernel, "System Applets");
     resource_limit->max_priority = 0x4;
     resource_limit->max_commit = 0x5E00000;
@@ -113,8 +113,8 @@ ResourceLimitList::ResourceLimitList(KernelSystem& kernel) {
     resource_limit->max_shared_mems = 0x8;
     resource_limit->max_address_arbiters = 0x3;
     resource_limit->max_cpu_time = 0x2710;
-    resource_limits[static_cast<u8>(ResourceLimitCategory::SYS_APPLET)] = resource_limit;
-    // Create the LIB_APPLET resource limit
+    resource_limits[static_cast<u8>(ResourceLimitCategory::SystemApplet)] = resource_limit;
+    // Create the Library Applets resource limit
     resource_limit = ResourceLimit::Create(kernel, "Library Applets");
     resource_limit->max_priority = 0x4;
     resource_limit->max_commit = 0x600000;
@@ -126,8 +126,8 @@ ResourceLimitList::ResourceLimitList(KernelSystem& kernel) {
     resource_limit->max_shared_mems = 0x8;
     resource_limit->max_address_arbiters = 0x1;
     resource_limit->max_cpu_time = 0x2710;
-    resource_limits[static_cast<u8>(ResourceLimitCategory::LIB_APPLET)] = resource_limit;
-    // Create the OTHER resource limit
+    resource_limits[static_cast<u8>(ResourceLimitCategory::LibraryApplet)] = resource_limit;
+    // Create the Others resource limit
     resource_limit = ResourceLimit::Create(kernel, "Others");
     resource_limit->max_priority = 0x4;
     resource_limit->max_commit = 0x2180000;
@@ -139,7 +139,7 @@ ResourceLimitList::ResourceLimitList(KernelSystem& kernel) {
     resource_limit->max_shared_mems = 0x1F;
     resource_limit->max_address_arbiters = 0x2D;
     resource_limit->max_cpu_time = 0x3E8;
-    resource_limits[static_cast<u8>(ResourceLimitCategory::OTHER)] = resource_limit;
+    resource_limits[static_cast<u8>(ResourceLimitCategory::Other)] = resource_limit;
 }
 
 ResourceLimitList::~ResourceLimitList() = default;

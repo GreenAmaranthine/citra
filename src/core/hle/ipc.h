@@ -108,7 +108,7 @@ inline u32 StaticBufferDesc(std::size_t size, u8 buffer_id) {
  * read-write access.
  * @return The created PXI buffer header.
  *
- * The next value is a phys-address of a table located in the BASE memregion.
+ * The next value is a phys-address of a table located in the Base memregion.
  */
 inline u32 PXIBufferDesc(u32 size, unsigned buffer_id, bool is_read_only) {
     u32 type = PXIBuffer;

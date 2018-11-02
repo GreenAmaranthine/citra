@@ -216,6 +216,8 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
                     DecodePixel(config.input_format, src_pixel + 3 * src_bytes_per_pixel)};
                 src_color = (((src_color + pixel1) + (pixel2 + pixel3)) / 4).Cast<u8>();
             }
+            if (!dst_pointer)
+                break;
             u8* dst_pixel{dst_pointer + dst_offset};
             switch (config.output_format) {
             case Regs::PixelFormat::RGBA8:

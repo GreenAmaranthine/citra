@@ -1033,8 +1033,8 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
     if (!VerifyPermissions(static_cast<MemoryPermission>(my_permission)) ||
         !VerifyPermissions(static_cast<MemoryPermission>(other_permission)))
         return ERR_INVALID_COMBINATION;
-    // TODO: Processes with memory type APPLICATION aren't allowed
-    // to create memory blocks with addr = 0, any attempts to do so
+    // TODO: Processes with memory type Application aren't allowed
+    // to create memory blocks with addr 0, any attempts to do so
     // should return error 0xD92007EA.
     if ((addr < Memory::PROCESS_IMAGE_VADDR || addr + size > Memory::SHARED_MEMORY_VADDR_END) &&
         addr != 0)
@@ -1042,7 +1042,7 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
     SharedPtr<Process> current_process{Core::System::GetInstance().Kernel().GetCurrentProcess()};
     // When trying to create a memory block with address = 0,
     // if the process has the Shared Device Memory flag in the exheader,
-    // then we have to allocate from the same region as the caller process instead of the BASE
+    // then we have to allocate from the same region as the caller process instead of the Base
     // region.
     MemoryRegion region{MemoryRegion::Base};
     if (addr == 0 && current_process->flags.shared_device_mem)
@@ -1156,7 +1156,7 @@ static ResultCode GetProcessInfo(s64* out, Handle process_handle, u32 type) {
     case 2:
         // TODO: Type 0 returns a slightly higher number than type 2, but I'm not sure
         // what's the difference between them.
-        *out = process->heap_used + process->linear_heap_used + process->misc_memory_used;
+        *out = process->memory_used;
         if (*out % Memory::PAGE_SIZE != 0) {
             LOG_ERROR(Kernel_SVC, "memory size not page-aligned");
             return ERR_MISALIGNED_SIZE;

@@ -296,23 +296,20 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
     auto [available_page, available_slot, needs_allocation]{GetFreeThreadLocalSlot(tls_slots)};
     if (needs_allocation) {
         // There are no already-allocated pages with free slots, lets allocate a new one.
-        // TLS pages are allocated from the BASE region in the linear heap.
-        MemoryRegionInfo* memory_region = GetMemoryRegion(MemoryRegion::Base);
-
+        // TLS pages are allocated from the Bae region in the linear heap.
+        MemoryRegionInfo* memory_region{GetMemoryRegion(MemoryRegion::Base)};
         // Allocate some memory from the end of the linear heap for this region.
-        auto offset = memory_region->LinearAllocate(Memory::PAGE_SIZE);
+        auto offset{memory_region->LinearAllocate(Memory::PAGE_SIZE)};
         if (!offset) {
             LOG_ERROR(Kernel_SVC,
                       "Not enough space in region to allocate a new TLS page for thread");
             return ERR_OUT_OF_MEMORY;
         }
-        owner_process.linear_heap_used += Memory::PAGE_SIZE;
+        owner_process.memory_used += Memory::PAGE_SIZE;
         tls_slots.emplace_back(0); // The page is completely available at the start
         available_page = tls_slots.size() - 1;
         available_slot = 0; // Use the first slot in the new page
-
-        auto& vm_manager = owner_process.vm_manager;
-
+        auto& vm_manager{owner_process.vm_manager};
         // Map the page to the current process' address space.
         // TODO: Find the correct MemoryState for this region.
         vm_manager.MapBackingMemory(Memory::TLS_AREA_VADDR + available_page * Memory::PAGE_SIZE,

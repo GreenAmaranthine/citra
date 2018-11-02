@@ -11,9 +11,10 @@ ConfigureHacks::ConfigureHacks(QWidget* parent)
     : QWidget{parent}, ui{std::make_unique<Ui::ConfigureHacks>()} {
     ui->setupUi(this);
     LoadConfiguration();
-    ui->toggle_priority_boost->setEnabled(!Core::System::GetInstance().IsPoweredOn());
-    ui->toggle_force_memory_mode_7->setEnabled(!Core::System::GetInstance().IsPoweredOn());
-    ui->disable_mh_2xmsaa->setEnabled(!Core::System::GetInstance().IsPoweredOn());
+    bool is_powered_on{Core::System::GetInstance().IsPoweredOn()};
+    ui->toggle_priority_boost->setEnabled(!is_powered_on);
+    ui->toggle_force_memory_mode_7->setEnabled(!is_powered_on);
+    ui->disable_mh_2xmsaa->setEnabled(!is_powered_on);
     connect(ui->combo_ticks_mode,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
             [&](int index) { ui->spinbox_ticks->setEnabled(index == 2); });

@@ -109,7 +109,6 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
             HeapAllocate(segment.addr, segment.size, permissions, memory_state, true);
             Memory::WriteBlock(*this, segment.addr, codeset->memory->data() + segment.offset,
                                segment.size);
-            misc_memory_used += segment.size;
         }};
     // Map CodeSet segments
     MapSegment(codeset->CodeSegment(), VMAPermission::ReadExecute, MemoryState::Code);
@@ -118,7 +117,6 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
     // Allocate and map stack
     HeapAllocate(Memory::HEAP_VADDR_END - stack_size, stack_size, VMAPermission::ReadWrite,
                  MemoryState::Locked, true);
-    misc_memory_used += stack_size;
     // Map special address mappings
     kernel.MapSharedPages(vm_manager);
     for (const auto& mapping : address_mappings)
@@ -182,7 +180,7 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
         vm_manager.Reprotect(vma.Unwrap(), perms);
         interval_target += interval_size;
     }
-    heap_used += size;
+    memory_used += size;
     resource_limit->current_commit += size;
     return MakeResult<VAddr>(target);
 }
@@ -213,7 +211,7 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
     }
     ResultCode result{vm_manager.UnmapRange(target, size)};
     ASSERT(result.IsSuccess());
-    heap_used -= size;
+    memory_used -= size;
     resource_limit->current_commit -= size;
     return RESULT_SUCCESS;
 }
@@ -252,7 +250,7 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
     auto vma{vm_manager.MapBackingMemory(target, backing_memory, size, MemoryState::Continuous)};
     ASSERT(vma.Succeeded());
     vm_manager.Reprotect(vma.Unwrap(), perms);
-    linear_heap_used += size;
+    memory_used += size;
     resource_limit->current_commit += size;
     LOG_INFO(Kernel, "Allocated at target={:08X}", target);
     return MakeResult<VAddr>(target);
@@ -272,7 +270,7 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
         LOG_ERROR(Kernel, "Trying to free already freed memory");
         return result;
     }
-    linear_heap_used -= size;
+    memory_used -= size;
     resource_limit->current_commit -= size;
     u32 physical_offset{target - GetLinearHeapAreaAddress()}; // Relative to FCRAM
     memory_region->Free(physical_offset, size);
