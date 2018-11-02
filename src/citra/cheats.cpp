@@ -74,9 +74,8 @@ void CheatDialog::UpdateTitleID() {
     system.CheatManager().RefreshCheats();
     ui->labelTitle->setText(
         QString("Title ID: %1")
-            .arg(QString::fromStdString(fmt::format(
-                "{:016X}",
-                Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id))));
+            .arg(QString::fromStdString(
+                fmt::format("{:016X}", system.Kernel().GetCurrentProcess()->codeset->program_id))));
     LoadCheats();
     ui->textLines->setEnabled(false);
     selection_changing = true;

@@ -42,8 +42,8 @@ class KernelSystem;
 } // namespace Kernel
 
 namespace CheatCore {
-    class CheatManager;
-}//
+class CheatManager;
+} // namespace CheatCore
 
 namespace Core {
 

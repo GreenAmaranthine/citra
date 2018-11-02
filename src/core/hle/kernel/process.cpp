@@ -6,8 +6,8 @@
 #include <memory>
 #include "common/assert.h"
 #include "common/common_funcs.h"
-#include "core/core.h"
 #include "common/logging/log.h"
+#include "core/core.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
