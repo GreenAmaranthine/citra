@@ -66,11 +66,16 @@ void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
         rb.PushMoveObjects<Kernel::Object>(nullptr);
         LOG_ERROR(Service_FS, "failed to get a handle for file {}", file_path.DebugStr());
     }
-    // Super Mario Maker fix
-    ctx.SleepClientThread(system.Kernel().GetThreadManager().GetCurrentThread(), "fs::openfile",
-                          std::chrono::nanoseconds{10000000},
+    auto archive{archives.GetArchive(archive_handle)};
+    if (!archive)
+        return;
+    std::chrono::nanoseconds open_timeout_ns{archive->GetOpenDelayNs()};
+    ctx.SleepClientThread(system.Kernel().GetThreadManager().GetCurrentThread(), "fs_user::open",
+                          open_timeout_ns,
                           [](Kernel::SharedPtr<Kernel::Thread> thread,
-                             Kernel::HLERequestContext& ctx, Kernel::ThreadWakeupReason reason) {});
+                             Kernel::HLERequestContext& ctx, Kernel::ThreadWakeupReason reason) {
+                              // Nothing to do here
+                          });
 }
 
 void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {

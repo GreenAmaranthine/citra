@@ -22,11 +22,16 @@ class IVFCDelayGenerator : public DelayGenerator {
     u64 GetReadDelayNs(std::size_t length) override {
         // This is the delay measured for a romfs read.
         // For now we will take that as a default
-        static constexpr u64 slope(94);
-        static constexpr u64 offset(582778);
-        static constexpr u64 minimum(663124);
-        u64 IPCDelayNanoseconds{std::max<u64>(static_cast<u64>(length) * slope + offset, minimum)};
-        return IPCDelayNanoseconds;
+        constexpr u64 slope{94};
+        constexpr u64 offset{582778};
+        constexpr u64 minimum{663124};
+        return std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
+    }
+
+    u64 GetOpenDelayNs() override {
+        // This is the delay measured for a romfs open.
+        // For now we will take that as a default
+        return 9438006;
     }
 };
 
@@ -36,11 +41,17 @@ public:
         // The delay was measured on O3DS and O2DS with
         // https://gist.github.com/B3n30/ac40eac20603f519ff106107f4ac9182
         // from the results the average of each length was taken.
-        static constexpr u64 slope(94);
-        static constexpr u64 offset(582778);
-        static constexpr u64 minimum(663124);
-        u64 IPCDelayNanoseconds{std::max<u64>(static_cast<u64>(length) * slope + offset, minimum)};
-        return IPCDelayNanoseconds;
+        constexpr u64 slope{94};
+        constexpr u64 offset{582778};
+        constexpr u64 minimum{663124};
+        return std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
+    }
+
+    u64 GetOpenDelayNs() override {
+        // This is the delay measured on O3DS and O2DS with
+        // https://gist.github.com/FearlessTobi/eb1d70619c65c7e6f02141d71e79a36e
+        // from the results the average of each length was taken.
+        return 9438006;
     }
 };
 
@@ -50,11 +61,17 @@ public:
         // The delay was measured on O3DS and O2DS with
         // https://gist.github.com/B3n30/ac40eac20603f519ff106107f4ac9182
         // from the results the average of each length was taken.
-        static constexpr u64 slope(94);
-        static constexpr u64 offset(582778);
-        static constexpr u64 minimum(663124);
-        u64 IPCDelayNanoseconds{std::max<u64>(static_cast<u64>(length) * slope + offset, minimum)};
-        return IPCDelayNanoseconds;
+        constexpr u64 slope{94};
+        constexpr u64 offset{582778};
+        constexpr u64 minimum{663124};
+        return std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
+    }
+
+    u64 GetOpenDelayNs() override {
+        // This is the delay measured on O3DS and O2DS with
+        // https://gist.github.com/FearlessTobi/eb1d70619c65c7e6f02141d71e79a36e
+        // from the results the average of each length was taken.
+        return 9438006;
     }
 };
 
@@ -65,7 +82,8 @@ public:
  */
 class IVFCArchive : public ArchiveBackend {
 public:
-    IVFCArchive(std::shared_ptr<RomFSReader> file);
+    IVFCArchive(std::shared_ptr<RomFSReader> file,
+                std::unique_ptr<DelayGenerator> delay_generator_);
 
     std::string GetName() const override;
 

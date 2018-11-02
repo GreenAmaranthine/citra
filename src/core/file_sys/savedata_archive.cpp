@@ -16,11 +16,17 @@ public:
         // The delay was measured on O3DS and O2DS with
         // https://gist.github.com/B3n30/ac40eac20603f519ff106107f4ac9182
         // from the results the average of each length was taken.
-        static constexpr u64 slope(183);
-        static constexpr u64 offset(524879);
-        static constexpr u64 minimum(631826);
-        u64 IPCDelayNanoseconds{std::max<u64>(static_cast<u64>(length) * slope + offset, minimum)};
-        return IPCDelayNanoseconds;
+        constexpr u64 slope{183};
+        constexpr u64 offset{524879};
+        constexpr u64 minimum{631826};
+        return std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
+    }
+
+    u64 GetOpenDelayNs() override {
+        // This is the delay measured on O3DS and O2DS with
+        // https://gist.github.com/FearlessTobi/c37e143c314789251f98f2c45cd706d2
+        // from the results the average of each length was taken.
+        return 269082;
     }
 };
 

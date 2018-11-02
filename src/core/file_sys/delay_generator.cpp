@@ -18,4 +18,10 @@ u64 DefaultDelayGenerator::GetReadDelayNs(std::size_t length) {
     return std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
 }
 
+u64 DefaultDelayGenerator::GetOpenDelayNs() {
+    // This is the delay measured for a romfs open.
+    // For now we will take that as a default
+    return 9438006;
+}
+
 } // namespace FileSys

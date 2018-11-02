@@ -12,6 +12,26 @@
 
 namespace FileSys {
 
+class SDMCWriteOnlyDelayGenerator : public DelayGenerator {
+public:
+    u64 GetReadDelayNs(std::size_t length) override {
+        // This is the delay measured on O3DS and O2DS with
+        // https://gist.github.com/B3n30/ac40eac20603f519ff106107f4ac9182
+        // from the results the average of each length was taken.
+        constexpr u64 slope{183};
+        constexpr u64 offset{524879};
+        constexpr u64 minimum{631826};
+        return std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
+    }
+
+    u64 GetOpenDelayNs() override {
+        // This is the delay measured on O3DS and O2DS with
+        // https://gist.github.com/FearlessTobi/c37e143c314789251f98f2c45cd706d2
+        // from the results the average of each length was taken.
+        return 269082;
+    }
+};
+
 ResultVal<std::unique_ptr<FileBackend>> SDMCWriteOnlyArchive::OpenFile(const Path& path,
                                                                        const Mode& mode) const {
     if (mode.read_flag) {
@@ -28,7 +48,7 @@ ResultVal<std::unique_ptr<DirectoryBackend>> SDMCWriteOnlyArchive::OpenDirectory
 }
 
 ArchiveFactory_SDMCWriteOnly::ArchiveFactory_SDMCWriteOnly(const std::string& mount_point)
-    : sdmc_directory(mount_point) {
+    : sdmc_directory{mount_point} {
     LOG_DEBUG(Service_FS, "Directory {} set as SDMCWriteOnly.", sdmc_directory);
 }
 
@@ -37,17 +57,18 @@ bool ArchiveFactory_SDMCWriteOnly::Initialize() {
         LOG_WARNING(Service_FS, "SDMC disabled by config.");
         return false;
     }
-
     if (!FileUtil::CreateFullPath(sdmc_directory)) {
         LOG_ERROR(Service_FS, "Unable to create SDMC path.");
         return false;
     }
-
     return true;
 }
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SDMCWriteOnly::Open(const Path& path) {
-    auto archive{std::make_unique<SDMCWriteOnlyArchive>(sdmc_directory)};
+    std::unique_ptr<DelayGenerator> delay_generator{
+        std::make_unique<SDMCWriteOnlyDelayGenerator>()};
+    auto archive{
+        std::make_unique<SDMCWriteOnlyArchive>(sdmc_directory, std::move(delay_generator))};
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
