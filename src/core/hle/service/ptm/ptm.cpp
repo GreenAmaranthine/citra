@@ -87,11 +87,6 @@ void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_PTM, "stubbed");
 }
 
-void CheckNew3DS(IPC::ResponseBuilder& rb) {
-    rb.Push(RESULT_SUCCESS);
-    rb.Push(CFG::IsNewModeEnabled());
-}
-
 void Module::Interface::ConfigureNew3DSCPU(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x818, 1, 0};
     u8 value{static_cast<u8>(rp.Pop<u8>() & 0xF)};
@@ -103,7 +98,11 @@ void Module::Interface::ConfigureNew3DSCPU(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x40A, 2, 0};
-    PTM::CheckNew3DS(rb);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(ptm->system.ServiceManager()
+                .GetService<CFG::Module::Interface>("cfg:u")
+                ->GetModule()
+                ->GetNewModel());
 }
 
 Module::Module(Core::System& system) : system{system} {

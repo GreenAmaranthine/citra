@@ -15,6 +15,10 @@
 #include "core/hle/kernel/memory.h"
 #include "core/hle/result.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace ConfigMem {
 class Handler;
 } // namespace ConfigMem
@@ -73,7 +77,7 @@ using SharedPtr = boost::intrusive_ptr<T>;
 
 class KernelSystem {
 public:
-    KernelSystem();
+    explicit KernelSystem(Core::System& system);
     ~KernelSystem();
 
     /// Initialize memory.
@@ -139,7 +143,7 @@ public:
     SharedPtr<Timer> CreateTimer(ResetType reset_type, std::string name = "Unknown");
 
     /**
-     * Creates a pair of ServerPort and an associated ClientPort.
+     * Creates a pair of ServerPort and a associated ClientPort.
      * @param max_sessions Maximum number of sessions to the port
      * @param name Optional name of the ports
      * @return The created port tuple
@@ -148,7 +152,7 @@ public:
         u32 max_sessions, std::string name = "UnknownPort");
 
     /**
-     * Creates a pair of ServerSession and an associated ClientSession.
+     * Creates a pair of ServerSession and a associated ClientSession.
      * @param name        Optional name of the ports.
      * @param client_port Optional The ClientPort that spawned this session.
      * @return The created session tuple
@@ -224,6 +228,10 @@ public:
     const ConfigMem::Handler& GetConfigMemHandler() const;
     ConfigMem::Handler& GetConfigMemHandler();
 
+    Core::System& Parent() {
+        return system;
+    }
+
 private:
     void MemoryInit(u32 mem_type);
 
@@ -243,6 +251,8 @@ private:
     std::unique_ptr<SharedPage::Handler> shared_page_handler;
 
     std::array<MemoryRegionInfo, 3> memory_regions;
+
+    Core::System& system;
 };
 
 } // namespace Kernel

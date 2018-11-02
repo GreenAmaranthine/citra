@@ -192,35 +192,26 @@ private:
 
     ResultVal<std::unique_ptr<FileBackend>> OpenExeFS(const std::string& filename) const {
         if (filename == "icon") {
-            if (ncch_data.icon) {
+            if (ncch_data.icon)
                 return MakeResult<std::unique_ptr<FileBackend>>(
                     std::make_unique<ExeFSSectionFile>(ncch_data.icon));
-            }
-
             LOG_WARNING(Service_FS, "Unable to read icon");
             return ERROR_EXEFS_SECTION_NOT_FOUND;
         }
-
         if (filename == "logo") {
-            if (ncch_data.logo) {
+            if (ncch_data.logo)
                 return MakeResult<std::unique_ptr<FileBackend>>(
                     std::make_unique<ExeFSSectionFile>(ncch_data.logo));
-            }
-
             LOG_WARNING(Service_FS, "Unable to read logo");
             return ERROR_EXEFS_SECTION_NOT_FOUND;
         }
-
         if (filename == "banner") {
-            if (ncch_data.banner) {
+            if (ncch_data.banner)
                 return MakeResult<std::unique_ptr<FileBackend>>(
                     std::make_unique<ExeFSSectionFile>(ncch_data.banner));
-            }
-
             LOG_WARNING(Service_FS, "Unable to read banner");
             return ERROR_EXEFS_SECTION_NOT_FOUND;
         }
-
         LOG_ERROR(Service_FS, "Unknown ExeFS section {}!", filename);
         return ERROR_INVALID_PATH;
     }
@@ -230,43 +221,30 @@ private:
 
 void ArchiveFactory_SelfNCCH::Register(Loader::AppLoader& app_loader) {
     u64 program_id{};
-    if (app_loader.ReadProgramId(program_id) != Loader::ResultStatus::Success) {
+    if (app_loader.ReadProgramId(program_id) != Loader::ResultStatus::Success)
         LOG_WARNING(
             Service_FS,
             "Could not read program id when registering with SelfNCCH, this might be a 3dsx file");
-    }
-
     LOG_DEBUG(Service_FS, "Registering program {:016X} with the SelfNCCH archive factory",
               program_id);
-
-    if (ncch_data.find(program_id) != ncch_data.end()) {
+    if (ncch_data.find(program_id) != ncch_data.end())
         LOG_WARNING(Service_FS,
                     "Registering program {:016X} with SelfNCCH will override existing mapping",
                     program_id);
-    }
-
     NCCHData& data{ncch_data[program_id]};
-
     std::shared_ptr<RomFSReader> romfs_file;
-    if (app_loader.ReadRomFS(romfs_file) == Loader::ResultStatus::Success) {
+    if (app_loader.ReadRomFS(romfs_file) == Loader::ResultStatus::Success)
         data.romfs_file = std::move(romfs_file);
-    }
-
     std::shared_ptr<RomFSReader> update_romfs_file;
-    if (app_loader.ReadUpdateRomFS(update_romfs_file) == Loader::ResultStatus::Success) {
+    if (app_loader.ReadUpdateRomFS(update_romfs_file) == Loader::ResultStatus::Success)
         data.update_romfs_file = std::move(update_romfs_file);
-    }
-
     std::vector<u8> buffer;
-    if (app_loader.ReadIcon(buffer) == Loader::ResultStatus::Success) {
+    if (app_loader.ReadIcon(buffer) == Loader::ResultStatus::Success)
         data.icon = std::make_shared<std::vector<u8>>(std::move(buffer));
-    }
-    if (app_loader.ReadLogo(buffer) == Loader::ResultStatus::Success) {
+    if (app_loader.ReadLogo(buffer) == Loader::ResultStatus::Success)
         data.logo = std::make_shared<std::vector<u8>>(std::move(buffer));
-    }
-    if (app_loader.ReadBanner(buffer) == Loader::ResultStatus::Success) {
+    if (app_loader.ReadBanner(buffer) == Loader::ResultStatus::Success)
         data.banner = std::make_shared<std::vector<u8>>(std::move(buffer));
-    }
 }
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SelfNCCH::Open(const Path& path) {

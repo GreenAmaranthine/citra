@@ -92,7 +92,7 @@ public:
     Module();
     ~Module();
 
-    bool IsNewModeEnabled();
+    bool GetNewModel();
     std::vector<u8> GetEulaVersion();
 
     class Interface : public ServiceFramework<Interface> {
@@ -311,9 +311,9 @@ private:
     std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer;
     std::unique_ptr<FileSys::ArchiveBackend> cfg_system_save_data_archive;
     u32 preferred_region_code{};
+    bool new_model{};
 };
 
 void InstallInterfaces(Core::System& system);
-bool IsNewModeEnabled();
 
 } // namespace Service::CFG

@@ -591,7 +591,7 @@ bool GMainWindow::LoadROM(const std::string& filename) {
     if (cheats_window)
         cheats_window->UpdateTitleID();
     else
-        CheatCore::RefreshCheats();
+        system.CheatManager().RefreshCheats();
     return true;
 }
 

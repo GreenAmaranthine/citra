@@ -138,7 +138,7 @@ void System::Reschedule() {
 System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     LOG_DEBUG(HW_Memory, "initialized OK");
     CoreTiming::Init();
-    kernel = std::make_unique<Kernel::KernelSystem>();
+    kernel = std::make_unique<Kernel::KernelSystem>(*this);
     // Initialize FS, CFG and memory
     service_manager = std::make_shared<Service::SM::ServiceManager>(*this);
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
@@ -155,7 +155,7 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     sleep_mode_enabled = false;
     HW::Init();
     Service::Init(*this);
-    CheatCore::Init();
+    cheat_manager = std::make_unique<CheatCore::CheatManager>();
     ResultStatus result{VideoCore::Init(frontend)};
     if (result != ResultStatus::Success)
         return result;
@@ -191,6 +191,14 @@ Kernel::KernelSystem& System::Kernel() {
     return *kernel;
 }
 
+const CheatCore::CheatManager& System::CheatManager() const {
+    return *cheat_manager;
+}
+
+CheatCore::CheatManager& System::CheatManager() {
+    return *cheat_manager;
+}
+
 const Frontend& System::GetFrontend() const {
     return *m_frontend;
 }
@@ -201,7 +209,7 @@ Frontend& System::GetFrontend() {
 
 void System::Shutdown() {
     // Shutdown emulation session
-    CheatCore::Shutdown();
+    cheat_manager.reset();
     VideoCore::Shutdown();
     kernel.reset();
     HW::Shutdown();

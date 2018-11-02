@@ -7,13 +7,13 @@
 #include <functional>
 #include "core/hle/service/service.h"
 
-namespace SharedPage {
-class Handler;
-} // namespace SharedPage
-
 namespace Core {
 class System;
 } // namespace Core
+
+namespace SharedPage {
+class Handler;
+} // namespace SharedPage
 
 namespace Kernel {
 class HLERequestContext;
@@ -31,7 +31,7 @@ public:
 private:
     void ControlWirelessEnabled(Kernel::HLERequestContext& ctx);
 
-    SharedPage::Handler& shared_page;
+    Core::System& system;
 };
 
 } // namespace Service::NWM

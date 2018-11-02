@@ -15,7 +15,7 @@
 
 namespace Kernel {
 
-KernelSystem::KernelSystem() {
+KernelSystem::KernelSystem(Core::System& system) : system{system} {
     resource_limits = std::make_unique<ResourceLimitList>(*this);
     thread_manager = std::make_unique<ThreadManager>();
     timer_manager = std::make_unique<TimerManager>();

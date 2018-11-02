@@ -9,11 +9,6 @@
 
 namespace CheatCore {
 
-// Starting point for running cheat codes. Initializes tick event and executes cheats every tick.
-void Init();
-void Shutdown();
-void RefreshCheats();
-
 enum class CheatType {
     Null = -0x1,
     Write32 = 0x00,
@@ -125,17 +120,22 @@ private:
     std::string name;
 };
 
-/// Handles loading/saving of cheats and executing them.
-class Engine {
+class CheatManager {
 public:
-    Engine();
+    CheatManager();
+    ~CheatManager();
+
     void Run();
-    static std::vector<Cheat> ReadFileContents();
-    static void Save(std::vector<Cheat> cheats);
     void RefreshCheats();
+    void Save(std::vector<Cheat> cheats);
 
 private:
+    void CheatTickCallback(int);
+
     std::vector<Cheat> cheats_list;
+    CoreTiming::EventType* tick_event;
 };
+
+std::vector<Cheat> GetCheatsFromFile();
 
 } // namespace CheatCore

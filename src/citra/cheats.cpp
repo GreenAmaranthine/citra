@@ -70,7 +70,8 @@ CheatDialog::CheatDialog(QWidget* parent)
 CheatDialog::~CheatDialog() {}
 
 void CheatDialog::UpdateTitleID() {
-    CheatCore::RefreshCheats();
+    auto& system{Core::System::GetInstance()};
+    system.CheatManager().RefreshCheats();
     ui->labelTitle->setText(
         QString("Title ID: %1")
             .arg(QString::fromStdString(fmt::format(
@@ -94,7 +95,7 @@ void CheatDialog::UpdateTitleID() {
 }
 
 void CheatDialog::LoadCheats() {
-    cheats = CheatCore::Engine::ReadFileContents();
+    cheats = CheatCore::GetCheatsFromFile();
     ui->tableCheats->setRowCount(static_cast<int>(cheats.size()));
     for (int i{}; i < static_cast<int>(cheats.size()); i++) {
         QCheckBox* enabled{new QCheckBox()};
@@ -124,8 +125,7 @@ void CheatDialog::OnSave() {
         QMessageBox::critical(this, "Error", error_message.arg(empty_cheat_names.join('\n')));
         return;
     }
-    CheatCore::Engine::Save(cheats);
-    CheatCore::RefreshCheats();
+    Core::System::GetInstance().CheatManager().Save(cheats);
 }
 
 void CheatDialog::OnClose() {

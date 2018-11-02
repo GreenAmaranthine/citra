@@ -41,6 +41,10 @@ namespace Kernel {
 class KernelSystem;
 } // namespace Kernel
 
+namespace CheatCore {
+    class CheatManager;
+}//
+
 namespace Core {
 
 class System {
@@ -147,6 +151,12 @@ public:
     /// Gets a reference to the kernel.
     Kernel::KernelSystem& Kernel();
 
+    /// Gets a const reference to the cheat manager.
+    const CheatCore::CheatManager& CheatManager() const;
+
+    /// Gets a reference to the cheat manager.
+    CheatCore::CheatManager& CheatManager();
+
     /// Gets a const reference to the frontend.
     const Frontend& GetFrontend() const;
 
@@ -193,6 +203,9 @@ public:
     }
 
     std::string set_application_file_path;
+    std::vector<u8> argument;
+    std::vector<u8> hmac;
+    u64 argument_source;
 
 private:
     /**
@@ -226,6 +239,10 @@ private:
     std::unique_ptr<RPC::RPCServer> rpc_server;
 #endif
 
+    /// Cheat manager
+    std::shared_ptr<CheatCore::CheatManager> cheat_manager;
+
+    /// Archive manager
     std::unique_ptr<Service::FS::ArchiveManager> archive_manager;
 
     std::unique_ptr<Kernel::KernelSystem> kernel;

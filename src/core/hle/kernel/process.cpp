@@ -6,6 +6,7 @@
 #include <memory>
 #include "common/assert.h"
 #include "common/common_funcs.h"
+#include "core/core.h"
 #include "common/logging/log.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
@@ -130,7 +131,11 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
 VAddr Process::GetLinearHeapAreaAddress() const {
     // Starting from system version 8.0.0 a new linear heap layout is supported to allow usage of
     // the extra RAM in the n3DS.
-    if (kernel_version > 0x22C && Service::CFG::IsNewModeEnabled())
+    if (kernel_version > 0x22C && kernel.Parent()
+                                      .ServiceManager()
+                                      .GetService<Service::CFG::Module::Interface>("cfg:u")
+                                      ->GetModule()
+                                      ->GetNewModel())
         return Memory::NEW_LINEAR_HEAP_VADDR;
     return Memory::LINEAR_HEAP_VADDR;
 }

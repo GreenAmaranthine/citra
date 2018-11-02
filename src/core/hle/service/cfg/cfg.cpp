@@ -118,8 +118,6 @@ static const std::vector<u8> cfg_system_savedata_id{
     0x00, 0x00, 0x00, 0x00, 0x17, 0x00, 0x01, 0x00,
 };
 
-static bool new_mode_enabled;
-
 Module::Interface::Interface(std::shared_ptr<Module> cfg, const char* name, u32 max_session)
     : ServiceFramework{name, max_session}, cfg{std::move(cfg)} {}
 
@@ -606,15 +604,15 @@ ResultCode Module::LoadConfigNANDSaveFile() {
 
 Module::Module() {
     LoadConfigNANDSaveFile();
+    SystemModel model{GetSystemModel()};
+    new_model =
+        model == NEW_NINTENDO_2DS_XL || model == NEW_NINTENDO_3DS || model == NEW_NINTENDO_3DS_XL;
 }
 
 Module::~Module() = default;
 
-bool Module::IsNewModeEnabled() {
-    SystemModel model{GetSystemModel()};
-    if (model == NEW_NINTENDO_2DS_XL || model == NEW_NINTENDO_3DS || model == NEW_NINTENDO_3DS_XL)
-        return true;
-    return false;
+bool Module::GetNewModel() {
+    return new_model;
 }
 
 std::vector<u8> Module::GetEulaVersion() {
@@ -777,11 +775,6 @@ void InstallInterfaces(Core::System& system) {
     std::make_shared<CFG_S>(cfg)->InstallAsService(service_manager);
     std::make_shared<CFG_U>(cfg)->InstallAsService(service_manager);
     std::make_shared<CFG_NOR>()->InstallAsService(service_manager);
-    new_mode_enabled = cfg->IsNewModeEnabled();
-}
-
-bool IsNewModeEnabled() {
-    return new_mode_enabled;
 }
 
 } // namespace Service::CFG

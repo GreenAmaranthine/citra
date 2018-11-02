@@ -14,48 +14,14 @@
 
 namespace CheatCore {
 
-static CoreTiming::EventType* tick_event;
-static std::unique_ptr<Engine> cheat_engine;
-
-static void CheatTickCallback(u64, int cycles_late) {
-    if (!cheat_engine)
-        cheat_engine = std::make_unique<Engine>();
-    cheat_engine->Run();
-    CoreTiming::ScheduleEvent(BASE_CLOCK_RATE_ARM11 - cycles_late, tick_event);
-}
-
-void Init() {
-    std::string cheats_dir{FileUtil::GetUserPath(FileUtil::UserPath::UserDir) + "cheats"};
-    if (!FileUtil::Exists(cheats_dir))
-        FileUtil::CreateDir(cheats_dir);
-    tick_event = CoreTiming::RegisterEvent("CheatCore::tick_event", CheatTickCallback);
-    CoreTiming::ScheduleEvent(BASE_CLOCK_RATE_ARM11, tick_event);
-}
-
-void Shutdown() {
-    CoreTiming::UnscheduleEvent(tick_event, 0);
-}
-
-void RefreshCheats() {
-    if (!cheat_engine)
-        cheat_engine = std::make_unique<Engine>();
-    cheat_engine->RefreshCheats();
-}
-
 static std::string GetFilePath() {
-    return fmt::format(
-        "{}{:016X}.txt", FileUtil::GetUserPath(FileUtil::UserPath::CheatsDir),
-        Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id);
+    u64 program_id{};
+    Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id);
+    return fmt::format("{}{:016X}.txt", FileUtil::GetUserPath(FileUtil::UserPath::CheatsDir),
+                       program_id);
 }
 
-Engine::Engine() {
-    const auto file_path{GetFilePath()};
-    if (!FileUtil::Exists(file_path))
-        FileUtil::CreateEmptyFile(file_path);
-    cheats_list = ReadFileContents();
-}
-
-std::vector<Cheat> Engine::ReadFileContents() {
+std::vector<Cheat> GetCheatsFromFile() {
     std::string file_path{GetFilePath()};
     std::string contents;
     FileUtil::ReadFileToString(true, file_path.c_str(), contents);
@@ -70,35 +36,58 @@ std::vector<Cheat> Engine::ReadFileContents() {
         current_line = Common::Trim(current_line);
         if (!current_line.empty()) {
             if (current_line.compare(0, 2, "+[") == 0) { // Enabled code
-                if (!cheat_lines.empty()) {
+                if (!cheat_lines.empty())
                     cheats.push_back(Cheat(name, cheat_lines, enabled));
-                }
                 name = current_line.substr(2, current_line.length() - 3);
                 cheat_lines.clear();
                 enabled = true;
                 continue;
             } else if (current_line.front() == '[') { // Disabled code
-                if (!cheat_lines.empty()) {
+                if (!cheat_lines.empty())
                     cheats.push_back(Cheat(name, cheat_lines, enabled));
-                }
                 name = current_line.substr(1, current_line.length() - 2);
                 cheat_lines.clear();
                 enabled = false;
                 continue;
-            } else if (current_line.front() != '*') {
+            } else if (current_line.front() != '*')
                 cheat_lines.emplace_back(std::move(current_line));
-            }
         }
-        if (i == lines.size() - 1) { // End of file
-            if (!cheat_lines.empty()) {
+        if (i == lines.size() - 1) // End of file
+            if (!cheat_lines.empty())
                 cheats.push_back(Cheat(name, cheat_lines, enabled));
-            }
-        }
     }
     return cheats;
 }
 
-void Engine::Save(std::vector<Cheat> cheats) {
+CheatManager::CheatManager() {
+    std::string cheats_dir{FileUtil::GetUserPath(FileUtil::UserPath::UserDir) + "cheats"};
+    if (!FileUtil::Exists(cheats_dir))
+        FileUtil::CreateDir(cheats_dir);
+    RefreshCheats();
+    tick_event =
+        CoreTiming::RegisterEvent("CheatManager::tick_event",
+                                  [this](u64, int cycles_late) { CheatTickCallback(cycles_late); });
+    CoreTiming::ScheduleEvent(BASE_CLOCK_RATE_ARM11, tick_event);
+}
+
+CheatManager::~CheatManager() {
+    CoreTiming::UnscheduleEvent(tick_event, 0);
+}
+
+void CheatManager::CheatTickCallback(int cycles_late) {
+    Run();
+    CoreTiming::ScheduleEvent(BASE_CLOCK_RATE_ARM11 - cycles_late, tick_event);
+}
+
+void CheatManager::RefreshCheats() {
+    std::string file_path{GetFilePath()};
+    if (!FileUtil::Exists(file_path))
+        FileUtil::CreateEmptyFile(file_path);
+    cheats_list = GetCheatsFromFile();
+}
+
+void CheatManager::Save(std::vector<Cheat> cheats) {
+    cheats_list = cheats;
     std::string file_path{GetFilePath()};
     FileUtil::IOFile file{file_path, "w+"};
     for (auto& cheat : cheats) {
@@ -107,14 +96,7 @@ void Engine::Save(std::vector<Cheat> cheats) {
     }
 }
 
-void Engine::RefreshCheats() {
-    std::string file_path{GetFilePath()};
-    if (!FileUtil::Exists(file_path))
-        FileUtil::CreateEmptyFile(file_path);
-    cheats_list = ReadFileContents();
-}
-
-void Engine::Run() {
+void CheatManager::Run() {
     for (auto& cheat : cheats_list)
         cheat.Execute();
 }

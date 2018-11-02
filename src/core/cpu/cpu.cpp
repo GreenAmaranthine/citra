@@ -99,7 +99,7 @@ public:
             break;
         }
         case Settings::TicksMode::Auto: {
-            u64 program_id;
+            u64 program_id{};
             Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id);
             auto itr{custom_ticks_map.find(program_id)};
             if (itr != custom_ticks_map.end()) {

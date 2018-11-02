@@ -12,8 +12,7 @@
 
 namespace Service::NWM {
 
-NWM_EXT::NWM_EXT(Core::System& system)
-    : ServiceFramework{"nwm::EXT"}, shared_page{system.Kernel().GetSharedPageHandler()} {
+NWM_EXT::NWM_EXT(Core::System& system) : ServiceFramework{"nwm::EXT"}, system{system} {
     static const FunctionInfo functions[]{
         {0x00080040, &NWM_EXT::ControlWirelessEnabled, "ControlWirelessEnabled"},
     };
@@ -28,12 +27,18 @@ void NWM_EXT::ControlWirelessEnabled(Kernel::HLERequestContext& ctx) {
     ResultCode result{RESULT_SUCCESS};
     switch (enabled) {
     case 0: { // Enable
+        auto& shared_page{system.Kernel().GetSharedPageHandler()};
         if (shared_page.GetNetworkState() == SharedPage::NetworkState::Internet) {
             result =
                 ResultCode(13, ErrorModule::NWM, ErrorSummary::InvalidState, ErrorLevel::Status);
             break;
         }
-        Settings::values.n_wifi_status = Service::CFG::IsNewModeEnabled() ? 2 : 1;
+        Settings::values.n_wifi_status = system.ServiceManager()
+                                                 .GetService<CFG::Module::Interface>("cfg:u")
+                                                 ->GetModule()
+                                                 ->GetNewModel()
+                                             ? 2
+                                             : 1;
         Settings::values.n_wifi_link_level = 3;
         Settings::values.n_state = 2;
         shared_page.SetWifiLinkLevel(SharedPage::WifiLinkLevel::Best);
@@ -42,6 +47,7 @@ void NWM_EXT::ControlWirelessEnabled(Kernel::HLERequestContext& ctx) {
         break;
     }
     case 1: { // Disable
+        auto& shared_page{system.Kernel().GetSharedPageHandler()};
         if (shared_page.GetNetworkState() != SharedPage::NetworkState::Internet) {
             result =
                 ResultCode(13, ErrorModule::NWM, ErrorSummary::InvalidState, ErrorLevel::Status);

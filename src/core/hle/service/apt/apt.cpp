@@ -31,10 +31,6 @@
 
 namespace Service::APT {
 
-static std::vector<u8> argument;
-static std::vector<u8> hmac;
-static u64 argument_source;
-
 void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x2, 2, 0};
     AppletId app_id{rp.PopEnum<AppletId>()};
@@ -354,11 +350,11 @@ void Module::Interface::StartApplication(Kernel::HLERequestContext& ctx) {
     u32 parameter_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x300))};
     u32 hmac_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x20))};
     u8 paused{rp.Pop<u8>()};
-    argument = rp.PopStaticBuffer();
-    argument.resize(parameter_size);
-    argument_source = apt->system.Kernel().GetCurrentProcess()->codeset->program_id;
-    hmac = rp.PopStaticBuffer();
-    hmac.resize(hmac_size);
+    apt->system.argument = rp.PopStaticBuffer();
+    apt->system.argument.resize(parameter_size);
+    apt->system.argument_source = apt->system.Kernel().GetCurrentProcess()->codeset->program_id;
+    apt->system.hmac = rp.PopStaticBuffer();
+    apt->system.hmac.resize(hmac_size);
     apt->system.SetApplication(AM::GetTitleContentPath(apt->jump_media, apt->jump_tid));
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS); // No error
@@ -472,10 +468,10 @@ void Module::Interface::DoApplicationJump(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x32, 2, 4};
     u32 parameter_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x300))};
     u32 hmac_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x20))};
-    argument = rp.PopStaticBuffer();
-    argument.resize(parameter_size);
-    argument_source = apt->system.Kernel().GetCurrentProcess()->codeset->program_id;
-    hmac = rp.PopStaticBuffer();
+    apt->system.argument = rp.PopStaticBuffer();
+    apt->system.argument.resize(parameter_size);
+    apt->system.argument_source = apt->system.Kernel().GetCurrentProcess()->codeset->program_id;
+    apt->system.hmac = rp.PopStaticBuffer();
     if (apt->application_restart)
         // Restart system
         apt->system.Restart();
@@ -608,7 +604,7 @@ void Module::Interface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x51, 2, 0};
     u32 parameter_size{rp.Pop<u32>()};
     StartupArgumentType startup_argument_type{static_cast<StartupArgumentType>(rp.Pop<u8>())};
-    const u32 max_parameter_size{0x1000};
+    constexpr u32 max_parameter_size{0x1000};
     if (parameter_size > max_parameter_size) {
         LOG_ERROR(Service_APT,
                   "Parameter size is outside the valid range (capped to {:#010X}): "
@@ -618,12 +614,12 @@ void Module::Interface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
     }
     LOG_DEBUG(Service_APT, "startup_argument_type={}, parameter_size={:#010X}",
               static_cast<u32>(startup_argument_type), parameter_size);
-    if (!argument.empty())
-        argument.resize(parameter_size);
+    if (!apt->system.argument.empty())
+        apt->system.argument.resize(parameter_size);
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
     rb.Push(RESULT_SUCCESS);
-    rb.Push(!argument.empty());
-    rb.PushStaticBuffer(argument, 0);
+    rb.Push(!apt->system.argument.empty());
+    rb.PushStaticBuffer(apt->system.argument, 0);
 }
 
 void Module::Interface::Wrap(Kernel::HLERequestContext& ctx) {
@@ -709,24 +705,34 @@ void Module::Interface::Unwrap(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::CheckNew3DSApp(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x101, 2, 0};
-    if (apt->unknown_ns_state_field) {
-        rb.Push(RESULT_SUCCESS);
+    rb.Push(RESULT_SUCCESS);
+    if (apt->unknown_ns_state_field)
         rb.Push<u32>(0);
-    } else
-        PTM::CheckNew3DS(rb);
+    else
+        rb.Push(apt->system.ServiceManager()
+                    .GetService<CFG::Module::Interface>("cfg:u")
+                    ->GetModule()
+                    ->GetNewModel());
     LOG_DEBUG(Service_APT, "called");
 }
 
 void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x102, 2, 0};
-    PTM::CheckNew3DS(rb);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(apt->system.ServiceManager()
+                .GetService<CFG::Module::Interface>("cfg:u")
+                ->GetModule()
+                ->GetNewModel());
     LOG_DEBUG(Service_APT, "called");
 }
 
 void Module::Interface::IsStandardMemoryLayout(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x104, 2, 0};
     rb.Push(RESULT_SUCCESS);
-    if (CFG::IsNewModeEnabled())
+    if (apt->system.ServiceManager()
+            .GetService<CFG::Module::Interface>("cfg:u")
+            ->GetModule()
+            ->GetNewModel())
         rb.Push<u32>(
             (apt->system.Kernel().GetConfigMemHandler().GetConfigMem().app_mem_type != 7) ? 1 : 0);
     else
@@ -748,23 +754,23 @@ void Module::Interface::ReceiveDeliverArg(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x35, 2, 0};
     u32 parameter_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x300))};
     u32 hmac_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x20))};
-    if (argument.empty()) {
+    if (apt->system.argument.empty()) {
         IPC::ResponseBuilder rb{rp.MakeBuilder(3, 0)};
         rb.Push(RESULT_SUCCESS);
         rb.Push<u64>(0);
         rb.Push<bool>(false);
     } else {
-        argument.resize(parameter_size);
-        hmac.resize(hmac_size);
+        apt->system.argument.resize(parameter_size);
+        apt->system.hmac.resize(hmac_size);
         IPC::ResponseBuilder rb{rp.MakeBuilder(3, 4)};
         rb.Push(RESULT_SUCCESS);
-        rb.Push<u64>(argument_source);
+        rb.Push<u64>(apt->system.argument_source);
         rb.Push<bool>(true);
-        rb.PushStaticBuffer(argument, 0);
-        rb.PushStaticBuffer(hmac, 1);
-        argument.clear();
-        hmac.clear();
-        argument_source = 0;
+        rb.PushStaticBuffer(apt->system.argument, 0);
+        rb.PushStaticBuffer(apt->system.hmac, 1);
+        apt->system.argument.clear();
+        apt->system.hmac.clear();
+        apt->system.argument_source = 0;
     }
     LOG_DEBUG(Service_APT, "parameter_size={}, hmac_size={}", parameter_size, hmac_size);
 }
@@ -773,11 +779,11 @@ void Module::Interface::SendDeliverArg(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x34, 2, 4};
     u32 parameter_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x300))};
     u32 hmac_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x20))};
-    argument = rp.PopStaticBuffer();
-    argument.resize(parameter_size);
-    argument_source = apt->system.Kernel().GetCurrentProcess()->codeset->program_id;
-    hmac = rp.PopStaticBuffer();
-    hmac.resize(hmac_size);
+    apt->system.argument = rp.PopStaticBuffer();
+    apt->system.argument.resize(parameter_size);
+    apt->system.argument_source = apt->system.Kernel().GetCurrentProcess()->codeset->program_id;
+    apt->system.hmac = rp.PopStaticBuffer();
+    apt->system.hmac.resize(hmac_size);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_APT, "parameter_size={}, hmac_size={}", parameter_size, hmac_size);

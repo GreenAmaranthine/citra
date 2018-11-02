@@ -24,7 +24,7 @@
 
 namespace Kernel {
 
-/// Size of the APPLICATION, SYSTEM and BASE memory regions (respectively) for each system
+/// Size of the Application, System and Base memory regions (respectively) for each system
 /// memory configuration type.
 static const u32 memory_region_sizes[8][3]{
     // Old 3DS layouts
@@ -41,7 +41,10 @@ static const u32 memory_region_sizes[8][3]{
 };
 
 void KernelSystem::MemoryInit(u32 mem_type) {
-    if (Service::CFG::IsNewModeEnabled())
+    if (system.ServiceManager()
+            .GetService<Service::CFG::Module::Interface>("cfg:u")
+            ->GetModule()
+            ->GetNewModel())
         if (Settings::values.force_memory_mode_7)
             mem_type = 7;
         else if (mem_type <= 5)

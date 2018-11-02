@@ -1205,7 +1205,11 @@ ResultCode KernelSetState(u32 type, u32 param0, u32 param1, u32 param2) {
         break;
     }
     case KernelSetStateType::ConfigureNew3DSCPU: {
-        const bool n3ds{Service::CFG::IsNewModeEnabled()};
+        const bool n3ds{Core::System::GetInstance()
+                            .ServiceManager()
+                            .GetService<Service::CFG::Module::Interface>("cfg:u")
+                            ->GetModule()
+                            ->GetNewModel()};
         enable_higher_core_clock = (n3ds && param0 & 0x00000001);
         enable_additional_cache = (n3ds && (param0 >> 1) & 0x00000001);
         LOG_TRACE(Kernel_SVC, "enable_higher_core_clock={}, enable_additional_cache={}",
