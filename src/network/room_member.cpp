@@ -16,8 +16,7 @@ namespace Network {
 
 constexpr u32 ConnectionTimeoutMs{5000};
 
-class RoomMember::RoomMemberImpl {
-public:
+struct RoomMember::RoomMemberImpl {
     ENetHost* client; ///< ENet network interface.
     ENetPeer* server; ///< The server peer the client is connected to
 
@@ -331,7 +330,7 @@ RoomMember::RoomMemberImpl::CallbackSet<ChatEntry>& RoomMember::RoomMemberImpl::
 template <typename T>
 void RoomMember::RoomMemberImpl::Invoke(const T& data) {
     std::lock_guard lock{callback_mutex};
-    CallbackSet<T> callback_set = callbacks.Get<T>();
+    CallbackSet<T> callback_set{callbacks.Get<T>()};
     for (auto const& callback : callback_set)
         (*callback)(data);
 }
@@ -340,8 +339,7 @@ template <typename T>
 RoomMember::CallbackHandle<T> RoomMember::RoomMemberImpl::Bind(
     std::function<void(const T&)> callback) {
     std::lock_guard lock{callback_mutex};
-    CallbackHandle<T> handle;
-    handle = std::make_shared<std::function<void(const T&)>>(callback);
+    CallbackHandle<T> handle{std::make_shared<std::function<void(const T&)>>(callback)};
     callbacks.Get<T>().insert(handle);
     return handle;
 }
@@ -476,6 +474,7 @@ void RoomMember::Leave() {
     room_member_impl->loop_thread.reset();
     enet_host_destroy(room_member_impl->client);
     room_member_impl->client = nullptr;
+    room_member_impl->Invoke(RoomInformation{});
 }
 
 template void RoomMember::Unbind(CallbackHandle<WifiPacket>);

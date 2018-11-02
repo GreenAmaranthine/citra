@@ -186,7 +186,7 @@ public:
     void Leave();
 
 private:
-    class RoomMemberImpl;
+    struct RoomMemberImpl;
     std::unique_ptr<RoomMemberImpl> room_member_impl;
 };
 

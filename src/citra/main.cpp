@@ -23,6 +23,7 @@
 #include <QtGui>
 #include <QtWidgets>
 #include <SDL.h>
+#define ENABLE_DISCORD_RPC
 #ifdef ENABLE_DISCORD_RPC
 #include <discord_rpc.h>
 #endif
@@ -398,7 +399,6 @@ void GMainWindow::ConnectWidgetEvents() {
     connect(this, &GMainWindow::EmulationStarting, screens, &Screens::OnEmulationStarting);
     connect(this, &GMainWindow::EmulationStopping, screens, &Screens::OnEmulationStopping);
     connect(&perf_stats_update_timer, &QTimer::timeout, this, &GMainWindow::UpdatePerformanceStats);
-    connect(&discord_rpc_update_timer, &QTimer::timeout, this, &GMainWindow::UpdateDiscordRPC);
     connect(this, &GMainWindow::UpdateProgress, this, &GMainWindow::OnUpdateProgress);
     connect(this, &GMainWindow::CIAInstallReport, this, &GMainWindow::OnCIAInstallReport);
     connect(this, &GMainWindow::CIAInstallFinished, this, &GMainWindow::OnCIAInstallFinished);
@@ -637,6 +637,10 @@ void GMainWindow::BootApplication(const std::string& filename) {
     SharedPage::Handler::update_3d = [this] { Update3D(); };
     RPC::RPCServer::cb_update_frame_advancing = [this] { UpdateFrameAdvancingCallback(); };
     Service::NWM::NWM_EXT::update_control_panel = [this] { UpdateControlPanelNetwork(); };
+    // Update Discord RPC
+    if (auto member{Network::GetRoomMember().lock()})
+        if (!member->IsConnected())
+            UpdateDiscordRPC(member->GetRoomInformation());
 }
 
 void GMainWindow::ShutdownApplication() {
@@ -691,6 +695,10 @@ void GMainWindow::ShutdownApplication() {
 
     short_title.clear();
     SetupUIStrings();
+    // Update Discord RPC
+    if (auto member{Network::GetRoomMember().lock()})
+        if (!member->IsConnected())
+            UpdateDiscordRPC(member->GetRoomInformation());
 }
 
 void GMainWindow::StoreRecentFile(const QString& filename) {
@@ -1638,19 +1646,24 @@ void GMainWindow::InitializeDiscordRPC() {
     discord_rpc_start_time = std::chrono::duration_cast<std::chrono::seconds>(
                                  std::chrono::system_clock::now().time_since_epoch())
                                  .count();
-    discord_rpc_update_timer.start(500);
+    if (auto member{Network::GetRoomMember().lock()}) {
+        callback_handle = member->BindOnRoomInformationChanged(
+            [this](const Network::RoomInformation& info) { UpdateDiscordRPC(info); });
+        UpdateDiscordRPC(member->GetRoomInformation());
+    }
 #endif
 }
 
 void GMainWindow::ShutdownDiscordRPC() {
 #ifdef ENABLE_DISCORD_RPC
-    discord_rpc_update_timer.stop();
+    if (auto member{Network::GetRoomMember().lock()})
+        member->Unbind(callback_handle);
     Discord_ClearPresence();
     Discord_Shutdown();
 #endif
 }
 
-void GMainWindow::UpdateDiscordRPC() {
+void GMainWindow::UpdateDiscordRPC(const Network::RoomInformation& info) {
 #ifdef ENABLE_DISCORD_RPC
     if (UISettings::values.enable_discord_rpc) {
         DiscordEventHandlers handlers{};
@@ -1660,11 +1673,10 @@ void GMainWindow::UpdateDiscordRPC() {
         if (auto member{Network::GetRoomMember().lock()})
             if (member->IsConnected()) {
                 const auto& member_info{member->GetMemberInformation()};
-                const auto& room_info{member->GetRoomInformation()};
                 presence.partySize = member_info.size();
-                presence.partyMax = room_info.member_slots;
+                presence.partyMax = info.member_slots;
                 static std::string room_name;
-                room_name = room_info.name;
+                room_name = info.name;
                 presence.state = room_name.c_str();
             }
         if (!short_title.empty())

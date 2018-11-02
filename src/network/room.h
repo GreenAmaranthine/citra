@@ -95,7 +95,7 @@ public:
     void Destroy();
 
 private:
-    class RoomImpl;
+    struct RoomImpl;
     std::unique_ptr<RoomImpl> room_impl;
 };
 

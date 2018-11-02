@@ -16,8 +16,7 @@
 
 namespace Network {
 
-class Room::RoomImpl {
-public:
+struct Room::RoomImpl {
     std::mt19937 random_gen; ///< Random number generator. Used for GenerateMacAddress
 
     ENetHost* server; ///< Network interface.

@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <memory>
 #include <QLabel>
 #include <QMainWindow>
 #include <QTimer>
@@ -14,6 +13,8 @@
 #include "core/hle/applets/mii_selector.h"
 #include "core/hle/applets/swkbd.h"
 #include "core/hle/service/am/am.h"
+#include "network/room.h"
+#include "network/room_member.h"
 #include "ui_main.h"
 
 class AboutDialog;
@@ -120,7 +121,7 @@ private slots:
 private:
     void InitializeDiscordRPC();
     void ShutdownDiscordRPC();
-    void UpdateDiscordRPC();
+    void UpdateDiscordRPC(const Network::RoomInformation& info);
 
     void InitializeWidgets();
     void InitializeRecentFileMenuActions();
@@ -195,8 +196,9 @@ private:
     s64 discord_rpc_start_time;
 
     QTimer perf_stats_update_timer;
-    QTimer discord_rpc_update_timer;
     QTimer movie_play_timer;
+
+    Network::RoomMember::CallbackHandle<Network::RoomInformation> callback_handle;
 
     MultiplayerState* multiplayer_state;
     std::unique_ptr<Config> config;
