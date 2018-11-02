@@ -80,7 +80,7 @@ struct Position {
 // Use "typename" rather than "class" here
 template <typename T>
 void FooBar() {
-    const std::string some_string{ "prefer uniform initialization" };
+    const std::string some_string{"prefer uniform initialization"};
 
     int some_array[]{
         5,
@@ -89,39 +89,28 @@ void FooBar() {
         42,
     };
 
-    if (note == the_space_after_the_if) {
+    if (note == the_space_after_the_if)
         CallAfunction();
-    } else {
+    else
         // Use a space after the // when commenting
-    }
 
     // Place a single space after the for loop semicolons, prefer pre-increment
-    for (int i{}; i != 25; ++i) {
+    for (int i{}; i != 25; ++i)
         // This is how we write loops
-    }
 
     DoStuff(this, function, call, takes, up, multiple,
             lines, like, this);
 
-    if (this || condition_takes_up_multiple &&
-        lines && like && this || everything ||
-        alright || then) {
-
-        // Leave a blank space before the if block body if the condition was continued across
-        // several lines.
-    }
-
     switch (var) {
     // No indentation for case label
     case 1: {
-        int case_var{ var + 3 };
+        int case_var{var + 3};
         DoSomething(case_var);
         break;
     }
     case 3:
         DoSomething(var);
         return;
-
     default:
         // Yes, even break for the last case
         break;
