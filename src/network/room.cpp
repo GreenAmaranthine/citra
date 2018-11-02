@@ -7,6 +7,8 @@
 #include <iomanip>
 #include <mutex>
 #include <random>
+#include <regex>
+#include <sstream>
 #include <thread>
 #include <enet/enet.h>
 #include "common/logging/log.h"
@@ -191,7 +193,7 @@ void Room::RoomImpl::StartLoop() {
 
 void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
     {
-        std::lock_guard<std::mutex> lock(member_mutex);
+        std::lock_guard lock{member_mutex};
         if (members.size() >= room_information.member_slots) {
             SendRoomIsFull(event->peer);
             return;
@@ -253,8 +255,11 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
 }
 
 bool Room::RoomImpl::IsValidNickname(const std::string& nickname) const {
-    // A nickname is valid if it isn't already taken by anybody else in the room.
-    // TODO: Check for empty names, spaces, etc.
+    // A nickname is valid if it matches the regex and is not already taken by anybody else in the
+    // room.
+    const std::regex nickname_regex{"^[ a-zA-Z0-9._-]{4,20}$"};
+    if (!std::regex_match(nickname, nickname_regex))
+        return false;
     std::lock_guard lock{member_mutex};
     return std::all_of(members.begin(), members.end(),
                        [&nickname](const auto& member) { return member.nickname != nickname; });
@@ -269,7 +274,7 @@ bool Room::RoomImpl::IsValidMacAddress(const MACAddress& address) const {
 
 bool Room::RoomImpl::IsValidConsoleId(u64 console_id) const {
     // A Console ID is valid if it is not already taken by anybody else in the room.
-    std::lock_guard<std::mutex> lock(member_mutex);
+    std::lock_guard lock{member_mutex};
     return std::all_of(members.begin(), members.end(), [&console_id](const auto& member) {
         return member.console_id != console_id;
     });
@@ -363,13 +368,12 @@ void Room::RoomImpl::SendStatusMessage(StatusMessageTypes type, const std::strin
     packet << static_cast<u8>(type);
     packet << nickname;
     packet << username;
-    std::lock_guard<std::mutex> lock(member_mutex);
+    std::lock_guard lock{member_mutex};
     if (!members.empty()) {
-        ENetPacket* enet_packet =
-            enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
-        for (auto& member : members) {
+        auto enet_packet{
+            enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE)};
+        for (auto& member : members)
             enet_peer_send(member.peer, 0, enet_packet);
-        }
     }
     enet_host_flush(server);
 }
@@ -506,7 +510,7 @@ void Room::RoomImpl::HandleClientDisconnection(ENetPeer* client) {
     // Remove the client from the members list.
     std::string nickname;
     {
-        std::lock_guard<std::mutex> lock(member_mutex);
+        std::lock_guard lock{member_mutex};
         auto member{std::find_if(members.begin(), members.end(),
                                  [client](const Member& member) { return member.peer == client; })};
         if (member != members.end()) {
