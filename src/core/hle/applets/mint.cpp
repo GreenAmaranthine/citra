@@ -16,21 +16,18 @@ ResultCode Mint::ReceiveParameter(const Service::APT::MessageParameter& paramete
         // TODO: Find the right error code
         return ResultCode(-1);
     }
-
     // The Request message contains a buffer with the size of the framebuffer shared
     // memory.
     // Create the SharedMemory that will hold the framebuffer data
     Service::APT::CaptureBufferInfo capture_info;
     ASSERT(sizeof(capture_info) == parameter.buffer.size());
     std::memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
-
     // TODO: allocated memory never released
     using Kernel::MemoryPermission;
     // Create a SharedMemory that directly points to this heap block.
     framebuffer_memory = Core::System::GetInstance().Kernel().CreateSharedMemoryForApplet(
         0, capture_info.size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
         "Mint Memory");
-
     // Send the response message with the newly created SharedMemory
     Service::APT::MessageParameter result;
     result.signal = Service::APT::SignalType::Response;
@@ -38,18 +35,15 @@ ResultCode Mint::ReceiveParameter(const Service::APT::MessageParameter& paramete
     result.destination_id = Service::APT::AppletId::Application;
     result.sender_id = id;
     result.object = framebuffer_memory;
-
     SendParameter(result);
     return RESULT_SUCCESS;
 }
 
 ResultCode Mint::StartImpl(const Service::APT::AppletStartupParameter& parameter) {
     is_running = true;
-
     // TODO: Set the expected fields in the response buffer before resending it to the
     // application.
     // TODO: Reverse the parameter format for the Mint applet
-
     // Let the application know that we're closing
     Service::APT::MessageParameter message;
     message.buffer.resize(parameter.buffer.size());
@@ -58,7 +52,6 @@ ResultCode Mint::StartImpl(const Service::APT::AppletStartupParameter& parameter
     message.destination_id = Service::APT::AppletId::Application;
     message.sender_id = id;
     SendParameter(message);
-
     is_running = false;
     return RESULT_SUCCESS;
 }

@@ -134,20 +134,17 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
         // TODO: Find the right error code
         return ResultCode(-1);
     }
-
     // The LibAppJustStarted message contains a buffer with the size of the framebuffer shared
     // memory.
     // Create the SharedMemory that will hold the framebuffer data
     Service::APT::CaptureBufferInfo capture_info;
     ASSERT(sizeof(capture_info) == parameter.buffer.size());
     std::memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
-
     using Kernel::MemoryPermission;
     // Create a SharedMemory that directly points to this heap block.
     framebuffer_memory = Core::System::GetInstance().Kernel().CreateSharedMemoryForApplet(
         0, capture_info.size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
         "SoftwareKeyboard Memory");
-
     // Send the response message with the newly created SharedMemory
     Service::APT::MessageParameter result;
     result.signal = Service::APT::SignalType::Response;
@@ -155,7 +152,6 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
     result.destination_id = Service::APT::AppletId::Application;
     result.sender_id = id;
     result.object = framebuffer_memory;
-
     SendParameter(result);
     return RESULT_SUCCESS;
 }
@@ -163,15 +159,11 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
 ResultCode SoftwareKeyboard::StartImpl(const Service::APT::AppletStartupParameter& parameter) {
     ASSERT_MSG(parameter.buffer.size() == sizeof(config),
                "The size of the parameter (SoftwareKeyboardConfig) is wrong");
-
     std::memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
-
     text_memory =
         boost::static_pointer_cast<Kernel::SharedMemory, Kernel::Object>(parameter.object);
-
     // TODO: Verify if this is the correct behavior
     std::memset(text_memory->GetPointer(), 0, text_memory->size);
-
     is_running = true;
     return RESULT_SUCCESS;
 }
@@ -242,7 +234,6 @@ void SoftwareKeyboard::Update() {
         u32 num_buttons{static_cast<u32>(config.num_buttons_m1)};
         for (u32 i{}; i <= num_buttons; ++i) {
             std::string button_text;
-
             // Apps are allowed to set custom text to display on the button
             std::u16string custom_button_text{
                 reinterpret_cast<char16_t*>(config.buttons_text[i].data())};
@@ -251,10 +242,8 @@ void SoftwareKeyboard::Update() {
                 button_text = default_button_text[num_buttons][i];
             else
                 button_text = Common::UTF16ToUTF8(custom_button_text);
-
             option_text += "\t(" + std::to_string(i) + ") " + button_text + "\t";
         }
-
         std::string option;
         auto ValidateButtonString{[&]() -> bool {
             bool valid{};
@@ -277,7 +266,6 @@ void SoftwareKeyboard::Update() {
                       << option_text << std::endl;
             std::getline(std::cin, option);
         } while (!ValidateButtonString());
-
         s32 button{static_cast<s32>(std::stol(option))};
         switch (config.num_buttons_m1) {
         case SoftwareKeyboardButtonConfig::SingleButton:
@@ -304,7 +292,6 @@ void SoftwareKeyboard::Update() {
             config.return_code = SoftwareKeyboardResult::None;
             break;
         }
-
         std::u16string utf16_input{Common::UTF8ToUTF16(input)};
         std::memcpy(text_memory->GetPointer(), utf16_input.c_str(),
                     utf16_input.length() * sizeof(char16_t));
@@ -339,7 +326,6 @@ void SoftwareKeyboard::Finalize() {
     message.destination_id = Service::APT::AppletId::Application;
     message.sender_id = id;
     SendParameter(message);
-
     is_running = false;
 }
 } // namespace HLE::Applets

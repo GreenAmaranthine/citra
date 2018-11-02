@@ -23,20 +23,17 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
         // TODO: Find the right error code
         return ResultCode(-1);
     }
-
     // The LibAppJustStarted message contains a buffer with the size of the framebuffer shared
     // memory.
     // Create the SharedMemory that will hold the framebuffer data
     Service::APT::CaptureBufferInfo capture_info;
     ASSERT(sizeof(capture_info) == parameter.buffer.size());
     std::memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
-
     using Kernel::MemoryPermission;
     // Create a SharedMemory that directly points to this heap block.
     framebuffer_memory = Core::System::GetInstance().Kernel().CreateSharedMemoryForApplet(
         0, capture_info.size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
         "MiiSelector Memory");
-
     // Send the response message with the newly created SharedMemory
     Service::APT::MessageParameter result;
     result.signal = Service::APT::SignalType::Response;
@@ -44,16 +41,13 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
     result.destination_id = Service::APT::AppletId::Application;
     result.sender_id = id;
     result.object = framebuffer_memory;
-
     SendParameter(result);
     return RESULT_SUCCESS;
 }
 
 ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& parameter) {
     is_running = true;
-
     std::memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
-
     MiiResult result{};
     if (config.magic_value != MiiSelectorMagic)
         result.return_code = 1;
@@ -68,7 +62,6 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
             result.selected_mii_data.data(),
             result.selected_mii_data.size() + sizeof(result.pad52));
     }
-
     // Let the application know that we're closing
     Service::APT::MessageParameter message;
     message.buffer.resize(sizeof(MiiResult));
@@ -77,7 +70,6 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
     message.destination_id = Service::APT::AppletId::Application;
     message.sender_id = id;
     SendParameter(message);
-
     is_running = false;
     return RESULT_SUCCESS;
 }
