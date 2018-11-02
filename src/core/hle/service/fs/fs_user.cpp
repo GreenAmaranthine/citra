@@ -70,8 +70,8 @@ void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
     if (!archive)
         return;
     std::chrono::nanoseconds open_timeout_ns{archive->GetOpenDelayNs()};
-    ctx.SleepClientThread(system.Kernel().GetThreadManager().GetCurrentThread(), "fs_user::open",
-                          open_timeout_ns,
+    ctx.SleepClientThread(system.Kernel().GetThreadManager().GetCurrentThread(),
+                          "FS_USER::OpenFile", open_timeout_ns,
                           [](Kernel::SharedPtr<Kernel::Thread> thread,
                              Kernel::HLERequestContext& ctx, Kernel::ThreadWakeupReason reason) {
                               // Nothing to do here
@@ -120,6 +120,16 @@ void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_FS, "failed to get a handle for file {} (mode={}, attributes={})",
                   file_path.DebugStr(), mode.hex, attributes);
     }
+    auto archive{archives.GetArchive(*archive_handle)};
+    if (!archive)
+        return;
+    std::chrono::nanoseconds open_timeout_ns{archive->GetOpenDelayNs()};
+    ctx.SleepClientThread(system.Kernel().GetThreadManager().GetCurrentThread(),
+                          "FS_USER::OpenFileDirectly", open_timeout_ns,
+                          [](Kernel::SharedPtr<Kernel::Thread> thread,
+                             Kernel::HLERequestContext& ctx, Kernel::ThreadWakeupReason reason) {
+                              // Nothing to do here
+                          });
 }
 
 void FS_USER::DeleteFile(Kernel::HLERequestContext& ctx) {
