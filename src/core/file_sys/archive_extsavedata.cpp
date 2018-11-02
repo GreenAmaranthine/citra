@@ -59,21 +59,16 @@ class ExtSaveDataDelayGenerator : public DelayGenerator {
 public:
     u64 GetReadDelayNs(std::size_t length) override {
         // This is the delay measured for a savedata read,
-        // not for extsaveData
+        // not for ExtSaveData
         // For now we will take that
-        static constexpr u64 slope(183);
-        static constexpr u64 offset(524879);
-        static constexpr u64 minimum(631826);
-        u64 ipc_delay_nanoseconds{
-            std::max<u64>(static_cast<u64>(length) * slope + offset, minimum)};
-        return ipc_delay_nanoseconds;
+        constexpr u64 slope{183};
+        constexpr u64 offset{524879};
+        constexpr u64 minimum{631826};
+        return std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
     }
 
     u64 GetOpenDelayNs() override {
-        // This is the delay measured for a savedata open,
-        // not for ExtSaveData
-        // For now we will take that
-        return 269082;
+        return 758199;
     }
 };
 
