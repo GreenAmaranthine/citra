@@ -325,10 +325,9 @@ ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission pe
     // TODO: check that the source and the target are actually a pair created by Map
     // Should return error 0xD8E007F5 in this case
     CASCADE_CODE(vm_manager.UnmapRange(target, size));
-    // Change back source region state. Note that the permission is reprotected according to
-    // param
-    CASCADE_CODE(vm_manager.ChangeMemoryState(
-        source, size, MemoryState::Aliased, VMAPermission::ReadWrite, MemoryState::Private, perms));
+    // Change back source region state. Note that the permission is reprotected according to param
+    CASCADE_CODE(vm_manager.ChangeMemoryState(source, size, MemoryState::Aliased,
+                                              VMAPermission::None, MemoryState::Private, perms));
     return RESULT_SUCCESS;
 }
 
