@@ -78,9 +78,8 @@ public:
      * @param mode Mode under which to open the File
      * @return The opened File object
      */
-    ResultVal<std::shared_ptr<File>> OpenFileFromArchive(ArchiveHandle archive_handle,
-                                                         const FileSys::Path& path,
-                                                         const FileSys::Mode mode);
+    std::tuple<ResultVal<std::shared_ptr<File>>, std::chrono::nanoseconds> OpenFileFromArchive(
+        ArchiveHandle archive_handle, const FileSys::Path& path, const FileSys::Mode mode);
 
     /**
      * Delete a File from an Archive
@@ -229,8 +228,6 @@ public:
     /// Registers a new NCCH file with the SelfNCCH archive factory
     void RegisterSelfNCCH(Loader::AppLoader& app_loader);
 
-    ArchiveBackend* GetArchive(ArchiveHandle handle);
-
 private:
     Core::System& system;
 
@@ -244,6 +241,8 @@ private:
 
     /// Register all archive types
     void RegisterArchiveTypes();
+
+    ArchiveBackend* GetArchive(ArchiveHandle handle);
 
     /**
      * Map of registered archives, identified by id code. Once an archive is registered here, it is

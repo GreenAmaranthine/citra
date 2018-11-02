@@ -53,11 +53,10 @@ void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
     std::vector<u8> filename{rp.PopStaticBuffer()};
     ASSERT(filename.size() == filename_size);
     FileSys::Path file_path{filename_type, filename};
-    LOG_DEBUG(Service_FS, "file_path={}, mode={}, attributes={}", file_path.DebugStr(), mode.hex,
-              attributes);
-    ResultVal<std::shared_ptr<File>> file_res{
-        archives.OpenFileFromArchive(archive_handle, file_path, mode)};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    LOG_DEBUG(Service_FS, "path={}, mode={}, attrs={}", file_path.DebugStr(), mode.hex, attributes);
+    const auto [file_res, open_timeout_ns] =
+        archives.OpenFileFromArchive(archive_handle, file_path, mode);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(file_res.Code());
     if (file_res.Succeeded()) {
         std::shared_ptr<File> file{*file_res};
@@ -66,16 +65,12 @@ void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
         rb.PushMoveObjects<Kernel::Object>(nullptr);
         LOG_ERROR(Service_FS, "failed to get a handle for file {}", file_path.DebugStr());
     }
-    auto archive{archives.GetArchive(archive_handle)};
-    if (!archive)
-        return;
-    std::chrono::nanoseconds open_timeout_ns{archive->GetOpenDelayNs()};
-    ctx.SleepClientThread(system.Kernel().GetThreadManager().GetCurrentThread(),
-                          "FS_USER::OpenFile", open_timeout_ns,
-                          [](Kernel::SharedPtr<Kernel::Thread> thread,
-                             Kernel::HLERequestContext& ctx, Kernel::ThreadWakeupReason reason) {
-                              // Nothing to do here
-                          });
+    ctx.SleepClientThread(
+        system.Kernel().GetThreadManager().GetCurrentThread(), "fs_user::open", open_timeout_ns,
+        [](Kernel::SharedPtr<Kernel::Thread> /*thread*/, Kernel::HLERequestContext& /*ctx*/,
+           Kernel::ThreadWakeupReason /*reason*/) {
+            // Nothing to do here
+        });
 }
 
 void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
@@ -109,8 +104,8 @@ void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
         return;
     }
     SCOPE_EXIT({ archives.CloseArchive(*archive_handle); });
-    ResultVal<std::shared_ptr<File>> file_res{
-        archives.OpenFileFromArchive(*archive_handle, file_path, mode)};
+    const auto [file_res,
+                open_timeout_ns]{archives.OpenFileFromArchive(*archive_handle, file_path, mode)};
     rb.Push(file_res.Code());
     if (file_res.Succeeded()) {
         std::shared_ptr<File> file{*file_res};
@@ -120,12 +115,8 @@ void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_FS, "failed to get a handle for file {} (mode={}, attributes={})",
                   file_path.DebugStr(), mode.hex, attributes);
     }
-    auto archive{archives.GetArchive(*archive_handle)};
-    if (!archive)
-        return;
-    std::chrono::nanoseconds open_timeout_ns{archive->GetOpenDelayNs()};
     ctx.SleepClientThread(system.Kernel().GetThreadManager().GetCurrentThread(),
-                          "FS_USER::OpenFileDirectly", open_timeout_ns,
+                          "fs_user::open_directly", open_timeout_ns,
                           [](Kernel::SharedPtr<Kernel::Thread> thread,
                              Kernel::HLERequestContext& ctx, Kernel::ThreadWakeupReason reason) {
                               // Nothing to do here

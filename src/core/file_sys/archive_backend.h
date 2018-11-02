@@ -155,14 +155,6 @@ public:
      */
     virtual u64 GetFreeBytes() const = 0;
 
-    u64 GetReadDelayNs(std::size_t length) {
-        if (delay_generator)
-            return delay_generator->GetReadDelayNs(length);
-        LOG_ERROR(Service_FS, "Delay generator was not initalized. Using default");
-        delay_generator = std::make_unique<DefaultDelayGenerator>();
-        return delay_generator->GetReadDelayNs(length);
-    }
-
     u64 GetOpenDelayNs() {
         if (delay_generator)
             return delay_generator->GetOpenDelayNs();
