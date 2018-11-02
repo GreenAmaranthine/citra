@@ -16,6 +16,9 @@
 #include "citra/util/clickable_label.h"
 #include "common/announce_multiplayer_room.h"
 #include "common/logging/log.h"
+#include "core/core.h"
+#include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/shared_page.h"
 #include "network/network.h"
 
 MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* app_list_model,
@@ -23,7 +26,7 @@ MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* app_list
     : QWidget{parent}, app_list_model{app_list_model}, leave_room{leave_room}, show_room{
                                                                                    show_room} {
     if (auto member{Network::GetRoomMember().lock()}) {
-        // register the network structs to use in slots and signals
+        // Register the network structs to use in slots and signals
         state_callback_handle = member->BindOnStateChanged(
             [this](const Network::RoomMember::State& state) { emit NetworkStateChanged(state); });
         connect(this, &MultiplayerState::NetworkStateChanged, this,
@@ -85,10 +88,15 @@ void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& s
     case Network::RoomMember::State::Error:
         NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
         break;
-    case Network::RoomMember::State::Joined:
+    case Network::RoomMember::State::Joined: {
         is_connected = true;
+        auto& system{Core::System::GetInstance()};
+        if (system.IsPoweredOn())
+            if (auto member{Network::GetRoomMember().lock()})
+                system.Kernel().GetSharedPageHandler().SetMacAddress(member->GetMacAddress());
         OnOpenNetworkRoom();
         break;
+    }
     }
     if (is_connected) {
         status_icon->setPixmap(QIcon::fromTheme("connected").pixmap(16));
