@@ -39,8 +39,6 @@ void Apply() {
     ir_rst->ReloadInputDevices();
     auto cam{sm.GetService<Service::CAM::Module::Interface>("cam:u")->GetModule()};
     cam->ReloadCameraDevices();
-    auto mic{sm.GetService<Service::MIC::MIC_U>("mic:u")};
-    mic->ReloadDevice();
 }
 
 template <typename T>

@@ -1701,7 +1701,6 @@ int main(int argc, char* argv[]) {
     Camera::QtMultimediaCameraHandler::Init();
 
     LOG_INFO(Frontend, "Citra version: {}-{}", Common::g_scm_branch, Common::g_scm_desc);
-    SDL_InitSubSystem(SDL_INIT_AUDIO);
 #ifdef _WIN32
     WSADATA data;
     WSAStartup(MAKEWORD(2, 2), &data);
@@ -1711,7 +1710,6 @@ int main(int argc, char* argv[]) {
 #ifdef _WIN32
     WSACleanup();
 #endif
-    SDL_QuitSubSystem(SDL_INIT_AUDIO);
     detached_tasks.WaitForAllTasks();
     return result;
 }

@@ -18,8 +18,6 @@ public:
     explicit MIC_U(Core::System& system);
     ~MIC_U();
 
-    void ReloadDevice();
-
 private:
     void MapSharedMem(Kernel::HLERequestContext& ctx);
     void UnmapSharedMem(Kernel::HLERequestContext& ctx);

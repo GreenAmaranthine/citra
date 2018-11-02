@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>239</width>
-    <height>157</height>
+    <height>124</height>
    </rect>
   </property>
   <layout class="QVBoxLayout">
@@ -38,20 +38,6 @@
         </item>
         <item>
          <widget class="QComboBox" name="output_device_combo_box"/>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="input">
-        <item>
-         <widget class="QLabel" name="input_device_label">
-          <property name="text">
-           <string>Input Device:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="input_device_combo_box"/>
         </item>
        </layout>
       </item>

@@ -13,7 +13,6 @@
 ConfigureAudio::ConfigureAudio(QWidget* parent)
     : QWidget{parent}, ui{std::make_unique<Ui::ConfigureAudio>()} {
     ui->setupUi(this);
-
     LoadConfiguration();
 }
 
@@ -21,50 +20,22 @@ ConfigureAudio::~ConfigureAudio() {}
 
 void ConfigureAudio::LoadConfiguration() {
     ui->toggle_audio_stretching->setChecked(Settings::values.enable_audio_stretching);
-
     // Load output devices
-    {
-        ui->output_device_combo_box->addItem("auto");
-        std::vector<std::string> device_list{AudioCore::ListDevices()};
-        for (const auto& device : device_list) {
-            ui->output_device_combo_box->addItem(device.c_str());
+    ui->output_device_combo_box->addItem("auto");
+    std::vector<std::string> device_list{AudioCore::ListDevices()};
+    for (const auto& device : device_list)
+        ui->output_device_combo_box->addItem(device.c_str());
+    int new_device_index{-1};
+    for (int index{}; index < ui->output_device_combo_box->count(); index++)
+        if (ui->output_device_combo_box->itemText(index).toStdString() ==
+            Settings::values.output_device) {
+            new_device_index = index;
+            break;
         }
-
-        int new_device_index{-1};
-        for (int index{}; index < ui->output_device_combo_box->count(); index++) {
-            if (ui->output_device_combo_box->itemText(index).toStdString() ==
-                Settings::values.output_device) {
-                new_device_index = index;
-                break;
-            }
-        }
-
-        ui->output_device_combo_box->setCurrentIndex(new_device_index);
-    }
-
-    // Load input devices
-    {
-        ui->input_device_combo_box->addItem("auto");
-        int num_devices{SDL_GetNumAudioDevices(1)};
-        for (int i{}; i < num_devices; ++i) {
-            ui->input_device_combo_box->addItem(SDL_GetAudioDeviceName(i, 1));
-        }
-
-        int new_device_index{-1};
-        for (int index{}; index < ui->input_device_combo_box->count(); index++) {
-            if (ui->input_device_combo_box->itemText(index).toStdString() ==
-                Settings::values.input_device) {
-                new_device_index = index;
-                break;
-            }
-        }
-
-        ui->input_device_combo_box->setCurrentIndex(new_device_index);
-    }
+    ui->output_device_combo_box->setCurrentIndex(new_device_index);
 }
 
 void ConfigureAudio::ApplyConfiguration() {
     Settings::values.enable_audio_stretching = ui->toggle_audio_stretching->isChecked();
     Settings::values.output_device = ui->output_device_combo_box->currentText().toStdString();
-    Settings::values.input_device = ui->input_device_combo_box->currentText().toStdString();
 }

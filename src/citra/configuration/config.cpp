@@ -222,8 +222,6 @@ void Config::Load() {
         qt_config->value("enable_audio_stretching", true).toBool();
     Settings::values.output_device =
         qt_config->value("output_device", "auto").toString().toStdString();
-    Settings::values.input_device =
-        qt_config->value("input_device", "auto").toString().toStdString();
     qt_config->endGroup();
     using namespace Service::CAM;
     qt_config->beginGroup("Camera");
@@ -437,7 +435,6 @@ void Config::Save() {
     qt_config->beginGroup("Audio");
     qt_config->setValue("enable_audio_stretching", Settings::values.enable_audio_stretching);
     qt_config->setValue("output_device", QString::fromStdString(Settings::values.output_device));
-    qt_config->setValue("input_device", QString::fromStdString(Settings::values.input_device));
     qt_config->endGroup();
     using namespace Service::CAM;
     qt_config->beginGroup("Camera");
