@@ -170,7 +170,7 @@ void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_ses
     u32 header_code{cmd_buf[0]};
     auto itr{handlers.find(header_code)};
     const FunctionInfoBase* info{itr == handlers.end() ? nullptr : &itr->second};
-    if (info == nullptr || info->handler_callback == nullptr)
+    if (!info || !info->handler_callback)
         return ReportUnimplementedFunction(cmd_buf, info);
     Kernel::SharedPtr<Kernel::Process> current_process = kernel.GetCurrentProcess();
     // TODO: The kernel should be the one handling this as part of translation after

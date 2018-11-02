@@ -286,7 +286,7 @@ static ResultCode SendSyncRequest(Handle handle) {
     auto& kernel{system.Kernel()};
     SharedPtr<ClientSession> session{
         kernel.GetCurrentProcess()->handle_table.Get<ClientSession>(handle)};
-    if (session == nullptr)
+    if (!session)
         return ERR_INVALID_HANDLE;
     LOG_TRACE(Kernel_SVC, "handle=0x{:08X}({})", handle, session->GetName());
     system.PrepareReschedule();

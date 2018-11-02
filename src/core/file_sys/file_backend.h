@@ -52,9 +52,8 @@ public:
     }
 
     u64 GetOpenDelayNs() {
-        if (delay_generator != nullptr) {
+        if (delay_generator)
             return delay_generator->GetOpenDelayNs();
-        }
         LOG_ERROR(Service_FS, "Delay generator was not initalized. Using default");
         delay_generator = std::make_unique<DefaultDelayGenerator>();
         return delay_generator->GetOpenDelayNs();
