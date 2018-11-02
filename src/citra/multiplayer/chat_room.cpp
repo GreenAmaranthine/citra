@@ -5,16 +5,23 @@
 #include <array>
 #include <future>
 #include <QColor>
+#include <QComboBox>
+#include <QCompleter>
+#include <QDialogButtonBox>
 #include <QImage>
+#include <QLabel>
 #include <QList>
 #include <QLocale>
 #include <QMenu>
 #include <QMessageBox>
 #include <QMetaType>
+#include <QStringListModel>
 #include <QTime>
+#include <QVBoxLayout>
 #include <QtConcurrent/QtConcurrentRun>
 #include "citra/app_list_p.h"
 #include "citra/multiplayer/chat_room.h"
+#include "citra/multiplayer/emojis.h"
 #include "citra/multiplayer/message.h"
 #include "citra/multiplayer/state.h"
 #include "common/logging/log.h"
@@ -95,9 +102,10 @@ ChatRoom::ChatRoom(QWidget* parent) : QWidget{parent}, ui{std::make_unique<Ui::C
     // Connect all the widgets to the appropriate events
     connect(ui->player_view, &QTreeView::customContextMenuRequested, this,
             &ChatRoom::PopupContextMenu);
-    connect(ui->chat_message, &QLineEdit::returnPressed, ui->send_message, &QPushButton::pressed);
-    connect(ui->chat_message, &QLineEdit::textChanged, this, &::ChatRoom::OnChatTextChanged);
-    connect(ui->send_message, &QPushButton::pressed, this, &ChatRoom::OnSendChat);
+    connect(ui->chat_message, &QLineEdit::returnPressed, ui->send_message, &QPushButton::released);
+    connect(ui->chat_message, &QLineEdit::textChanged, this, &ChatRoom::OnChatTextChanged);
+    connect(ui->send_message, &QPushButton::released, this, &ChatRoom::OnSendChat);
+    connect(ui->insert_emoji, &QPushButton::released, this, &ChatRoom::OnInsertEmoji);
 }
 
 ChatRoom::~ChatRoom() = default;
@@ -151,27 +159,21 @@ bool ChatRoom::ValidateMessage(const std::string& msg) {
     return !msg.empty();
 }
 
-void ChatRoom::OnRoomUpdate(const Network::RoomInformation& info) {
-    // TODO: change title
-    if (auto member{Network::GetRoomMember().lock()}) {
-        SetPlayerList(member->GetMemberInformation());
-    }
-}
-
 void ChatRoom::Disable() {
     ui->send_message->setDisabled(true);
     ui->chat_message->setDisabled(true);
+    ui->insert_emoji->setDisabled(true);
 }
 
 void ChatRoom::Enable() {
     ui->send_message->setEnabled(true);
     ui->chat_message->setEnabled(true);
+    ui->insert_emoji->setEnabled(true);
 }
 
 void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
-    if (!ValidateMessage(chat.message)) {
+    if (!ValidateMessage(chat.message))
         return;
-    }
     if (auto room{Network::GetRoomMember().lock()}) {
         // get the id of the player
         auto members{room->GetMemberInformation()};
@@ -198,12 +200,9 @@ void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
 
 void ChatRoom::OnSendChat() {
     QString message{ui->chat_message->text()};
-    if (!Send(message)) {
+    if (!Send(message))
         return;
-    }
-
     ui->chat_message->clear();
-
     HandleNewMessage(message);
 }
 
@@ -211,9 +210,8 @@ void ChatRoom::SetPlayerList(const Network::RoomMember::MemberList& member_list)
     // TODO: Remember which row is selected
     player_list->removeRows(0, player_list->rowCount());
     for (const auto& member : member_list) {
-        if (member.nickname.empty()) {
+        if (member.nickname.empty())
             continue;
-        }
         QList<QStandardItem*> l;
         std::vector<std::string> elements{member.nickname, member.app_info.name};
         for (const auto& item : elements) {
@@ -227,36 +225,30 @@ void ChatRoom::SetPlayerList(const Network::RoomMember::MemberList& member_list)
 }
 
 void ChatRoom::OnChatTextChanged() {
-    if (ui->chat_message->text().length() > Network::MaxMessageSize) {
+    if (ui->chat_message->text().length() > Network::MaxMessageSize)
         ui->chat_message->setText(ui->chat_message->text().left(Network::MaxMessageSize));
-    }
 }
 
 void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
     QModelIndex item{ui->player_view->indexAt(menu_location)};
     if (!item.isValid())
         return;
-
-    std::string nickname = player_list->item(item.row())->text().toStdString();
-    if (auto member{Network::GetRoomMember().lock()}) {
+    std::string nickname{player_list->item(item.row())->text().toStdString()};
+    if (auto member{Network::GetRoomMember().lock()})
         // You can't block yourself
         if (nickname == member->GetNickname())
             return;
-    }
-
     QMenu context_menu;
-    QAction* block_action{context_menu.addAction("Block Player")};
-
+    QAction* block_action{context_menu.addAction("Block User")};
     block_action->setCheckable(true);
     block_action->setChecked(block_list.count(nickname) > 0);
-
     connect(block_action, &QAction::triggered, [this, nickname] {
-        if (block_list.count(nickname)) {
+        if (block_list.count(nickname))
             block_list.erase(nickname);
-        } else {
+        else {
             QMessageBox::StandardButton result{QMessageBox::question(
-                this, "Block Player",
-                QString("When you block a player, you will no longer receive chat messages from "
+                this, "Block User",
+                QString("When you block a user, you will no longer receive chat messages from "
                         "them.<br><br>Are you sure you would like to block %1?")
                     .arg(QString::fromStdString(nickname)),
                 QMessageBox::Yes | QMessageBox::No)};
@@ -264,6 +256,41 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
                 block_list.emplace(nickname);
         }
     });
-
     context_menu.exec(ui->player_view->viewport()->mapToGlobal(menu_location));
+}
+
+void ChatRoom::OnInsertEmoji() {
+    QDialog dialog;
+    auto dialog_layout{new QVBoxLayout(&dialog)};
+    auto emoji_combobox{new QComboBox()};
+    emoji_combobox->setEditable(true);
+    auto preview{new QLabel()};
+    auto model{new QStringListModel()};
+    emoji_combobox->setModel(model);
+    for (const auto& emoji : EmojiMap)
+        emoji_combobox->addItem(QString::fromStdString(emoji.first));
+    auto completer{new QCompleter(model->stringList())};
+    completer->setCaseSensitivity(Qt::CaseInsensitive);
+    emoji_combobox->setCompleter(completer);
+    auto button_box{new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel)};
+    connect(button_box, &QDialogButtonBox::accepted, [&] { dialog.accept(); });
+    connect(button_box, &QDialogButtonBox::rejected, [&] { dialog.reject(); });
+    connect(emoji_combobox, &QComboBox::currentTextChanged, [&](const QString& text) {
+        auto itr{EmojiMap.find(text.toStdString())};
+        if (itr != EmojiMap.end()) {
+            preview->setText(QString("Preview: %1").arg(QString::fromStdString(itr->second)));
+            button_box->button(QDialogButtonBox::Ok)->setEnabled(true);
+        } else
+            button_box->button(QDialogButtonBox::Ok)->setEnabled(false);
+    });
+    dialog_layout->addWidget(emoji_combobox);
+    dialog_layout->addWidget(preview);
+    dialog_layout->addWidget(button_box);
+    preview->setText(QString("Preview: %1")
+                         .arg(QString::fromStdString(
+                             EmojiMap.find(emoji_combobox->currentText().toStdString())->second)));
+    auto code{dialog.exec()};
+    if (code == QDialog::Accepted)
+        ui->chat_message->insert(QString::fromStdString(
+            EmojiMap.find(emoji_combobox->currentText().toStdString())->second));
 }

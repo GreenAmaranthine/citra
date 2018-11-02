@@ -57,7 +57,7 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
         // Use Citra Web Service user name as nickname by default
         ui->nickname->setText(QString::fromStdString(Settings::values.citra_username));
     // UI Buttons
-    connect(ui->refresh_list, &QPushButton::pressed, this, &Lobby::RefreshLobby);
+    connect(ui->refresh_list, &QPushButton::released, this, &Lobby::RefreshLobby);
     connect(ui->applications_i_have, &QCheckBox::stateChanged, proxy,
             &LobbyFilterProxyModel::SetFilterOwned);
     connect(ui->hide_full, &QCheckBox::stateChanged, proxy, &LobbyFilterProxyModel::SetFilterFull);

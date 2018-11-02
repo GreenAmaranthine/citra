@@ -28,13 +28,12 @@ ClientRoomWindow::ClientRoomWindow(QWidget* parent)
             [this](const Network::RoomInformation& info) { emit RoomInformationChanged(info); });
         member->BindOnStateChanged(
             [this](const Network::RoomMember::State& state) { emit StateChanged(state); });
-
         connect(this, &ClientRoomWindow::RoomInformationChanged, this,
                 &ClientRoomWindow::OnRoomUpdate);
-        connect(this, &ClientRoomWindow::StateChanged, this, &::ClientRoomWindow::OnStateChange);
+        connect(this, &ClientRoomWindow::StateChanged, this, &ClientRoomWindow::OnStateChange);
     }
     // TODO: Network was not initialized?
-    connect(ui->disconnect, &QPushButton::pressed, [this] { Disconnect(); });
+    connect(ui->disconnect, &QPushButton::released, [this] { Disconnect(); });
     ui->disconnect->setDefault(false);
     ui->disconnect->setAutoDefault(false);
     UpdateView();

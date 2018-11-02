@@ -29,17 +29,18 @@ class ChatRoom : public QWidget {
 
 public:
     explicit ChatRoom(QWidget* parent);
+    ~ChatRoom();
+
     void SetPlayerList(const Network::RoomMember::MemberList& member_list);
     void Clear();
     void AppendStatusMessage(const QString& msg);
     bool Send(const QString& msg);
     void HandleNewMessage(const QString& msg);
-    ~ChatRoom();
 
 public slots:
-    void OnRoomUpdate(const Network::RoomInformation& info);
     void OnChatReceive(const Network::ChatEntry&);
     void OnSendChat();
+    void OnInsertEmoji();
     void OnChatTextChanged();
     void PopupContextMenu(const QPoint& menu_location);
     void Disable();

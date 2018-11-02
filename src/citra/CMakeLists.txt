@@ -48,6 +48,7 @@ add_executable(citra
     configuration/configure_ui.h
     configuration/configure_hacks.cpp
     configuration/configure_hacks.h
+    multiplayer/emojis.h
     multiplayer/chat_room.cpp
     multiplayer/chat_room.h
     multiplayer/client_room.cpp
