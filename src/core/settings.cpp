@@ -5,8 +5,10 @@
 #include <utility>
 #include "audio_core/hle/hle.h"
 #include "core/core.h"
+#include "core/hle/service/cam/cam.h"
 #include "core/hle/service/hid/hid.h"
-#include "core/hle/service/ir/ir.h"
+#include "core/hle/service/ir/ir_rst.h"
+#include "core/hle/service/ir/ir_user.h"
 #include "core/hle/service/mic/mic_u.h"
 #include "core/settings.h"
 #include "video_core/renderer/renderer.h"
@@ -17,23 +19,28 @@ namespace Settings {
 Values values;
 
 void Apply() {
+    auto& system{Core::System::GetInstance()};
+    if (!system.IsPoweredOn())
+        return;
     VideoCore::g_hw_shaders_enabled = values.use_hw_shaders;
     VideoCore::g_hw_shaders_accurate_gs = values.shaders_accurate_gs;
     VideoCore::g_hw_shaders_accurate_mul = values.shaders_accurate_mul;
-    if (VideoCore::g_renderer) {
-        VideoCore::g_renderer->UpdateCurrentFramebufferLayout();
-        VideoCore::g_renderer->GetRasterizer()->SyncSettings();
-    }
     VideoCore::g_bg_color_update_requested = true;
-    auto& system{Core::System::GetInstance()};
-    if (system.IsPoweredOn()) {
-        system.DSP().UpdateSink();
-        system.DSP().EnableStretching(values.enable_audio_stretching);
-    }
-    Service::HID::ReloadInputDevices();
-    Service::IR::ReloadInputDevices();
-    Service::CAM::ReloadCameraDevices();
-    Service::MIC::ReloadDevice();
+    VideoCore::g_renderer->UpdateCurrentFramebufferLayout();
+    auto& dsp{system.DSP()};
+    dsp.UpdateSink();
+    dsp.EnableStretching(values.enable_audio_stretching);
+    auto& sm{system.ServiceManager()};
+    auto hid{sm.GetService<Service::HID::Module::Interface>("hid:USER")->GetModule()};
+    hid->ReloadInputDevices();
+    auto ir_user{sm.GetService<Service::IR::IR_USER>("ir:USER")};
+    auto ir_rst{sm.GetService<Service::IR::IR_RST>("ir:rst")};
+    ir_user->ReloadInputDevices();
+    ir_rst->ReloadInputDevices();
+    auto cam{sm.GetService<Service::CAM::Module::Interface>("cam:u")->GetModule()};
+    cam->ReloadCameraDevices();
+    auto mic{sm.GetService<Service::MIC::MIC_U>("mic:u")};
+    mic->ReloadDevice();
 }
 
 template <typename T>

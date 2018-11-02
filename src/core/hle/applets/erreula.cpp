@@ -51,7 +51,7 @@ void ErrEula::Update() {
     bool open{};
     cb(config, open);
     std::mutex m;
-    std::unique_lock<std::mutex> lock{m};
+    std::unique_lock lock{m};
     std::condition_variable cv;
     cv.wait(lock, [&open]() -> bool { return !open; });
     Finalize();

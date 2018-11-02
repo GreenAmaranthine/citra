@@ -117,7 +117,6 @@ void HostRoomWindow::Host() {
         UISettings::values.room_port = (ui->port->isModified() && !ui->port->text().isEmpty())
                                            ? ui->port->text()
                                            : QString::number(Network::DefaultRoomPort);
-        Settings::Apply();
         OnConnection();
     }
 }

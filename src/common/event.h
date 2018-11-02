@@ -17,7 +17,7 @@ public:
     Event() : is_set(false) {}
 
     void Set() {
-        std::lock_guard<std::mutex> lk{mutex};
+        std::lock_guard lk{mutex};
         if (!is_set) {
             is_set = true;
             condvar.notify_one();
@@ -25,14 +25,14 @@ public:
     }
 
     void Wait() {
-        std::unique_lock<std::mutex> lk{mutex};
+        std::unique_lock lk{mutex};
         condvar.wait(lk, [&] { return is_set; });
         is_set = false;
     }
 
     template <class Duration>
     bool WaitFor(const std::chrono::duration<Duration>& time) {
-        std::unique_lock<std::mutex> lk{mutex};
+        std::unique_lock lk{mutex};
         if (!condvar.wait_for(lk, time, [this] { return is_set; }))
             return false;
         is_set = false;
@@ -41,7 +41,7 @@ public:
 
     template <class Clock, class Duration>
     bool WaitUntil(const std::chrono::time_point<Clock, Duration>& time) {
-        std::unique_lock<std::mutex> lk{mutex};
+        std::unique_lock lk{mutex};
         if (!condvar.wait_until(lk, time, [this] { return is_set; }))
             return false;
         is_set = false;
@@ -49,7 +49,7 @@ public:
     }
 
     void Reset() {
-        std::unique_lock<std::mutex> lk{mutex};
+        std::unique_lock lk{mutex};
         // no other action required, since wait loops on the predicate and any lingering signal will
         // get cleared on the first iteration
         is_set = false;

@@ -87,7 +87,10 @@ void CheatManager::RefreshCheats() {
 }
 
 void CheatManager::Save(std::vector<Cheat> cheats) {
-    cheats_list = cheats;
+    {
+        std::lock_guard lock{cheats_list_mutex};
+        cheats_list = cheats;
+    }
     std::string file_path{GetFilePath()};
     FileUtil::IOFile file{file_path, "w+"};
     for (auto& cheat : cheats) {
@@ -97,6 +100,7 @@ void CheatManager::Save(std::vector<Cheat> cheats) {
 }
 
 void CheatManager::Run() {
+    std::lock_guard lock{cheats_list_mutex};
     for (auto& cheat : cheats_list)
         cheat.Execute();
 }

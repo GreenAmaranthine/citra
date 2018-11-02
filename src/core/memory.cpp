@@ -136,7 +136,7 @@ T Read(const VAddr vaddr) {
         return value;
     }
     // The memory access might do an MMIO or cached access, so we have to lock the HLE kernel state
-    std::lock_guard<std::recursive_mutex> lock{HLE::g_hle_lock};
+    std::lock_guard lock{HLE::g_hle_lock};
     PageType type{current_page_table->attributes[vaddr >> PAGE_BITS]};
     switch (type) {
     case PageType::Unmapped:
@@ -170,7 +170,7 @@ void Write(const VAddr vaddr, const T data) {
         return;
     }
     // The memory access might do an MMIO or cached access, so we have to lock the HLE kernel state
-    std::lock_guard<std::recursive_mutex> lock{HLE::g_hle_lock};
+    std::lock_guard lock{HLE::g_hle_lock};
     PageType type{current_page_table->attributes[vaddr >> PAGE_BITS]};
     switch (type) {
     case PageType::Unmapped:

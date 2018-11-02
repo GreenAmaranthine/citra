@@ -13,7 +13,6 @@ namespace Common {
 
 constexpr char KEY_VALUE_SEPARATOR{':'};
 constexpr char PARAM_SEPARATOR{','};
-
 constexpr char ESCAPE_CHARACTER{'$'};
 constexpr char KEY_VALUE_SEPARATOR_ESCAPE[]{"$0"};
 constexpr char PARAM_SEPARATOR_ESCAPE[]{"$1"};
@@ -24,13 +23,10 @@ constexpr char ESCAPE_CHARACTER_ESCAPE[]{"$2"};
 constexpr char EMPTY_PLACEHOLDER[]{"[empty]"};
 
 ParamPackage::ParamPackage(const std::string& serialized) {
-    if (serialized == EMPTY_PLACEHOLDER) {
+    if (serialized == EMPTY_PLACEHOLDER)
         return;
-    }
-
     std::vector<std::string> pairs;
     Common::SplitString(serialized, PARAM_SEPARATOR, pairs);
-
     for (const std::string& pair : pairs) {
         std::vector<std::string> key_value;
         Common::SplitString(pair, KEY_VALUE_SEPARATOR, key_value);
@@ -38,13 +34,11 @@ ParamPackage::ParamPackage(const std::string& serialized) {
             LOG_ERROR(Common, "invalid key pair {}", pair);
             continue;
         }
-
         for (std::string& part : key_value) {
             part = Common::ReplaceAll(part, KEY_VALUE_SEPARATOR_ESCAPE, {KEY_VALUE_SEPARATOR});
             part = Common::ReplaceAll(part, PARAM_SEPARATOR_ESCAPE, {PARAM_SEPARATOR});
             part = Common::ReplaceAll(part, ESCAPE_CHARACTER_ESCAPE, {ESCAPE_CHARACTER});
         }
-
         Set(key_value[0], std::move(key_value[1]));
     }
 }
@@ -54,9 +48,7 @@ ParamPackage::ParamPackage(std::initializer_list<DataType::value_type> list) : d
 std::string ParamPackage::Serialize() const {
     if (data.empty())
         return EMPTY_PLACEHOLDER;
-
-    std::string result{};
-
+    std::string result;
     for (const auto& pair : data) {
         std::array<std::string, 2> key_value{{pair.first, pair.second}};
         for (std::string& part : key_value) {
@@ -66,8 +58,7 @@ std::string ParamPackage::Serialize() const {
         }
         result += key_value[0] + KEY_VALUE_SEPARATOR + key_value[1] + PARAM_SEPARATOR;
     }
-
-    result.pop_back(); // discard the trailing PARAM_SEPARATOR
+    result.pop_back(); // Discard the trailing PARAM_SEPARATOR
     return result;
 }
 
@@ -77,17 +68,15 @@ std::string ParamPackage::Get(const std::string& key, const std::string& default
         LOG_DEBUG(Common, "key {} not found", key);
         return default_value;
     }
-
     return pair->second;
 }
 
 int ParamPackage::Get(const std::string& key, int default_value) const {
-    auto pair = data.find(key);
+    auto pair{data.find(key)};
     if (pair == data.end()) {
         LOG_DEBUG(Common, "key {} not found", key);
         return default_value;
     }
-
     try {
         return std::stoi(pair->second);
     } catch (const std::logic_error&) {
@@ -97,12 +86,11 @@ int ParamPackage::Get(const std::string& key, int default_value) const {
 }
 
 float ParamPackage::Get(const std::string& key, float default_value) const {
-    auto pair = data.find(key);
+    auto pair{data.find(key)};
     if (pair == data.end()) {
         LOG_DEBUG(Common, "key {} not found", key);
         return default_value;
     }
-
     try {
         return std::stof(pair->second);
     } catch (const std::logic_error&) {

@@ -368,12 +368,4 @@ void InstallInterfaces(Core::System& system) {
     std::make_shared<MIC_U>(system)->InstallAsService(service_manager);
 }
 
-void ReloadDevice() {
-    auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn())
-        return;
-    auto mic{system.ServiceManager().GetService<MIC_U>("mic:u")};
-    mic->ReloadDevice();
-}
-
 } // namespace Service::MIC

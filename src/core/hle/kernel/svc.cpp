@@ -1373,7 +1373,7 @@ static const FunctionDef* GetSVCInfo(u32 func_num) {
 
 void CallSVC(u32 immediate) {
     // Lock the global kernel mutex when we enter the kernel HLE.
-    std::lock_guard<std::recursive_mutex> lock{HLE::g_hle_lock};
+    std::lock_guard lock{HLE::g_hle_lock};
     DEBUG_ASSERT_MSG(Core::System::GetInstance().Kernel().GetCurrentProcess()->status ==
                          ProcessStatus::Running,
                      "Running threads from exiting processes is unimplemented");

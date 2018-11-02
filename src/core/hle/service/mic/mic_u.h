@@ -43,6 +43,5 @@ private:
 };
 
 void InstallInterfaces(Core::System& system);
-void ReloadDevice();
 
 } // namespace Service::MIC

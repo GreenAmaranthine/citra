@@ -18,13 +18,13 @@ using std::chrono::microseconds;
 namespace Core {
 
 void PerfStats::BeginSystemFrame() {
-    std::lock_guard<std::mutex> lock{object_mutex};
+    std::lock_guard lock{object_mutex};
 
     frame_begin = Clock::now();
 }
 
 void PerfStats::EndSystemFrame() {
-    std::lock_guard<std::mutex> lock{object_mutex};
+    std::lock_guard lock{object_mutex};
 
     auto frame_end{Clock::now()};
     accumulated_frametime += frame_end - frame_begin;
@@ -35,12 +35,12 @@ void PerfStats::EndSystemFrame() {
 }
 
 void PerfStats::EndAppFrame() {
-    std::lock_guard<std::mutex> lock{object_mutex};
+    std::lock_guard lock{object_mutex};
     app_frames += 1;
 }
 
 PerfStats::Results PerfStats::GetAndResetStats(microseconds current_system_time_us) {
-    std::lock_guard<std::mutex> lock{object_mutex};
+    std::lock_guard lock{object_mutex};
 
     const auto now{Clock::now()};
 
@@ -67,7 +67,7 @@ PerfStats::Results PerfStats::GetAndResetStats(microseconds current_system_time_
 }
 
 double PerfStats::GetLastFrameTimeScale() {
-    std::lock_guard<std::mutex> lock{object_mutex};
+    std::lock_guard lock{object_mutex};
 
     return duration_cast<DoubleSecs>(previous_frame_length).count() /
            (1.0 / Settings::values.screen_refresh_rate);

@@ -10,6 +10,7 @@
 #include "common/bit_set.h"
 #include "common/logging/log.h"
 #include "core/core.h"
+#include "core/settings.h"
 #include "video_core/regs_framebuffer.h"
 #include "video_core/regs_lighting.h"
 #include "video_core/regs_rasterizer.h"
@@ -283,9 +284,11 @@ static std::string SampleTexture(const PicaFSConfig& config, unsigned texture_un
         case TexturingRegs::TextureConfig::TextureCube:
             return "texture(tex_cube, vec3(texcoord0, texcoord0_w))";
         case TexturingRegs::TextureConfig::Shadow2D:
-            return "shadowTexture(texcoord0, texcoord0_w)";
+            return Settings::values.enable_shadows ? "shadowTexture(texcoord0, texcoord0_w)"
+                                                   : "vec4(1.0)";
         case TexturingRegs::TextureConfig::ShadowCube:
-            return "shadowTextureCube(texcoord0, texcoord0_w)";
+            return Settings::values.enable_shadows ? "shadowTextureCube(texcoord0, texcoord0_w)"
+                                                   : "vec4(1.0)";
         case TexturingRegs::TextureConfig::Disabled:
             return "vec4(0.0)";
         default:

@@ -23,7 +23,7 @@ void GSP_LCD::SetBrightnessRaw(Kernel::HLERequestContext& ctx) {
     // TODO: add support for Windows & macOS
 #ifdef __linux__
     std::string command{"xrandr --output eDP-1 --brightness "};
-    std::ostringstream os{};
+    std::ostringstream os;
     os << brightness_f;
     command += os.str();
     ret = system(command.c_str());
@@ -43,7 +43,7 @@ void GSP_LCD::SetBrightness(Kernel::HLERequestContext& ctx) {
     // TODO: add support for Windows & macOS
 #ifdef __linux__
     std::string command{"xrandr --output eDP-1 --brightness "};
-    std::ostringstream os{};
+    std::ostringstream os;
     os << brightness_f;
     command += os.str();
     ret = system(command.c_str());

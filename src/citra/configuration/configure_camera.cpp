@@ -280,7 +280,6 @@ void ConfigureCamera::ApplyConfiguration() {
     Settings::values.camera_name = camera_name;
     Settings::values.camera_config = camera_config;
     Settings::values.camera_flip = camera_flip;
-    Settings::Apply();
 }
 
 ConfigureCamera::CameraPosition ConfigureCamera::getCameraSelection() {

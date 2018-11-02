@@ -376,14 +376,6 @@ void Module::SetOverrideControls(bool pad, bool touch, bool motion, bool circle)
     use_override_circle_pad = circle;
 }
 
-void ReloadInputDevices() {
-    auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn())
-        return;
-    auto hid{system.ServiceManager().GetService<User>("hid:USER")->GetModule()};
-    hid->ReloadInputDevices();
-}
-
 void SetPadState(u32 raw) {
     auto& system{Core::System::GetInstance()};
     if (!system.IsPoweredOn())

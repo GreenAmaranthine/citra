@@ -11,17 +11,6 @@
 
 namespace Service::IR {
 
-void ReloadInputDevices() {
-    auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn())
-        return;
-    auto& sm{system.ServiceManager()};
-    auto ir_user{sm.GetService<IR_USER>("ir:USER")};
-    auto ir_rst{sm.GetService<IR_RST>("ir:rst")};
-    ir_user->ReloadInputDevices();
-    ir_rst->ReloadInputDevices();
-}
-
 void InstallInterfaces(Core::System& system) {
     auto& service_manager{system.ServiceManager()};
     std::make_shared<IR_U>()->InstallAsService(service_manager);

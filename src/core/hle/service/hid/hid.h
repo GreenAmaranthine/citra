@@ -288,9 +288,6 @@ private:
 
 void InstallInterfaces(Core::System& system);
 
-/// Reload input devices. Used when input configuration changed
-void ReloadInputDevices();
-
 void SetPadState(u32 raw);
 void SetTouchState(s16 x, s16 y, bool valid);
 void SetMotionState(s16 x, s16 y, s16 z, s16 roll, s16 pitch, s16 yaw);
@@ -298,4 +295,5 @@ void SetCircleState(s16 x, s16 y);
 void SetOverrideControls(bool pad, bool touch, bool motion, bool circle);
 
 const PadState& GetInputsThisFrame();
+
 } // namespace Service::HID

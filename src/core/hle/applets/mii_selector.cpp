@@ -55,7 +55,7 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
         bool open{};
         cb(config, result, open);
         std::mutex m;
-        std::unique_lock<std::mutex> lock{m};
+        std::unique_lock lock{m};
         std::condition_variable cv;
         cv.wait(lock, [&open]() -> bool { return !open; });
         result.mii_data_checksum = boost::crc<16, 0x1021, 0, 0, false, false>(

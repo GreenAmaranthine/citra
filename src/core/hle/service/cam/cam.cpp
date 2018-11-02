@@ -905,6 +905,10 @@ void Module::Interface::DriverFinalize(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_CAM, "called");
 }
 
+std::shared_ptr<Module> Module::Interface::GetModule() {
+    return cam;
+}
+
 Module::Module(Core::System& system) {
     for (PortConfig& port : ports) {
         port.completion_event =
@@ -936,14 +940,6 @@ void Module::LoadCameraImplementation(CameraConfig& camera, int camera_id) {
     camera.impl->SetEffect(camera.contexts[0].effect);
     camera.impl->SetFormat(camera.contexts[0].format);
     camera.impl->SetResolution(camera.contexts[0].resolution);
-}
-
-void ReloadCameraDevices() {
-    auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn())
-        return;
-    auto cam{system.ServiceManager().GetService<CAM_U>("cam:u")->GetModule()};
-    cam->ReloadCameraDevices();
 }
 
 void InstallInterfaces(Core::System& system) {

@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <map>
+#include <mutex>
 #include <vector>
 #include "common/string_util.h"
 #include "core/core_timing.h"
@@ -133,6 +134,7 @@ private:
     void CheatTickCallback(int);
 
     std::vector<Cheat> cheats_list;
+    std::mutex cheats_list_mutex;
     CoreTiming::EventType* tick_event;
 };
 

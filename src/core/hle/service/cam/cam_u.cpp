@@ -78,8 +78,4 @@ CAM_U::CAM_U(std::shared_ptr<Module> cam) : Module::Interface{std::move(cam), "c
     RegisterHandlers(functions);
 }
 
-std::shared_ptr<Module> CAM_U::GetModule() {
-    return cam;
-}
-
 } // namespace Service::CAM

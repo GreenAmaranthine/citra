@@ -128,13 +128,6 @@ void RPCServer::HandleSetScreenRefreshRate(Packet& packet, int rate) {
     packet.SendReply();
 }
 
-void RPCServer::HandleSetShadowsEnabled(Packet& packet, bool enabled) {
-    Settings::values.enable_shadows = enabled;
-    Settings::Apply();
-    packet.SetPacketDataSize(0);
-    packet.SendReply();
-}
-
 void RPCServer::HandleIsButtonPressed(Packet& packet, int button) {
     packet.SetPacketDataSize(sizeof(bool));
     packet.GetPacketData()[0] = (Service::HID::GetInputsThisFrame().hex & button) != 0;
@@ -177,7 +170,6 @@ bool RPCServer::ValidatePacket(const PacketHeader& packet_header) {
         case PacketType::SetSpeedLimit:
         case PacketType::SetBackgroundColor:
         case PacketType::SetScreenRefreshRate:
-        case PacketType::SetShadowsEnabled:
         case PacketType::IsButtonPressed:
         case PacketType::SetFrameAdvancing:
         case PacketType::AdvanceFrame:
@@ -336,14 +328,6 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
             int rate;
             std::memcpy(&rate, data, sizeof(int));
             HandleSetScreenRefreshRate(*request_packet, rate);
-            success = true;
-            break;
-        }
-        case PacketType::SetShadowsEnabled: {
-            const u8* data{request_packet->GetPacketData().data() + (sizeof(u32) * 2)};
-            bool enabled;
-            std::memcpy(&enabled, data, sizeof(bool));
-            HandleSetShadowsEnabled(*request_packet, enabled);
             success = true;
             break;
         }

@@ -337,7 +337,6 @@ void ConfigureSystem::ApplyConfiguration() {
         static_cast<Settings::InitClock>(ui->combo_init_clock->currentIndex());
     Settings::values.init_time = ui->edit_init_time->dateTime().toTime_t();
     Settings::values.region_value = ui->region_combobox->currentIndex() - 1;
-    Settings::Apply();
 }
 
 void ConfigureSystem::UpdateBirthdayComboBox(int birthmonth_index) {

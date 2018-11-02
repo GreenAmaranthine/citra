@@ -27,7 +27,6 @@ enum class PacketType {
     SetSpeedLimit,
     SetBackgroundColor,
     SetScreenRefreshRate,
-    SetShadowsEnabled,
     IsButtonPressed,
     SetFrameAdvancing,
     AdvanceFrame,

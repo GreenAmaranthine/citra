@@ -26,7 +26,7 @@ private:
         explicit Device(std::weak_ptr<TouchState>&& touch_state) : touch_state{touch_state} {}
         std::tuple<float, float, bool> GetStatus() const override {
             if (auto state{touch_state.lock()}) {
-                std::lock_guard<std::mutex> guard{state->mutex};
+                std::lock_guard guard{state->mutex};
                 return std::make_tuple(state->touch_x, state->touch_y, state->touch_pressed);
             }
             return std::make_tuple(0.0f, 0.0f, false);
@@ -80,7 +80,7 @@ std::tuple<unsigned, unsigned> Frontend::TouchPressed(unsigned framebuffer_x,
                                                       unsigned framebuffer_y) {
     if (!IsWithinTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y))
         return {};
-    std::lock_guard<std::mutex> guard{touch_state->mutex};
+    std::lock_guard guard{touch_state->mutex};
     if (Settings::values.factor_3d != 0)
         touch_state->touch_x =
             static_cast<float>(framebuffer_x - framebuffer_layout.bottom_screen.left / 2) /
@@ -99,7 +99,7 @@ std::tuple<unsigned, unsigned> Frontend::TouchPressed(unsigned framebuffer_x,
 }
 
 void Frontend::TouchReleased() {
-    std::lock_guard<std::mutex> guard{touch_state->mutex};
+    std::lock_guard guard{touch_state->mutex};
     touch_state->touch_pressed = false;
     touch_state->touch_x = 0;
     touch_state->touch_y = 0;
@@ -116,9 +116,9 @@ std::tuple<unsigned, unsigned> Frontend::TouchMoved(unsigned framebuffer_x,
 
 void Frontend::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) {
     Layout::FramebufferLayout layout;
-    if (Settings::values.custom_layout) {
+    if (Settings::values.custom_layout)
         layout = Layout::CustomFrameLayout(width, height, Settings::values.swap_screen);
-    } else {
+    else {
         switch (Settings::values.layout_option) {
         case Settings::LayoutOption::SingleScreen:
             layout = Layout::SingleFrameLayout(width, height, Settings::values.swap_screen);

@@ -39,7 +39,11 @@ Rasterizer::Rasterizer()
       uniform_buffer{GL_UNIFORM_BUFFER, UNIFORM_BUFFER_SIZE, false},
       index_buffer{GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE, false},
       texture_buffer{GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE, false} {
-    SyncSettings();
+    allow_shadow = GLAD_GL_ARB_shader_image_load_store && GLAD_GL_ARB_shader_image_size &&
+                   GLAD_GL_ARB_framebuffer_no_attachments;
+    if (!allow_shadow)
+        LOG_WARNING(Render,
+                    "Shadow might not be able to render because of unsupported OpenGL extensions.");
     if (!GLAD_GL_ARB_texture_barrier) {
         LOG_WARNING(Render,
                     "ARB_texture_barrier not supported. Some games might produce artifacts.");
@@ -211,7 +215,7 @@ struct VertexArrayInfo {
     u32 vs_input_size;
 };
 
-std::optional<Rasterizer::VertexArrayInfo> Rasterizer::AnalyzeVertexArray(bool is_indexed) {
+Rasterizer::VertexArrayInfo Rasterizer::AnalyzeVertexArray(bool is_indexed) {
     const auto& regs{Pica::g_state.regs};
     const auto& vertex_attributes{regs.pipeline.vertex_attributes};
     u32 vertex_min{};
@@ -220,8 +224,6 @@ std::optional<Rasterizer::VertexArrayInfo> Rasterizer::AnalyzeVertexArray(bool i
         const auto& index_info{regs.pipeline.index_array};
         PAddr address{vertex_attributes.GetPhysicalBaseAddress() + index_info.offset};
         const u8* index_address_8{Memory::GetPhysicalPointer(address)};
-        if (!index_address_8)
-            return {};
         const u16* index_address_16{reinterpret_cast<const u16*>(index_address_8)};
         bool index_u16{index_info.format != 0};
         vertex_min = 0xFFFF;
@@ -240,10 +242,9 @@ std::optional<Rasterizer::VertexArrayInfo> Rasterizer::AnalyzeVertexArray(bool i
     }
     u32 vertex_num{vertex_max - vertex_min + 1};
     u32 vs_input_size{};
-    for (auto& loader : vertex_attributes.attribute_loaders) {
+    for (auto& loader : vertex_attributes.attribute_loaders)
         if (loader.component_count != 0)
             vs_input_size += loader.byte_count * vertex_num;
-    }
     return VertexArrayInfo{vertex_min, vertex_max, vs_input_size};
 }
 
@@ -381,10 +382,7 @@ static GLenum GetCurrentPrimitiveMode(bool use_gs) {
 bool Rasterizer::AccelerateDrawBatchInternal(bool is_indexed, bool use_gs) {
     const auto& regs{Pica::g_state.regs};
     GLenum primitive_mode{GetCurrentPrimitiveMode(use_gs)};
-    auto opt{AnalyzeVertexArray(is_indexed)};
-    if (!opt.has_value())
-        return false;
-    auto [vs_input_index_min, vs_input_index_max, vs_input_size]{*opt};
+    auto [vs_input_index_min, vs_input_index_max, vs_input_size]{AnalyzeVertexArray(is_indexed)};
     if (vs_input_size > VERTEX_BUFFER_SIZE) {
         LOG_WARNING(Render, "Too large vertex input size {}", vs_input_size);
         return false;
@@ -673,9 +671,9 @@ bool Rasterizer::Draw(bool accelerate, bool is_indexed) {
     state.Apply();
     // Draw the vertex batch
     bool succeeded{true};
-    if (accelerate) {
+    if (accelerate)
         succeeded = AccelerateDrawBatchInternal(is_indexed, use_gs);
-    } else {
+    else {
         state.draw.vertex_array = sw_vao.handle;
         state.draw.vertex_buffer = vertex_buffer.GetHandle();
         shader_program_manager->UseTrivialVertexShader();
@@ -1866,17 +1864,4 @@ void Rasterizer::UploadUniforms(bool accelerate_draw, bool use_gs) {
         used_bytes += uniform_size_aligned_fs;
     }
     uniform_buffer.Unmap(used_bytes);
-}
-
-void Rasterizer::SyncSettings() {
-    if (Settings::values.enable_shadows) {
-        allow_shadow = GLAD_GL_ARB_shader_image_load_store && GLAD_GL_ARB_shader_image_size &&
-                       GLAD_GL_ARB_framebuffer_no_attachments;
-        if (!allow_shadow) {
-            LOG_WARNING(
-                Render,
-                "Shadow might not be able to render because of unsupported OpenGL extensions.");
-        }
-    } else
-        allow_shadow = false;
 }

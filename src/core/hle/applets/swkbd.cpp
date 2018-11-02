@@ -305,7 +305,7 @@ void SoftwareKeyboard::Update() {
         bool open{};
         cb(config, text, open);
         std::mutex m;
-        std::unique_lock<std::mutex> lock{m};
+        std::unique_lock lock{m};
         std::condition_variable cv;
         cv.wait(lock, [&open]() -> bool { return !open; });
         std::memcpy(text_memory->GetPointer(), text.c_str(), text.length() * sizeof(char16_t));

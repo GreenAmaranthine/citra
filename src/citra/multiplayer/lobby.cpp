@@ -129,7 +129,6 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
     UISettings::values.nickname = ui->nickname->text();
     UISettings::values.ip = proxy->data(connection_index, LobbyItemHost::HostIPRole).toString();
     UISettings::values.port = proxy->data(connection_index, LobbyItemHost::HostPortRole).toString();
-    Settings::Apply();
 }
 
 void Lobby::ResetModel() {

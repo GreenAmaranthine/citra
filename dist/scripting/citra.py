@@ -23,10 +23,9 @@ class RequestType(enum.IntEnum):
     SetSpeedLimit = 13,
     SetBackgroundColor = 14,
     SetScreenRefreshRate = 15,
-    SetShadowsEnabled = 16,
-    IsButtonPressed = 17,
-    SetFrameAdvancing = 18,
-    AdvanceFrame = 19
+    IsButtonPressed = 16,
+    SetFrameAdvancing = 17,
+    AdvanceFrame = 18
 
 
 CITRA_PORT = "45987"
@@ -272,16 +271,6 @@ class Citra:
         request_data = struct.pack("IIi", 0, 0, rate)
         request, request_id = self._generate_header(
             RequestType.SetScreenRefreshRate, len(request_data))
-        request += request_data
-        self.socket.send(request)
-        self.socket.recv()
-
-    # Sets whether shadows are enabled.
-    #   enabled: True to enable, False to disable.
-    def set_shadows_enabled(self, enabled):
-        request_data = struct.pack("II?", 0, 0, enabled)
-        request, request_id = self._generate_header(
-            RequestType.SetShadowsEnabled, len(request_data))
         request += request_data
         self.socket.send(request)
         self.socket.recv()

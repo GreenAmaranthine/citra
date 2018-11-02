@@ -43,7 +43,7 @@ System::ResultStatus System::RunLoop() {
     if (!cpu_core)
         return ResultStatus::ErrorNotInitialized;
     if (!running.load(std::memory_order::memory_order_relaxed)) {
-        std::unique_lock<std::mutex> lock{running_mutex};
+        std::unique_lock lock{running_mutex};
         running_cv.wait(lock);
     }
     if (!dsp_core->IsOutputAllowed()) {

@@ -190,7 +190,7 @@ public:
 
     void SetRunning(bool running) {
         this->running.store(running, std::memory_order::memory_order_relaxed);
-        std::unique_lock<std::mutex> lock{running_mutex};
+        std::unique_lock lock{running_mutex};
         running_cv.notify_one();
     }
 

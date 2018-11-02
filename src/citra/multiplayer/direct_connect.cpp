@@ -80,7 +80,6 @@ void DirectConnectWindow::Connect() {
     UISettings::values.port = (ui->port->isModified() && !ui->port->text().isEmpty())
                                   ? ui->port->text()
                                   : UISettings::values.port;
-    Settings::Apply();
     // Attempt to connect in a different thread
     QFuture<void> f{QtConcurrent::run([&] {
         if (auto member{Network::GetRoomMember().lock()}) {

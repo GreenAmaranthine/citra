@@ -29,7 +29,7 @@ public:
         for (auto& worker : workers) {
             worker.spinlock_enabled = enable;
             if (enable) {
-                std::unique_lock<std::mutex> lock{worker.mutex};
+                std::unique_lock lock{worker.mutex};
                 lock.unlock();
                 worker.cv.notify_one();
             }
@@ -54,7 +54,7 @@ private:
 
         ~Worker() {
             exit_loop = true;
-            std::unique_lock<std::mutex> lock{mutex};
+            std::unique_lock lock{mutex};
             lock.unlock();
             cv.notify_one();
             thread.join();
@@ -64,15 +64,12 @@ private:
         std::future<void> Push(F&& f, Args&&... args) {
             auto task{std::make_shared<std::packaged_task<decltype(f(args...))()>>(
                 std::bind(std::forward<F>(f), std::forward<Args>(args)...))};
-
             queue.Push([task] { (*task)(); });
-
             if (!spinlock_enabled.load(std::memory_order_relaxed)) {
-                std::unique_lock<std::mutex> lock{mutex};
+                std::unique_lock lock{mutex};
                 lock.unlock();
                 cv.notify_one();
             }
-
             return task->get_future();
         }
 
@@ -88,8 +85,7 @@ private:
                     task();
                 if (spinlock_enabled)
                     continue;
-
-                std::unique_lock<std::mutex> lock{mutex};
+                std::unique_lock lock{mutex};
                 if (!queue.Empty())
                     continue;
                 if (exit_loop)
@@ -107,4 +103,5 @@ private:
     std::size_t next_worker{};
     std::vector<Worker> workers;
 };
+
 } // namespace Common
