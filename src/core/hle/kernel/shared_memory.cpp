@@ -35,6 +35,7 @@ SharedPtr<SharedMemory> KernelSystem::CreateSharedMemory(Process* owner_process,
         MemoryRegionInfo* memory_region{GetMemoryRegion(region)};
         auto offset{memory_region->LinearAllocate(size)};
         ASSERT_MSG(offset, "Not enough space in region to allocate shared memory!");
+        std::fill(Memory::fcram.data() + *offset, Memory::fcram.data() + *offset + size, 0);
         shared_memory->backing_blocks = {{Memory::fcram.data() + *offset, size}};
         shared_memory->holding_memory += MemoryRegionInfo::Interval(*offset, *offset + size);
         shared_memory->linear_heap_phys_address = Memory::FCRAM_PADDR + *offset;
@@ -74,9 +75,12 @@ SharedPtr<SharedMemory> KernelSystem::CreateSharedMemoryForApplet(
     shared_memory->size = size;
     shared_memory->permissions = permissions;
     shared_memory->other_permissions = other_permissions;
-    for (const auto& interval : backing_blocks)
+    for (const auto& interval : backing_blocks) {
         shared_memory->backing_blocks.push_back(
             {Memory::fcram.data() + interval.lower(), interval.upper() - interval.lower()});
+        std::fill(Memory::fcram.data() + interval.lower(), Memory::fcram.data() + interval.upper(),
+                  0);
+    }
     shared_memory->base_address = Memory::HEAP_VADDR + offset;
     return shared_memory;
 }
