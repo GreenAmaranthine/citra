@@ -323,6 +323,7 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
     tls_slots[available_page].set(available_slot);
     thread->tls_address = Memory::TLS_AREA_VADDR + available_page * Memory::PAGE_SIZE +
                           available_slot * Memory::TLS_ENTRY_SIZE;
+    Memory::ZeroBlock(owner_process, thread->tls_address, Memory::TLS_ENTRY_SIZE);
     // TODO: move to ScheduleThread() when scheduler is added so selected core is used
     // to initialize the context
     ResetThreadContext(thread->context, stack_top, entry_point, arg);
