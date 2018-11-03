@@ -236,13 +236,16 @@ void GMainWindow::InitializeHotkeys() {
                                    QKeySequence(Qt::Key_Comma));
     hotkey_registry.RegisterHotkey("Main Window", "Continue/Pause", QKeySequence(Qt::Key_F4));
     hotkey_registry.RegisterHotkey("Main Window", "Restart", QKeySequence(Qt::Key_F5));
-    hotkey_registry.RegisterHotkey("Main Window", "Swap Screens", QKeySequence("F9"));
-    hotkey_registry.RegisterHotkey("Main Window", "Toggle Screen Layout", QKeySequence("F10"));
+    hotkey_registry.RegisterHotkey("Main Window", "Swap Screens", QKeySequence(Qt::Key_F9));
+    hotkey_registry.RegisterHotkey("Main Window", "Toggle Screen Layout",
+                                   QKeySequence(Qt::Key_F10));
     hotkey_registry.RegisterHotkey("Main Window", "Fullscreen", QKeySequence::FullScreen);
     hotkey_registry.RegisterHotkey("Main Window", "Exit Fullscreen", QKeySequence(Qt::Key_Escape));
     hotkey_registry.RegisterHotkey("Main Window", "Toggle Speed Limit", QKeySequence("CTRL+Z"));
-    hotkey_registry.RegisterHotkey("Main Window", "Increase Speed Limit", QKeySequence("+"));
-    hotkey_registry.RegisterHotkey("Main Window", "Decrease Speed Limit", QKeySequence("-"));
+    hotkey_registry.RegisterHotkey("Main Window", "Increase Speed Limit",
+                                   QKeySequence(Qt::Key_Minus));
+    hotkey_registry.RegisterHotkey("Main Window", "Decrease Speed Limit",
+                                   QKeySequence(Qt::Key_Plus));
     hotkey_registry.RegisterHotkey("Main Window", "Increase Internal Resolution",
                                    QKeySequence("CTRL+I"));
     hotkey_registry.RegisterHotkey("Main Window", "Decrease Internal Resolution",
