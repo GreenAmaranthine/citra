@@ -1631,9 +1631,9 @@ void GMainWindow::OnMoviePlaybackCompleted() {
 void GMainWindow::SetupUIStrings() {
     if (short_title.empty())
         setWindowTitle(
-            QString("Citra Valentin | %1-%2").arg(Common::g_scm_branch, Common::g_scm_desc));
+            QString("Citra | Valentin %1-%2").arg(Common::g_scm_branch, Common::g_scm_desc));
     else
-        setWindowTitle(QString("Citra Valentin | %1-%2 | %3")
+        setWindowTitle(QString("Citra | Valentin %1-%2 | %3")
                            .arg(Common::g_scm_branch, Common::g_scm_desc, short_title.c_str()));
 }
 
@@ -1726,7 +1726,7 @@ int main(int argc, char* argv[]) {
     Camera::RegisterFactory("qt", std::make_unique<Camera::QtMultimediaCameraFactory>());
     Camera::QtMultimediaCameraHandler::Init();
 
-    LOG_INFO(Frontend, "Citra version: {}-{}", Common::g_scm_branch, Common::g_scm_desc);
+    LOG_INFO(Frontend, "Citra version: Valentin {}-{}", Common::g_scm_branch, Common::g_scm_desc);
 #ifdef _WIN32
     WSADATA data;
     WSAStartup(MAKEWORD(2, 2), &data);
