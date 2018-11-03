@@ -6,8 +6,8 @@
 #include <QListWidgetItem>
 #include "citra/configuration/config.h"
 #include "citra/configuration/configure_dialog.h"
-#include "core/settings.h"
 #include "citra/hotkeys.h"
+#include "core/settings.h"
 #include "ui_configure.h"
 
 ConfigurationDialog::ConfigurationDialog(QWidget* parent, const HotkeyRegistry& registry)
