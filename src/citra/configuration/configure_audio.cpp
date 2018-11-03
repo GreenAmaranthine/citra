@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <memory>
-#include <SDL.h>
 #include "audio_core/sink.h"
 #include "citra/configuration/configure_audio.h"
 #include "core/core.h"
