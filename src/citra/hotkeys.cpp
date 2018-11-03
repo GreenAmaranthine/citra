@@ -59,7 +59,8 @@ QShortcut* HotkeyRegistry::GetHotkey(const QString& group, const QString& action
     return hk.shortcut;
 }
 
-GHotkeysDialog::GHotkeysDialog(QWidget* parent) : QWidget{parent} {
+GHotkeysDialog::GHotkeysDialog(QWidget* parent)
+    : QWidget{parent}, ui{std::make_unique<Ui::Hotkeys>()} {
     ui->setupUi(this);
 }
 

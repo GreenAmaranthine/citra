@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>ConfigurationDialog</class>
  <widget class="QDialog" name="ConfigurationDialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>482</width>
-    <height>274</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Citra Configuration</string>
   </property>
@@ -17,7 +9,14 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QListWidget" name="selectorList"/>
+      <widget class="QListWidget" name="selectorList">
+       <property name="minimumWidth">
+        <number>150</number>
+       </property>
+       <property name="maximumWidth">
+        <number>150</number>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QTabWidget" name="tabWidget">
