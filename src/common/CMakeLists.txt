@@ -50,5 +50,4 @@ add_library(common STATIC
 
 create_target_directory_groups(common)
 
-target_link_libraries(common PUBLIC Boost::boost fmt)
-target_link_libraries(common PRIVATE xbyak)
+target_link_libraries(common PUBLIC Boost::boost fmt PRIVATE xbyak)
