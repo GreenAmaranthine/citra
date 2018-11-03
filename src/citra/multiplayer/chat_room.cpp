@@ -38,15 +38,15 @@ public:
         message = QString::fromStdString(chat.message);
     }
 
-    /// Format the message using the players color
-    QString GetPlayerChatMessage(u16 player) const {
-        auto color{player_color[player % 16]};
+    /// Format the message using the member's color
+    QString GetMemberChatMessage(u16 member) const {
+        auto color{member_color[member % 16]};
         return QString("[%1] <font color='%2'>&lt;%3&gt;</font> %4")
             .arg(timestamp, color, nickname.toHtmlEscaped(), message.toHtmlEscaped());
     }
 
 private:
-    static constexpr std::array<const char*, 16> player_color{
+    static constexpr std::array<const char*, 16> member_color{
         {"#0000FF", "#FF0000", "#8A2BE2", "#FF69B4", "#1E90FF", "#008000", "#00FF7F", "#B22222",
          "#DAA520", "#FF4500", "#2E8B57", "#5F9EA0", "#D2691E", "#9ACD32", "#FF7F50", "FFFF00"}};
 
@@ -75,18 +75,18 @@ private:
 
 ChatRoom::ChatRoom(QWidget* parent) : QWidget{parent}, ui{std::make_unique<Ui::ChatRoom>()} {
     ui->setupUi(this);
-    // Set the item_model for player_view
+    // Set the item_model for member_view
     enum {
         COLUMN_NAME,
         COLUMN_APP,
         COLUMN_COUNT, // Number of columns
     };
-    player_list = new QStandardItemModel(ui->player_view);
-    ui->player_view->setModel(player_list);
-    ui->player_view->setContextMenuPolicy(Qt::CustomContextMenu);
-    player_list->insertColumns(0, COLUMN_COUNT);
-    player_list->setHeaderData(COLUMN_NAME, Qt::Horizontal, "Name");
-    player_list->setHeaderData(COLUMN_APP, Qt::Horizontal, "Application");
+    member_list = new QStandardItemModel(ui->member_view);
+    ui->member_view->setModel(member_list);
+    ui->member_view->setContextMenuPolicy(Qt::CustomContextMenu);
+    member_list->insertColumns(0, COLUMN_COUNT);
+    member_list->setHeaderData(COLUMN_NAME, Qt::Horizontal, "Name");
+    member_list->setHeaderData(COLUMN_APP, Qt::Horizontal, "Application");
     ui->chat_history->document()->setMaximumBlockCount(max_chat_lines);
     // Register the network structs to use in slots and signals
     qRegisterMetaType<Network::ChatEntry>();
@@ -100,7 +100,7 @@ ChatRoom::ChatRoom(QWidget* parent) : QWidget{parent}, ui{std::make_unique<Ui::C
     }
     // TODO: network was not initialized?
     // Connect all the widgets to the appropriate events
-    connect(ui->player_view, &QTreeView::customContextMenuRequested, this,
+    connect(ui->member_view, &QTreeView::customContextMenuRequested, this,
             &ChatRoom::PopupContextMenu);
     connect(ui->chat_message, &QLineEdit::returnPressed, ui->send_message, &QPushButton::released);
     connect(ui->chat_message, &QLineEdit::textChanged, this, &ChatRoom::OnChatTextChanged);
@@ -134,11 +134,11 @@ bool ChatRoom::Send(const QString& msg) {
                                  return member.nickname == chat.nickname;
                              })};
         if (it == members.end())
-            LOG_INFO(Network, "Cannot find self in the player list when sending a message.");
-        auto player{std::distance(members.begin(), it)};
+            LOG_INFO(Network, "Cannot find self in the member list when sending a message.");
+        auto member_id{std::distance(members.begin(), it)};
         ChatMessage m{chat};
         member->SendChatMessage(message);
-        AppendChatMessage(m.GetPlayerChatMessage(player));
+        AppendChatMessage(m.GetMemberChatMessage(member_id));
         return true;
     }
     return false;
@@ -175,24 +175,24 @@ void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
     if (!ValidateMessage(chat.message))
         return;
     if (auto room{Network::GetRoomMember().lock()}) {
-        // get the id of the player
+        // Get the ID of the member
         auto members{room->GetMemberInformation()};
         auto it{std::find_if(members.begin(), members.end(),
                              [&chat](const Network::RoomMember::MemberInformation& member) {
                                  return member.nickname == chat.nickname;
                              })};
         if (it == members.end()) {
-            LOG_INFO(Network, "Chat message received from unknown player. Ignoring it.");
+            LOG_INFO(Network, "Chat message received from unknown member. Ignoring it.");
             return;
         }
         if (block_list.count(chat.nickname)) {
-            LOG_INFO(Network, "Chat message received from blocked player {}. Ignoring it.",
+            LOG_INFO(Network, "Chat message received from blocked member {}. Ignoring it.",
                      chat.nickname);
             return;
         }
-        auto player{std::distance(members.begin(), it)};
+        auto member{std::distance(members.begin(), it)};
         ChatMessage m{chat};
-        AppendChatMessage(m.GetPlayerChatMessage(player));
+        AppendChatMessage(m.GetMemberChatMessage(member));
         QString message{QString::fromStdString(chat.message)};
         HandleNewMessage(message.remove(QChar('\0')));
     }
@@ -206,9 +206,9 @@ void ChatRoom::OnSendChat() {
     HandleNewMessage(message);
 }
 
-void ChatRoom::SetPlayerList(const Network::RoomMember::MemberList& member_list) {
+void ChatRoom::SetMemberList(const Network::RoomMember::MemberList& member_list) {
     // TODO: Remember which row is selected
-    player_list->removeRows(0, player_list->rowCount());
+    this->member_list->removeRows(0, this->member_list->rowCount());
     for (const auto& member : member_list) {
         if (member.nickname.empty())
             continue;
@@ -219,7 +219,7 @@ void ChatRoom::SetPlayerList(const Network::RoomMember::MemberList& member_list)
             child->setEditable(false);
             l.append(child);
         }
-        player_list->invisibleRootItem()->appendRow(l);
+        this->member_list->invisibleRootItem()->appendRow(l);
     }
     // TODO: Restore row selection
 }
@@ -230,16 +230,16 @@ void ChatRoom::OnChatTextChanged() {
 }
 
 void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
-    QModelIndex item{ui->player_view->indexAt(menu_location)};
+    QModelIndex item{ui->member_view->indexAt(menu_location)};
     if (!item.isValid())
         return;
-    std::string nickname{player_list->item(item.row())->text().toStdString()};
+    std::string nickname{member_list->item(item.row())->text().toStdString()};
     if (auto member{Network::GetRoomMember().lock()})
         // You can't block yourself
         if (nickname == member->GetNickname())
             return;
     QMenu context_menu;
-    QAction* block_action{context_menu.addAction("Block User")};
+    QAction* block_action{context_menu.addAction("Block Member")};
     block_action->setCheckable(true);
     block_action->setChecked(block_list.count(nickname) > 0);
     connect(block_action, &QAction::triggered, [this, nickname] {
@@ -247,8 +247,8 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
             block_list.erase(nickname);
         else {
             QMessageBox::StandardButton result{QMessageBox::question(
-                this, "Block User",
-                QString("When you block a user, you will no longer receive chat messages from "
+                this, "Block Member",
+                QString("When you block a member, you will no longer receive chat messages from "
                         "them.<br><br>Are you sure you would like to block %1?")
                     .arg(QString::fromStdString(nickname)),
                 QMessageBox::Yes | QMessageBox::No)};
@@ -256,7 +256,7 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
                 block_list.emplace(nickname);
         }
     });
-    context_menu.exec(ui->player_view->viewport()->mapToGlobal(menu_location));
+    context_menu.exec(ui->member_view->viewport()->mapToGlobal(menu_location));
 }
 
 void ChatRoom::OnInsertEmoji() {

@@ -149,9 +149,9 @@ class LobbyItemMemberList : public LobbyItem {
 public:
     LobbyItemMemberList() = default;
 
-    explicit LobbyItemMemberList(QList<QVariant> members, u32 max_players) {
+    explicit LobbyItemMemberList(QList<QVariant> members, u32 max_members) {
         setData(members, MemberListRole);
-        setData(max_players, MaxPlayerRole);
+        setData(max_members, MaxMemberRole);
     }
 
     QVariant data(int role) const override {
@@ -159,18 +159,18 @@ public:
             return LobbyItem::data(role);
         auto members = data(MemberListRole).toList();
         return QString("%1 / %2").arg(QString::number(members.size()),
-                                      data(MaxPlayerRole).toString());
+                                      data(MaxMemberRole).toString());
     }
 
     bool operator<(const QStandardItem& other) const override {
-        // Sort by rooms that have the most players
+        // Sort by rooms that have the most members
         int left_members{data(MemberListRole).toList().size()};
         int right_members{other.data(MemberListRole).toList().size()};
         return left_members < right_members;
     }
 
     static const int MemberListRole{Qt::UserRole + 1};
-    static const int MaxPlayerRole{Qt::UserRole + 2};
+    static const int MaxMemberRole{Qt::UserRole + 2};
 };
 
 /// Member information for when a lobby is expanded in the UI

@@ -57,7 +57,7 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
         ui->username->setText(QString::fromStdString(Settings::values.citra_username));
     ui->room_name->setText(UISettings::values.room_name);
     ui->port->setText(UISettings::values.room_port);
-    ui->max_player->setValue(UISettings::values.max_player);
+    ui->max_members->setValue(UISettings::values.max_members);
     int index{static_cast<int>(UISettings::values.host_type)};
     if (index < ui->host_type->count())
         ui->host_type->setCurrentIndex(index);
@@ -98,7 +98,7 @@ void HostRoomWindow::Host() {
         auto password{ui->password->text().toStdString()};
         if (auto room{Network::GetRoom().lock()}) {
             bool created{room->Create(ui->room_name->text().toStdString(), "", port, password,
-                                      ui->max_player->value(), app_name.toStdString(), app_id)};
+                                      ui->max_members->value(), app_name.toStdString(), app_id)};
             if (!created) {
                 NetworkMessage::ShowError(NetworkMessage::COULD_NOT_CREATE_ROOM);
                 LOG_ERROR(Network, "Could not create room!");
@@ -112,7 +112,7 @@ void HostRoomWindow::Host() {
         UISettings::values.room_name = ui->room_name->text();
         UISettings::values.app_id =
             ui->app_list->currentData(AppListItemPath::ProgramIdRole).toLongLong();
-        UISettings::values.max_player = ui->max_player->value();
+        UISettings::values.max_members = ui->max_members->value();
         UISettings::values.host_type = ui->host_type->currentIndex();
         UISettings::values.room_port = (ui->port->isModified() && !ui->port->text().isEmpty())
                                            ? ui->port->text()

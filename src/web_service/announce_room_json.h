@@ -21,12 +21,12 @@ public:
         : client(host, username, token), host(host), username(username), token(token) {}
     ~RoomJson() = default;
     void SetRoomInformation(const std::string& uid, const std::string& name, const u16 port,
-                            const u32 max_player, const u32 net_version, const bool has_password,
+                            const u32 max_members, const u32 net_version, const bool has_password,
                             const std::string& preferred_app, const u64 preferred_app_id) override;
-    void AddPlayer(const std::string& nickname, const MacAddress& mac_address, const u64 app_id,
+    void AddMember(const std::string& nickname, const MacAddress& mac_address, const u64 app_id,
                    const std::string& app_name) override;
     Common::WebResult Announce() override;
-    void ClearPlayers() override;
+    void ClearMembers() override;
     AnnounceMultiplayerRoom::RoomList GetRoomList() override;
     void Delete() override;
 

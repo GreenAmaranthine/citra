@@ -25,7 +25,7 @@ struct Room {
     std::string owner;
     std::string ip;
     u16 port;
-    u32 max_player;
+    u32 max_members;
     u32 net_version;
     bool has_password;
     std::string preferred_app;
@@ -53,18 +53,18 @@ public:
      * @param preferred_app_id The title id of the preferred app
      */
     virtual void SetRoomInformation(const std::string& uid, const std::string& name, const u16 port,
-                                    const u32 max_player, const u32 net_version,
+                                    const u32 max_members, const u32 net_version,
                                     const bool has_password, const std::string& preferred_app,
                                     const u64 preferred_app_id) = 0;
 
     /**
-     * Adds a player information to the data that gets announced
-     * @param nickname The nickname of the player
-     * @param mac_address The MAC Address of the player
-     * @param app_id The Title ID of the application the player runs
-     * @param app_name The name of the application the player runs
+     * Adds a member information to the data that gets announced
+     * @param nickname The nickname of the member
+     * @param mac_address The MAC Address of the member
+     * @param app_id The Title ID of the application the member runs
+     * @param app_name The name of the application member runs
      */
-    virtual void AddPlayer(const std::string& nickname, const MacAddress& mac_address,
+    virtual void AddMember(const std::string& nickname, const MacAddress& mac_address,
                            const u64 app_id, const std::string& app_name) = 0;
 
     /**
@@ -73,8 +73,8 @@ public:
      */
     virtual Common::WebResult Announce() = 0;
 
-    /// Empties the stored players
-    virtual void ClearPlayers() = 0;
+    /// Empties the stored members
+    virtual void ClearMembers() = 0;
 
     /**
      * Get the room information from the announce service
@@ -95,18 +95,19 @@ public:
     ~NullBackend() = default;
 
     void SetRoomInformation(const std::string& /*uid*/, const std::string& /*name*/,
-                            const u16 /*port*/, const u32 /*max_player*/, const u32 /*net_version*/,
-                            const bool /*has_password*/, const std::string& /*preferred_app*/,
+                            const u16 /*port*/, const u32 /*max_members*/,
+                            const u32 /*net_version*/, const bool /*has_password*/,
+                            const std::string& /*preferred_app*/,
                             const u64 /*preferred_app_id*/) override {}
 
-    void AddPlayer(const std::string& /*nickname*/, const MacAddress& /*mac_address*/,
+    void AddMember(const std::string& /*nickname*/, const MacAddress& /*mac_address*/,
                    const u64 /*app_id*/, const std::string& /*app_name*/) override {}
 
     Common::WebResult Announce() override {
         return Common::WebResult{Common::WebResult::Code::NoWebservice, "WebService is missing"};
     }
 
-    void ClearPlayers() override {}
+    void ClearMembers() override {}
 
     RoomList GetRoomList() override {
         return RoomList{};

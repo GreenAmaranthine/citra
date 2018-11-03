@@ -82,9 +82,9 @@ void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
             room_information.uid, room_information.name, room_information.port,
             room_information.member_slots, Network::network_version, room->HasPassword(),
             room_information.preferred_app, room_information.preferred_app_id);
-        backend->ClearPlayers();
+        backend->ClearMembers();
         for (const auto& member : memberlist) {
-            backend->AddPlayer(member.nickname, member.mac_address, member.app_info.id,
+            backend->AddMember(member.nickname, member.mac_address, member.app_info.id,
                                member.app_info.name);
         }
         Common::WebResult result{backend->Announce()};

@@ -37,7 +37,7 @@ static void PrintHelp(const char* argv0) {
               << " [options] <filename>\n"
                  "--room-name         The name of the room\n"
                  "--port              The port used for the room\n"
-                 "--max_members       The maximum number of players for this room\n"
+                 "--max_members       The maximum number of members for this room\n"
                  "--password          The password for the room\n"
                  "--preferred-app     The preferred application for this room\n"
                  "--preferred-app-id  The preferred application's ID for this room\n"

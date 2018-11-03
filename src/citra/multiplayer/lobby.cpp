@@ -97,7 +97,7 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
                 return;
     }
     QModelIndex index{source};
-    // If the user double clicks on a child row (aka the player list) then use the parent instead
+    // If the user double clicks on a child row (aka the member list) then use the parent instead
     if (source.parent() != QModelIndex())
         index = source.parent();
     if (!ui->nickname->hasAcceptableInput()) {
@@ -139,7 +139,7 @@ void Lobby::ResetModel() {
     model->setHeaderData(Column::APP_NAME, Qt::Horizontal, "Preferred Application",
                          Qt::DisplayRole);
     model->setHeaderData(Column::HOST, Qt::Horizontal, "Host", Qt::DisplayRole);
-    model->setHeaderData(Column::MEMBER, Qt::Horizontal, "Players", Qt::DisplayRole);
+    model->setHeaderData(Column::MEMBER, Qt::Horizontal, "Members", Qt::DisplayRole);
 }
 
 void Lobby::RefreshLobby() {
@@ -179,7 +179,7 @@ void Lobby::OnRefreshLobby() {
                              smdh_icon),
             new LobbyItemHost(QString::fromStdString(room.owner), QString::fromStdString(room.ip),
                               room.port),
-            new LobbyItemMemberList(members, room.max_player),
+            new LobbyItemMemberList(members, room.max_members),
         })};
         model->appendRow(row);
         // To make the rows expandable, add the member data as a child of the first column of the
@@ -213,11 +213,11 @@ bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& s
     // Filter by filled rooms
     if (filter_full) {
         QModelIndex member_list{sourceModel()->index(sourceRow, Column::MEMBER, sourceParent)};
-        int player_count{
+        int member_count{
             sourceModel()->data(member_list, LobbyItemMemberList::MemberListRole).toList().size()};
-        int max_players{
-            sourceModel()->data(member_list, LobbyItemMemberList::MaxPlayerRole).toInt()};
-        if (player_count >= max_players)
+        int max_members{
+            sourceModel()->data(member_list, LobbyItemMemberList::MaxMemberRole).toInt()};
+        if (member_count >= max_members)
             return false;
     }
     // Filter by search parameters

@@ -58,12 +58,12 @@
         <item row="2" column="0">
          <widget class="QLabel" name="label_2">
           <property name="text">
-           <string>Max Players</string>
+           <string>Max Members</string>
           </property>
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="QSpinBox" name="max_player">
+         <widget class="QSpinBox" name="max_members">
           <property name="minimum">
            <number>1</number>
           </property>

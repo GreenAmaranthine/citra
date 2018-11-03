@@ -82,7 +82,7 @@ struct Values {
     QString port;
     QString room_nickname;
     QString room_name;
-    quint32 max_player;
+    quint32 max_members;
     QString room_port;
     uint host_type;
     qulonglong app_id;

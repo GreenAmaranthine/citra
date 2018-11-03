@@ -29,6 +29,6 @@ private:
     void Disconnect();
     void UpdateView();
 
-    QStandardItemModel* player_list;
+    QStandardItemModel* member_list;
     std::unique_ptr<Ui::ClientRoom> ui;
 };

@@ -31,7 +31,7 @@ public:
     explicit ChatRoom(QWidget* parent);
     ~ChatRoom();
 
-    void SetPlayerList(const Network::RoomMember::MemberList& member_list);
+    void SetMemberList(const Network::RoomMember::MemberList& member_list);
     void Clear();
     void AppendStatusMessage(const QString& msg);
     bool Send(const QString& msg);
@@ -53,7 +53,7 @@ private:
     static constexpr u32 max_chat_lines{1000};
     void AppendChatMessage(const QString&);
     bool ValidateMessage(const std::string&);
-    QStandardItemModel* player_list;
+    QStandardItemModel* member_list;
     std::unique_ptr<Ui::ChatRoom> ui;
     std::unordered_set<std::string> block_list;
 };

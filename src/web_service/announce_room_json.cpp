@@ -29,7 +29,7 @@ void to_json(nlohmann::json& json, const Room& room) {
     json["name"] = room.name;
     json["preferredGameName"] = room.preferred_app;
     json["preferredGameId"] = room.preferred_app_id;
-    json["maxPlayers"] = room.max_player;
+    json["maxPlayers"] = room.max_members;
     json["netVersion"] = room.net_version;
     json["hasPassword"] = room.has_password;
     if (room.members.size() > 0) {
@@ -45,7 +45,7 @@ void from_json(const nlohmann::json& json, Room& room) {
     room.port = json.at("port").get<u16>();
     room.preferred_app = json.at("preferredGameName").get<std::string>();
     room.preferred_app_id = json.at("preferredGameId").get<u64>();
-    room.max_player = json.at("maxPlayers").get<u32>();
+    room.max_members = json.at("maxPlayers").get<u32>();
     room.net_version = json.at("netVersion").get<u32>();
     room.has_password = json.at("hasPassword").get<bool>();
     try {
@@ -60,19 +60,19 @@ void from_json(const nlohmann::json& json, Room& room) {
 namespace WebService {
 
 void RoomJson::SetRoomInformation(const std::string& uid, const std::string& name, const u16 port,
-                                  const u32 max_player, const u32 net_version,
+                                  const u32 max_members, const u32 net_version,
                                   const bool has_password, const std::string& preferred_app,
                                   const u64 preferred_app_id) {
     room.name = name;
     room.UID = uid;
     room.port = port;
-    room.max_player = max_player;
+    room.max_members = max_members;
     room.net_version = net_version;
     room.has_password = has_password;
     room.preferred_app = preferred_app;
     room.preferred_app_id = preferred_app_id;
 }
-void RoomJson::AddPlayer(const std::string& nickname, const MacAddress& mac_address,
+void RoomJson::AddMember(const std::string& nickname, const MacAddress& mac_address,
                          const u64 app_id, const std::string& app_name) {
     AnnounceMultiplayerRoom::Room::Member member;
     member.name = nickname;
@@ -87,15 +87,14 @@ Common::WebResult RoomJson::Announce() {
     return client.PostJson("/lobby", json.dump(), false);
 }
 
-void RoomJson::ClearPlayers() {
+void RoomJson::ClearMembers() {
     room.members.clear();
 }
 
 AnnounceMultiplayerRoom::RoomList RoomJson::GetRoomList() {
     auto reply{client.GetJson("/lobby", true).returned_data};
-    if (reply.empty()) {
+    if (reply.empty())
         return {};
-    }
     return nlohmann::json::parse(reply).at("rooms").get<AnnounceMultiplayerRoom::RoomList>();
 }
 

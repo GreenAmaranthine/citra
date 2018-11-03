@@ -67,7 +67,7 @@ void ClientRoomWindow::UpdateView() {
             ui->chat->Enable();
             ui->disconnect->setEnabled(true);
             auto memberlist{member->GetMemberInformation()};
-            ui->chat->SetPlayerList(memberlist);
+            ui->chat->SetMemberList(memberlist);
             const auto information{member->GetRoomInformation()};
             setWindowTitle(QString("%1 (%2/%3 members) - connected")
                                .arg(QString::fromStdString(information.name))

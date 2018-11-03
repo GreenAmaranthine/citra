@@ -40,18 +40,16 @@ private slots:
     void OnRefreshLobby();
 
     /**
-     * Handler for single clicking on a room in the list. Expands the treeitem to show player
+     * Handler for single clicking on a room in the list. Expands the treeitem to show member
      * information for the people in the room
-     *
-     * index - The row of the proxy model that the user wants to join.
+     * @param index The row of the proxy model that the user wants to join.
      */
     void OnExpandRoom(const QModelIndex&);
 
     /**
      * Handler for double clicking on a room in the list. Gathers the host ip and port and attempts
      * to connect. Will also prompt for a password in case one is required.
-     *
-     * index - The row of the proxy model that the user wants to join.
+     * @param index The row of the proxy model that the user wants to join.
      */
     void OnJoinRoom(const QModelIndex&);
 

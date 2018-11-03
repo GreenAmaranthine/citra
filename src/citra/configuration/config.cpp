@@ -355,7 +355,7 @@ void Config::Load() {
     UISettings::values.host_type = qt_config->value("host_type", 0).toUInt(&ok);
     if (!ok)
         UISettings::values.host_type = 0;
-    UISettings::values.max_player = qt_config->value("max_player", 8).toUInt();
+    UISettings::values.max_members = qt_config->value("max_members", 8).toUInt();
     UISettings::values.app_id = qt_config->value("app_id", 0).toULongLong();
     qt_config->endGroup();
     qt_config->endGroup();
@@ -528,7 +528,7 @@ void Config::Save() {
     qt_config->setValue("room_name", UISettings::values.room_name);
     qt_config->setValue("room_port", UISettings::values.room_port);
     qt_config->setValue("host_type", UISettings::values.host_type);
-    qt_config->setValue("max_player", UISettings::values.max_player);
+    qt_config->setValue("max_members", UISettings::values.max_members);
     qt_config->setValue("app_id", UISettings::values.app_id);
     qt_config->endGroup();
     qt_config->endGroup();
