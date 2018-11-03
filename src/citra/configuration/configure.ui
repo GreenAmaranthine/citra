@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>489</width>
-    <height>557</height>
+    <width>482</width>
+    <height>274</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,56 +15,63 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QTabWidget" name="tabWidget">
-     <property name="currentIndex">
-      <number>0</number>
-     </property>
-     <widget class="ConfigureGeneral" name="generalTab">
-      <attribute name="title">
-       <string>General</string>
-      </attribute>
-     </widget>
-     <widget class="ConfigureSystem" name="systemTab">
-      <attribute name="title">
-       <string>System</string>
-      </attribute>
-     </widget>
-     <widget class="ConfigureInput" name="inputTab">
-      <attribute name="title">
-       <string>Input</string>
-      </attribute>
-     </widget>
-     <widget class="ConfigureGraphics" name="graphicsTab">
-      <attribute name="title">
-       <string>Graphics</string>
-      </attribute>
-     </widget>
-     <widget class="ConfigureAudio" name="audioTab">
-      <attribute name="title">
-       <string>Audio</string>
-      </attribute>
-     </widget>
-     <widget class="ConfigureCamera" name="cameraTab">
-      <attribute name="title">
-       <string>Camera</string>
-      </attribute>
-     </widget>
-     <widget class="ConfigureWeb" name="webTab">
-      <attribute name="title">
-       <string>Web</string>
-      </attribute>
-     </widget>
-     <widget class="ConfigureUi" name="uiTab">
-      <attribute name="title">
-       <string>UI</string>
-      </attribute>
-     </widget>
-     <widget class="ConfigureHacks" name="hacksTab">
-      <attribute name="title">
-       <string>Hacks</string>
-      </attribute>
-     </widget>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QListWidget" name="selectorList"/>
+     </item>
+     <item>
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <widget class="ConfigureGeneral" name="generalTab">
+        <attribute name="title">
+         <string>General</string>
+        </attribute>
+       </widget>
+       <widget class="ConfigureSystem" name="systemTab">
+        <attribute name="title">
+         <string>System</string>
+        </attribute>
+       </widget>
+       <widget class="ConfigureInput" name="inputTab">
+        <attribute name="title">
+         <string>Input</string>
+        </attribute>
+       </widget>
+       <widget class="ConfigureGraphics" name="graphicsTab">
+        <attribute name="title">
+         <string>Graphics</string>
+        </attribute>
+       </widget>
+       <widget class="ConfigureAudio" name="audioTab">
+        <attribute name="title">
+         <string>Audio</string>
+        </attribute>
+       </widget>
+       <widget class="ConfigureCamera" name="cameraTab">
+        <attribute name="title">
+         <string>Camera</string>
+        </attribute>
+       </widget>
+       <widget class="ConfigureHacks" name="hacksTab">
+        <attribute name="title">
+         <string>Hacks</string>
+        </attribute>
+       </widget>
+       <widget class="ConfigureWeb" name="webTab">
+        <attribute name="title">
+         <string>Web</string>
+        </attribute>
+       </widget>
+       <widget class="ConfigureUi" name="uiTab">
+        <attribute name="title">
+         <string>UI</string>
+        </attribute>
+       </widget>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
@@ -101,6 +108,12 @@
    <container>1</container>
   </customwidget>
   <customwidget>
+   <class>ConfigureHacks</class>
+   <extends>QWidget</extends>
+   <header>configuration/configure_hacks.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>ConfigureInput</class>
    <extends>QWidget</extends>
    <header>configuration/configure_input.h</header>
@@ -122,12 +135,6 @@
    <class>ConfigureUi</class>
    <extends>QWidget</extends>
    <header>configuration/configure_ui.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>ConfigureHacks</class>
-   <extends>QWidget</extends>
-   <header>configuration/configure_hacks.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -23,5 +23,8 @@ public:
     bool restore_defaults_requested{};
 
 private:
+    void UpdateVisibleTabs();
+    void PopulateSelectionList();
+
     std::unique_ptr<Ui::ConfigurationDialog> ui;
 };

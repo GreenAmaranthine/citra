@@ -54,9 +54,9 @@ void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
     ASSERT(filename.size() == filename_size);
     FileSys::Path file_path{filename_type, filename};
     LOG_DEBUG(Service_FS, "path={}, mode={}, attrs={}", file_path.DebugStr(), mode.hex, attributes);
-    const auto [file_res, open_timeout_ns] =
-        archives.OpenFileFromArchive(archive_handle, file_path, mode);
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    const auto [file_res,
+                open_timeout_ns]{archives.OpenFileFromArchive(archive_handle, file_path, mode)};
+    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(file_res.Code());
     if (file_res.Succeeded()) {
         std::shared_ptr<File> file{*file_res};
