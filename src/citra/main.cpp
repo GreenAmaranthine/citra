@@ -243,9 +243,9 @@ void GMainWindow::InitializeHotkeys() {
     hotkey_registry.RegisterHotkey("Main Window", "Exit Fullscreen", QKeySequence(Qt::Key_Escape));
     hotkey_registry.RegisterHotkey("Main Window", "Toggle Speed Limit", QKeySequence("CTRL+Z"));
     hotkey_registry.RegisterHotkey("Main Window", "Increase Speed Limit",
-                                   QKeySequence(Qt::Key_Minus));
-    hotkey_registry.RegisterHotkey("Main Window", "Decrease Speed Limit",
                                    QKeySequence(Qt::Key_Plus));
+    hotkey_registry.RegisterHotkey("Main Window", "Decrease Speed Limit",
+                                   QKeySequence(Qt::Key_Minus));
     hotkey_registry.RegisterHotkey("Main Window", "Increase Internal Resolution",
                                    QKeySequence("CTRL+I"));
     hotkey_registry.RegisterHotkey("Main Window", "Decrease Internal Resolution",
