@@ -232,10 +232,9 @@ void AppList::onTextChanged(const QString& newText) {
     }
 }
 
-void AppList::onUpdateThemedIcons() {
+void AppList::OnUpdateThemedIcons() {
     for (int i{}; i < item_model->invisibleRootItem()->rowCount(); i++) {
         QStandardItem* child{item_model->invisibleRootItem()->child(i)};
-
         switch (static_cast<AppListItemType>(child->type())) {
         case AppListItemType::InstalledDir:
             child->setData(QIcon::fromTheme("sd_card").pixmap(48), Qt::DecorationRole);

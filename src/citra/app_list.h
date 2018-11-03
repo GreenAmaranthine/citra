@@ -77,7 +77,7 @@ private slots:
     void onItemExpanded(const QModelIndex& item);
     void onTextChanged(const QString& newText);
     void onFilterCloseClicked();
-    void onUpdateThemedIcons();
+    void OnUpdateThemedIcons();
 
 private:
     void AddDirEntry(AppListDir* entry_items);
@@ -115,7 +115,7 @@ signals:
     void AddDirectory();
 
 private slots:
-    void onUpdateThemedIcons();
+    void OnUpdateThemedIcons();
 
 protected:
     void mouseDoubleClickEvent(QMouseEvent* event) override;

@@ -169,7 +169,7 @@ private:
 
     bool ValidateMovie(const QString& path, u64 program_id = 0);
     void UpdatePerformanceStats();
-    void SetupUIStrings();
+    void UpdateTitle();
 
     Q_INVOKABLE void ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& open);
     Q_INVOKABLE void SwkbdCallback(HLE::Applets::SoftwareKeyboardConfig& config,

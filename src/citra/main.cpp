@@ -121,7 +121,7 @@ GMainWindow::GMainWindow() : config{new Config()} {
     RestoreUIState();
     ConnectMenuEvents();
     ConnectWidgetEvents();
-    SetupUIStrings();
+    UpdateTitle();
 #ifdef _MSC_VER
     int cpu_id[4];
     __cpuid(cpu_id, 1);
@@ -601,7 +601,7 @@ bool GMainWindow::LoadROM(const std::string& filename) {
         return false;
     }
     system.GetAppLoader().ReadShortTitle(short_title);
-    SetupUIStrings();
+    UpdateTitle();
     if (cheats_window)
         cheats_window->UpdateTitleID();
     else
@@ -708,7 +708,7 @@ void GMainWindow::ShutdownApplication() {
     touch_label->setVisible(false);
 
     short_title.clear();
-    SetupUIStrings();
+    UpdateTitle();
     // Update Discord RPC
     if (auto member{Network::GetRoomMember().lock()})
         if (!member->IsConnected())
@@ -1628,7 +1628,7 @@ void GMainWindow::OnMoviePlaybackCompleted() {
     ui.action_Stop_Recording_Playback->setEnabled(false);
 }
 
-void GMainWindow::SetupUIStrings() {
+void GMainWindow::UpdateTitle() {
     if (short_title.empty())
         setWindowTitle(
             QString("Citra | Valentin %1-%2").arg(Common::g_scm_branch, Common::g_scm_desc));
