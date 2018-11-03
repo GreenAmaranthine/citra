@@ -30,9 +30,8 @@ void QtCameraInterface::SetFlip(Service::CAM::Flip flip) {
 }
 
 void QtCameraInterface::SetEffect(Service::CAM::Effect effect) {
-    if (effect != Service::CAM::Effect::None) {
+    if (effect != Service::CAM::Effect::None)
         LOG_ERROR(Service_CAM, "Unimplemented effect {}", static_cast<int>(effect));
-    }
 }
 
 std::vector<u16> QtCameraInterface::ReceiveFrame() {
@@ -44,10 +43,8 @@ std::unique_ptr<CameraInterface> QtCameraFactory::CreatePreview(const std::strin
                                                                 int width, int height,
                                                                 const Service::CAM::Flip& flip) {
     std::unique_ptr<CameraInterface> camera{Create(config, flip)};
-
-    if (camera->IsPreviewAvailable()) {
+    if (camera->IsPreviewAvailable())
         return camera;
-    }
     QMessageBox::critical(nullptr, "Error",
                           (config.empty()
                                ? "Couldn't load the camera"

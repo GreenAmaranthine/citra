@@ -16,6 +16,7 @@ class StillImageCamera final : public QtCameraInterface {
 public:
     StillImageCamera(QImage image, const Service::CAM::Flip& flip);
     ~StillImageCamera();
+
     void StartCapture() override;
     void StopCapture() override;
     void SetFrameRate(Service::CAM::FrameRate frame_rate) override {}

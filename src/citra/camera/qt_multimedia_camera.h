@@ -41,6 +41,7 @@ class QtMultimediaCamera final : public QtCameraInterface {
 public:
     QtMultimediaCamera(const std::string& camera_name, const Service::CAM::Flip& flip);
     ~QtMultimediaCamera();
+
     void StartCapture() override;
     void StopCapture() override;
     void SetFrameRate(Service::CAM::FrameRate frame_rate) override;

@@ -48,9 +48,8 @@ QList<QVideoFrame::PixelFormat> QtCameraSurface::supportedPixelFormats(
 }
 
 bool QtCameraSurface::present(const QVideoFrame& frame) {
-    if (!frame.isValid()) {
+    if (!frame.isValid())
         return false;
-    }
     QVideoFrame cloneFrame{frame};
     cloneFrame.map(QAbstractVideoBuffer::ReadOnly);
     const QImage image{cloneFrame.bits(), cloneFrame.width(), cloneFrame.height(),
@@ -65,12 +64,11 @@ bool QtCameraSurface::present(const QVideoFrame& frame) {
 QtMultimediaCamera::QtMultimediaCamera(const std::string& camera_name,
                                        const Service::CAM::Flip& flip)
     : QtCameraInterface{flip}, handler{QtMultimediaCameraHandler::GetHandler(camera_name)} {
-    if (handler->thread() == QThread::currentThread()) {
+    if (handler->thread() == QThread::currentThread())
         handler->CreateCamera(camera_name);
-    } else {
+    else
         QMetaObject::invokeMethod(handler.get(), "CreateCamera", Qt::BlockingQueuedConnection,
                                   Q_ARG(const std::string&, camera_name));
-    }
 }
 
 QtMultimediaCamera::~QtMultimediaCamera() {
@@ -79,11 +77,10 @@ QtMultimediaCamera::~QtMultimediaCamera() {
 }
 
 void QtMultimediaCamera::StartCapture() {
-    if (handler->thread() == QThread::currentThread()) {
+    if (handler->thread() == QThread::currentThread())
         handler->StartCamera();
-    } else {
+    else
         QMetaObject::invokeMethod(handler.get(), "StartCamera", Qt::BlockingQueuedConnection);
-    }
 }
 
 void QtMultimediaCamera::StopCapture() {
@@ -92,7 +89,6 @@ void QtMultimediaCamera::StopCapture() {
 
 void QtMultimediaCamera::SetFrameRate(Service::CAM::FrameRate frame_rate) {
     auto framerate{FrameRateList[static_cast<int>(frame_rate)]};
-
     if (handler->camera->supportedViewfinderFrameRateRanges().contains(framerate)) {
         handler->settings.setMinimumFrameRate(framerate.minimumFrameRate);
         handler->settings.setMaximumFrameRate(framerate.maximumFrameRate);
