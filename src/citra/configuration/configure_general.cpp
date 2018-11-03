@@ -5,7 +5,7 @@
 #include <QMessageBox>
 #include "citra/configuration/configure_general.h"
 #include "citra/ui_settings.h"
-#include "citra/util/console.h"
+#include "citra/util/util.h"
 #include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"

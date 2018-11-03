@@ -78,8 +78,6 @@ add_executable(citra
     ui_settings.h
     util/clickable_label.cpp
     util/clickable_label.h
-    util/console.cpp
-    util/console.h
     util/util.cpp
     util/util.h
     swkbd.cpp

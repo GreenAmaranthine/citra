@@ -42,7 +42,7 @@
 #include "citra/swkbd.h"
 #include "citra/ui_settings.h"
 #include "citra/util/clickable_label.h"
-#include "citra/util/console.h"
+#include "citra/util/util.h"
 #include "common/common_paths.h"
 #include "common/detached_tasks.h"
 #include "common/logging/backend.h"
