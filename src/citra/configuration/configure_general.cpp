@@ -48,7 +48,7 @@ void ConfigureGeneral::ApplyConfiguration() {
         static_cast<Settings::KeyboardMode>(ui->combobox_keyboard_mode->currentIndex());
     UISettings::values.show_console = ui->toggle_console->isChecked();
     Settings::values.log_filter = ui->log_filter_edit->text().toStdString();
-    Util::ToggleConsole();
+    ToggleConsole();
     Log::Filter filter;
     filter.ParseFilterString(Settings::values.log_filter);
     Log::SetGlobalFilter(filter);

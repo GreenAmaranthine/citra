@@ -165,7 +165,7 @@ static bool ContainsAllWords(const QString& haystack, const QString& userinput) 
 }
 
 // Syncs the expanded state of Application Directories with settings to persist across sessions
-void AppList::onItemExpanded(const QModelIndex& item) {
+void AppList::OnItemExpanded(const QModelIndex& item) {
     // The click should still register in the AppListItemPath item no matter which column was
     // clicked
     int row{item_model->itemFromIndex(item)->row()};
@@ -288,11 +288,11 @@ AppList::AppList(GMainWindow* parent) : QWidget{parent} {
     tree_view->setColumnWidth(COLUMN_NAME, 500);
     tree_view->setColumnWidth(COLUMN_COMPATIBILITY, 115);
     item_model->setSortRole(AppListItemPath::TitleRole);
-    connect(main_window, &GMainWindow::UpdateThemedIcons, this, &AppList::onUpdateThemedIcons);
+    connect(main_window, &GMainWindow::UpdateThemedIcons, this, &AppList::OnUpdateThemedIcons);
     connect(tree_view, &QTreeView::activated, this, &AppList::ValidateEntry);
     connect(tree_view, &QTreeView::customContextMenuRequested, this, &AppList::PopupContextMenu);
-    connect(tree_view, &QTreeView::expanded, this, &AppList::onItemExpanded);
-    connect(tree_view, &QTreeView::collapsed, this, &AppList::onItemExpanded);
+    connect(tree_view, &QTreeView::expanded, this, &AppList::OnItemExpanded);
+    connect(tree_view, &QTreeView::collapsed, this, &AppList::OnItemExpanded);
     // We must register all custom types with the Qt Automoc system so that we're able to use
     // it with signals/slots. In this case, QList falls under the umbrells of custom types.
     qRegisterMetaType<QList<QStandardItem*>>("QList<QStandardItem*>");
@@ -622,7 +622,7 @@ QString AppList::FindApplicationByProgramID(QStandardItem* current_item, u64 pro
 AppListPlaceholder::AppListPlaceholder(GMainWindow* parent) : QWidget{parent}, main_window{parent} {
     main_window = parent;
     connect(main_window, &GMainWindow::UpdateThemedIcons, this,
-            &AppListPlaceholder::onUpdateThemedIcons);
+            &AppListPlaceholder::OnUpdateThemedIcons);
     layout = new QVBoxLayout;
     image = new QLabel;
     text = new QLabel;
@@ -641,7 +641,7 @@ AppListPlaceholder::AppListPlaceholder(GMainWindow* parent) : QWidget{parent}, m
 
 AppListPlaceholder::~AppListPlaceholder() = default;
 
-void AppListPlaceholder::onUpdateThemedIcons() {
+void AppListPlaceholder::OnUpdateThemedIcons() {
     image->setPixmap(QIcon::fromTheme("plus_folder").pixmap(200));
 }
 

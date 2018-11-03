@@ -74,7 +74,7 @@ signals:
     void ShowList(bool show);
 
 private slots:
-    void onItemExpanded(const QModelIndex& item);
+    void OnItemExpanded(const QModelIndex& item);
     void onTextChanged(const QString& newText);
     void onFilterCloseClicked();
     void OnUpdateThemedIcons();
