@@ -22,19 +22,19 @@ public:
 
 public slots:
     void LoadConfiguration();
-    void onToolButtonClicked();
+    void OnToolButtonClicked();
 
 private:
     enum class CameraPosition { RearRight, Front, RearLeft, RearBoth, Null };
     static const std::array<std::string, 3> Implementations;
-    void recordConfig();        ///< Record the current configuration
+    void RecordConfig();        ///< Record the current configuration
     void updateCameraMode();    ///< Updates camera mode
-    void updateImageSourceUI(); ///< Updates image source
+    void UpdateImageSourceUI(); ///< Updates image source
     void startPreviewing();
     void stopPreviewing();
-    void connectEvents();
-    CameraPosition getCameraSelection();
-    int getSelectedCameraIndex();
+    void ConnectEvents();
+    CameraPosition GetCameraSelection();
+    int GetSelectedCameraIndex();
 
 private:
     std::unique_ptr<Ui::ConfigureCamera> ui;

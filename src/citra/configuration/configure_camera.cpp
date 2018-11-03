@@ -33,7 +33,7 @@ ConfigureCamera::ConfigureCamera(QWidget* parent)
     }
     updateCameraMode();
     LoadConfiguration();
-    connectEvents();
+    ConnectEvents();
     ui->preview_box->setHidden(true);
 }
 
@@ -41,17 +41,17 @@ ConfigureCamera::~ConfigureCamera() {
     stopPreviewing();
 }
 
-void ConfigureCamera::connectEvents() {
+void ConfigureCamera::ConnectEvents() {
     connect(ui->image_source,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, [this] {
                 stopPreviewing();
-                updateImageSourceUI();
+                UpdateImageSourceUI();
             });
     connect(ui->camera_selection,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, [this] {
                 stopPreviewing();
-                if (getCameraSelection() != current_selected) {
-                    recordConfig();
+                if (GetCameraSelection() != current_selected) {
+                    RecordConfig();
                 }
                 if (ui->camera_selection->currentIndex() == 1) {
                     ui->camera_mode->setCurrentIndex(1); // Double
@@ -67,17 +67,17 @@ void ConfigureCamera::connectEvents() {
                 stopPreviewing();
                 ui->camera_position_label->setVisible(ui->camera_mode->currentIndex() == 1);
                 ui->camera_position->setVisible(ui->camera_mode->currentIndex() == 1);
-                current_selected = getCameraSelection();
+                current_selected = GetCameraSelection();
             });
     connect(ui->camera_position,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, [this] {
                 stopPreviewing();
-                if (getCameraSelection() != current_selected) {
-                    recordConfig();
+                if (GetCameraSelection() != current_selected) {
+                    RecordConfig();
                 }
                 LoadConfiguration();
             });
-    connect(ui->toolButton, &QToolButton::clicked, this, &ConfigureCamera::onToolButtonClicked);
+    connect(ui->toolButton, &QToolButton::clicked, this, &ConfigureCamera::OnToolButtonClicked);
     connect(ui->preview_button, &QPushButton::clicked, this, [&] { startPreviewing(); });
     connect(ui->prompt_before_load, &QCheckBox::stateChanged, this, [this](int state) {
         ui->camera_file->setDisabled(state == Qt::Checked);
@@ -95,7 +95,7 @@ void ConfigureCamera::connectEvents() {
 }
 
 void ConfigureCamera::updateCameraMode() {
-    CameraPosition pos{getCameraSelection()};
+    CameraPosition pos{GetCameraSelection()};
     // Set the visibility of the camera mode selection widgets
     if (pos == CameraPosition::RearBoth) {
         ui->camera_position->setHidden(true);
@@ -110,7 +110,7 @@ void ConfigureCamera::updateCameraMode() {
     }
 }
 
-void ConfigureCamera::updateImageSourceUI() {
+void ConfigureCamera::UpdateImageSourceUI() {
     int image_source{ui->image_source->currentIndex()};
     switch (image_source) {
     case 0: /* blank */
@@ -127,7 +127,7 @@ void ConfigureCamera::updateImageSourceUI() {
         ui->camera_file_label->setHidden(false);
         ui->camera_file->setHidden(false);
         ui->toolButton->setHidden(false);
-        if (camera_config[getSelectedCameraIndex()].empty()) {
+        if (camera_config[GetSelectedCameraIndex()].empty()) {
             ui->prompt_before_load->setChecked(true);
             ui->camera_file->setDisabled(true);
             ui->toolButton->setDisabled(true);
@@ -146,7 +146,7 @@ void ConfigureCamera::updateImageSourceUI() {
     ui->camera_flip->setHidden(image_source == 0);
 }
 
-void ConfigureCamera::recordConfig() {
+void ConfigureCamera::RecordConfig() {
     std::string implementation{Implementations[ui->image_source->currentIndex()]};
     int image_source{ui->image_source->currentIndex()};
     std::string config;
@@ -169,21 +169,20 @@ void ConfigureCamera::recordConfig() {
         camera_config[index] = config;
         camera_flip[index] = ui->camera_flip->currentIndex();
     }
-    current_selected = getCameraSelection();
+    current_selected = GetCameraSelection();
 }
 
 void ConfigureCamera::startPreviewing() {
-    current_selected = getCameraSelection();
-    recordConfig();
-    int camera_selection{getSelectedCameraIndex()};
+    current_selected = GetCameraSelection();
+    RecordConfig();
+    int camera_selection{GetSelectedCameraIndex()};
     stopPreviewing();
     // Init preview box
     ui->preview_box->setHidden(false);
     ui->preview_button->setHidden(true);
     preview_width = ui->preview_box->size().width();
     preview_height = preview_width * 0.75;
-    ui->preview_box->setToolTip(QString("Resolution: ") + QString::number(preview_width) + "*" +
-                                QString::number(preview_height));
+    ui->preview_box->setToolTip(QString("Resolution: %1 * %2").arg(preview_width, preview_height));
     // Load previewing camera
     previewing_camera = Camera::CreateCameraPreview(
         camera_name[camera_selection], camera_config[camera_selection], preview_width,
@@ -214,9 +213,8 @@ void ConfigureCamera::stopPreviewing() {
 }
 
 void ConfigureCamera::timerEvent(QTimerEvent* event) {
-    if (event->timerId() != timer_id) {
+    if (event->timerId() != timer_id)
         return;
-    }
     if (!previewing_camera) {
         killTimer(timer_id);
         timer_id = 0;
@@ -235,77 +233,68 @@ void ConfigureCamera::timerEvent(QTimerEvent* event) {
 }
 
 void ConfigureCamera::LoadConfiguration() {
-    int index{getSelectedCameraIndex()};
-    for (int i{}; i < Implementations.size(); i++) {
-        if (Implementations[i] == camera_name[index]) {
+    int index{GetSelectedCameraIndex()};
+    for (int i{}; i < Implementations.size(); i++)
+        if (Implementations[i] == camera_name[index])
             ui->image_source->setCurrentIndex(i);
-        }
-    }
     if (camera_name[index] == "image") {
         ui->camera_file->setDisabled(camera_config[index].empty());
         ui->toolButton->setDisabled(camera_config[index].empty());
-        if (camera_config[index].empty()) {
+        if (camera_config[index].empty())
             ui->camera_file->clear();
-        }
     }
     if (camera_name[index] == "qt") {
         ui->system_camera->setCurrentIndex(0);
-        if (!camera_config[index].empty()) {
+        if (!camera_config[index].empty())
             ui->system_camera->setCurrentText(QString::fromStdString(camera_config[index]));
-        }
-    } else {
+    } else
         ui->camera_file->setText(QString::fromStdString(camera_config[index]));
-    }
     ui->camera_flip->setCurrentIndex(camera_flip[index]);
-    updateImageSourceUI();
+    UpdateImageSourceUI();
 }
 
-void ConfigureCamera::onToolButtonClicked() {
+void ConfigureCamera::OnToolButtonClicked() {
     stopPreviewing();
     QList<QByteArray> types{QImageReader::supportedImageFormats()};
     QList<QString> temp_filters;
-    for (const QByteArray& type : types) {
+    for (const QByteArray& type : types)
         temp_filters << QString("*." + QString(type));
-    }
     QString filter{QString("Supported image files (%1)").arg(temp_filters.join(" "))};
     QString path{QFileDialog::getOpenFileName(this, QString("Open File"), ".", filter)};
-    if (!path.isEmpty()) {
+    if (!path.isEmpty())
         ui->camera_file->setText(path);
-    }
 }
 
 void ConfigureCamera::ApplyConfiguration() {
-    recordConfig();
+    RecordConfig();
     stopPreviewing();
     Settings::values.camera_name = camera_name;
     Settings::values.camera_config = camera_config;
     Settings::values.camera_flip = camera_flip;
 }
 
-ConfigureCamera::CameraPosition ConfigureCamera::getCameraSelection() {
+ConfigureCamera::CameraPosition ConfigureCamera::GetCameraSelection() {
     switch (ui->camera_selection->currentIndex()) {
     case 0: // Front
         return CameraPosition::Front;
     case 1: // Rear
-        if (ui->camera_mode->currentIndex() == 0) {
+        if (ui->camera_mode->currentIndex() == 0)
             // Single (2D) mode
             return CameraPosition::RearBoth;
-        } else {
+        else
             // Double (3D) mode
             return (ui->camera_position->currentIndex() == 0) ? CameraPosition::RearLeft
                                                               : CameraPosition::RearRight;
-        }
     default:
         LOG_ERROR(Frontend, "Unknown camera selection");
         return CameraPosition::Front;
     }
 }
 
-int ConfigureCamera::getSelectedCameraIndex() {
-    CameraPosition pos = getCameraSelection();
+int ConfigureCamera::GetSelectedCameraIndex() {
+    CameraPosition pos{GetCameraSelection()};
     int camera_selection{static_cast<int>(pos)};
-    if (pos == CameraPosition::RearBoth) { // Single Mode
-        camera_selection = 0;              // Either camera is the same, so we return RearRight
-    }
+    if (pos == CameraPosition::RearBoth) // Single Mode
+        camera_selection = 0;            // Either camera is the same, so we return RearRight
     return camera_selection;
 }

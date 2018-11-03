@@ -130,14 +130,13 @@ std::shared_ptr<QtMultimediaCameraHandler> QtMultimediaCameraHandler::GetHandler
     const std::string& camera_name) {
     if (loaded.count(camera_name))
         return loaded.at(camera_name);
-    for (int i{}; i < handlers.size(); i++) {
+    for (int i{}; i < handlers.size(); i++)
         if (!status[i]) {
             LOG_INFO(Service_CAM, "Successfully got handler {}", i);
             status[i] = true;
             loaded.emplace(camera_name, handlers[i]);
             return handlers[i];
         }
-    }
     LOG_ERROR(Service_CAM, "All handlers taken up");
     return nullptr;
 }
@@ -149,12 +148,11 @@ void QtMultimediaCameraHandler::ReleaseHandler(
             LOG_INFO(Service_CAM, "Successfully released handler {}", i);
             status[i] = false;
             handlers[i]->started = false;
-            for (auto it{loaded.begin()}; it != loaded.end(); it++) {
+            for (auto it{loaded.begin()}; it != loaded.end(); it++)
                 if (it->second == handlers[i]) {
                     loaded.erase(it);
                     break;
                 }
-            }
             break;
         }
     }
@@ -162,23 +160,20 @@ void QtMultimediaCameraHandler::ReleaseHandler(
 
 void QtMultimediaCameraHandler::CreateCamera(const std::string& camera_name) {
     QList<QCameraInfo> cameras{QCameraInfo::availableCameras()};
-    for (const QCameraInfo& cameraInfo : cameras) {
+    for (const QCameraInfo& cameraInfo : cameras)
         if (cameraInfo.deviceName().toStdString() == camera_name)
             camera = std::make_unique<QCamera>(cameraInfo);
-    }
-    if (!camera) { // no cameras found, using default camera
+    if (!camera) // No cameras found, using default camera
         camera = std::make_unique<QCamera>();
-    }
     settings.setMinimumFrameRate(30);
     settings.setMaximumFrameRate(30);
     camera->setViewfinder(&camera_surface);
     camera->load();
-    if (camera->supportedViewfinderPixelFormats().isEmpty()) {
+    if (camera->supportedViewfinderPixelFormats().isEmpty())
         // The gstreamer plugin (used on linux systems) returns an empty list on querying supported
         // viewfinder pixel formats, and will not work without expliciting setting it to some value,
         // so we're defaulting to RGB565 here which should be fairly widely supported.
         settings.setPixelFormat(QVideoFrame::PixelFormat::Format_RGB565);
-    }
 }
 
 void QtMultimediaCameraHandler::StopCamera() {
@@ -198,19 +193,15 @@ bool QtMultimediaCameraHandler::CameraAvailable() const {
 
 void QtMultimediaCameraHandler::StopCameras() {
     LOG_INFO(Service_CAM, "Stopping all cameras");
-    for (auto& handler : handlers) {
-        if (handler && handler->started) {
+    for (auto& handler : handlers)
+        if (handler && handler->started)
             handler->StopCamera();
-        }
-    }
 }
 
 void QtMultimediaCameraHandler::ResumeCameras() {
-    for (auto& handler : handlers) {
-        if (handler && handler->started) {
+    for (auto& handler : handlers)
+        if (handler && handler->started)
             handler->StartCamera();
-        }
-    }
 }
 
 void QtMultimediaCameraHandler::ReleaseHandlers() {

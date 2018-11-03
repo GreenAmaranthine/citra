@@ -93,8 +93,8 @@ ConfigureMotionTouch::ConfigureMotionTouch(QWidget* parent)
                 "style=\"text-decoration: underline; color:#039be5;\">Learn More</span></a>"));
 
     LoadConfiguration();
-    updateUiDisplay();
-    connectEvents();
+    UpdateUIDisplay();
+    ConnectEvents();
 }
 
 ConfigureMotionTouch::~ConfigureMotionTouch() = default;
@@ -121,7 +121,7 @@ void ConfigureMotionTouch::LoadConfiguration() {
     ui->udp_pad_index->setCurrentIndex(Settings::values.udp_pad_index);
 }
 
-void ConfigureMotionTouch::updateUiDisplay() {
+void ConfigureMotionTouch::UpdateUIDisplay() {
     std::string motion_engine{ui->motion_provider->currentData().toString().toStdString()};
     std::string touch_engine{ui->touch_provider->currentData().toString().toStdString()};
 
@@ -153,13 +153,13 @@ void ConfigureMotionTouch::updateUiDisplay() {
     }
 }
 
-void ConfigureMotionTouch::connectEvents() {
+void ConfigureMotionTouch::ConnectEvents() {
     connect(ui->motion_provider,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
-            [this](int) { updateUiDisplay(); });
+            [this](int) { UpdateUIDisplay(); });
     connect(ui->touch_provider,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
-            [this](int) { updateUiDisplay(); });
+            [this](int) { UpdateUIDisplay(); });
     connect(ui->udp_test, &QPushButton::clicked, this, &ConfigureMotionTouch::OnCemuhookUDPTest);
     connect(ui->touch_calibration_config, &QPushButton::clicked, this,
             &ConfigureMotionTouch::OnConfigureTouchCalibration);
@@ -201,7 +201,7 @@ void ConfigureMotionTouch::OnConfigureTouchCalibration() {
         LOG_INFO(Frontend,
                  "UDP touchpad calibration config success: min_x={}, min_y={}, max_x={}, max_y={}",
                  min_x, min_y, max_x, max_y);
-        updateUiDisplay();
+        UpdateUIDisplay();
     } else {
         LOG_ERROR(Frontend, "UDP touchpad calibration config failed");
     }

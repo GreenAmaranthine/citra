@@ -7,11 +7,11 @@
 #include <memory>
 #include <QWidget>
 
-class HotkeyRegistry;
-
 namespace Ui {
 class ConfigureGeneral;
 } // namespace Ui
+
+class HotkeyRegistry;
 
 class ConfigureGeneral : public QWidget {
     Q_OBJECT

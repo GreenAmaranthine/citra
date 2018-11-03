@@ -17,6 +17,7 @@ class ConfigureHacks : public QWidget {
 public:
     explicit ConfigureHacks(QWidget* parent = nullptr);
     ~ConfigureHacks();
+
     void ApplyConfiguration();
 
 private:

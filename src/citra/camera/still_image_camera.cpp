@@ -32,15 +32,12 @@ bool StillImageCamera::IsPreviewAvailable() {
 std::string StillImageCameraFactory::last_path;
 
 const std::string StillImageCameraFactory::GetFilePath() const {
-    if (!last_path.empty()) {
+    if (!last_path.empty())
         return last_path;
-    }
     QList<QByteArray> types{QImageReader::supportedImageFormats()};
     QList<QString> temp_filters;
-    for (QByteArray type : types) {
+    for (QByteArray type : types)
         temp_filters << QString("*." + QString(type));
-    }
-
     QString filter{QString("Supported image files (%1)").arg(temp_filters.join(" "))};
     last_path = QFileDialog::getOpenFileName(nullptr, "Open File", ".", filter).toStdString();
     return last_path;
@@ -49,20 +46,17 @@ const std::string StillImageCameraFactory::GetFilePath() const {
 std::unique_ptr<CameraInterface> StillImageCameraFactory::Create(const std::string& config,
                                                                  const Service::CAM::Flip& flip) {
     std::string real_config{config};
-    if (config.empty()) {
-        // call GetFilePath() in UI thread (note: StillImageCameraFactory itself is initialized in
+    if (config.empty())
+        // Call GetFilePath() in UI thread (note: StillImageCameraFactory itself is initialized in
         // UI thread, so we can just pass in "this" here)
-        if (thread() == QThread::currentThread()) {
+        if (thread() == QThread::currentThread())
             real_config = GetFilePath();
-        } else {
+        else
             QMetaObject::invokeMethod(this, "GetFilePath", Qt::BlockingQueuedConnection,
                                       Q_RETURN_ARG(std::string, real_config));
-        }
-    }
     QImage image{QString::fromStdString(real_config)};
-    if (image.isNull()) {
+    if (image.isNull())
         LOG_ERROR(Service_CAM, "Couldn't load image \"{}\"", real_config);
-    }
     return std::make_unique<StillImageCamera>(image, flip);
 }
 

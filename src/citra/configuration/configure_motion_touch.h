@@ -9,13 +9,13 @@
 #include "common/param_package.h"
 #include "input_common/udp/udp.h"
 
-class QVBoxLayout;
-class QLabel;
-class QPushButton;
-
 namespace Ui {
 class ConfigureMotionTouch;
 } // namespace Ui
+
+class QVBoxLayout;
+class QLabel;
+class QPushButton;
 
 /// A dialog for touchpad calibration configuration.
 class CalibrationConfigurationDialog : public QDialog {
@@ -29,13 +29,16 @@ public:
 private:
     Q_INVOKABLE void UpdateLabelText(QString text);
     Q_INVOKABLE void UpdateButtonText(QString text);
+
     QVBoxLayout* layout;
     QLabel* status_label;
     QPushButton* cancel_button;
     std::unique_ptr<InputCommon::CemuhookUDP::CalibrationConfigurationJob> job;
+
     // Configuration results
     bool completed{};
     u16 min_x, min_y, max_x, max_y;
+
     friend class ConfigureMotionTouch;
 };
 
@@ -55,11 +58,14 @@ private slots:
 
 private:
     void closeEvent(QCloseEvent* event) override;
+
     Q_INVOKABLE void ShowUDPTestResult(bool result);
+
     void LoadConfiguration();
-    void updateUiDisplay();
-    void connectEvents();
+    void UpdateUIDisplay();
+    void ConnectEvents();
     bool CanCloseDialog();
+
     std::unique_ptr<Ui::ConfigureMotionTouch> ui;
     int min_x, min_y, max_x, max_y; ///< Coordinate system of the CemuhookUDP touch provider
     bool udp_test_in_progress{};
