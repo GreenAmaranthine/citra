@@ -24,14 +24,14 @@ namespace Memory {
 static std::array<u8, Memory::VRAM_SIZE> vram;
 static std::array<u8, Memory::N3DS_EXTRA_RAM_SIZE> n3ds_extra_ram;
 static std::array<u8, Memory::L2C_SIZE> l2cache;
-std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram;
-
 static PageTable* current_page_table{};
+std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram;
 
 void SetCurrentPageTable(PageTable* page_table) {
     current_page_table = page_table;
-    if (Core::System::GetInstance().IsPoweredOn())
-        Core::CPU().PageTableChanged();
+    auto& system{Core::System::GetInstance()};
+    if (system.IsPoweredOn())
+        system.CPU().PageTableChanged();
 }
 
 PageTable* GetCurrentPageTable() {
@@ -106,9 +106,7 @@ static u8* GetPointerFromVMA(VAddr vaddr) {
     return GetPointerFromVMA(*Core::System::GetInstance().Kernel().GetCurrentProcess(), vaddr);
 }
 
-/**
- * This function should only be called for virtual addreses with attribute `PageType::Special`.
- */
+/// This function should only be called for virtual addreses with attribute `PageType::Special`.
 static MMIORegionPointer GetMMIOHandler(const PageTable& page_table, VAddr vaddr) {
     for (const auto& region : page_table.special_regions)
         if (vaddr >= region.base && vaddr < (region.base + region.size))
@@ -494,7 +492,6 @@ void WriteBlock(const Kernel::Process& process, const VAddr dest_addr, const voi
     std::size_t remaining_size{size};
     std::size_t page_index{dest_addr >> PAGE_BITS};
     std::size_t page_offset{dest_addr & PAGE_MASK};
-
     while (remaining_size > 0) {
         const std::size_t copy_amount{std::min(PAGE_SIZE - page_offset, remaining_size)};
         const VAddr current_vaddr{static_cast<VAddr>((page_index << PAGE_BITS) + page_offset)};
@@ -545,7 +542,6 @@ void ZeroBlock(const Kernel::Process& process, const VAddr dest_addr, const std:
     while (remaining_size > 0) {
         const std::size_t copy_amount{std::min(PAGE_SIZE - page_offset, remaining_size)};
         const VAddr current_vaddr{static_cast<VAddr>((page_index << PAGE_BITS) + page_offset)};
-
         switch (page_table.attributes[page_index]) {
         case PageType::Unmapped:
             LOG_ERROR(HW_Memory,
@@ -572,7 +568,6 @@ void ZeroBlock(const Kernel::Process& process, const VAddr dest_addr, const std:
         default:
             UNREACHABLE();
         }
-
         page_index++;
         page_offset = 0;
         remaining_size -= copy_amount;
@@ -589,11 +584,9 @@ void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
     std::size_t remaining_size{size};
     std::size_t page_index{src_addr >> PAGE_BITS};
     std::size_t page_offset{src_addr & PAGE_MASK};
-
     while (remaining_size > 0) {
         const std::size_t copy_amount{std::min(PAGE_SIZE - page_offset, remaining_size)};
         const VAddr current_vaddr{static_cast<VAddr>((page_index << PAGE_BITS) + page_offset)};
-
         switch (page_table.attributes[page_index]) {
         case PageType::Unmapped: {
             LOG_ERROR(HW_Memory,
@@ -625,7 +618,6 @@ void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
         default:
             UNREACHABLE();
         }
-
         page_index++;
         page_offset = 0;
         dest_addr += static_cast<VAddr>(copy_amount);
@@ -640,15 +632,13 @@ void CopyBlock(VAddr dest_addr, VAddr src_addr, const std::size_t size) {
 
 void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_process,
                VAddr src_addr, VAddr dest_addr, std::size_t size) {
-    auto& page_table = src_process.vm_manager.page_table;
-    std::size_t remaining_size = size;
-    std::size_t page_index = src_addr >> PAGE_BITS;
-    std::size_t page_offset = src_addr & PAGE_MASK;
-
+    auto& page_table{src_process.vm_manager.page_table};
+    std::size_t remaining_siz{size};
+    std::size_t page_index{src_addr >> PAGE_BITS};
+    std::size_t page_offset{src_addr & PAGE_MASK};
     while (remaining_size > 0) {
-        const std::size_t copy_amount = std::min(PAGE_SIZE - page_offset, remaining_size);
-        const VAddr current_vaddr = static_cast<VAddr>((page_index << PAGE_BITS) + page_offset);
-
+        const std::size_t copy_amount{std::min(PAGE_SIZE - page_offset, remaining_size)};
+        const VAddr current_vaddr{static_cast<VAddr>((page_index << PAGE_BITS) + page_offset)};
         switch (page_table.attributes[page_index]) {
         case PageType::Unmapped: {
             LOG_ERROR(HW_Memory,
@@ -659,12 +649,12 @@ void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_p
         }
         case PageType::Memory: {
             DEBUG_ASSERT(page_table.pointers[page_index]);
-            const u8* src_ptr = page_table.pointers[page_index] + page_offset;
+            const u8* src_ptr{page_table.pointers[page_index] + page_offset};
             WriteBlock(dest_process, dest_addr, src_ptr, copy_amount);
             break;
         }
         case PageType::Special: {
-            MMIORegionPointer handler = GetMMIOHandler(page_table, current_vaddr);
+            MMIORegionPointer handler{GetMMIOHandler(page_table, current_vaddr)};
             DEBUG_ASSERT(handler);
             std::vector<u8> buffer(copy_amount);
             handler->ReadBlock(current_vaddr, buffer.data(), buffer.size());
@@ -681,7 +671,6 @@ void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_p
         default:
             UNREACHABLE();
         }
-
         page_index++;
         page_offset = 0;
         dest_addr += static_cast<VAddr>(copy_amount);
@@ -731,22 +720,20 @@ void WriteMMIO<u64>(MMIORegionPointer mmio_handler, VAddr addr, const u64 data) 
 }
 
 std::optional<PAddr> TryVirtualToPhysicalAddress(const VAddr addr) {
-    if (addr == 0) {
+    if (addr == 0)
         return 0;
-    } else if (addr >= VRAM_VADDR && addr < VRAM_N3DS_VADDR_END) {
+    else if (addr >= VRAM_VADDR && addr < VRAM_N3DS_VADDR_END)
         return addr - VRAM_VADDR + VRAM_PADDR;
-    } else if (addr >= LINEAR_HEAP_VADDR && addr < LINEAR_HEAP_VADDR_END) {
+    else if (addr >= LINEAR_HEAP_VADDR && addr < LINEAR_HEAP_VADDR_END)
         return addr - LINEAR_HEAP_VADDR + FCRAM_PADDR;
-    } else if (addr >= NEW_LINEAR_HEAP_VADDR && addr < NEW_LINEAR_HEAP_VADDR_END) {
+    else if (addr >= NEW_LINEAR_HEAP_VADDR && addr < NEW_LINEAR_HEAP_VADDR_END)
         return addr - NEW_LINEAR_HEAP_VADDR + FCRAM_PADDR;
-    } else if (addr >= DSP_RAM_VADDR && addr < DSP_RAM_VADDR_END) {
+    else if (addr >= DSP_RAM_VADDR && addr < DSP_RAM_VADDR_END)
         return addr - DSP_RAM_VADDR + DSP_RAM_PADDR;
-    } else if (addr >= IO_AREA_VADDR && addr < IO_AREA_VADDR_END) {
+    else if (addr >= IO_AREA_VADDR && addr < IO_AREA_VADDR_END)
         return addr - IO_AREA_VADDR + IO_AREA_PADDR;
-    } else if (addr >= N3DS_EXTRA_RAM_VADDR && addr < N3DS_EXTRA_RAM_VADDR_END) {
+    else if (addr >= N3DS_EXTRA_RAM_VADDR && addr < N3DS_EXTRA_RAM_VADDR_END)
         return addr - N3DS_EXTRA_RAM_VADDR + N3DS_EXTRA_RAM_PADDR;
-    }
-
     return {};
 }
 
@@ -761,21 +748,19 @@ PAddr VirtualToPhysicalAddress(const VAddr addr) {
 }
 
 std::optional<VAddr> PhysicalToVirtualAddress(const PAddr addr) {
-    if (addr == 0) {
+    if (addr == 0)
         return 0;
-    } else if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END) {
+    else if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END)
         return addr - VRAM_PADDR + VRAM_VADDR;
-    } else if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END) {
+    else if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END)
         return addr - FCRAM_PADDR +
                Core::System::GetInstance().Kernel().GetCurrentProcess()->GetLinearHeapAreaAddress();
-    } else if (addr >= DSP_RAM_PADDR && addr < DSP_RAM_PADDR_END) {
+    else if (addr >= DSP_RAM_PADDR && addr < DSP_RAM_PADDR_END)
         return addr - DSP_RAM_PADDR + DSP_RAM_VADDR;
-    } else if (addr >= IO_AREA_PADDR && addr < IO_AREA_PADDR_END) {
+    else if (addr >= IO_AREA_PADDR && addr < IO_AREA_PADDR_END)
         return addr - IO_AREA_PADDR + IO_AREA_VADDR;
-    } else if (addr >= N3DS_EXTRA_RAM_PADDR && addr < N3DS_EXTRA_RAM_PADDR_END) {
+    else if (addr >= N3DS_EXTRA_RAM_PADDR && addr < N3DS_EXTRA_RAM_PADDR_END)
         return addr - N3DS_EXTRA_RAM_PADDR + N3DS_EXTRA_RAM_VADDR;
-    }
-
     return {};
 }
 
