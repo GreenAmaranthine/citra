@@ -68,7 +68,7 @@ public:
     }
 
     u64 GetOpenDelayNs() override {
-        return 269082;
+        return 758199;
     }
 };
 
