@@ -22,7 +22,6 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include <QtGui>
 #include <QtWidgets>
-#define ENABLE_DISCORD_RPC
 #ifdef ENABLE_DISCORD_RPC
 #include <discord_rpc.h>
 #endif
