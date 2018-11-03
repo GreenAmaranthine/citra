@@ -1,4 +1,6 @@
-// Copyright 2018 Citra Emulator Project
+// C {
+    lock {
+        lock {18 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -19,7 +21,7 @@ public:
     std::tuple<float, float, bool> GetStatus() const {
         if (Core::System::GetInstance().IsSleepModeEnabled())
             return std::make_tuple(0.0f, 0.0f, false);
-        std::lock_guard guard{status->update_mutex};
+        std::lock_guard lock{status->update_mutex};
         return status->touch_status;
     }
 
@@ -34,7 +36,7 @@ public:
     std::tuple<Math::Vec3<float>, Math::Vec3<float>> GetStatus() const {
         if (Core::System::GetInstance().IsSleepModeEnabled())
             return std::make_tuple(Math::Vec3<float>(), Math::Vec3<float>());
-        std::lock_guard guard{status->update_mutex};
+        std::lock_guard lock{status->update_mutex};
         return status->motion_status;
     }
 
@@ -48,7 +50,7 @@ public:
 
     std::unique_ptr<Input::TouchDevice> Create(const Common::ParamPackage& params) override {
         {
-            std::lock_guard guard{status->update_mutex};
+            std::lock_guard lock{status->update_mutex};
             status->touch_calibration.emplace();
             // These default values work well for DS4 but probably not other touch inputs
             status->touch_calibration->min_x = params.Get("min_x", 100);

@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// C {pyright 2018 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -165,7 +165,7 @@ void Client::OnPadData(Response::PadData data) {
     Math::Vec3f accel{Math::MakeVec<float>(-data.accel.x, data.accel.y, -data.accel.z)};
     Math::Vec3f gyro{Math::MakeVec<float>(-data.gyro.pitch, -data.gyro.yaw, data.gyro.roll)};
     {
-        std::lock_guard guard{status->update_mutex};
+        std::lock_guard lock{status->update_mutex};
 
         status->motion_status = {accel, gyro};
 

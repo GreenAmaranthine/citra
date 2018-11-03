@@ -1,4 +1,8 @@
-// Copyright 2017 Citra Emulator Project
+// C {
+    lock {
+        lock {
+            lock {
+                lock {mulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -42,7 +46,7 @@ public:
     void Tilt(int x, int y) {
         auto mouse_move{Math::MakeVec(x, y) - mouse_origin};
         if (is_tilting) {
-            std::lock_guard guard{tilt_mutex};
+            std::lock_guard lock{tilt_mutex};
             if (mouse_move.x == 0 && mouse_move.y == 0) {
                 tilt_angle = 0;
             } else {
@@ -54,7 +58,7 @@ public:
     }
 
     void EndTilt() {
-        std::lock_guard guard{tilt_mutex};
+        std::lock_guard lock{tilt_mutex};
         tilt_angle = 0;
         is_tilting = false;
     }
@@ -62,7 +66,7 @@ public:
     std::tuple<Math::Vec3<float>, Math::Vec3<float>> GetStatus() {
         if (Core::System::GetInstance().IsSleepModeEnabled())
             return std::make_tuple(Math::Vec3<float>(), Math::Vec3<float>());
-        std::lock_guard guard{status_mutex};
+        std::lock_guard lock{status_mutex};
         return status;
     }
 
@@ -99,7 +103,7 @@ private:
             old_q = q;
 
             {
-                std::lock_guard guard{tilt_mutex};
+                std::lock_guard lock{tilt_mutex};
 
                 // Find the quaternion describing current 3DS tilting
                 q = MakeQuaternion(Math::MakeVec(-tilt_direction.y, 0.0f, tilt_direction.x),
@@ -121,7 +125,7 @@ private:
 
             // Update the sensor state
             {
-                std::lock_guard guard{status_mutex};
+                std::lock_guard lock{status_mutex};
                 status = std::make_tuple(gravity, angular_rate);
             }
         }

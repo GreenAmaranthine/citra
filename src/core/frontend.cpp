@@ -24,9 +24,10 @@ private:
     class Device : public Input::TouchDevice {
     public:
         explicit Device(std::weak_ptr<TouchState>&& touch_state) : touch_state{touch_state} {}
+
         std::tuple<float, float, bool> GetStatus() const override {
             if (auto state{touch_state.lock()}) {
-                std::lock_guard guard{state->mutex};
+                std::lock_guard lock{state->mutex};
                 return std::make_tuple(state->touch_x, state->touch_y, state->touch_pressed);
             }
             return std::make_tuple(0.0f, 0.0f, false);
@@ -55,17 +56,16 @@ Frontend::~Frontend() {
  */
 static bool IsWithinTouchscreen(const Layout::FramebufferLayout& layout, unsigned framebuffer_x,
                                 unsigned framebuffer_y) {
-    if (Settings::values.factor_3d != 0) {
+    if (Settings::values.factor_3d != 0)
         return (framebuffer_y >= layout.bottom_screen.top &&
                 framebuffer_y < layout.bottom_screen.bottom &&
                 framebuffer_x >= layout.bottom_screen.left / 2 &&
                 framebuffer_x < layout.bottom_screen.right / 2);
-    } else {
+    else
         return (framebuffer_y >= layout.bottom_screen.top &&
                 framebuffer_y < layout.bottom_screen.bottom &&
                 framebuffer_x >= layout.bottom_screen.left &&
                 framebuffer_x < layout.bottom_screen.right);
-    }
 }
 
 std::tuple<unsigned, unsigned> Frontend::ClipToTouchScreen(unsigned new_x, unsigned new_y) {
@@ -80,7 +80,7 @@ std::tuple<unsigned, unsigned> Frontend::TouchPressed(unsigned framebuffer_x,
                                                       unsigned framebuffer_y) {
     if (!IsWithinTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y))
         return {};
-    std::lock_guard guard{touch_state->mutex};
+    std::lock_guard lock{touch_state->mutex};
     if (Settings::values.factor_3d != 0)
         touch_state->touch_x =
             static_cast<float>(framebuffer_x - framebuffer_layout.bottom_screen.left / 2) /
@@ -99,7 +99,7 @@ std::tuple<unsigned, unsigned> Frontend::TouchPressed(unsigned framebuffer_x,
 }
 
 void Frontend::TouchReleased() {
-    std::lock_guard guard{touch_state->mutex};
+    std::lock_guard lock{touch_state->mutex};
     touch_state->touch_pressed = false;
     touch_state->touch_x = 0;
     touch_state->touch_y = 0;
