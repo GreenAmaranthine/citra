@@ -633,7 +633,7 @@ void CopyBlock(VAddr dest_addr, VAddr src_addr, const std::size_t size) {
 void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_process,
                VAddr src_addr, VAddr dest_addr, std::size_t size) {
     auto& page_table{src_process.vm_manager.page_table};
-    std::size_t remaining_siz{size};
+    std::size_t remaining_size{size};
     std::size_t page_index{src_addr >> PAGE_BITS};
     std::size_t page_offset{src_addr & PAGE_MASK};
     while (remaining_size > 0) {
