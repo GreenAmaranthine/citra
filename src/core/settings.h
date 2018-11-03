@@ -182,7 +182,6 @@ struct Values {
     // Audio
     bool enable_audio_stretching;
     std::string output_device;
-    std::string input_device;
 
     // Camera
     std::array<std::string, Service::CAM::NumCameras> camera_name;

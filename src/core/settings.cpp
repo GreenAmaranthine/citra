@@ -77,7 +77,6 @@ void LogSettings() {
     LogSetting("LLE_UsingLLEModules", using_lle_modules);
     LogSetting("Audio_EnableAudioStretching", Settings::values.enable_audio_stretching);
     LogSetting("Audio_OutputDevice", Settings::values.output_device);
-    LogSetting("Audio_InputDevice", Settings::values.input_device);
     using namespace Service::CAM;
     LogSetting("Camera_OuterRightName", Settings::values.camera_name[OuterRightCamera]);
     LogSetting("Camera_OuterRightConfig", Settings::values.camera_config[OuterRightCamera]);
