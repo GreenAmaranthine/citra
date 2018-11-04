@@ -76,11 +76,10 @@ static const std::unordered_map<u64, QStringList> compatibility_database{{
     {0x000400000016E800, {}},                          // PICROSS e6
     {0x00040000001AD600, {}},                          // PICROSS e7
     {0x00040000001CE000, {}},                          // PICROSS e8
-    {0x0004000000130600, {GitHubIssue("citra-emu/citra", 3347)}}, // Photos with Mario
-    {0x0004000000030700,
-     {"Local multiplayer needs DLP", "Needs Nintendo Network support"}}, // Mario Kart 7
-    {0x0004000000143D00, {}},                                            // 2048
-    {0x0004000000187E00, {}},                                            // Picross 3D: Round 2
+    {0x0004000000130600, {GitHubIssue("citra-emu/citra", 3347)}},          // Photos with Mario
+    {0x0004000000030700, {"Needs DLP", "Needs Nintendo Network support"}}, // Mario Kart 7
+    {0x0004000000143D00, {}},                                              // 2048
+    {0x0004000000187E00, {}},                                              // Picross 3D: Round 2
     {0x00040000000EE000, {}}, // Super Smash Bros. for Nintendo 3DS
     {0x0004000000125600, {}}, // The Legend of Zelda: Majora's Mask 3D
     {0x000400000010C000, {}}, // Kirby: Triple Deluxe
@@ -99,8 +98,8 @@ static const std::unordered_map<u64, QStringList> compatibility_database{{
     {0x0004001000022700,
      {GitHubIssue("citra-emu/citra", 3897), GitHubIssue("citra-emu/citra", 3903)}}, // Mii Maker
     {0x0004001000022100, {"Needs DLP"}},                                            // Download Play
-    {0x0004001000022300, {}},                              // Health and Safety Information
-    {0x000400100002C100, {"Citra crashes when stopping"}}, // Nintendo Network ID Settings
+    {0x0004001000022300, {}},                                 // Health and Safety Information
+    {0x000400100002C100, {"Needs Nintendo Network support"}}, // Nintendo Network ID Settings
 
     // EUR (Demos)
     {0x00040002001CB201, {}}, // Captain Toad Demo
@@ -124,13 +123,12 @@ static const std::unordered_map<u64, QStringList> compatibility_database{{
     {0x000400000008C300,
      {GitHubIssue("citra-valentin/citra", 277), GitHubIssue("citra-emu/citra", 4320),
       "Exchange Miis or Other Items - The name of the island flashes",
-      "Scan QR Code - Preparing camera never ends"}}, // Tomodachi Life
-    {0x0004000000030800,
-     {"Local multiplayer needs DLP", "Needs Nintendo Network support"}}, // Mario Kart 7
-    {0x0004000000139000, {}},                                            // 2048
+      "Scan QR Code - Preparing camera never ends"}},                      // Tomodachi Life
+    {0x0004000000030800, {"Needs DLP", "Needs Nintendo Network support"}}, // Mario Kart 7
+    {0x0004000000139000, {}},                                              // 2048
     {0x00040000001B2700, {}},                                   // YO-KAI WATCH 2: Psychic Specters
     {0x0004000000112600, {}},                                   // Cut the Rope: Triple Treat
-    {0x00040000001B8700, {}},                                   // Minecraft
+    {0x00040000001B8700, {"Softlock when saving"}},             // Minecraft
     {0x0004000000062300, {"Multiplayer needs deprecated UDS"}}, // Sonic Generations
     {0x0004000000126300, {}},                                   // MONSTER HUNTER 4 ULTIMATE
     {0x00040000001D1900, {GitHubIssue("citra-emu/citra", 4330)}}, // Luigi's Mansion

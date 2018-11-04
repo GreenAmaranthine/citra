@@ -237,15 +237,16 @@ private:
 
     std::unique_ptr<ResourceLimitList> resource_limits;
     std::atomic<u32> next_object_id{};
+
+    std::unique_ptr<ThreadManager> thread_manager;
+    std::unique_ptr<TimerManager> timer_manager;
+
     u32 next_process_id{};
 
     // Lists all processes that exist in the current session.
     std::vector<SharedPtr<Process>> process_list;
 
     SharedPtr<Process> current_process;
-
-    std::unique_ptr<ThreadManager> thread_manager;
-    std::unique_ptr<TimerManager> timer_manager;
 
     std::unique_ptr<ConfigMem::Handler> config_mem_handler;
     std::unique_ptr<SharedPage::Handler> shared_page_handler;
