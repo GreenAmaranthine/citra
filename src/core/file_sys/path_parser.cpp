@@ -21,7 +21,8 @@ PathParser::PathParser(const Path& path) {
         return;
     }
     // Filter out invalid characters for the host system.
-    // Although some of these characters are valid on a real console, they are unlikely to be used by games.
+    // Although some of these characters are valid on a real console, they are unlikely to be used
+    // by games.
     if (std::find_if(path_string.begin(), path_string.end(), [](char c) {
             static const std::set<char> invalid_chars{'<', '>', '\\', '|', ':', '\"', '*', '?'};
             return invalid_chars.find(c) != invalid_chars.end();

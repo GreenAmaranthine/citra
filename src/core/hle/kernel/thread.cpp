@@ -37,8 +37,8 @@ u32 ThreadManager::NewThreadId() {
 }
 
 Thread::Thread(KernelSystem& kernel)
-    : WaitObject{kernel}, context{Core::CPU().NewContext()}, thread_manager{
-                                                                 kernel.GetThreadManager()} {}
+    : WaitObject{kernel}, context{kernel.Parent().CPU().NewContext()},
+      thread_manager{kernel.GetThreadManager()} {}
 Thread::~Thread() {}
 
 Thread* ThreadManager::GetCurrentThread() const {
@@ -87,7 +87,7 @@ void ThreadManager::SwitchContext(Thread* new_thread) {
     // Save context for previous thread
     if (previous_thread) {
         previous_thread->last_running_ticks = timing.GetTicks();
-        Core::CPU().SaveContext(previous_thread->context);
+        system.CPU().SaveContext(previous_thread->context);
         if (previous_thread->status == ThreadStatus::Running) {
             // This is only the case when a reschedule is triggered without the current thread
             // yielding execution (i.e. an event triggered, system core time-sliced, etc)

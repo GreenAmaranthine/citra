@@ -12,14 +12,18 @@
 #include <QLineEdit>
 #include "core/cheat_core.h"
 
-class QComboBox;
-class QLineEdit;
-class QWidget;
+namespace Core {
+class System;
+}
 
 namespace Ui {
 class CheatDialog;
 class NewCheatDialog;
 } // namespace Ui
+
+class QComboBox;
+class QLineEdit;
+class QWidget;
 
 struct FoundItem {
     QString address;
@@ -30,16 +34,12 @@ class CheatDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit CheatDialog(QWidget* parent = nullptr);
+    explicit CheatDialog(Core::System& system, QWidget* parent = nullptr);
     ~CheatDialog();
+
     void UpdateTitleID();
 
 private:
-    std::unique_ptr<Ui::CheatDialog> ui;
-    int current_row{-1};
-    bool selection_changing{};
-    std::vector<CheatCore::Cheat> cheats;
-    std::vector<FoundItem> previous_found;
     void LoadCheats();
     void OnAddCheat();
     void OnSave();
@@ -53,14 +53,24 @@ private:
     void OnValueTypeChanged(int index);
     void OnHexCheckedChanged(bool checked);
     void LoadTable(const std::vector<FoundItem>& items);
-    template <typename T>
-    std::vector<FoundItem> FirstSearch(const T value, std::function<bool(int, int, int)> comparer);
-    template <typename T>
-    std::vector<FoundItem> NextSearch(const T value, std::function<bool(int, int, int)> comparer);
     bool Equals(int a, int b, int c);
     bool LessThan(int a, int b, int c);
     bool GreaterThan(int a, int b, int c);
     bool Between(int min, int max, int value);
+
+    template <typename T>
+    std::vector<FoundItem> FirstSearch(const T value, std::function<bool(int, int, int)> comparer);
+
+    template <typename T>
+    std::vector<FoundItem> NextSearch(const T value, std::function<bool(int, int, int)> comparer);
+
+    std::unique_ptr<Ui::CheatDialog> ui;
+    int current_row{-1};
+    bool selection_changing{};
+    std::vector<CheatCore::Cheat> cheats;
+    std::vector<FoundItem> previous_found;
+
+    Core::System& system;
 };
 
 class NewCheatDialog : public QDialog {
@@ -89,15 +99,20 @@ class ModifyAddressDialog : public QDialog {
     Q_OBJECT
 
 public:
-    ModifyAddressDialog(QWidget* parent, const QString& address, int type, const QString& value);
+    explicit ModifyAddressDialog(Core::System& system, QWidget* parent, const QString& address,
+                                 int type, const QString& value);
     ~ModifyAddressDialog();
 
-    QString return_value;
+    QString GetReturnValue() const {
+        return return_value;
+    }
 
 private:
+    void OnOkClicked();
+
     QLineEdit* address_block;
     QLineEdit* value_block;
     QComboBox* type_select;
-
-    void OnOkClicked();
+    QString return_value;
+    Core::System& system;
 };

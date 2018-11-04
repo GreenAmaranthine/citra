@@ -32,13 +32,11 @@ public:
      */
     void run() override;
 
-    /**
-     * Requests for the emulation thread to stop running
-     */
-    void RequestStop() {
+    /// Requests for the emulation thread to stop running
+    void RequestStop(Core::System& system) {
         stop_run = true;
-        Core::System::GetInstance().SetRunning(false);
-    };
+        system.SetRunning(false);
+    }
 
 private:
     bool running{};

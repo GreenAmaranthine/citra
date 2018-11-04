@@ -156,7 +156,7 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     sleep_mode_enabled = false;
     HW::Init();
     Service::Init(*this);
-    cheat_manager = std::make_unique<CheatCore::CheatManager>(*timing);
+    cheat_manager = std::make_unique<CheatCore::CheatManager>(*this);
     ResultStatus result{VideoCore::Init(*this)};
     if (result != ResultStatus::Success)
         return result;

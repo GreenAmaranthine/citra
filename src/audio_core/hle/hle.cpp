@@ -89,7 +89,7 @@ private:
 
 DspHle::Impl::Impl(DspHle& parent_, Core::System& system_) : parent{parent_}, system{system_} {
     dsp_memory.raw_memory.fill(0);
-    Core::Timing& timing{Core::System::GetInstance().CoreTiming()};
+    Core::Timing& timing{system.CoreTiming()};
     tick_event = timing.RegisterEvent(
         "DSP Tick Event", [this](u64, s64 cycles_late) { AudioTickCallback(cycles_late); });
     timing.ScheduleEvent(audio_frame_ticks, tick_event);
@@ -305,12 +305,11 @@ bool DspHle::Impl::Tick() {
 }
 
 bool DspHle::Impl::IsOutputAllowed() {
-    if (!Core::System::GetInstance().IsSleepModeEnabled())
+    if (!system.IsSleepModeEnabled())
         return true;
     else
         return titles_output_allowed_shell_closed.count(
-                   Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id) ==
-                   1 &&
+                   system.Kernel().GetCurrentProcess()->codeset->program_id) == 1 &&
                Settings::values.headphones_connected;
 }
 
@@ -323,7 +322,7 @@ void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
             service->SignalInterrupt(InterruptType::Pipe, DspPipe::Binary);
         }
     // Reschedule recurrent event
-    Core::Timing& timing = Core::System::GetInstance().CoreTiming();
+    Core::Timing& timing{system.CoreTiming()};
     timing.ScheduleEvent(audio_frame_ticks - cycles_late, tick_event);
 }
 

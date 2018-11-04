@@ -8,6 +8,10 @@
 #include "common/string_util.h"
 #include "core/core_timing.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace CheatCore {
 
 enum class CheatType {
@@ -88,7 +92,7 @@ public:
         this->enabled = enabled;
     }
 
-    void Execute();
+    void Execute(Core::System& system);
     std::string ToString();
 
     bool GetEnabled() const {
@@ -123,7 +127,7 @@ private:
 
 class CheatManager {
 public:
-    explicit CheatManager(Core::Timing& timing);
+    explicit CheatManager(Core::System& system);
     ~CheatManager();
 
     void Run();
@@ -136,9 +140,9 @@ private:
     std::vector<Cheat> cheats_list;
     std::mutex cheats_list_mutex;
     Core::TimingEventType* tick_event;
-    Core::Timing& timing;
+    Core::System& system;
 };
 
-std::vector<Cheat> GetCheatsFromFile();
+std::vector<Cheat> GetCheatsFromFile(Core::System& system);
 
 } // namespace CheatCore

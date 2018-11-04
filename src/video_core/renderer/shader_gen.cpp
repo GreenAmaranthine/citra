@@ -663,9 +663,9 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
         // Bump mapping is enabled using a tangent map
         out += "vec3 surface_tangent = " + Perturbation() + ";\n";
         // Mathematically, recomputing Z-component of the tangent vector won't affect the relevant
-        // computation below, which is also confirmed on a real console. So we don't bother recomputing here
-        // even if 'renorm' is enabled.
-        // The normal vector isn't perturbed by the tangent map and is just a unit vector.
+        // computation below, which is also confirmed on a real console. So we don't bother
+        // recomputing here even if 'renorm' is enabled. The normal vector isn't perturbed by the
+        // tangent map and is just a unit vector.
         out += "vec3 surface_normal = vec3(0.0, 0.0, 1.0);\n";
     } else {
         // No bump mapping - surface local normal and tangent are just unit vectors

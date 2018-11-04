@@ -794,9 +794,10 @@ static ResultCode SetThreadPriority(Handle handle, u32 priority) {
 
 /// Create a mutex
 static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
-    auto& kernel{Core::System::GetInstance().Kernel()};
+    auto& system{Core::System::GetInstance()};
+    auto& kernel{system.Kernel()};
     auto mutex{kernel.CreateMutex(initial_locked != 0)};
-    mutex->name = fmt::format("mutex-{:08x}", Core::CPU().GetReg(14));
+    mutex->name = fmt::format("mutex-{:08x}", system.CPU().GetReg(14));
     *out_handle = kernel.GetCurrentProcess()->handle_table.Create(std::move(mutex));
     LOG_TRACE(Kernel_SVC, "initial_locked={}, created handle: 0x{:08X}",
               initial_locked ? "true" : "false", *out_handle);
@@ -943,9 +944,10 @@ static ResultCode ClearEvent(Handle handle) {
 
 /// Creates a timer
 static ResultCode CreateTimer(Handle* out_handle, u32 reset_type) {
-    auto& kernel{Core::System::GetInstance().Kernel()};
+    auto& system{Core::System::GetInstance()};
+    auto& kernel{system.Kernel()};
     auto timer{kernel.CreateTimer(static_cast<ResetType>(reset_type),
-                                  fmt ::format("timer-{:08x}", Core::CPU().GetReg(14)))};
+                                  fmt::format("timer-{:08x}", system.CPU().GetReg(14)))};
     *out_handle = kernel.GetCurrentProcess()->handle_table.Create(std::move(timer));
     LOG_TRACE(Kernel_SVC, "reset_type=0x{:08X}, created handle=0x{:08X}", reset_type, *out_handle);
     return RESULT_SUCCESS;
@@ -1381,7 +1383,7 @@ void CallSVC(u32 immediate) {
     DEBUG_ASSERT_MSG(Core::System::GetInstance().Kernel().GetCurrentProcess()->status ==
                          ProcessStatus::Running,
                      "Running threads from exiting processes is unimplemented");
-    const FunctionDef* info{GetSVCInfo(immediate)};
+    const auto info{GetSVCInfo(immediate)};
     if (info)
         if (info->func)
             info->func();

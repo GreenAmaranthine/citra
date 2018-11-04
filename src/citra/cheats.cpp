@@ -24,8 +24,8 @@
 #include "core/memory.h"
 #include "ui_cheats.h"
 
-CheatDialog::CheatDialog(QWidget* parent)
-    : QDialog{parent}, ui{std::make_unique<Ui::CheatDialog>()} {
+CheatDialog::CheatDialog(Core::System& system, QWidget* parent)
+    : QDialog{parent}, ui{std::make_unique<Ui::CheatDialog>()}, system{system} {
     setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint);
     ui->setupUi(this);
     ui->tableCheats->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -35,9 +35,8 @@ CheatDialog::CheatDialog(QWidget* parent)
     ui->tableCheats->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
     ui->labelTitle->setText(
         QString("Title ID: %1")
-            .arg(QString::fromStdString(fmt::format(
-                "{:016X}",
-                Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id))));
+            .arg(QString::fromStdString(
+                fmt::format("{:016X}", system.Kernel().GetCurrentProcess()->codeset->program_id))));
     ui->lblTo->hide();
     ui->txtSearchTo->hide();
     ui->tableFound->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -57,11 +56,11 @@ CheatDialog::CheatDialog(QWidget* parent)
     connect(ui->chkHex, &QCheckBox::clicked, this,
             [this](bool state) { OnHexCheckedChanged(state); });
     connect(ui->tableFound, &QTableWidget::doubleClicked, this, [&](QModelIndex i) {
-        ModifyAddressDialog* dialog{new ModifyAddressDialog(
-            this, ui->tableFound->item(i.row(), 0)->text(), ui->cbValueType->currentIndex(),
-            ui->tableFound->item(i.row(), 1)->text())};
+        auto dialog{new ModifyAddressDialog(system, this, ui->tableFound->item(i.row(), 0)->text(),
+                                            ui->cbValueType->currentIndex(),
+                                            ui->tableFound->item(i.row(), 1)->text())};
         dialog->exec();
-        QString rv{dialog->return_value};
+        const auto rv{dialog->GetReturnValue()};
         ui->tableFound->item(i.row(), 1)->setText(rv);
     });
     LoadCheats();
@@ -70,7 +69,6 @@ CheatDialog::CheatDialog(QWidget* parent)
 CheatDialog::~CheatDialog() {}
 
 void CheatDialog::UpdateTitleID() {
-    auto& system{Core::System::GetInstance()};
     system.CheatManager().RefreshCheats();
     ui->labelTitle->setText(
         QString("Title ID: %1")
@@ -94,10 +92,10 @@ void CheatDialog::UpdateTitleID() {
 }
 
 void CheatDialog::LoadCheats() {
-    cheats = CheatCore::GetCheatsFromFile();
+    cheats = CheatCore::GetCheatsFromFile(system);
     ui->tableCheats->setRowCount(static_cast<int>(cheats.size()));
     for (int i{}; i < static_cast<int>(cheats.size()); i++) {
-        QCheckBox* enabled{new QCheckBox()};
+        auto enabled{new QCheckBox()};
         enabled->setChecked(cheats[i].GetEnabled());
         enabled->setStyleSheet("margin-left:7px;");
         ui->tableCheats->setItem(i, 0, new QTableWidgetItem());
@@ -114,17 +112,16 @@ void CheatDialog::OnSave() {
     bool error{};
     QString error_message{"The following cheats are empty:\n\n%1"};
     QStringList empty_cheat_names;
-    for (auto& cheat : cheats) {
+    for (auto& cheat : cheats)
         if (cheat.GetCheatLines().empty()) {
             empty_cheat_names.append(QString::fromStdString(cheat.GetName()));
             error = true;
         }
-    }
     if (error) {
         QMessageBox::critical(this, "Error", error_message.arg(empty_cheat_names.join('\n')));
         return;
     }
-    Core::System::GetInstance().CheatManager().Save(cheats);
+    system.CheatManager().Save(cheats);
 }
 
 void CheatDialog::OnClose() {
@@ -153,24 +150,24 @@ void CheatDialog::OnRowSelected(int row, int column) {
 void CheatDialog::OnLinesChanged() {
     if (selection_changing)
         return;
-    QString lines{ui->textLines->toPlainText()};
+    auto lines{ui->textLines->toPlainText()};
     std::vector<std::string> lines_vec;
     Common::SplitString(lines.toStdString(), '\n', lines_vec);
-    auto new_lines{std::vector<CheatCore::CheatLine>()};
+    std::vector<CheatCore::CheatLine> new_lines;
     for (const auto& line : lines_vec)
         new_lines.emplace_back(line);
     cheats[current_row].SetCheatLines(new_lines);
 }
 
 void CheatDialog::OnCheckChanged(int state) {
-    QCheckBox* checkbox{qobject_cast<QCheckBox*>(sender())};
+    auto checkbox{qobject_cast<QCheckBox*>(sender())};
     int row{static_cast<int>(checkbox->property("row").toInt())};
     cheats[row].SetEnabled(static_cast<bool>(state));
 }
 
 void CheatDialog::OnDelete() {
-    QItemSelectionModel* selectionModel{ui->tableCheats->selectionModel()};
-    QModelIndexList selected{selectionModel->selectedRows()};
+    auto selectionModel{ui->tableCheats->selectionModel()};
+    auto selected{selectionModel->selectedRows()};
     std::vector<int> rows;
     for (int i{selected.count() - 1}; i >= 0; i--) {
         QModelIndex index{selected.at(i)};
@@ -192,7 +189,7 @@ void CheatDialog::OnAddCheat() {
     auto result{dialog.GetReturnValue()};
     cheats.push_back(result);
     int new_cheat_index{static_cast<int>(cheats.size() - 1)};
-    QCheckBox* enabled{new QCheckBox()};
+    auto enabled{new QCheckBox()};
     ui->tableCheats->setRowCount(static_cast<int>(cheats.size()));
     enabled->setCheckState(Qt::CheckState::Unchecked);
     enabled->setStyleSheet("margin-left:7px;");
@@ -218,8 +215,7 @@ NewCheatDialog::NewCheatDialog(QWidget* parent)
     name_label->setText("Name: ");
     name_panel->addWidget(name_label);
     name_panel->addWidget(name_block);
-    QDialogButtonBox* button_box{
-        new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel)};
+    auto button_box{new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel)};
     connect(button_box, &QDialogButtonBox::accepted, this, [&]() {
         std::string name{name_block->text().toStdString()};
         if (Common::Trim(name).length() > 0) {
@@ -484,9 +480,9 @@ bool CheatDialog::Between(int value, int min, int max) {
     return min < value && value < max;
 }
 
-ModifyAddressDialog::ModifyAddressDialog(QWidget* parent, const QString& address, int type,
-                                         const QString& value)
-    : QDialog{parent, Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint} {
+ModifyAddressDialog::ModifyAddressDialog(Core::System& system, QWidget* parent,
+                                         const QString& address, int type, const QString& value)
+    : QDialog{parent, Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint}, system{system} {
     setWindowTitle("Modify Address");
     setSizeGripEnabled(false);
     QVBoxLayout* main_layout{new QVBoxLayout(this)};
@@ -540,33 +536,33 @@ void ModifyAddressDialog::OnOkClicked() {
     case 0: { // u32
         u32 value{new_value.toUInt(nullptr, 10)};
         Memory::Write32(address, value);
-        Core::CPU().InvalidateCacheRange(address, sizeof(u32));
+        system.CPU().InvalidateCacheRange(address, sizeof(u32));
         break;
     }
     case 1: { // u16
         u16 value{new_value.toUShort(nullptr, 10)};
         Memory::Write16(address, value);
-        Core::CPU().InvalidateCacheRange(address, sizeof(u16));
+        system.CPU().InvalidateCacheRange(address, sizeof(u16));
         break;
     }
     case 2: { // u8
         u8 value{static_cast<u8>(new_value.toUShort(nullptr, 10))};
         Memory::Write8(address, value);
-        Core::CPU().InvalidateCacheRange(address, sizeof(u8));
+        system.CPU().InvalidateCacheRange(address, sizeof(u8));
         break;
     }
     case 3: { // float
         float value{new_value.toFloat()};
         u32 converted{IeeeFloatToHex(value).toUInt(nullptr, 16)};
         Memory::Write32(address, converted);
-        Core::CPU().InvalidateCacheRange(address, sizeof(u32));
+        system.CPU().InvalidateCacheRange(address, sizeof(u32));
         break;
     }
     case 4: { // double
         double value{new_value.toDouble()};
         u64 converted{DoubleToHexString(value).toULongLong(nullptr, 10)};
         Memory::Write64(address, converted);
-        Core::CPU().InvalidateCacheRange(address, sizeof(u64));
+        system.CPU().InvalidateCacheRange(address, sizeof(u64));
         break;
     }
     }

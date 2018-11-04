@@ -14,15 +14,15 @@
 
 namespace CheatCore {
 
-static std::string GetFilePath() {
+static std::string GetFilePath(Core::System& system) {
     u64 program_id{};
     Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id);
     return fmt::format("{}{:016X}.txt", FileUtil::GetUserPath(FileUtil::UserPath::CheatsDir),
                        program_id);
 }
 
-std::vector<Cheat> GetCheatsFromFile() {
-    std::string file_path{GetFilePath()};
+std::vector<Cheat> GetCheatsFromFile(Core::System& system) {
+    std::string file_path{GetFilePath(system)};
     std::string contents;
     FileUtil::ReadFileToString(true, file_path.c_str(), contents);
     std::vector<std::string> lines;
@@ -59,11 +59,12 @@ std::vector<Cheat> GetCheatsFromFile() {
     return cheats;
 }
 
-CheatManager::CheatManager(Core::Timing& timing) : timing{timing} {
+CheatManager::CheatManager(Core::System& system) : system{system} {
     std::string cheats_dir{FileUtil::GetUserPath(FileUtil::UserPath::UserDir) + "cheats"};
     if (!FileUtil::Exists(cheats_dir))
         FileUtil::CreateDir(cheats_dir);
     RefreshCheats();
+    auto& timing{system.CoreTiming()};
     tick_event = timing.RegisterEvent("CheatManager Tick Event", [this](u64, int cycles_late) {
         CheatTickCallback(cycles_late);
     });
@@ -71,19 +72,19 @@ CheatManager::CheatManager(Core::Timing& timing) : timing{timing} {
 }
 
 CheatManager::~CheatManager() {
-    timing.UnscheduleEvent(tick_event, 0);
+    system.CoreTiming().UnscheduleEvent(tick_event, 0);
 }
 
 void CheatManager::CheatTickCallback(int cycles_late) {
     Run();
-    timing.ScheduleEvent(BASE_CLOCK_RATE_ARM11 - cycles_late, tick_event);
+    system.CoreTiming().ScheduleEvent(BASE_CLOCK_RATE_ARM11 - cycles_late, tick_event);
 }
 
 void CheatManager::RefreshCheats() {
-    std::string file_path{GetFilePath()};
+    std::string file_path{GetFilePath(system)};
     if (!FileUtil::Exists(file_path))
         FileUtil::CreateEmptyFile(file_path);
-    cheats_list = GetCheatsFromFile();
+    cheats_list = GetCheatsFromFile(system);
 }
 
 void CheatManager::Save(std::vector<Cheat> cheats) {
@@ -91,7 +92,7 @@ void CheatManager::Save(std::vector<Cheat> cheats) {
         std::lock_guard lock{cheats_list_mutex};
         cheats_list = cheats;
     }
-    std::string file_path{GetFilePath()};
+    std::string file_path{GetFilePath(system)};
     FileUtil::IOFile file{file_path, "w+"};
     for (auto& cheat : cheats) {
         std::string str{cheat.ToString()};
@@ -102,10 +103,10 @@ void CheatManager::Save(std::vector<Cheat> cheats) {
 void CheatManager::Run() {
     std::lock_guard lock{cheats_list_mutex};
     for (auto& cheat : cheats_list)
-        cheat.Execute();
+        cheat.Execute(system);
 }
 
-void Cheat::Execute() {
+void Cheat::Execute(Core::System& system) {
     if (!enabled)
         return;
     u32 addr{};
@@ -145,19 +146,19 @@ void Cheat::Execute() {
         case CheatType::Write32: { // 0XXXXXXX YYYYYYYY   word[XXXXXXX+offset] = YYYYYYYY
             addr = line.address + offset;
             Memory::Write32(addr, val);
-            Core::CPU().InvalidateCacheRange(addr, sizeof(u32));
+            system.CPU().InvalidateCacheRange(addr, sizeof(u32));
             break;
         }
         case CheatType::Write16: { // 1XXXXXXX 0000YYYY   half[XXXXXXX+offset] = YYYY
             addr = line.address + offset;
             Memory::Write16(addr, static_cast<u16>(val));
-            Core::CPU().InvalidateCacheRange(addr, sizeof(u16));
+            system.CPU().InvalidateCacheRange(addr, sizeof(u16));
             break;
         }
         case CheatType::Write8: { // 2XXXXXXX 000000YY   byte[XXXXXXX+offset] = YY
             addr = line.address + offset;
             Memory::Write8(addr, static_cast<u8>(val));
-            Core::CPU().InvalidateCacheRange(addr, sizeof(u8));
+            system.CPU().InvalidateCacheRange(addr, sizeof(u8));
             break;
         }
         case CheatType::GreaterThan32: { // 3XXXXXXX YYYYYYYY   IF YYYYYYYY > word[XXXXXXX]

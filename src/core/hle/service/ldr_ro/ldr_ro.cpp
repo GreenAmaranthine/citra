@@ -128,7 +128,7 @@ void RO::Initialize(Kernel::HLERequestContext& ctx) {
         //     There is also a chance that another issue causes the app passing wrong arguments.
         LOG_WARNING(Service_LDR, "crs_buffer_ptr == crs_address (0x{:08X})", crs_address);
     }
-    CROHelper crs{crs_address};
+    CROHelper crs{system, crs_address};
     crs.InitCRS();
     result = crs.Rebase(0, crs_size, 0, 0, 0, 0, true);
     if (result.IsError()) {
@@ -274,7 +274,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
         //     There is also a chance that this case is just prohibited.
         LOG_WARNING(Service_LDR, "cro_buffer_ptr == cro_address (0x{:08X})", cro_address);
     }
-    CROHelper cro{cro_address};
+    CROHelper cro{system, cro_address};
     result = cro.VerifyHash(cro_size, crr_address);
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error verifying CRO in CRR {:08X}", result.raw);
@@ -330,7 +330,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
             return;
         }
     }
-    Core::CPU().InvalidateCacheRange(cro_address, cro_size);
+    system.CPU().InvalidateCacheRange(cro_address, cro_size);
     LOG_INFO(Service_LDR, "CRO {} loaded at 0x{:08X}, fixed_end=0x{:08X}", cro.ModuleName(),
              cro_address, cro_address + fix_size);
     rb.Push(RESULT_SUCCESS, fix_size);
@@ -344,7 +344,7 @@ void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
     auto process{rp.PopObject<Kernel::Process>()};
     LOG_DEBUG(Service_LDR, "cro_address=0x{:08X}, zero={}, cro_buffer_ptr=0x{:08X}", cro_address,
               zero, cro_buffer_ptr);
-    CROHelper cro{cro_address};
+    CROHelper cro{system, cro_address};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     ClientSlot* slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs == 0) {
@@ -386,12 +386,11 @@ void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
     // TODO: verify the behaviour when buffer_ptr == address
     if (cro_address != cro_buffer_ptr) {
         result = process->vm_manager.UnmapRange(cro_address, fixed_size);
-        if (result.IsError()) {
+        if (result.IsError())
             LOG_ERROR(Service_LDR, "Error unmapping CRO {:08X}", result.raw);
-        }
         slot->memory_synchronizer.RemoveMemoryBlock(cro_address, cro_buffer_ptr);
     }
-    Core::CPU().InvalidateCacheRange(cro_address, fixed_size);
+    system.CPU().InvalidateCacheRange(cro_address, fixed_size);
     rb.Push(result);
 }
 
@@ -400,7 +399,7 @@ void RO::LinkCRO(Kernel::HLERequestContext& ctx) {
     VAddr cro_address{rp.Pop<u32>()};
     auto process{rp.PopObject<Kernel::Process>()};
     LOG_DEBUG(Service_LDR, "cro_address=0x{:08X}", cro_address);
-    CROHelper cro{cro_address};
+    CROHelper cro{system, cro_address};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     ClientSlot* slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs == 0) {
@@ -432,7 +431,7 @@ void RO::UnlinkCRO(Kernel::HLERequestContext& ctx) {
     VAddr cro_address{rp.Pop<u32>()};
     auto process{rp.PopObject<Kernel::Process>()};
     LOG_DEBUG(Service_LDR, "cro_address=0x{:08X}", cro_address);
-    CROHelper cro{cro_address};
+    CROHelper cro{system, cro_address};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     ClientSlot* slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs == 0) {
@@ -471,23 +470,22 @@ void RO::Shutdown(Kernel::HLERequestContext& ctx) {
         rb.Push(ERROR_NOT_INITIALIZED);
         return;
     }
-    CROHelper crs{slot->loaded_crs};
+    CROHelper crs{system, slot->loaded_crs};
     crs.Unrebase(true);
     slot->memory_synchronizer.SynchronizeOriginalMemory(*process);
     ResultCode result{RESULT_SUCCESS};
     // TODO: verify the behaviour when buffer_ptr == address
     if (slot->loaded_crs != crs_buffer_ptr) {
         result = process->vm_manager.UnmapRange(slot->loaded_crs, crs.GetFileSize());
-        if (result.IsError()) {
+        if (result.IsError())
             LOG_ERROR(Service_LDR, "Error unmapping CRS {:08X}", result.raw);
-        }
         slot->memory_synchronizer.RemoveMemoryBlock(slot->loaded_crs, crs_buffer_ptr);
     }
     slot->loaded_crs = 0;
     rb.Push(result);
 }
 
-RO::RO() : ServiceFramework{"ldr:ro", 2} {
+RO::RO(Core::System& system) : ServiceFramework{"ldr:ro", 2}, system{system} {
     static const FunctionInfo functions[]{
         {0x000100C2, &RO::Initialize, "Initialize"},
         {0x00020082, &RO::LoadCRR, "LoadCRR"},
@@ -503,8 +501,7 @@ RO::RO() : ServiceFramework{"ldr:ro", 2} {
 }
 
 void InstallInterfaces(Core::System& system) {
-    auto& service_manager{system.ServiceManager()};
-    std::make_shared<RO>()->InstallAsService(service_manager);
+    std::make_shared<RO>(system)->InstallAsService(system.ServiceManager());
 }
 
 } // namespace Service::LDR

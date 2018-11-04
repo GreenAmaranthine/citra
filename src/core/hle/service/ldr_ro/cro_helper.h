@@ -11,6 +11,10 @@
 #include "core/hle/result.h"
 #include "core/memory.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Service::LDR {
 
 // GCC versions < 5.0 don't implement std::is_trivially_copyable.
@@ -29,14 +33,15 @@ namespace Service::LDR {
     static_assert(sizeof(name) == (size), "Unexpected struct size for CRO structure " #name)
 #endif
 
-static constexpr u32 CRO_HEADER_SIZE{0x138};
-static constexpr u32 CRO_HASH_SIZE{0x80};
+constexpr u32 CRO_HEADER_SIZE{0x138};
+constexpr u32 CRO_HASH_SIZE{0x80};
 
 /// Represents a loaded module (CRO) with interfaces manipulating it.
 class CROHelper final {
 public:
     // TODO: pass in the process handle for memory access
-    explicit CROHelper(VAddr cro_address) : module_address{cro_address} {}
+    explicit CROHelper(Core::System& system, VAddr cro_address)
+        : system{system}, module_address{cro_address} {}
 
     std::string ModuleName() const {
         return Memory::ReadCString(GetField(ModuleNameOffset), GetField(ModuleNameSize));
@@ -143,7 +148,8 @@ public:
     std::tuple<VAddr, u32> GetExecutablePages() const;
 
 private:
-    const VAddr module_address; ///< the virtual address of this module
+    Core::System& system;
+    const VAddr module_address; ///< The virtual address of this module
 
     /**
      * Each item in this enum represents a u32 field in the header begin from address+0x80,
@@ -466,10 +472,11 @@ private:
      *         otherwise error code of the last iteration.
      */
     template <typename FunctionObject>
-    static ResultCode ForEachAutoLinkCRO(VAddr crs_address, FunctionObject func) {
+    static ResultCode ForEachAutoLinkCRO(Core::System& system, VAddr crs_address,
+                                         FunctionObject func) {
         VAddr current = crs_address;
         while (current != 0) {
-            CROHelper cro{current};
+            CROHelper cro{system, current};
             CASCADE_RESULT(bool next, func(cro));
             if (!next)
                 break;

@@ -7,6 +7,10 @@
 #include <memory>
 #include <QDialog>
 
+namespace Core {
+class System;
+}
+
 namespace Ui {
 class ControlPanel;
 } // namespace Ui
@@ -15,8 +19,9 @@ class ControlPanel : public QDialog {
     Q_OBJECT
 
 public:
-    explicit ControlPanel(QWidget* parent = nullptr);
+    explicit ControlPanel(Core::System& system, QWidget* parent = nullptr);
     ~ControlPanel();
+
     void Update3D();
     void UpdateNetwork();
 

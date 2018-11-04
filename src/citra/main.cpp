@@ -659,7 +659,7 @@ void GMainWindow::BootApplication(const std::string& filename) {
 
 void GMainWindow::ShutdownApplication() {
     OnStopRecordingPlayback();
-    emu_thread->RequestStop();
+    emu_thread->RequestStop(system);
 
     // Frame advancing must be cancelled in order to release the emu thread from waiting
     system.frame_limiter.SetFrameAdvancing(false);
@@ -1197,13 +1197,13 @@ void GMainWindow::OnOpenConfiguration() {
 
 void GMainWindow::OnCheats() {
     if (!cheats_window)
-        cheats_window = std::make_shared<CheatDialog>(this);
+        cheats_window = std::make_shared<CheatDialog>(system, this);
     cheats_window->show();
 }
 
 void GMainWindow::OnControlPanel() {
     if (!control_panel)
-        control_panel = std::make_shared<ControlPanel>(this);
+        control_panel = std::make_shared<ControlPanel>(system, this);
     control_panel->show();
 }
 

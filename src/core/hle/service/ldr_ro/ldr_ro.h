@@ -20,7 +20,7 @@ struct ClientSlot : public Kernel::SessionRequestHandler::SessionDataBase {
 
 class RO final : public ServiceFramework<RO, ClientSlot> {
 public:
-    RO();
+    explicit RO(Core::System& system);
 
 private:
     void Initialize(Kernel::HLERequestContext& ctx);
@@ -33,10 +33,12 @@ private:
         LoadCRO(ctx, link_on_load_bug_fix);
     }
 
-    void UnloadCRO(Kernel::HLERequestContext& self);
-    void LinkCRO(Kernel::HLERequestContext& self);
-    void UnlinkCRO(Kernel::HLERequestContext& self);
-    void Shutdown(Kernel::HLERequestContext& self);
+    void UnloadCRO(Kernel::HLERequestContext& ctx);
+    void LinkCRO(Kernel::HLERequestContext& ctx);
+    void UnlinkCRO(Kernel::HLERequestContext& ctx);
+    void Shutdown(Kernel::HLERequestContext& ctx);
+
+    Core::System& system;
 };
 
 void InstallInterfaces(Core::System& system);
