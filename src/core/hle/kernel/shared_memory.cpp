@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-SharedMemory::SharedMemory(KernelSystem& kernel) : Object(kernel), kernel(kernel) {}
+SharedMemory::SharedMemory(KernelSystem& kernel) : Object{kernel}, kernel{kernel} {}
 SharedMemory::~SharedMemory() {
     for (const auto& interval : holding_memory)
         kernel.GetMemoryRegion(MemoryRegion::System)
@@ -120,7 +120,10 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
     VAddr target_address{address};
     if (base_address == 0 && target_address == 0)
         // Calculate the address at which to map the memory block.
-        target_address = linear_heap_phys_offset + target_process->GetLinearHeapAreaAddress();
+        // Note: even on new firmware versions, the target address is still in the old linear heap
+        // region. This exception is made to keep the shared font compatibility. See
+        // APT:GetSharedFont for detail.
+        target_address = linear_heap_phys_offset + Memory::LINEAR_HEAP_VADDR;
     auto vma{target_process->vm_manager.FindVMA(target_address)};
     if (vma->second.type != VMAType::Free ||
         vma->second.base + vma->second.size < target_address + size) {
@@ -130,7 +133,7 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
         return ERR_INVALID_ADDRESS_STATE;
     }
     // Map the memory block into the target process
-    VAddr interval_target{target_address};
+    auto interval_target{target_address};
     for (const auto& interval : backing_blocks) {
         auto vma{target_process->vm_manager.MapBackingMemory(interval_target, interval.first,
                                                              interval.second, MemoryState::Shared)};
