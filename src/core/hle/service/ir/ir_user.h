@@ -30,7 +30,7 @@ public:
      */
     using SendFunc = std::function<void(const std::vector<u8>& data)>;
 
-    explicit IRDevice(SendFunc send_func);
+    explicit IRDevice(Core::System& system, SendFunc send_func);
     virtual ~IRDevice();
 
     /// Called when connected with console
@@ -45,6 +45,8 @@ public:
 protected:
     /// Sends data to the console. The actual sending method is specified in the constructor
     void Send(const std::vector<u8>& data);
+
+    Core::System& system;
 
 private:
     const SendFunc send_func;

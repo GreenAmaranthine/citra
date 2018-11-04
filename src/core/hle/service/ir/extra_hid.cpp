@@ -63,7 +63,7 @@ enum class ResponseID : u8 {
     ReadCalibrationData = 0x11,
 };
 
-ExtraHID::ExtraHID(SendFunc send_func) : IRDevice{send_func} {
+ExtraHID::ExtraHID(Core::System& system, SendFunc send_func) : IRDevice{system, send_func} {
     LoadInputDevices();
     // The data below was retrieved from a New 3DS
     // TODO: this data is probably writable (via request 3?) and thus should be saved to
@@ -142,11 +142,11 @@ ExtraHID::ExtraHID(SendFunc send_func) : IRDevice{send_func} {
         0xFF,
         0x65,
     }};
-    hid_polling_callback_id = Core::System::GetInstance().CoreTiming().RegisterEvent(
+    hid_polling_callback_id = system.CoreTiming().RegisterEvent(
         "ExtraHID Send HID Status Event", [this](u64, s64 cycles_late) {
             SendHIDStatus();
-            Core::System::GetInstance().CoreTiming().ScheduleEvent(
-                msToCycles(hid_period) - cycles_late, hid_polling_callback_id);
+            system.CoreTiming().ScheduleEvent(msToCycles(hid_period) - cycles_late,
+                                              hid_polling_callback_id);
         });
 }
 
@@ -157,7 +157,7 @@ ExtraHID::~ExtraHID() {
 void ExtraHID::OnConnect() {}
 
 void ExtraHID::OnDisconnect() {
-    Core::System::GetInstance().CoreTiming().UnscheduleEvent(hid_polling_callback_id, 0);
+    system.CoreTiming().UnscheduleEvent(hid_polling_callback_id, 0);
 }
 
 void ExtraHID::HandleConfigureHIDPollingRequest(const std::vector<u8>& request) {
@@ -166,12 +166,11 @@ void ExtraHID::HandleConfigureHIDPollingRequest(const std::vector<u8>& request) 
                   Common::ArrayToString(request.data(), request.size()));
         return;
     }
-auto& timing{Core::System::GetInstance().CoreTiming()};
     // Change HID input polling interval
+    auto& timing{system.CoreTiming()};
     timing.UnscheduleEvent(hid_polling_callback_id, 0);
     hid_period = request[1];
-    timing.ScheduleEvent(msToCycles(hid_period),
-                                                           hid_polling_callback_id);
+    timing.ScheduleEvent(msToCycles(hid_period), hid_polling_callback_id);
 }
 
 void ExtraHID::HandleReadCalibrationDataRequest(const std::vector<u8>& request_buf) {

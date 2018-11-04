@@ -35,12 +35,12 @@ static_assert(sizeof(ExtraHIDResponse) == 6, "HID status response has wrong size
 
 /**
  * An IRDevice emulating Circle Pad Pro or new models additional HID hardware.
- * This device sends periodic updates at a rate configured by the console, and sends calibration data if
- * requested.
+ * This device sends periodic updates at a rate configured by the console, and sends calibration
+ * data if requested.
  */
 class ExtraHID final : public IRDevice {
 public:
-    explicit ExtraHID(SendFunc send_func, Core::System& system);
+    explicit ExtraHID(Core::System& system, SendFunc send_func);
     ~ExtraHID();
 
     void OnConnect() override;

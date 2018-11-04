@@ -372,8 +372,8 @@ IR_USER::IR_USER(Core::System& system) : ServiceFramework{"ir:USER", 1} {
         system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "IR:ConnectionStatusEvent");
     send_event = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "IR:SendEvent");
     receive_event = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "IR:ReceiveEvent");
-    extra_hid =
-        std::make_unique<ExtraHID>([this](const std::vector<u8>& data) { PutToReceive(data); });
+    extra_hid = std::make_unique<ExtraHID>(
+        system, [this](const std::vector<u8>& data) { PutToReceive(data); });
 }
 
 IR_USER::~IR_USER() {
@@ -385,7 +385,8 @@ void IR_USER::ReloadInputDevices() {
     extra_hid->RequestInputDevicesReload();
 }
 
-IRDevice::IRDevice(SendFunc send_func_) : send_func{send_func_} {}
+IRDevice::IRDevice(Core::System& system, SendFunc send_func_)
+    : system{system}, send_func{send_func_} {}
 IRDevice::~IRDevice() = default;
 
 void IRDevice::Send(const std::vector<u8>& data) {
