@@ -1076,7 +1076,7 @@ static ResultCode CreatePort(Handle* server_port, Handle* client_port, VAddr nam
 }
 
 static ResultCode CreateSessionToPort(Handle* out_client_session, Handle client_port_handle) {
-    auto curent_process{Core::System::GetInstance().Kernel().GetCurrentProcess()};
+    auto current_process{Core::System::GetInstance().Kernel().GetCurrentProcess()};
     auto client_port{current_process->handle_table.Get<ClientPort>(client_port_handle)};
     if (!client_port)
         return ERR_INVALID_HANDLE;
