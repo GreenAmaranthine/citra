@@ -165,11 +165,11 @@ public:
     // Gets a reference to the frontend.
     Frontend& GetFrontend();
 
-    /// Gets a refeence to the timing system
-    Timing& CoreTiming();
-
-    /// Gets a refeence to the timing system
+    /// Gets a const reference to the timing system
     const Timing& CoreTiming() const;
+
+    /// Gets a reference to the timing system
+    Timing& CoreTiming();
 
     PerfStats perf_stats;
     FrameLimiter frame_limiter;
@@ -270,10 +270,6 @@ private:
     std::mutex running_mutex;
     std::condition_variable running_cv;
 };
-
-inline Cpu& CPU() {
-    return System::GetInstance().CPU();
-}
 
 inline AudioCore::DspHle& DSP() {
     return System::GetInstance().DSP();

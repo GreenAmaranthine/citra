@@ -80,7 +80,6 @@ add_library(core STATIC
     hle/applets/mint.h
     hle/applets/swkbd.cpp
     hle/applets/swkbd.h
-    hle/function_wrappers.h
     hle/ipc.h
     hle/ipc_helpers.h
     hle/kernel/address_arbiter.cpp
