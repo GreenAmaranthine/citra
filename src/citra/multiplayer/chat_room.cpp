@@ -21,11 +21,13 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include "citra/app_list_p.h"
 #include "citra/multiplayer/chat_room.h"
+#include "citra/multiplayer/client_room.h"
 #include "citra/multiplayer/emojis.h"
 #include "citra/multiplayer/message.h"
 #include "citra/multiplayer/state.h"
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
+#include "core/core.h"
 #include "ui_chat_room.h"
 
 class ChatMessage {
@@ -73,7 +75,9 @@ private:
     QString message;
 };
 
-ChatRoom::ChatRoom(QWidget* parent) : QWidget{parent}, ui{std::make_unique<Ui::ChatRoom>()} {
+ChatRoom::ChatRoom(QWidget* parent)
+    : QWidget{parent}, ui{std::make_unique<Ui::ChatRoom>()},
+      system{static_cast<ClientRoomWindow*>(parentWidget())->system} {
     ui->setupUi(this);
     // Set the item_model for member_view
     enum {
@@ -87,18 +91,16 @@ ChatRoom::ChatRoom(QWidget* parent) : QWidget{parent}, ui{std::make_unique<Ui::C
     member_list->insertColumns(0, COLUMN_COUNT);
     member_list->setHeaderData(COLUMN_NAME, Qt::Horizontal, "Name");
     member_list->setHeaderData(COLUMN_APP, Qt::Horizontal, "Application");
-    ui->chat_history->document()->setMaximumBlockCount(max_chat_lines);
+    constexpr int MaxChatLines{1000};
+    ui->chat_history->document()->setMaximumBlockCount(MaxChatLines);
     // Register the network structs to use in slots and signals
     qRegisterMetaType<Network::ChatEntry>();
     qRegisterMetaType<Network::RoomInformation>();
     qRegisterMetaType<Network::RoomMember::State>();
     // Setup the callbacks for network updates
-    if (auto member{Network::GetRoomMember().lock()}) {
-        member->BindOnChatMessageRecieved(
-            [this](const Network::ChatEntry& chat) { emit ChatReceived(chat); });
-        connect(this, &ChatRoom::ChatReceived, this, &ChatRoom::OnChatReceive);
-    }
-    // TODO: network was not initialized?
+    system.RoomMember().BindOnChatMessageRecieved(
+        [this](const Network::ChatEntry& chat) { emit ChatReceived(chat); });
+    connect(this, &ChatRoom::ChatReceived, this, &ChatRoom::OnChatReceive);
     // Connect all the widgets to the appropriate events
     connect(ui->member_view, &QTreeView::customContextMenuRequested, this,
             &ChatRoom::PopupContextMenu);
@@ -120,28 +122,26 @@ void ChatRoom::AppendStatusMessage(const QString& msg) {
 }
 
 bool ChatRoom::Send(const QString& msg) {
-    if (auto member{Network::GetRoomMember().lock()}) {
-        if (member->GetState() != Network::RoomMember::State::Joined)
-            return false;
-        auto message{msg.toStdString()};
-        if (!ValidateMessage(message))
-            return false;
-        auto nick{member->GetNickname()};
-        Network::ChatEntry chat{nick, message};
-        auto members{member->GetMemberInformation()};
-        auto it{std::find_if(members.begin(), members.end(),
-                             [&chat](const Network::RoomMember::MemberInformation& member) {
-                                 return member.nickname == chat.nickname;
-                             })};
-        if (it == members.end())
-            LOG_INFO(Network, "Cannot find self in the member list when sending a message.");
-        auto member_id{std::distance(members.begin(), it)};
-        ChatMessage m{chat};
-        member->SendChatMessage(message);
-        AppendChatMessage(m.GetMemberChatMessage(member_id));
-        return true;
-    }
-    return false;
+    auto& member{system.RoomMember()};
+    if (member.GetState() != Network::RoomMember::State::Joined)
+        return false;
+    auto message{msg.toStdString()};
+    if (!ValidateMessage(message))
+        return false;
+    auto nick{member.GetNickname()};
+    Network::ChatEntry chat{nick, message};
+    auto members{member.GetMemberInformation()};
+    auto it{std::find_if(members.begin(), members.end(),
+                         [&chat](const Network::RoomMember::MemberInformation& member) {
+                             return member.nickname == chat.nickname;
+                         })};
+    if (it == members.end())
+        LOG_INFO(Network, "Cannot find self in the member list when sending a message.");
+    auto member_id{std::distance(members.begin(), it)};
+    ChatMessage m{chat};
+    member.SendChatMessage(message);
+    AppendChatMessage(m.GetMemberChatMessage(member_id));
+    return true;
 }
 
 void ChatRoom::HandleNewMessage(const QString& msg) {
@@ -174,28 +174,26 @@ void ChatRoom::Enable() {
 void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
     if (!ValidateMessage(chat.message))
         return;
-    if (auto room{Network::GetRoomMember().lock()}) {
-        // Get the ID of the member
-        auto members{room->GetMemberInformation()};
-        auto it{std::find_if(members.begin(), members.end(),
-                             [&chat](const Network::RoomMember::MemberInformation& member) {
-                                 return member.nickname == chat.nickname;
-                             })};
-        if (it == members.end()) {
-            LOG_INFO(Network, "Chat message received from unknown member. Ignoring it.");
-            return;
-        }
-        if (block_list.count(chat.nickname)) {
-            LOG_INFO(Network, "Chat message received from blocked member {}. Ignoring it.",
-                     chat.nickname);
-            return;
-        }
-        auto member{std::distance(members.begin(), it)};
-        ChatMessage m{chat};
-        AppendChatMessage(m.GetMemberChatMessage(member));
-        QString message{QString::fromStdString(chat.message)};
-        HandleNewMessage(message.remove(QChar('\0')));
+    // Get the ID of the member
+    auto members{system.RoomMember().GetMemberInformation()};
+    auto it{std::find_if(members.begin(), members.end(),
+                         [&chat](const Network::RoomMember::MemberInformation& member) {
+                             return member.nickname == chat.nickname;
+                         })};
+    if (it == members.end()) {
+        LOG_INFO(Network, "Chat message received from unknown member. Ignoring it.");
+        return;
     }
+    if (block_list.count(chat.nickname)) {
+        LOG_INFO(Network, "Chat message received from blocked member {}. Ignoring it.",
+                 chat.nickname);
+        return;
+    }
+    auto member{std::distance(members.begin(), it)};
+    ChatMessage m{chat};
+    AppendChatMessage(m.GetMemberChatMessage(member));
+    QString message{QString::fromStdString(chat.message)};
+    HandleNewMessage(message.remove(QChar('\0')));
 }
 
 void ChatRoom::OnSendChat() {
@@ -234,10 +232,9 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
     if (!item.isValid())
         return;
     std::string nickname{member_list->item(item.row())->text().toStdString()};
-    if (auto member{Network::GetRoomMember().lock()})
-        // You can't block yourself
-        if (nickname == member->GetNickname())
-            return;
+    // You can't block yourself
+    if (nickname == system.RoomMember().GetNickname())
+        return;
     QMenu context_menu;
     QAction* block_action{context_menu.addAction("Block Member")};
     block_action->setCheckable(true);

@@ -14,8 +14,10 @@ class ClientRoomWindow : public QDialog {
     Q_OBJECT
 
 public:
-    explicit ClientRoomWindow(QWidget* parent);
+    explicit ClientRoomWindow(QWidget* parent, Core::System& system);
     ~ClientRoomWindow();
+
+    Core::System& system;
 
 public slots:
     void OnRoomUpdate(const Network::RoomInformation&);

@@ -16,12 +16,12 @@
 #include "citra/ui_settings.h"
 #include "common/logging/log.h"
 #include "core/settings.h"
-#include "network/network.h"
+#include "network/room_member.h"
 
 Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
-             std::shared_ptr<Core::AnnounceMultiplayerSession> session)
+             std::shared_ptr<Core::AnnounceMultiplayerSession> session, Core::System& system)
     : QDialog{parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint},
-      ui{std::make_unique<Ui::Lobby>()}, announce_multiplayer_session{session} {
+      ui{std::make_unique<Ui::Lobby>()}, announce_multiplayer_session{session}, system{system} {
     ui->setupUi(this);
     // Setup the watcher for background connections
     watcher = new QFutureWatcher<void>;
@@ -39,7 +39,6 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
     proxy->setSortLocaleAware(true);
     ui->room_list->setModel(proxy);
-
     ui->room_list->header()->setSectionResizeMode(QHeaderView::Interactive);
     ui->room_list->header()->stretchLastSection();
     ui->room_list->setAlternatingRowColors(true);
@@ -87,15 +86,14 @@ void Lobby::OnExpandRoom(const QModelIndex& index) {
 }
 
 void Lobby::OnJoinRoom(const QModelIndex& source) {
-    if (const auto member{Network::GetRoomMember().lock()}) {
-        // Prevent the user from trying to join a room while they are already joining.
-        if (member->GetState() == Network::RoomMember::State::Joining)
+    // Prevent the user from trying to join a room while they are already joining.
+    auto& member{system.RoomMember()};
+    if (member.GetState() == Network::RoomMember::State::Joining)
+        return;
+    else if (member.GetState() == Network::RoomMember::State::Joined)
+        // And ask if they want to leave the room if they are already in one.
+        if (!NetworkMessage::WarnDisconnect())
             return;
-        else if (member->GetState() == Network::RoomMember::State::Joined)
-            // And ask if they want to leave the room if they are already in one.
-            if (!NetworkMessage::WarnDisconnect())
-                return;
-    }
     QModelIndex index{source};
     // If the user double clicks on a child row (aka the member list) then use the parent instead
     if (source.parent() != QModelIndex())
@@ -118,10 +116,8 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
         proxy->data(connection_index, LobbyItemHost::HostIPRole).toString().toStdString()};
     int port{proxy->data(connection_index, LobbyItemHost::HostPortRole).toInt()};
     // Attempt to connect in a different thread
-    QFuture<void> f{QtConcurrent::run([nickname, ip, port, password] {
-        if (auto member{Network::GetRoomMember().lock()}) {
-            member->Join(nickname, ip.c_str(), port, BroadcastMac, password);
-        }
+    QFuture<void> f{QtConcurrent::run([this, nickname, ip, port, password] {
+        system.RoomMember().Join(nickname, ip.c_str(), port, BroadcastMac, password);
     })};
     watcher->setFuture(f);
     // TODO: disable widgets and display a connecting while we wait

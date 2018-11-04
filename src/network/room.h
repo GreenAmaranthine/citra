@@ -13,7 +13,7 @@
 namespace Network {
 
 constexpr u32 network_version{3}; ///< The network version
-constexpr u16 DefaultRoomPort = 24872;
+constexpr u16 DefaultRoomPort{24872};
 constexpr u32 MaxMessageSize{500};
 constexpr u32 MaxConcurrentConnections{
     254};                             ///< Maximum number of concurrent connections allowed rooms.
@@ -54,7 +54,7 @@ public:
     struct Member {
         std::string nickname;   ///< The nickname of the member.
         AppInfo app_info;       ///< The current application of the member.
-        MacAddress mac_address; ///< The assigned mac address of the member.
+        MacAddress mac_address; ///< The assigned MAC address of the member.
     };
 
     Room();

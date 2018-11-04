@@ -45,12 +45,20 @@ namespace CheatCore {
 class CheatManager;
 } // namespace CheatCore
 
+namespace Network {
+class Room;
+class RoomMember;
+} // namespace Network
+
 namespace Core {
 
 class Timing;
 
 class System {
 public:
+    System();
+    ~System();
+
     /**
      * Gets the instance of the System singleton class.
      * @returns Reference to the instance of the System singleton class.
@@ -165,11 +173,23 @@ public:
     // Gets a reference to the frontend.
     Frontend& GetFrontend();
 
-    /// Gets a const reference to the timing system
+    /// Gets a const reference to the timing system.
     const Timing& CoreTiming() const;
 
-    /// Gets a reference to the timing system
+    /// Gets a reference to the timing system.
     Timing& CoreTiming();
+
+    /// Gets a const reference to the room.
+    const Network::Room& Room() const;
+
+    /// Gets a reference to the room.
+    Network::Room& Room();
+
+    /// Gets a const reference to the room member.
+    const Network::RoomMember& RoomMember() const;
+
+    /// Gets a reference to the room member.
+    Network::RoomMember& RoomMember();
 
     PerfStats perf_stats;
     FrameLimiter frame_limiter;
@@ -240,7 +260,7 @@ private:
     bool reschedule_pending{};
 
     /// Service manager
-    std::shared_ptr<Service::SM::ServiceManager> service_manager;
+    std::unique_ptr<Service::SM::ServiceManager> service_manager;
 
 #ifdef ENABLE_SCRIPTING
     /// RPC server for scripting support
@@ -248,10 +268,16 @@ private:
 #endif
 
     /// Cheat manager
-    std::shared_ptr<CheatCore::CheatManager> cheat_manager;
+    std::unique_ptr<CheatCore::CheatManager> cheat_manager;
 
     /// Archive manager
     std::unique_ptr<Service::FS::ArchiveManager> archive_manager;
+
+    /// Room
+    std::unique_ptr<Network::Room> room;
+
+    /// Room member
+    std::unique_ptr<Network::RoomMember> room_member;
 
     std::unique_ptr<Kernel::KernelSystem> kernel;
     std::unique_ptr<Timing> timing;

@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <utility>
+#include <enet/enet.h>
 #include "audio_core/hle/hle.h"
 #include "common/logging/log.h"
 #include "core/cheat_core.h"
@@ -23,6 +24,8 @@
 #include "core/loader/loader.h"
 #include "core/memory_setup.h"
 #include "core/movie.h"
+#include "network/room.h"
+#include "network/room_member.h"
 #ifdef ENABLE_SCRIPTING
 #include "core/rpc/rpc_server.h"
 #endif
@@ -30,13 +33,33 @@
 #include "web_service/verify_login.h"
 #endif
 #include "core/settings.h"
-#include "network/network.h"
 #include "video_core/renderer/renderer.h"
 #include "video_core/video_core.h"
 
 namespace Core {
 
 /*static*/ System System::s_instance;
+
+System::System() {
+    if (enet_initialize() != 0)
+        return;
+    room = std::make_unique<Network::Room>();
+    room_member = std::make_unique<Network::RoomMember>();
+}
+
+System::~System() {
+    if (room_member) {
+        if (room_member->IsConnected())
+            room_member->Leave();
+        room_member.reset();
+    }
+    if (room) {
+        if (room->IsOpen())
+            room->Destroy();
+        room.reset();
+    }
+    enet_deinitialize();
+}
 
 System::ResultStatus System::RunLoop() {
     status = ResultStatus::Success;
@@ -141,7 +164,7 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     timing = std::make_unique<Core::Timing>();
     kernel = std::make_unique<Kernel::KernelSystem>(*this);
     // Initialize FS, CFG and memory
-    service_manager = std::make_shared<Service::SM::ServiceManager>(*this);
+    service_manager = std::make_unique<Service::SM::ServiceManager>(*this);
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
     Service::FS::InstallInterfaces(*this);
     Service::CFG::InstallInterfaces(*this);
@@ -150,7 +173,7 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     dsp_core = std::make_unique<AudioCore::DspHle>(*this);
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching);
 #ifdef ENABLE_SCRIPTING
-    rpc_server = std::make_unique<RPC::RPCServer>();
+    rpc_server = std::make_unique<RPC::RPCServer>(*this);
 #endif
     shutdown_requested = false;
     sleep_mode_enabled = false;
@@ -208,6 +231,22 @@ Timing& System::CoreTiming() {
     return *timing;
 }
 
+const Network::Room& System::Room() const {
+    return *room;
+}
+
+Network::Room& System::Room() {
+    return *room;
+}
+
+const Network::RoomMember& System::RoomMember() const {
+    return *room_member;
+}
+
+Network::RoomMember& System::RoomMember() {
+    return *room_member;
+}
+
 const Frontend& System::GetFrontend() const {
     return *m_frontend;
 }
@@ -230,10 +269,7 @@ void System::Shutdown() {
     cpu_core.reset();
     timing.reset();
     app_loader.reset();
-    if (auto member{Network::GetRoomMember().lock()}) {
-        Network::AppInfo app_info{};
-        member->SendAppInfo(app_info);
-    }
+    room_member->SendAppInfo(Network::AppInfo{});
     LOG_DEBUG(Core, "Shutdown OK");
 }
 

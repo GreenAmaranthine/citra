@@ -16,26 +16,24 @@
 #include "citra/multiplayer/validation.h"
 #include "citra/ui_settings.h"
 #include "core/settings.h"
-#include "network/network.h"
+#include "network/room.h"
 #include "ui_direct_connect.h"
 
 enum class ConnectionType : u8 { TraversalServer, IP };
 
-DirectConnectWindow::DirectConnectWindow(QWidget* parent)
+DirectConnectWindow::DirectConnectWindow(QWidget* parent, Core::System& system)
     : QDialog{parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint},
-      ui{std::make_unique<Ui::DirectConnect>()} {
+      ui{std::make_unique<Ui::DirectConnect>()}, system{system} {
     ui->setupUi(this);
-
     // Setup the watcher for background connections
     watcher = new QFutureWatcher<void>;
     connect(watcher, &QFutureWatcher<void>::finished, this, &DirectConnectWindow::OnConnection);
 
     ui->nickname->setValidator(validation.GetNickname());
     ui->nickname->setText(UISettings::values.nickname);
-    if (ui->nickname->text().isEmpty() && !Settings::values.citra_username.empty()) {
+    if (ui->nickname->text().isEmpty() && !Settings::values.citra_username.empty())
         // Use Citra Web Service user name as nickname by default
         ui->nickname->setText(QString::fromStdString(Settings::values.citra_username));
-    }
     ui->ip->setValidator(validation.GetIP());
     ui->ip->setText(UISettings::values.ip);
     ui->port->setValidator(validation.GetPort());
@@ -52,14 +50,14 @@ void DirectConnectWindow::Connect() {
         NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID);
         return;
     }
-    if (const auto member{Network::GetRoomMember().lock()})
-        // Prevent the user from trying to join a room while they are already joining.
-        if (member->GetState() == Network::RoomMember::State::Joining)
+    // Prevent the user from trying to join a room while they are already joining.
+    auto& member{system.RoomMember()};
+    if (member.GetState() == Network::RoomMember::State::Joining)
+        return;
+    else if (member.GetState() == Network::RoomMember::State::Joined)
+        // And ask if they want to leave the room if they are already in one.
+        if (!NetworkMessage::WarnDisconnect())
             return;
-        else if (member->GetState() == Network::RoomMember::State::Joined)
-            // And ask if they want to leave the room if they are already in one.
-            if (!NetworkMessage::WarnDisconnect())
-                return;
     switch (static_cast<ConnectionType>(ui->connection_type->currentIndex())) {
     case ConnectionType::TraversalServer:
         break;
@@ -82,11 +80,10 @@ void DirectConnectWindow::Connect() {
                                   : UISettings::values.port;
     // Attempt to connect in a different thread
     QFuture<void> f{QtConcurrent::run([&] {
-        if (auto member{Network::GetRoomMember().lock()}) {
-            auto port{UISettings::values.port.toUInt()};
-            member->Join(ui->nickname->text().toStdString(), ui->ip->text().toStdString().c_str(),
-                         port, BroadcastMac, ui->password->text().toStdString().c_str());
-        }
+        auto port{UISettings::values.port.toUInt()};
+        system.RoomMember().Join(ui->nickname->text().toStdString(),
+                                 ui->ip->text().toStdString().c_str(), port, BroadcastMac,
+                                 ui->password->text().toStdString().c_str());
     })};
     watcher->setFuture(f);
     // And disable widgets and display a connecting while we wait
@@ -105,7 +102,6 @@ void DirectConnectWindow::EndConnecting() {
 
 void DirectConnectWindow::OnConnection() {
     EndConnecting();
-    if (auto member{Network::GetRoomMember().lock()})
-        if (member->GetState() == Network::RoomMember::State::Joined)
-            close();
+    if (system.RoomMember().GetState() == Network::RoomMember::State::Joined)
+        close();
 }

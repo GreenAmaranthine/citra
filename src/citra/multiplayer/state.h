@@ -8,7 +8,10 @@
 #include <unordered_map>
 #include <QWidget>
 #include "core/announce_multiplayer_session.h"
-#include "network/network.h"
+
+namespace Core {
+class System;
+} // namespace Core
 
 class QStandardItemModel;
 class Lobby;
@@ -23,8 +26,8 @@ class MultiplayerState : public QWidget {
 public:
     using Replies = std::unordered_map<std::string, std::string>;
 
-    explicit MultiplayerState(QWidget* parent, QStandardItemModel* app_list, QAction* leave_room,
-                              QAction* show_room);
+    explicit MultiplayerState(QWidget* parent, QStandardItemModel* app_list,
+                              QAction* leave_room, QAction* show_room, Core::System& system);
     ~MultiplayerState();
 
     /**
@@ -71,6 +74,7 @@ private:
     Network::RoomMember::State current_state{Network::RoomMember::State::Uninitialized};
     Network::RoomMember::CallbackHandle<Network::RoomMember::State> state_callback_handle;
     Replies replies;
+    Core::System& system;
 };
 
 Q_DECLARE_METATYPE(Common::WebResult);

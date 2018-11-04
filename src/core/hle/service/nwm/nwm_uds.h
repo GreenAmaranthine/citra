@@ -6,13 +6,21 @@
 
 #include <array>
 #include <cstddef>
+#include <list>
+#include <mutex>
 #include <vector>
+#include <deque>
+#include <unordered_map>
+#include <map>
+#include <atomic>
 #include "common/common_types.h"
 #include "common/swap.h"
 #include "core/hle/service/service.h"
+#include "network/room_member.h"
 
 namespace Core {
 class System;
+struct TimingEventType;
 } // namespace Core
 
 namespace Service::NWM {
@@ -131,6 +139,90 @@ private:
     void DecryptBeaconData(Kernel::HLERequestContext& ctx);
 
     void BeaconBroadcastCallback(s64);
+
+    std::list<Network::WifiPacket> GetReceivedBeacons(const MacAddress& sender);
+    u16 GetNextAvailableNodeId();
+    void BroadcastNodeMap();
+    void SendPacket(Network::WifiPacket& packet);
+    void HandleNodeMapPacket(const Network::WifiPacket& packet);
+    void HandleBeaconFrame(const Network::WifiPacket& packet);
+    void HandleAssociationResponseFrame(const Network::WifiPacket& packet);
+    void HandleEAPoLPacket(const Network::WifiPacket& packet);
+    void HandleSecureDataPacket(const Network::WifiPacket& packet);
+    void StartConnectionSequence(const MacAddress& server);
+    void SendAssociationResponseFrame(const MacAddress& address);
+    void HandleAuthenticationFrame(const Network::WifiPacket& packet);
+    void HandleDeauthenticationFrame(const Network::WifiPacket& packet);
+    void HandleDataFrame(const Network::WifiPacket& packet);
+    void OnWifiPacketReceived(const Network::WifiPacket& packet);
+    std::optional<MacAddress> GetNodeMacAddress(u16 dest_node_id, u8 flags);
+
+    // Event that is signaled every time the connection status changes.
+    Kernel::SharedPtr<Kernel::Event> connection_status_event;
+
+    // Shared memory provided by the application to store the receive buffer.
+    // This isn't currently used.
+    Kernel::SharedPtr<Kernel::SharedMemory> recv_buffer_memory;
+
+    // Connection status of this console.
+    ConnectionStatus connection_status{};
+
+    std::atomic_bool initialized{false};
+
+    /* Node information about the current network.
+     * The amount of elements in this vector is always the maximum number
+     * of nodes specified in the network configuration.
+     * The first node is always the host.
+     */
+    NodeList node_info;
+
+    // Node information about our own system.
+    NodeInfo current_node;
+
+    // Mapping of data channels to their internal data.
+    struct BindNodeData {
+        u32 bind_node_id;    ///< Id of the bind node associated with this data.
+        u8 channel;          ///< Channel that this bind node was bound to.
+        u16 network_node_id; ///< Node id this bind node is associated with, only packets from this
+                             /// network node will be received.
+        Kernel::SharedPtr<Kernel::Event> event;       ///< Receive event for this bind node.
+        std::deque<std::vector<u8>> received_packets; ///< List of packets received on this channel.
+    };
+
+    std::unordered_map<u32, BindNodeData> channel_data;
+
+    // The WiFi network channel that the network is currently on.
+    // Since we're not actually interacting with physical radio waves, this is just a dummy value.
+    u8 network_channel{DefaultNetworkChannel};
+
+    // Information about the network that we're currently connected to.
+    NetworkInfo network_info;
+
+    // Mapping of mac addresses to their respective node IDs.
+    struct Node {
+        bool connected;
+        u16 node_id;
+    };
+    std::map<MacAddress, Node> node_map;
+
+    // Event that will generate and send the 802.11 beacon frames.
+    Core::TimingEventType* beacon_broadcast_event;
+
+    // Callback identifier for the OnWifiPacketReceived event.
+    Network::RoomMember::CallbackHandle<Network::WifiPacket> wifi_packet_received;
+
+    // Mutex to synchronize access to the connection status between the emulation thread and the
+    // network thread.
+    std::mutex connection_status_mutex;
+
+    Kernel::SharedPtr<Kernel::Event> connection_event;
+
+    // Mutex to synchronize access to the list of received beacons between the emulation thread and
+    // the network thread.
+    std::mutex beacon_mutex;
+
+    // List of the last <MaxBeaconFrames> beacons received from the network.
+    std::list<Network::WifiPacket> received_beacons;
 };
 
 } // namespace Service::NWM

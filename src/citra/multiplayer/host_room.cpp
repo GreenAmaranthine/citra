@@ -24,9 +24,10 @@
 #include "ui_host_room.h"
 
 HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
-                               std::shared_ptr<Core::AnnounceMultiplayerSession> session)
+                               std::shared_ptr<Core::AnnounceMultiplayerSession> session,
+                               Core::System& system)
     : QDialog{parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint},
-      ui{std::make_unique<Ui::HostRoom>()}, announce_multiplayer_session{session} {
+      ui{std::make_unique<Ui::HostRoom>()}, announce_multiplayer_session{session}, system{system} {
     ui->setupUi(this);
     // Set up validation for all of the fields
     ui->room_name->setValidator(validation.GetRoomName());
@@ -81,44 +82,41 @@ void HostRoomWindow::Host() {
         NetworkMessage::ShowError(NetworkMessage::PORT_NOT_VALID);
         return;
     }
-    if (auto member{Network::GetRoomMember().lock()}) {
-        if (member->GetState() == Network::RoomMember::State::Joining)
+    auto& member{system.RoomMember()};
+    if (member.GetState() == Network::RoomMember::State::Joining)
+        return;
+    else if (member.GetState() == Network::RoomMember::State::Joined) {
+        auto parent{static_cast<MultiplayerState*>(parentWidget())};
+        if (!parent->OnCloseRoom()) {
+            close();
             return;
-        else if (member->GetState() == Network::RoomMember::State::Joined) {
-            auto parent{static_cast<MultiplayerState*>(parentWidget())};
-            if (!parent->OnCloseRoom()) {
-                close();
-                return;
-            }
         }
-        ui->host->setDisabled(true);
-        auto app_name{ui->app_list->currentData(Qt::DisplayRole).toString()};
-        auto app_id{ui->app_list->currentData(AppListItemPath::ProgramIdRole).toLongLong()};
-        auto port{ui->port->isModified() ? ui->port->text().toInt() : Network::DefaultRoomPort};
-        auto password{ui->password->text().toStdString()};
-        if (auto room{Network::GetRoom().lock()}) {
-            bool created{room->Create(ui->room_name->text().toStdString(), "", port, password,
-                                      ui->max_members->value(), app_name.toStdString(), app_id)};
-            if (!created) {
-                NetworkMessage::ShowError(NetworkMessage::COULD_NOT_CREATE_ROOM);
-                LOG_ERROR(Network, "Could not create room!");
-                ui->host->setEnabled(true);
-                return;
-            }
-        }
-        member->Join(ui->username->text().toStdString(), "127.0.0.1", port, BroadcastMac, password);
-        // Store settings
-        UISettings::values.room_nickname = ui->username->text();
-        UISettings::values.room_name = ui->room_name->text();
-        UISettings::values.app_id =
-            ui->app_list->currentData(AppListItemPath::ProgramIdRole).toLongLong();
-        UISettings::values.max_members = ui->max_members->value();
-        UISettings::values.host_type = ui->host_type->currentIndex();
-        UISettings::values.room_port = (ui->port->isModified() && !ui->port->text().isEmpty())
-                                           ? ui->port->text()
-                                           : QString::number(Network::DefaultRoomPort);
-        OnConnection();
     }
+    ui->host->setDisabled(true);
+    auto app_name{ui->app_list->currentData(Qt::DisplayRole).toString()};
+    auto app_id{ui->app_list->currentData(AppListItemPath::ProgramIdRole).toLongLong()};
+    auto port{ui->port->isModified() ? ui->port->text().toInt() : Network::DefaultRoomPort};
+    auto password{ui->password->text().toStdString()};
+    bool created{system.Room().Create(ui->room_name->text().toStdString(), "", port, password,
+                                      ui->max_members->value(), app_name.toStdString(), app_id)};
+    if (!created) {
+        NetworkMessage::ShowError(NetworkMessage::COULD_NOT_CREATE_ROOM);
+        LOG_ERROR(Network, "Could not create room!");
+        ui->host->setEnabled(true);
+        return;
+    }
+    member.Join(ui->username->text().toStdString(), "127.0.0.1", port, BroadcastMac, password);
+    // Store settings
+    UISettings::values.room_nickname = ui->username->text();
+    UISettings::values.room_name = ui->room_name->text();
+    UISettings::values.app_id =
+        ui->app_list->currentData(AppListItemPath::ProgramIdRole).toLongLong();
+    UISettings::values.max_members = ui->max_members->value();
+    UISettings::values.host_type = ui->host_type->currentIndex();
+    UISettings::values.room_port = (ui->port->isModified() && !ui->port->text().isEmpty())
+                                       ? ui->port->text()
+                                       : QString::number(Network::DefaultRoomPort);
+    OnConnection();
 }
 
 void HostRoomWindow::AddReply() {
@@ -146,30 +144,27 @@ void HostRoomWindow::RemoveReply() {
 
 void HostRoomWindow::UpdateReplies() {
     // Only update replies if the user is hosting a room.
-    if (auto room{Network::GetRoom().lock()})
-        if (room->IsOpen()) {
-            auto parent{static_cast<MultiplayerState*>(parentWidget())};
-            MultiplayerState::Replies replies;
-            for (int i{}; i < ui->tableReplies->rowCount(); ++i)
-                replies.emplace(ui->tableReplies->item(i, /* Message */ 0)->text().toStdString(),
-                                ui->tableReplies->item(i, /* Reply */ 1)->text().toStdString());
-            parent->SetReplies(replies);
-        }
+    if (system.Room().IsOpen()) {
+        auto parent{static_cast<MultiplayerState*>(parentWidget())};
+        MultiplayerState::Replies replies;
+        for (int i{}; i < ui->tableReplies->rowCount(); ++i)
+            replies.emplace(ui->tableReplies->item(i, /* Message */ 0)->text().toStdString(),
+                            ui->tableReplies->item(i, /* Reply */ 1)->text().toStdString());
+        parent->SetReplies(replies);
+    }
 }
 
 void HostRoomWindow::OnConnection() {
     ui->host->setEnabled(true);
-    if (auto member{Network::GetRoomMember().lock()}) {
-        if (member->GetState() == Network::RoomMember::State::Joining) {
-            // Start the announce session if they chose Public
-            if (ui->host_type->currentIndex() == 0)
-                if (auto session{announce_multiplayer_session.lock()})
-                    session->Start();
-                else
-                    LOG_ERROR(Network, "Starting announce session failed");
-            UpdateReplies();
-            close();
-        }
+    if (system.RoomMember().GetState() == Network::RoomMember::State::Joining) {
+        // Start the announce session if they chose Public
+        if (ui->host_type->currentIndex() == 0)
+            if (auto session{announce_multiplayer_session.lock()})
+                session->Start();
+            else
+                LOG_ERROR(Network, "Starting announce session failed");
+        UpdateReplies();
+        close();
     }
 }
 

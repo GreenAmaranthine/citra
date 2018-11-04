@@ -18,7 +18,6 @@ struct TimingEventType;
 } // namespace Core
 
 namespace Kernel {
-class Event;
 class SharedMemory;
 } // namespace Kernel
 

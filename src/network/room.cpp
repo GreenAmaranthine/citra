@@ -9,8 +9,8 @@
 #include <random>
 #include <sstream>
 #include <thread>
+#include <enet/enet.h>
 #include "common/logging/log.h"
-#include "enet/enet.h"
 #include "network/packet.h"
 #include "network/room.h"
 
@@ -29,7 +29,7 @@ struct Room::RoomImpl {
     struct Member {
         std::string nickname;   ///< The nickname of the member.
         AppInfo app_info;       ///< The current application of the member.
-        MacAddress mac_address; ///< The assigned mac address of the member.
+        MacAddress mac_address; ///< The assigned MAC address of the member.
         ENetPeer* peer;         ///< The remote peer.
     };
 

@@ -28,7 +28,6 @@ constexpr u64 gyroscope_update_ticks{BASE_CLOCK_RATE_ARM11 / 101};
 
 constexpr float accelerometer_coef{512.0f}; // Measured from hw test result
 constexpr float gyroscope_coef{14.375f}; // Got from hwtest GetGyroscopeLowRawToDpsCoefficient call
-static PadState inputs_this_frame;
 
 DirectionState GetStickDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
     // 30 degree and 60 degree are angular thresholds for directions
@@ -105,7 +104,7 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     state.circle_right.Assign(direction.right);
     if (use_override_pad_state)
         state.hex = override_pad_state;
-    inputs_this_frame.hex = state.hex;
+    pad_state = state.hex;
     mem->pad.current_state.hex = state.hex;
     mem->pad.index = next_pad_index;
     next_pad_index = (next_pad_index + 1) % mem->pad.entries.size();
@@ -197,10 +196,6 @@ void Module::UpdateAccelerometerCallback(u64 userdata, s64 cycles_late) {
     event_accelerometer->Signal();
     // Reschedule recurrent event
     timing.ScheduleEvent(accelerometer_update_ticks - cycles_late, accelerometer_update_event);
-}
-
-const PadState& GetInputsThisFrame() {
-    return inputs_this_frame;
 }
 
 void Module::UpdateGyroscopeCallback(u64 userdata, s64 cycles_late) {
@@ -378,46 +373,6 @@ void Module::SetOverrideControls(bool pad, bool touch, bool motion, bool circle)
     use_override_touch = touch;
     use_override_motion = motion;
     use_override_circle_pad = circle;
-}
-
-void SetPadState(u32 raw) {
-    auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn())
-        return;
-    auto hid{system.ServiceManager().GetService<User>("hid:USER")->GetModule()};
-    hid->SetPadState(raw);
-}
-
-void SetTouchState(s16 x, s16 y, bool valid) {
-    auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn())
-        return;
-    auto hid{system.ServiceManager().GetService<User>("hid:USER")->GetModule()};
-    hid->SetTouchState(x, y, valid);
-}
-
-void SetMotionState(s16 x, s16 y, s16 z, s16 roll, s16 pitch, s16 yaw) {
-    auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn())
-        return;
-    auto hid{system.ServiceManager().GetService<User>("hid:USER")->GetModule()};
-    hid->SetMotionState(x, y, z, roll, pitch, yaw);
-}
-
-void SetCircleState(s16 x, s16 y) {
-    auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn())
-        return;
-    auto hid{system.ServiceManager().GetService<User>("hid:USER")->GetModule()};
-    hid->SetCircleState(x, y);
-}
-
-void SetOverrideControls(bool pad, bool touch, bool motion, bool circle) {
-    auto& system{Core::System::GetInstance()};
-    if (!system.IsPoweredOn())
-        return;
-    auto hid{system.ServiceManager().GetService<User>("hid:USER")->GetModule()};
-    hid->SetOverrideControls(pad, touch, motion, circle);
 }
 
 void InstallInterfaces(Core::System& system) {

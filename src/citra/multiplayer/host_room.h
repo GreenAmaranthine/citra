@@ -11,13 +11,13 @@
 #include <QVariant>
 #include "citra/multiplayer/chat_room.h"
 #include "citra/multiplayer/validation.h"
-#include "network/network.h"
 
 namespace Ui {
 class HostRoom;
 } // namespace Ui
 
 namespace Core {
+class System;
 class AnnounceMultiplayerSession;
 } // namespace Core
 
@@ -31,7 +31,7 @@ class HostRoomWindow : public QDialog {
 
 public:
     explicit HostRoomWindow(QWidget* parent, QStandardItemModel* list,
-                            std::shared_ptr<Core::AnnounceMultiplayerSession> session);
+                            std::shared_ptr<Core::AnnounceMultiplayerSession> session, Core::System& system);
     ~HostRoomWindow();
 
 private slots:
@@ -52,6 +52,7 @@ private:
     ComboBoxProxyModel* proxy;
     std::unique_ptr<Ui::HostRoom> ui;
     Validation validation;
+    Core::System& system;
 };
 
 /**

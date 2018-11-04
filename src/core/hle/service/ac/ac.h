@@ -13,10 +13,6 @@ namespace Core {
 class System;
 } // namespace Core
 
-namespace Kernel {
-class Event;
-} // namespace Kernel
-
 namespace Service::AC {
 
 class Module final {

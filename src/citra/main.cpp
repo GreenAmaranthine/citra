@@ -113,7 +113,6 @@ GMainWindow::GMainWindow() : config{new Config()} {
     statusBar()->hide();
     default_theme_paths = QIcon::themeSearchPaths();
     UpdateUITheme();
-    Network::Init();
     InitializeWidgets();
     InitializeRecentFileMenuActions();
     InitializeHotkeys();
@@ -142,7 +141,6 @@ GMainWindow::~GMainWindow() {
     // Will get automatically deleted otherwise
     if (!screens->parent())
         delete screens;
-    Network::Shutdown();
 #ifdef ENABLE_DISCORD_RPC
     if (UISettings::values.enable_discord_rpc)
         ShutdownDiscordRPC();
@@ -160,8 +158,8 @@ void GMainWindow::InitializeWidgets() {
     ui.horizontalLayout->addWidget(app_list_placeholder);
     app_list_placeholder->setVisible(false);
 
-    multiplayer_state =
-        new MultiplayerState(this, app_list->GetModel(), ui.action_Leave_Room, ui.action_Show_Room);
+    multiplayer_state = new MultiplayerState(this, app_list->GetModel(), ui.action_Leave_Room,
+                                             ui.action_Show_Room, system);
     multiplayer_state->setVisible(false);
 
     // Create status bar
@@ -652,9 +650,9 @@ void GMainWindow::BootApplication(const std::string& filename) {
     RPC::RPCServer::cb_update_frame_advancing = [this] { UpdateFrameAdvancingCallback(); };
     Service::NWM::NWM_EXT::update_control_panel = [this] { UpdateControlPanelNetwork(); };
     // Update Discord RPC
-    if (auto member{Network::GetRoomMember().lock()})
-        if (!member->IsConnected())
-            UpdateDiscordRPC(member->GetRoomInformation());
+    auto& member{system.RoomMember()};
+    if (!member.IsConnected())
+        UpdateDiscordRPC(member.GetRoomInformation());
 }
 
 void GMainWindow::ShutdownApplication() {
@@ -710,9 +708,9 @@ void GMainWindow::ShutdownApplication() {
     short_title.clear();
     UpdateTitle();
     // Update Discord RPC
-    if (auto member{Network::GetRoomMember().lock()})
-        if (!member->IsConnected())
-            UpdateDiscordRPC(member->GetRoomInformation());
+    auto& member{system.RoomMember()};
+    if (!member.IsConnected())
+        UpdateDiscordRPC(member.GetRoomInformation());
 }
 
 void GMainWindow::StoreRecentFile(const QString& filename) {
@@ -1660,18 +1658,16 @@ void GMainWindow::InitializeDiscordRPC() {
     discord_rpc_start_time = std::chrono::duration_cast<std::chrono::seconds>(
                                  std::chrono::system_clock::now().time_since_epoch())
                                  .count();
-    if (auto member{Network::GetRoomMember().lock()}) {
-        callback_handle = member->BindOnRoomInformationChanged(
-            [this](const Network::RoomInformation& info) { UpdateDiscordRPC(info); });
-        UpdateDiscordRPC(member->GetRoomInformation());
-    }
+    auto& member{system.RoomMember()};
+    callback_handle = member.BindOnRoomInformationChanged(
+        [this](const Network::RoomInformation& info) { UpdateDiscordRPC(info); });
+    UpdateDiscordRPC(member.GetRoomInformation());
 #endif
 }
 
 void GMainWindow::ShutdownDiscordRPC() {
 #ifdef ENABLE_DISCORD_RPC
-    if (auto member{Network::GetRoomMember().lock()})
-        member->Unbind(callback_handle);
+    system.RoomMember().Unbind(callback_handle);
     Discord_ClearPresence();
     Discord_Shutdown();
 #endif
@@ -1684,15 +1680,15 @@ void GMainWindow::UpdateDiscordRPC(const Network::RoomInformation& info) {
         handlers.disconnected = HandleDiscordDisconnected;
         handlers.errored = HandleDiscordError;
         DiscordRichPresence presence{};
-        if (auto member{Network::GetRoomMember().lock()})
-            if (member->IsConnected()) {
-                const auto& member_info{member->GetMemberInformation()};
-                presence.partySize = member_info.size();
-                presence.partyMax = info.member_slots;
-                static std::string room_name;
-                room_name = info.name;
-                presence.state = room_name.c_str();
-            }
+        auto& member{system.RoomMember()};
+        if (member.IsConnected()) {
+            const auto& member_info{member.GetMemberInformation()};
+            presence.partySize = member_info.size();
+            presence.partyMax = info.member_slots;
+            static std::string room_name;
+            room_name = info.name;
+            presence.state = room_name.c_str();
+        }
         if (!short_title.empty())
             presence.details = short_title.c_str();
         presence.startTimestamp = discord_rpc_start_time;

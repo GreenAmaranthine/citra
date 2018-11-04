@@ -24,7 +24,6 @@ struct TimingEventType;
 } // namespace Core
 
 namespace Kernel {
-class Event;
 class SharedMemory;
 } // namespace Kernel
 
@@ -226,6 +225,8 @@ public:
     void SetCircleState(s16 x, s16 y);
     void SetOverrideControls(bool pad, bool touch, bool motion, bool circle);
 
+    u32 pad_state{};
+
 private:
     void LoadInputDevices();
     void UpdatePadCallback(u64 userdata, s64 cycles_late);
@@ -284,13 +285,5 @@ private:
 };
 
 void InstallInterfaces(Core::System& system);
-
-void SetPadState(u32 raw);
-void SetTouchState(s16 x, s16 y, bool valid);
-void SetMotionState(s16 x, s16 y, s16 z, s16 roll, s16 pitch, s16 yaw);
-void SetCircleState(s16 x, s16 y);
-void SetOverrideControls(bool pad, bool touch, bool motion, bool circle);
-
-const PadState& GetInputsThisFrame();
 
 } // namespace Service::HID

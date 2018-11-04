@@ -7,8 +7,9 @@
 #include "announce_multiplayer_session.h"
 #include "common/announce_multiplayer_room.h"
 #include "common/assert.h"
+#include "core/core.h"
 #include "core/settings.h"
-#include "network/network.h"
+#include "network/room.h"
 
 #ifdef ENABLE_WEB_SERVICE
 #include "web_service/announce_room_json.h"
@@ -16,8 +17,8 @@
 
 namespace Core {
 
-// Time between room is announced to web_service
-static constexpr std::chrono::seconds announce_time_interval(15);
+// Time between room is announced to web services
+constexpr std::chrono::seconds announce_time_interval{15};
 
 AnnounceMultiplayerSession::AnnounceMultiplayerSession() {
 #ifdef ENABLE_WEB_SERVICE
@@ -30,9 +31,8 @@ AnnounceMultiplayerSession::AnnounceMultiplayerSession() {
 }
 
 void AnnounceMultiplayerSession::Start() {
-    if (announce_multiplayer_thread) {
+    if (announce_multiplayer_thread)
         Stop();
-    }
     shutdown_event.Reset();
     announce_multiplayer_thread =
         std::make_unique<std::thread>(&AnnounceMultiplayerSession::AnnounceMultiplayerLoop, this);
@@ -67,32 +67,26 @@ AnnounceMultiplayerSession::~AnnounceMultiplayerSession() {
 void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
     auto update_time{std::chrono::steady_clock::now()};
     std::future<Common::WebResult> future;
+    auto& room{Core::System::GetInstance().Room()};
     while (!shutdown_event.WaitUntil(update_time)) {
         update_time += announce_time_interval;
-        std::shared_ptr<Network::Room> room{Network::GetRoom().lock()};
-        if (!room) {
+        if (!room.IsOpen())
             break;
-        }
-        if (!room->IsOpen()) {
-            break;
-        }
-        Network::RoomInformation room_information{room->GetRoomInformation()};
-        std::vector<Network::Room::Member> memberlist{room->GetRoomMemberList()};
+        auto room_information{room.GetRoomInformation()};
+        auto member_list{room.GetRoomMemberList()};
         backend->SetRoomInformation(
             room_information.uid, room_information.name, room_information.port,
-            room_information.member_slots, Network::network_version, room->HasPassword(),
+            room_information.member_slots, Network::network_version, room.HasPassword(),
             room_information.preferred_app, room_information.preferred_app_id);
         backend->ClearMembers();
-        for (const auto& member : memberlist) {
+        for (const auto& member : member_list)
             backend->AddMember(member.nickname, member.mac_address, member.app_info.id,
                                member.app_info.name);
-        }
-        Common::WebResult result{backend->Announce()};
+        auto result{backend->Announce()};
         if (result.result_code != Common::WebResult::Code::Success) {
             std::lock_guard lock{callback_mutex};
-            for (auto callback : error_callbacks) {
+            for (auto callback : error_callbacks)
                 (*callback)(result);
-            }
         }
     }
 }

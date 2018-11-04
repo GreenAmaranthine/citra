@@ -12,19 +12,13 @@
 
 namespace RPC {
 
-RPCServer::RPCServer() : server{*this} {
-    LOG_INFO(RPC, "Starting RPC server ...");
-
+RPCServer::RPCServer(Core::System& system) : server{*this}, system{system} {
     Start();
-
     LOG_INFO(RPC, "RPC started.");
 }
 
 RPCServer::~RPCServer() {
-    LOG_INFO(RPC, "Stopping RPC ...");
-
     Stop();
-
     LOG_INFO(RPC, "RPC stopped.");
 }
 
@@ -45,26 +39,38 @@ void RPCServer::HandleWriteMemory(Packet& packet, u32 address, const u8* data, u
 }
 
 void RPCServer::HandlePadState(Packet& packet, u32 raw) {
-    Service::HID::SetPadState(raw);
+    system.ServiceManager()
+        .GetService<Service::HID::Module::Interface>("hid:USER")
+        ->GetModule()
+        ->SetPadState(raw);
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
 
 void RPCServer::HandleTouchState(Packet& packet, s16 x, s16 y, bool valid) {
-    Service::HID::SetTouchState(x, y, valid);
+    system.ServiceManager()
+        .GetService<Service::HID::Module::Interface>("hid:USER")
+        ->GetModule()
+        ->SetTouchState(x, y, valid);
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
 
 void RPCServer::HandleMotionState(Packet& packet, s16 x, s16 y, s16 z, s16 roll, s16 pitch,
                                   s16 yaw) {
-    Service::HID::SetMotionState(x, y, z, roll, pitch, yaw);
+    system.ServiceManager()
+        .GetService<Service::HID::Module::Interface>("hid:USER")
+        ->GetModule()
+        ->SetMotionState(x, y, z, roll, pitch, yaw);
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
 
 void RPCServer::HandleCircleState(Packet& packet, s16 x, s16 y) {
-    Service::HID::SetCircleState(x, y);
+    system.ServiceManager()
+        .GetService<Service::HID::Module::Interface>("hid:USER")
+        ->GetModule()
+        ->SetCircleState(x, y);
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
@@ -76,32 +82,35 @@ void RPCServer::HandleSetResolution(Packet& packet, u16 resolution) {
 }
 
 void RPCServer::HandleSetApplication(Packet& packet, const std::string& path) {
-    Core::System::GetInstance().SetApplication(path);
+    system.SetApplication(path);
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
 
 void RPCServer::HandleSetOverrideControls(Packet& packet, bool pad, bool touch, bool motion,
                                           bool circle) {
-    Service::HID::SetOverrideControls(pad, touch, motion, circle);
+    system.ServiceManager()
+        .GetService<Service::HID::Module::Interface>("hid:USER")
+        ->GetModule()
+        ->SetOverrideControls(pad, touch, motion, circle);
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
 
 void RPCServer::HandlePause(Packet& packet) {
-    Core::System::GetInstance().SetRunning(false);
+    system.SetRunning(false);
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
 
 void RPCServer::HandleResume(Packet& packet) {
-    Core::System::GetInstance().SetRunning(true);
+    system.SetRunning(true);
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
 
 void RPCServer::HandleRestart(Packet& packet) {
-    Core::System::GetInstance().Restart();
+    system.Restart();
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
@@ -130,24 +139,26 @@ void RPCServer::HandleSetScreenRefreshRate(Packet& packet, int rate) {
 
 void RPCServer::HandleIsButtonPressed(Packet& packet, int button) {
     packet.SetPacketDataSize(sizeof(bool));
-    packet.GetPacketData()[0] = (Service::HID::GetInputsThisFrame().hex & button) != 0;
+    packet.GetPacketData()[0] = (system.ServiceManager()
+                                     .GetService<Service::HID::Module::Interface>("hid:USER")
+                                     ->GetModule()
+                                     ->pad_state &
+                                 button) != 0;
     packet.SendReply();
 }
 
 void RPCServer::HandleSetFrameAdvancing(Packet& packet, bool enable) {
-    Core::System::GetInstance().frame_limiter.SetFrameAdvancing(enable);
-    if (cb_update_frame_advancing) {
+    system.frame_limiter.SetFrameAdvancing(enable);
+    if (cb_update_frame_advancing)
         cb_update_frame_advancing();
-    }
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
 
 void RPCServer::HandleAdvanceFrame(Packet& packet) {
-    Core::System::GetInstance().frame_limiter.AdvanceFrame();
-    if (cb_update_frame_advancing) {
+    system.frame_limiter.AdvanceFrame();
+    if (cb_update_frame_advancing)
         cb_update_frame_advancing();
-    }
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
@@ -173,9 +184,8 @@ bool RPCServer::ValidatePacket(const PacketHeader& packet_header) {
         case PacketType::IsButtonPressed:
         case PacketType::SetFrameAdvancing:
         case PacketType::AdvanceFrame:
-            if (packet_header.packet_size >= (sizeof(u32) * 2)) {
+            if (packet_header.packet_size >= (sizeof(u32) * 2))
                 return true;
-            }
             break;
         default:
             break;

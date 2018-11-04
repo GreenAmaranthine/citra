@@ -10,13 +10,17 @@
 #include "common/threadsafe_queue.h"
 #include "core/rpc/server.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace RPC {
 
 class PacketHeader;
 
 class RPCServer {
 public:
-    RPCServer();
+    explicit RPCServer(Core::System& system);
     ~RPCServer();
 
     void QueueRequest(std::unique_ptr<RPC::Packet> request);
@@ -51,6 +55,7 @@ private:
     Server server;
     Common::SPSCQueue<std::unique_ptr<Packet>> request_queue;
     std::thread request_handler_thread;
+    Core::System& system;
 };
 
 } // namespace RPC

@@ -10,15 +10,17 @@
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
 #include <QVariant>
-#include "network/network.h"
+#include "network/room.h"
+#include "network/room_member.h"
+
+namespace Core {
+class System;
+class AnnounceMultiplayerSession;
+} // namespace Core
 
 namespace Ui {
 class ChatRoom;
 } // namespace Ui
-
-namespace Core {
-class AnnounceMultiplayerSession;
-} // namespace Core
 
 class ConnectionError;
 class ComboBoxProxyModel;
@@ -50,12 +52,13 @@ signals:
     void ChatReceived(const Network::ChatEntry&);
 
 private:
-    static constexpr u32 max_chat_lines{1000};
     void AppendChatMessage(const QString&);
     bool ValidateMessage(const std::string&);
+
     QStandardItemModel* member_list;
     std::unique_ptr<Ui::ChatRoom> ui;
     std::unordered_set<std::string> block_list;
+    Core::System& system;
 };
 
 Q_DECLARE_METATYPE(Network::ChatEntry);

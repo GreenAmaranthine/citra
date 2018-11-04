@@ -349,8 +349,11 @@ void Cheat::Execute(Core::System& system) {
             break;
         }
         case CheatType::Joker: {
-            auto state{Service::HID::GetInputsThisFrame()};
-            bool result{(state.hex & line.value) == line.value};
+            bool result{(system.ServiceManager()
+                             .GetService<Service::HID::Module::Interface>("hid:USER")
+                             ->GetModule()
+                             ->pad_state &
+                         line.value) == line.value};
             if (result) {
                 if (if_flag > 0)
                     if_flag--;

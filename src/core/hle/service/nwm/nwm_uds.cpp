@@ -3,22 +3,14 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <array>
-#include <atomic>
 #include <cstring>
-#include <list>
-#include <map>
-#include <mutex>
 #include <optional>
-#include <unordered_map>
-#include <vector>
 #include <cryptopp/osrng.h>
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/ipc_helpers.h"
-#include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/shared_page.h"
 #include "core/hle/lock.h"
@@ -28,7 +20,7 @@
 #include "core/hle/service/nwm/uds_connection.h"
 #include "core/hle/service/nwm/uds_data.h"
 #include "core/memory.h"
-#include "network/network.h"
+#include "network/room_member.h"
 
 namespace Service::NWM {
 
@@ -39,76 +31,9 @@ enum {
 };
 } // namespace ErrCodes
 
-// Event that is signaled every time the connection status changes.
-static Kernel::SharedPtr<Kernel::Event> connection_status_event;
-
-// Shared memory provided by the application to store the receive buffer.
-// This isn't currently used.
-static Kernel::SharedPtr<Kernel::SharedMemory> recv_buffer_memory;
-
-// Connection status of this console.
-static ConnectionStatus connection_status{};
-
-static std::atomic_bool initialized(false);
-
-/* Node information about the current network.
- * The amount of elements in this vector is always the maximum number
- * of nodes specified in the network configuration.
- * The first node is always the host.
- */
-static NodeList node_info;
-
-// Node information about our own system.
-static NodeInfo current_node;
-
-struct BindNodeData {
-    u32 bind_node_id;    ///< Id of the bind node associated with this data.
-    u8 channel;          ///< Channel that this bind node was bound to.
-    u16 network_node_id; ///< Node id this bind node is associated with, only packets from this
-                         /// network node will be received.
-    Kernel::SharedPtr<Kernel::Event> event;       ///< Receive event for this bind node.
-    std::deque<std::vector<u8>> received_packets; ///< List of packets received on this channel.
-};
-
-// Mapping of data channels to their internal data.
-static std::unordered_map<u32, BindNodeData> channel_data;
-
-// The WiFi network channel that the network is currently on.
-// Since we're not actually interacting with physical radio waves, this is just a dummy value.
-static u8 network_channel{DefaultNetworkChannel};
-
-// Information about the network that we're currently connected to.
-static NetworkInfo network_info;
-
-// Mapping of mac addresses to their respective node IDs.
-struct Node {
-    bool connected;
-    u16 node_id;
-};
-static std::map<MacAddress, Node> node_map;
-
-// Event that will generate and send the 802.11 beacon frames.
-static Core::TimingEventType* beacon_broadcast_event;
-
-// Callback identifier for the OnWifiPacketReceived event.
-static Network::RoomMember::CallbackHandle<Network::WifiPacket> wifi_packet_received;
-
-// Mutex to synchronize access to the connection status between the emulation thread and the
-// network thread.
-static std::mutex connection_status_mutex;
-
-static Kernel::SharedPtr<Kernel::Event> connection_event;
-
-// Mutex to synchronize access to the list of received beacons between the emulation thread and the
-// network thread.
-static std::mutex beacon_mutex;
-
 // Number of beacons to store before we start dropping the old ones.
 // TODO: Find a more accurate value for this limit.
 constexpr std::size_t MaxBeaconFrames{15};
-
-// List of the last <MaxBeaconFrames> beacons received from the network.
-static std::list<Network::WifiPacket> received_beacons;
 
 // Network node id used when a SecureData packet is addressed to every connected node.
 constexpr u16 BroadcastNetworkNodeId{0xFFFF};
@@ -116,10 +41,8 @@ constexpr u16 BroadcastNetworkNodeId{0xFFFF};
 // The host has always dest_node_id 1
 constexpr u16 HostDestNodeId{1};
 
-/**
- * Returns a list of received 802.11 beacon frames from the specified sender since the last call.
- */
-std::list<Network::WifiPacket> GetReceivedBeacons(const MacAddress& sender) {
+/// Returns a list of received 802.11 beacon frames from the specified sender since the last call.
+std::list<Network::WifiPacket> NWM_UDS::GetReceivedBeacons(const MacAddress& sender) {
     std::lock_guard lock{beacon_mutex};
     if (sender != BroadcastMac) {
         std::list<Network::WifiPacket> filtered_list;
@@ -138,19 +61,19 @@ std::list<Network::WifiPacket> GetReceivedBeacons(const MacAddress& sender) {
 }
 
 /// Sends a WifiPacket to the room we're currently connected to.
-void SendPacket(Network::WifiPacket& packet) {
-    if (auto member{Network::GetRoomMember().lock()})
-        if (member->GetState() == Network::RoomMember::State::Joined) {
-            packet.transmitter_address = member->GetMacAddress();
-            member->SendWifiPacket(packet);
-        }
+void NWM_UDS::SendPacket(Network::WifiPacket& packet) {
+    auto& member{system.RoomMember()};
+    if (member.GetState() == Network::RoomMember::State::Joined) {
+        packet.transmitter_address = member.GetMacAddress();
+        member.SendWifiPacket(packet);
+    }
 }
 
 /*
  * Returns an available index in the nodes array for the
  * currently-hosted UDS network.
  */
-static u16 GetNextAvailableNodeId() {
+u16 NWM_UDS::GetNextAvailableNodeId() {
     for (u16 index{}; index < connection_status.max_nodes; ++index)
         if ((connection_status.node_bitmask & (1 << index)) == 0)
             return index + 1;
@@ -158,7 +81,7 @@ static u16 GetNextAvailableNodeId() {
     ASSERT_MSG(false, "No available connection slots in the network");
 }
 
-static void BroadcastNodeMap() {
+void NWM_UDS::BroadcastNodeMap() {
     // Note: This isn't how UDS on a console does it but it shouldn't be
     // necessary for citra
     Network::WifiPacket packet;
@@ -183,7 +106,7 @@ static void BroadcastNodeMap() {
     SendPacket(packet);
 }
 
-static void HandleNodeMapPacket(const Network::WifiPacket& packet) {
+void NWM_UDS::HandleNodeMapPacket(const Network::WifiPacket& packet) {
     std::lock_guard lock{connection_status_mutex};
     if (connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
         LOG_DEBUG(Service_NWM, "Ignored NodeMapPacket since connection_status is host");
@@ -206,7 +129,7 @@ static void HandleNodeMapPacket(const Network::WifiPacket& packet) {
 
 // Inserts the received beacon frame in the beacon queue and removes any older beacons if the size
 // limit is exceeded.
-void HandleBeaconFrame(const Network::WifiPacket& packet) {
+void NWM_UDS::HandleBeaconFrame(const Network::WifiPacket& packet) {
     std::lock_guard lock{beacon_mutex};
     const auto unique_beacon{std::find_if(received_beacons.begin(), received_beacons.end(),
                                           [&packet](const Network::WifiPacket& new_packet) {
@@ -222,7 +145,7 @@ void HandleBeaconFrame(const Network::WifiPacket& packet) {
         received_beacons.pop_front();
 }
 
-void HandleAssociationResponseFrame(const Network::WifiPacket& packet) {
+void NWM_UDS::HandleAssociationResponseFrame(const Network::WifiPacket& packet) {
     auto assoc_result{GetAssociationResult(packet.data)};
     ASSERT_MSG(std::get<AssocStatus>(assoc_result) == AssocStatus::Successful,
                "Could not join network");
@@ -246,7 +169,7 @@ void HandleAssociationResponseFrame(const Network::WifiPacket& packet) {
     SendPacket(eapol_start);
 }
 
-static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
+void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
     std::unique_lock hle_lock{HLE::g_hle_lock, std::defer_lock};
     std::unique_lock lock{connection_status_mutex, std::defer_lock};
     std::lock(hle_lock, lock);
@@ -343,7 +266,7 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
     }
 }
 
-static void HandleSecureDataPacket(const Network::WifiPacket& packet) {
+void NWM_UDS::HandleSecureDataPacket(const Network::WifiPacket& packet) {
     auto secure_data{ParseSecureDataHeader(packet.data)};
     std::unique_lock hle_lock{HLE::g_hle_lock, std::defer_lock};
     std::unique_lock lock{connection_status_mutex, std::defer_lock};
@@ -398,7 +321,7 @@ static void HandleSecureDataPacket(const Network::WifiPacket& packet) {
  * Start a connection sequence with an UDS server. The sequence starts by sending an 802.11
  * authentication frame with SEQ1.
  */
-void StartConnectionSequence(const MacAddress& server) {
+void NWM_UDS::StartConnectionSequence(const MacAddress& server) {
     using Network::WifiPacket;
     WifiPacket auth_request;
     {
@@ -414,8 +337,8 @@ void StartConnectionSequence(const MacAddress& server) {
     SendPacket(auth_request);
 }
 
-/// Sends an Association Response frame to the specified mac address
-void SendAssociationResponseFrame(const MacAddress& address) {
+/// Sends an Association Response frame to the specified MAC address
+void NWM_UDS::SendAssociationResponseFrame(const MacAddress& address) {
     using Network::WifiPacket;
     WifiPacket assoc_response;
     {
@@ -443,7 +366,7 @@ void SendAssociationResponseFrame(const MacAddress& address) {
  * with an Authentication frame containing SEQ2, and immediately sends an Association response frame
  * containing the details of the access point and the assigned association id for the new client.
  */
-void HandleAuthenticationFrame(const Network::WifiPacket& packet) {
+void NWM_UDS::HandleAuthenticationFrame(const Network::WifiPacket& packet) {
     // Only the SEQ1 auth frame is handled here, the SEQ2 frame doesn't need any special behavior
     if (GetAuthenticationSeqNumber(packet.data) == AuthenticationSeq::SEQ1) {
         using Network::WifiPacket;
@@ -480,7 +403,7 @@ void HandleAuthenticationFrame(const Network::WifiPacket& packet) {
 }
 
 /// Handles the deauthentication frames sent from clients to hosts, when they leave a session
-void HandleDeauthenticationFrame(const Network::WifiPacket& packet) {
+void NWM_UDS::HandleDeauthenticationFrame(const Network::WifiPacket& packet) {
     std::unique_lock hle_lock{HLE::g_hle_lock, std::defer_lock};
     std::unique_lock lock{connection_status_mutex, std::defer_lock};
     std::lock(hle_lock, lock);
@@ -513,7 +436,7 @@ void HandleDeauthenticationFrame(const Network::WifiPacket& packet) {
     LOG_DEBUG(Service_NWM, "called");
 }
 
-static void HandleDataFrame(const Network::WifiPacket& packet) {
+void NWM_UDS::HandleDataFrame(const Network::WifiPacket& packet) {
     switch (GetFrameEtherType(packet.data)) {
     case EtherType::EAPoL:
         HandleEAPoLPacket(packet);
@@ -524,8 +447,8 @@ static void HandleDataFrame(const Network::WifiPacket& packet) {
     }
 }
 
-/// Callback to parse and handle a received wifi packet.
-void OnWifiPacketReceived(const Network::WifiPacket& packet) {
+/// Callback to parse and handle a received WiFi packet.
+void NWM_UDS::OnWifiPacketReceived(const Network::WifiPacket& packet) {
     switch (packet.type) {
     case Network::WifiPacket::PacketType::Beacon:
         HandleBeaconFrame(packet);
@@ -548,7 +471,7 @@ void OnWifiPacketReceived(const Network::WifiPacket& packet) {
     }
 }
 
-static std::optional<MacAddress> GetNodeMacAddress(u16 dest_node_id, u8 flags) {
+std::optional<MacAddress> NWM_UDS::GetNodeMacAddress(u16 dest_node_id, u8 flags) {
     constexpr u8 BroadcastFlag{0x2};
     if ((flags & BroadcastFlag) || dest_node_id == BroadcastNetworkNodeId)
         // Broadcast
@@ -567,8 +490,7 @@ static std::optional<MacAddress> GetNodeMacAddress(u16 dest_node_id, u8 flags) {
 }
 
 void NWM_UDS::Shutdown(Kernel::HLERequestContext& ctx) {
-    if (auto member{Network::GetRoomMember().lock()})
-        member->Unbind(wifi_packet_received);
+    system.RoomMember().Unbind(wifi_packet_received);
     for (auto bind_node : channel_data)
         bind_node.second.event->Signal();
     channel_data.clear();
@@ -597,7 +519,7 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     Kernel::MappedBuffer out_buffer{rp.PopMappedBuffer()};
     ASSERT(out_buffer.GetSize() == out_buffer_size);
     std::size_t cur_buffer_size{sizeof(BeaconDataReplyHeader)};
-    // Retrieve all beacon frames that were received from the desired mac address.
+    // Retrieve all beacon frames that were received from the desired MAC address.
     auto beacons{GetReceivedBeacons(mac_address)};
     BeaconDataReplyHeader data_reply_header{};
     data_reply_header.total_entries = static_cast<u32>(beacons.size());
@@ -639,10 +561,8 @@ void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
     recv_buffer_memory = rp.PopObject<Kernel::SharedMemory>();
     initialized = true;
     ASSERT_MSG(recv_buffer_memory->size == sharedmem_size, "Invalid shared memory size.");
-    if (auto member{Network::GetRoomMember().lock()})
-        wifi_packet_received = member->BindOnWifiPacketReceived(OnWifiPacketReceived);
-    else
-        LOG_ERROR(Service_NWM, "Network isn't initalized");
+    wifi_packet_received = system.RoomMember().BindOnWifiPacketReceived(
+        [this](const Network::WifiPacket& packet) { OnWifiPacketReceived(packet); });
     {
         std::lock_guard lock{connection_status_mutex};
         // Reset the connection status, it contains all zeros after initialization,
@@ -804,11 +724,11 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
         connection_status.node_bitmask |= 1;
         // Notify the application that the first node was set.
         connection_status.changed_nodes |= 1;
-        if (auto member{Network::GetRoomMember().lock()})
-            if (member->IsConnected())
-                network_info.host_mac_address = member->GetMacAddress();
-            else
-                network_info.host_mac_address = {{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
+        auto& member{system.RoomMember()};
+        if (member.IsConnected())
+            network_info.host_mac_address = member.GetMacAddress();
+        else
+            network_info.host_mac_address = {{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
         node_info[0] = current_node;
         // If the application has a preferred channel, use that instead.
         if (network_info.channel != 0)
@@ -1032,7 +952,7 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
     StartConnectionSequence(network_info.host_mac_address);
     // 300 ms
     // Since this timing is handled by core_timing it could differ from the 'real world' time
-    static constexpr std::chrono::nanoseconds UDSConnectionTimeout{300000000};
+    constexpr std::chrono::nanoseconds UDSConnectionTimeout{300000000};
     connection_event = ctx.SleepClientThread(
         system.Kernel().GetThreadManager().GetCurrentThread(), "uds::ConnectToNetwork",
         UDSConnectionTimeout,
@@ -1174,9 +1094,9 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework{"nwm::UDS"}, system{sy
     auto mac{SharedPage::DefaultMac};
     // Keep the Nintendo 3DS MAC header and randomly generate the last 3 bytes
     rng.GenerateBlock(static_cast<CryptoPP::byte*>(mac.data() + 3), 3);
-    if (auto member{Network::GetRoomMember().lock()})
-        if (member->IsConnected())
-            mac = member->GetMacAddress();
+    auto& member{system.RoomMember()};
+    if (member.IsConnected())
+        mac = member.GetMacAddress();
     system.Kernel().GetSharedPageHandler().SetMacAddress(mac);
 }
 
@@ -1191,8 +1111,7 @@ NWM_UDS::~NWM_UDS() {
         connection_status = {};
         connection_status.status = static_cast<u32>(NetworkStatus::NotConnected);
     }
-    if (auto member{Network::GetRoomMember().lock()})
-        member->Unbind(wifi_packet_received);
+    system.RoomMember().Unbind(wifi_packet_received);
     system.CoreTiming().UnscheduleEvent(beacon_broadcast_event, 0);
 }
 

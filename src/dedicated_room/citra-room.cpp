@@ -30,7 +30,7 @@
 #include "core/announce_multiplayer_session.h"
 #include "core/core.h"
 #include "core/settings.h"
-#include "network/network.h"
+#include "network/room.h"
 
 static void PrintHelp(const char* argv0) {
     std::cout << "Usage: " << argv0
@@ -172,36 +172,31 @@ int main(int argc, char** argv) {
         Settings::values.citra_username = username;
         Settings::values.citra_token = token;
     }
-    Network::Init();
-    if (auto room{Network::GetRoom().lock()}) {
-        if (!room->Create(room_name, "", port, password, max_members, preferred_app,
-                          preferred_app_id)) {
-            std::cout << "Failed to create room: \n\n";
-            return -1;
-        }
-        std::cout << "Room is open. Close with Q+Enter...\n\n";
-        auto announce_session{std::make_unique<Core::AnnounceMultiplayerSession>()};
-        if (announce)
-            announce_session->Start();
-        while (room->IsOpen()) {
-            std::string in;
-            std::cin >> in;
-            if (in.size() > 0) {
-                if (announce)
-                    announce_session->Stop();
-                announce_session.reset();
-                room->Destroy();
-                Network::Shutdown();
-                return 0;
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds{100});
-        }
-        if (announce)
-            announce_session->Stop();
-        announce_session.reset();
-        room->Destroy();
+    auto& room{Core::System::GetInstance().Room()};
+    if (!room.Create(room_name, "", port, password, max_members, preferred_app, preferred_app_id)) {
+        std::cout << "Failed to create room!\n\n";
+        return -1;
     }
-    Network::Shutdown();
+    std::cout << "Room is open. Close with Q+Enter...\n\n";
+    auto announce_session{std::make_unique<Core::AnnounceMultiplayerSession>()};
+    if (announce)
+        announce_session->Start();
+    while (room.IsOpen()) {
+        std::string in;
+        std::cin >> in;
+        if (in.size() > 0) {
+            if (announce)
+                announce_session->Stop();
+            announce_session.reset();
+            room.Destroy();
+            return 0;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds{100});
+    }
+    if (announce)
+        announce_session->Stop();
+    announce_session.reset();
+    room.Destroy();
     detached_tasks.WaitForAllTasks();
     return 0;
 }

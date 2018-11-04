@@ -16,23 +16,21 @@
 #include "citra/multiplayer/state.h"
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
+#include "core/core.h"
 #include "ui_client_room.h"
 
-ClientRoomWindow::ClientRoomWindow(QWidget* parent)
+ClientRoomWindow::ClientRoomWindow(QWidget* parent, Core::System& system)
     : QDialog{parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint},
-      ui{std::make_unique<Ui::ClientRoom>()} {
+      ui{std::make_unique<Ui::ClientRoom>()}, system{system} {
     ui->setupUi(this);
     // Setup the callbacks for network updates
-    if (auto member{Network::GetRoomMember().lock()}) {
-        member->BindOnRoomInformationChanged(
-            [this](const Network::RoomInformation& info) { emit RoomInformationChanged(info); });
-        member->BindOnStateChanged(
-            [this](const Network::RoomMember::State& state) { emit StateChanged(state); });
-        connect(this, &ClientRoomWindow::RoomInformationChanged, this,
-                &ClientRoomWindow::OnRoomUpdate);
-        connect(this, &ClientRoomWindow::StateChanged, this, &ClientRoomWindow::OnStateChange);
-    }
-    // TODO: Network was not initialized?
+    auto& member{system.RoomMember()};
+    member.BindOnRoomInformationChanged(
+        [this](const Network::RoomInformation& info) { emit RoomInformationChanged(info); });
+    member.BindOnStateChanged(
+        [this](const Network::RoomMember::State& state) { emit StateChanged(state); });
+    connect(this, &ClientRoomWindow::RoomInformationChanged, this, &ClientRoomWindow::OnRoomUpdate);
+    connect(this, &ClientRoomWindow::StateChanged, this, &ClientRoomWindow::OnStateChange);
     connect(ui->disconnect, &QPushButton::released, [this] { Disconnect(); });
     ui->disconnect->setDefault(false);
     ui->disconnect->setAutoDefault(false);
@@ -62,19 +60,17 @@ void ClientRoomWindow::Disconnect() {
 }
 
 void ClientRoomWindow::UpdateView() {
-    if (auto member{Network::GetRoomMember().lock()})
-        if (member->IsConnected()) {
-            ui->chat->Enable();
-            ui->disconnect->setEnabled(true);
-            auto memberlist{member->GetMemberInformation()};
-            ui->chat->SetMemberList(memberlist);
-            const auto information{member->GetRoomInformation()};
-            setWindowTitle(QString("%1 (%2/%3 members) - connected")
-                               .arg(QString::fromStdString(information.name))
-                               .arg(memberlist.size())
-                               .arg(information.member_slots));
-            return;
-        }
-    // TODO: Can't get RoomMember*, show error and close window
-    close();
+    auto& member{system.RoomMember()};
+    if (member.IsConnected()) {
+        ui->chat->Enable();
+        ui->disconnect->setEnabled(true);
+        auto member_list{member.GetMemberInformation()};
+        ui->chat->SetMemberList(member_list);
+        const auto information{member.GetRoomInformation()};
+        setWindowTitle(QString("%1 (%2/%3 members) - connected")
+                           .arg(QString::fromStdString(information.name))
+                           .arg(member_list.size())
+                           .arg(information.member_slots));
+        return;
+    }
 }

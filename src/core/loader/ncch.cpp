@@ -24,7 +24,7 @@
 #include "core/loader/ncch.h"
 #include "core/loader/smdh.h"
 #include "core/memory.h"
-#include "network/network.h"
+#include "network/room_member.h"
 
 namespace Loader {
 
@@ -67,10 +67,9 @@ ResultStatus AppLoader_NCCH::LoadExec(Kernel::SharedPtr<Kernel::Process>& proces
     u64_le program_id;
     if (ResultStatus::Success == ReadCode(code) &&
         ResultStatus::Success == ReadProgramId(program_id)) {
-        std::string process_name{Common::StringFromFixedZeroTerminatedBuffer(
+        auto process_name{Common::StringFromFixedZeroTerminatedBuffer(
             (const char*)overlay_ncch->exheader_header.codeset_info.name, 8)};
-        SharedPtr<CodeSet> codeset{
-            Core::System::GetInstance().Kernel().CreateCodeSet(process_name, program_id)};
+        auto codeset{Core::System::GetInstance().Kernel().CreateCodeSet(process_name, program_id)};
         codeset->CodeSegment().offset = 0;
         codeset->CodeSegment().addr = overlay_ncch->exheader_header.codeset_info.text.address;
         codeset->CodeSegment().size =
@@ -92,12 +91,12 @@ ResultStatus AppLoader_NCCH::LoadExec(Kernel::SharedPtr<Kernel::Process>& proces
             bss_page_size;
         codeset->entrypoint = codeset->CodeSegment().addr;
         codeset->memory = std::make_shared<std::vector<u8>>(std::move(code));
-        process = Core::System::GetInstance().Kernel().CreateProcess(std::move(codeset));
+        auto& kernel{Core::System::GetInstance().Kernel()};
+        process = kernel.CreateProcess(std::move(codeset));
         // Attach a resource limit to the process based on the resource limit category
         process->resource_limit =
-            Core::System::GetInstance().Kernel().ResourceLimit().GetForCategory(
-                static_cast<Kernel::ResourceLimitCategory>(
-                    overlay_ncch->exheader_header.arm11_system_local_caps.resource_limit_category));
+            kernel.ResourceLimit().GetForCategory(static_cast<Kernel::ResourceLimitCategory>(
+                overlay_ncch->exheader_header.arm11_system_local_caps.resource_limit_category));
         // Set the default CPU core for this process
         process->ideal_processor =
             overlay_ncch->exheader_header.arm11_system_local_caps.ideal_processor;
@@ -124,9 +123,8 @@ void AppLoader_NCCH::ParseRegionLockoutInfo() {
         constexpr u32 REGION_COUNT{7};
         std::vector<u32> regions;
         for (u32 region{}; region < REGION_COUNT; ++region) {
-            if (region_lockout & 1) {
+            if (region_lockout & 1)
                 regions.push_back(region);
-            }
             region_lockout >>= 1;
         }
         Core::System::GetInstance()
@@ -140,40 +138,28 @@ void AppLoader_NCCH::ParseRegionLockoutInfo() {
 ResultStatus AppLoader_NCCH::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
-
     ResultStatus result{base_ncch.Load()};
     if (result != ResultStatus::Success)
         return result;
-
     u64_le ncch_program_id;
     ReadProgramId(ncch_program_id);
     std::string program_id{fmt::format("{:016X}", ncch_program_id)};
-
     LOG_INFO(Loader, "Program ID: {}", program_id);
-
     update_ncch.OpenFile(Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC,
                                                           ncch_program_id | UPDATE_MASK));
     result = update_ncch.Load();
     if (result == ResultStatus::Success)
         overlay_ncch = &update_ncch;
-
-    if (auto member{Network::GetRoomMember().lock()}) {
-        Network::AppInfo app_info;
-        ReadShortTitle(app_info.name);
-        app_info.id = ncch_program_id;
-        member->SendAppInfo(app_info);
-    }
-
-    is_loaded = true; // Set state to loaded
-
+    Network::AppInfo app_info;
+    ReadShortTitle(app_info.name);
+    app_info.id = ncch_program_id;
+    Core::System::GetInstance().RoomMember().SendAppInfo(app_info);
+    is_loaded = true;           // Set state to loaded
     result = LoadExec(process); // Load the executable into memory for booting
     if (ResultStatus::Success != result)
         return result;
-
     Core::System::GetInstance().ArchiveManager().RegisterSelfNCCH(*this);
-
     ParseRegionLockoutInfo();
-
     return ResultStatus::Success;
 }
 

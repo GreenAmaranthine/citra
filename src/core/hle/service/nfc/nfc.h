@@ -17,10 +17,6 @@ namespace Core {
 class System;
 } // namespace Core
 
-namespace Kernel {
-class Event;
-} // namespace Kernel
-
 namespace Service::NFC {
 
 using AmiiboData = std::array<u8, AMIIBO_MAX_SIZE>;

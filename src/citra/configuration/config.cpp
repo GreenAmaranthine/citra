@@ -8,7 +8,7 @@
 #include "common/file_util.h"
 #include "input_common/main.h"
 #include "input_common/udp/client.h"
-#include "network/network.h"
+#include "network/room.h"
 
 const std::array<int, Settings::NativeButton::NumButtons> Config::default_buttons{{
     Qt::Key_A,

@@ -9,6 +9,10 @@
 #include <QFutureWatcher>
 #include "citra/multiplayer/validation.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Ui {
 class DirectConnect;
 } // namespace Ui
@@ -17,7 +21,7 @@ class DirectConnectWindow : public QDialog {
     Q_OBJECT
 
 public:
-    explicit DirectConnectWindow(QWidget* parent = nullptr);
+    explicit DirectConnectWindow(QWidget* parent, Core::System& system);
     ~DirectConnectWindow();
 
 signals:
@@ -37,4 +41,5 @@ private:
     QFutureWatcher<void>* watcher;
     std::unique_ptr<Ui::DirectConnect> ui;
     Validation validation;
+    Core::System& system;
 };
