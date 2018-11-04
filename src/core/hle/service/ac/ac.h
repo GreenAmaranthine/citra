@@ -55,7 +55,7 @@ protected:
     Kernel::SharedPtr<Kernel::Event> connect_event;
     Kernel::SharedPtr<Kernel::Event> disconnect_event;
 
-    std::string connected_network_name{""};
+    std::string connected_network_name{"Nintendo"};
 };
 
 void InstallInterfaces(Core::System& system);
