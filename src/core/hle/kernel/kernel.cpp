@@ -19,7 +19,7 @@ namespace Kernel {
 KernelSystem::KernelSystem(Core::System& system) : system{system} {
     resource_limits = std::make_unique<ResourceLimitList>(*this);
     auto& timing{system.CoreTiming()};
-    thread_manager = std::make_unique<ThreadManager>(timing);
+    thread_manager = std::make_unique<ThreadManager>(system);
     timer_manager = std::make_unique<TimerManager>(timing);
 }
 

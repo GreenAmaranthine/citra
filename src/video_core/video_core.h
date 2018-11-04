@@ -7,10 +7,11 @@
 #include <atomic>
 #include <memory>
 #include "core/core.h"
+#include "core/framebuffer_layout.h"
 
 namespace Core {
-    class System;
-}//
+class System;
+} // namespace Core
 
 class Renderer;
 

@@ -248,8 +248,8 @@ void Module::Interface::EnableAccelerometer(Kernel::HLERequestContext& ctx) {
     ++hid->enable_accelerometer_count;
     // Schedules the accelerometer update event if the accelerometer was just enabled
     if (hid->enable_accelerometer_count == 1)
-        system.CoreTiming().ScheduleEvent(accelerometer_update_ticks,
-                                          hid->accelerometer_update_event);
+        hid->system.CoreTiming().ScheduleEvent(accelerometer_update_ticks,
+                                               hid->accelerometer_update_event);
     IPC::ResponseBuilder rb{ctx, 0x11, 1, 0};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HID, "called");
@@ -259,7 +259,7 @@ void Module::Interface::DisableAccelerometer(Kernel::HLERequestContext& ctx) {
     --hid->enable_accelerometer_count;
     // Unschedules the accelerometer update event if the accelerometer was just disabled
     if (hid->enable_accelerometer_count == 0)
-        system.CoreTiming().UnscheduleEvent(hid->accelerometer_update_event, 0);
+        hid->system.CoreTiming().UnscheduleEvent(hid->accelerometer_update_event, 0);
     IPC::ResponseBuilder rb{ctx, 0x12, 1, 0};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HID, "called");
@@ -269,7 +269,7 @@ void Module::Interface::EnableGyroscopeLow(Kernel::HLERequestContext& ctx) {
     ++hid->enable_gyroscope_count;
     // Schedules the gyroscope update event if the gyroscope was just enabled
     if (hid->enable_gyroscope_count == 1)
-        CoreTiming::ScheduleEvent(gyroscope_update_ticks, hid->gyroscope_update_event);
+        hid->system.CoreTiming().ScheduleEvent(gyroscope_update_ticks, hid->gyroscope_update_event);
     IPC::ResponseBuilder rb{ctx, 0x13, 1, 0};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HID, "called");
@@ -279,7 +279,7 @@ void Module::Interface::DisableGyroscopeLow(Kernel::HLERequestContext& ctx) {
     --hid->enable_gyroscope_count;
     // Unschedules the gyroscope update event if the gyroscope was just disabled
     if (hid->enable_gyroscope_count == 0)
-        CoreTiming::UnscheduleEvent(hid->gyroscope_update_event, 0);
+        hid->system.CoreTiming().UnscheduleEvent(hid->gyroscope_update_event, 0);
     IPC::ResponseBuilder rb{ctx, 0x14, 1, 0};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HID, "called");

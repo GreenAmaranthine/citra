@@ -16,6 +16,10 @@
 #include "core/hle/kernel/wait_object.h"
 #include "core/hle/result.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Kernel {
 
 class Mutex;
@@ -57,7 +61,7 @@ enum class ThreadWakeupReason {
 
 class ThreadManager {
 public:
-    explicit ThreadManager();
+    explicit ThreadManager(Core::System& system);
     ~ThreadManager();
 
     /**
@@ -118,6 +122,8 @@ private:
 
     // Lists all threads that aren't deleted.
     std::vector<SharedPtr<Thread>> thread_list;
+
+    Core::System& system;
 
     friend class Thread;
     friend class KernelSystem;

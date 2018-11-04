@@ -123,7 +123,7 @@ private:
 
 class CheatManager {
 public:
-    CheatManager();
+    explicit CheatManager(Core::Timing& timing);
     ~CheatManager();
 
     void Run();
@@ -135,7 +135,8 @@ private:
 
     std::vector<Cheat> cheats_list;
     std::mutex cheats_list_mutex;
-    CoreTiming::EventType* tick_event;
+    Core::TimingEventType* tick_event;
+    Core::Timing& timing;
 };
 
 std::vector<Cheat> GetCheatsFromFile();

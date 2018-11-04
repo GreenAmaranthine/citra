@@ -8,7 +8,7 @@ using Callback = Dynarmic::A32::Coprocessor::Callback;
 using CallbackOrAccessOneWord = Dynarmic::A32::Coprocessor::CallbackOrAccessOneWord;
 using CallbackOrAccessTwoWords = Dynarmic::A32::Coprocessor::CallbackOrAccessTwoWords;
 
-CPUCP15::CPUCP15(const std::shared_ptr<State>& state) : state(state) {}
+CPUCP15::CPUCP15(State& state) : state{state} {}
 
 CPUCP15::~CPUCP15() = default;
 
@@ -23,21 +23,21 @@ CallbackOrAccessOneWord CPUCP15::CompileSendOneWord(bool two, unsigned opc1, Cop
     // TODO: Privileged CP15 registers
     if (!two && CRn == CoprocReg::C7 && opc1 == 0 && CRm == CoprocReg::C5 && opc2 == 4)
         // This is a dummy write, we ignore the value written here.
-        return &state->cp15[CP15_FLUSH_PREFETCH_BUFFER];
+        return &state.cp15[CP15_FLUSH_PREFETCH_BUFFER];
     if (!two && CRn == CoprocReg::C7 && opc1 == 0 && CRm == CoprocReg::C10) {
         switch (opc2) {
         case 4:
             // This is a dummy write, we ignore the value written here.
-            return &state->cp15[CP15_DATA_SYNC_BARRIER];
+            return &state.cp15[CP15_DATA_SYNC_BARRIER];
         case 5:
             // This is a dummy write, we ignore the value written here.
-            return &state->cp15[CP15_DATA_MEMORY_BARRIER];
+            return &state.cp15[CP15_DATA_MEMORY_BARRIER];
         default:
             return boost::blank{};
         }
     }
     if (!two && CRn == CoprocReg::C13 && opc1 == 0 && CRm == CoprocReg::C0 && opc2 == 2)
-        return &state->cp15[CP15_THREAD_UPRW];
+        return &state.cp15[CP15_THREAD_UPRW];
     return {};
 }
 
@@ -51,14 +51,13 @@ CallbackOrAccessOneWord CPUCP15::CompileGetOneWord(bool two, unsigned opc1, Copr
     if (!two && CRn == CoprocReg::C13 && opc1 == 0 && CRm == CoprocReg::C0) {
         switch (opc2) {
         case 2:
-            return &state->cp15[CP15_THREAD_UPRW];
+            return &state.cp15[CP15_THREAD_UPRW];
         case 3:
-            return &state->cp15[CP15_THREAD_URO];
+            return &state.cp15[CP15_THREAD_URO];
         default:
             return {};
         }
     }
-
     return {};
 }
 

@@ -83,6 +83,8 @@ private:
     Core::TimingEventType* tick_event;
 
     std::weak_ptr<DSP_DSP> dsp_dsp;
+
+    Core::System& system;
 };
 
 DspHle::Impl::Impl(DspHle& parent_, Core::System& system_) : parent{parent_}, system{system_} {

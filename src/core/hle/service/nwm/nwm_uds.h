@@ -130,7 +130,7 @@ private:
     void ConnectToNetwork(Kernel::HLERequestContext& ctx);
     void DecryptBeaconData(Kernel::HLERequestContext& ctx);
 
-    void BeaconBroadcastCallback(u64 userdata, s64 cycles_late);
+    void BeaconBroadcastCallback(s64);
 };
 
 } // namespace Service::NWM

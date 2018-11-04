@@ -9,6 +9,10 @@
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/wait_object.h"
 
+namespace Core {
+class Timing;
+} // namespace Core
+
 namespace Kernel {
 
 class TimerManager {
@@ -22,7 +26,7 @@ private:
     /// The event type of the generic timer callback event
     Core::TimingEventType* timer_callback_event_type;
 
-    u64 next_timer_callback_id{0};
+    u64 next_timer_callback_id{};
     std::unordered_map<u64, Timer*> timer_callback_table;
 
     friend class Timer;

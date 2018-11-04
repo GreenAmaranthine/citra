@@ -28,7 +28,7 @@ static std::unordered_map<u64, u64> custom_ticks_map{{
 
 class UserCallbacks final : public Dynarmic::A32::UserCallbacks {
 public:
-    explicit UserCallbacks(Cpu& parent) : parent{parent} {
+    explicit UserCallbacks(Cpu& parent, Core::System& system) : parent{parent}, system{system} {
         SyncSettings();
     }
 
@@ -81,11 +81,11 @@ public:
     }
 
     void AddTicks(std::uint64_t ticks) override {
-        CoreTiming::AddTicks(use_custom_ticks ? custom_ticks : ticks);
+        system.CoreTiming().AddTicks(use_custom_ticks ? custom_ticks : ticks);
     }
 
     std::uint64_t GetTicksRemaining() override {
-        s64 ticks{CoreTiming::GetDowncount()};
+        s64 ticks{system.CoreTiming().GetDowncount()};
         return static_cast<u64>(ticks <= 0 ? 0 : ticks);
     }
 
@@ -100,7 +100,7 @@ public:
         }
         case Settings::TicksMode::Auto: {
             u64 program_id{};
-            Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id);
+            system.GetAppLoader().ReadProgramId(program_id);
             auto itr{custom_ticks_map.find(program_id)};
             if (itr != custom_ticks_map.end()) {
                 custom_ticks = itr->second;
@@ -123,6 +123,7 @@ private:
     Cpu& parent;
     u64 custom_ticks{};
     bool use_custom_ticks{};
+    Core::System& system;
 };
 
 ThreadContext::ThreadContext() {
@@ -188,8 +189,7 @@ void ThreadContext::SetFpexc(u32 value) {
     fpexc = value;
 }
 
-Cpu::Cpu() : cb{std::make_unique<UserCallbacks>(*this)} {
-    state = std::make_shared<State>();
+Cpu::Cpu(Core::System& system) : cb{std::make_unique<UserCallbacks>(*this, system)} {
     PageTableChanged();
 }
 
@@ -197,7 +197,6 @@ Cpu::~Cpu() = default;
 
 void Cpu::Run() {
     ASSERT(Memory::GetCurrentPageTable() == current_page_table);
-
     jit->Run();
 }
 
@@ -226,21 +225,17 @@ void Cpu::SetVFPReg(int index, u32 value) {
 }
 
 u32 Cpu::GetVFPSystemReg(VFPSystemRegister reg) const {
-    if (reg == VFP_FPSCR) {
+    if (reg == VFP_FPSCR)
         return jit->Fpscr();
-    }
-
     // Dynarmic doesn't implement and/or expose other VFP registers
-    return state->vfp[reg];
+    return state.vfp[reg];
 }
 
 void Cpu::SetVFPSystemReg(VFPSystemRegister reg, u32 value) {
-    if (reg == VFP_FPSCR) {
+    if (reg == VFP_FPSCR)
         jit->SetFpscr(value);
-    }
-
     // Dynarmic doesn't implement and/or expose other VFP registers
-    state->vfp[reg] = value;
+    state.vfp[reg] = value;
 }
 
 u32 Cpu::GetCPSR() const {
@@ -252,11 +247,11 @@ void Cpu::SetCPSR(u32 cpsr) {
 }
 
 u32 Cpu::GetCP15Register(CP15Register reg) {
-    return state->cp15[reg];
+    return state.cp15[reg];
 }
 
 void Cpu::SetCP15Register(CP15Register reg, u32 value) {
-    state->cp15[reg] = value;
+    state.cp15[reg] = value;
 }
 
 std::unique_ptr<ThreadContext> Cpu::NewContext() const {
@@ -264,19 +259,17 @@ std::unique_ptr<ThreadContext> Cpu::NewContext() const {
 }
 
 void Cpu::SaveContext(const std::unique_ptr<ThreadContext>& arg) {
-    ThreadContext* ctx{dynamic_cast<ThreadContext*>(arg.get())};
+    auto ctx{dynamic_cast<ThreadContext*>(arg.get())};
     ASSERT(ctx);
-
     jit->SaveContext(*ctx->ctx);
-    ctx->fpexc = state->vfp[VFP_FPEXC];
+    ctx->fpexc = state.vfp[VFP_FPEXC];
 }
 
 void Cpu::LoadContext(const std::unique_ptr<ThreadContext>& arg) {
-    const ThreadContext* ctx{dynamic_cast<ThreadContext*>(arg.get())};
+    auto ctx{dynamic_cast<ThreadContext*>(arg.get())};
     ASSERT(ctx);
-
     jit->LoadContext(*ctx->ctx);
-    state->vfp[VFP_FPEXC] = ctx->fpexc;
+    state.vfp[VFP_FPEXC] = ctx->fpexc;
 }
 
 void Cpu::PrepareReschedule() {
@@ -291,13 +284,11 @@ void Cpu::InvalidateCacheRange(u32 start_address, std::size_t length) {
 
 void Cpu::PageTableChanged() {
     current_page_table = Memory::GetCurrentPageTable();
-
     auto iter{jits.find(current_page_table)};
     if (iter != jits.end()) {
         jit = iter->second.get();
         return;
     }
-
     auto new_jit{MakeJit()};
     jit = new_jit.get();
     jits.emplace(current_page_table, std::move(new_jit));

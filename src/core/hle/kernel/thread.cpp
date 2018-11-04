@@ -47,7 +47,7 @@ Thread* ThreadManager::GetCurrentThread() const {
 
 void Thread::Stop() {
     // Cancel any outstanding wakeup events for this thread
-    kernel.Parent().CoreTiming().UnscheduleEvent(thread_manager.ThreadWakeupEventType, thread_id);
+    system.CoreTiming().UnscheduleEvent(thread_manager.ThreadWakeupEventType, thread_id);
     thread_manager.wakeup_callback_table.erase(thread_id);
     // Clean up thread from ready queue
     // This is only needed when the thread is termintated forcefully (SVC TerminateProcess)
@@ -70,7 +70,7 @@ void Thread::Stop() {
 
 /// Boost low priority threads (temporarily) that have been starved
 void ThreadManager::PriorityBoostStarvedThreads() {
-    u64 current_ticks{CoreTiming::GetTicks()};
+    u64 current_ticks{system.CoreTiming().GetTicks()};
     for (auto& thread : thread_list) {
         const u64 boost_timeout{2000000}; // Boost threads that have been ready for > this long
         u64 delta{current_ticks - thread->last_running_ticks};
@@ -162,7 +162,7 @@ void ThreadManager::ThreadWakeupCallback(u64 thread_id, s64 cycles_late) {
             thread->wakeup_callback(ThreadWakeupReason::Timeout, thread, nullptr);
         // Remove the thread from each of its waiting objects' waitlists
         for (auto& object : thread->wait_objects)
-            object->RemoveWaitingThread(thread.get());
+            object->RemoveWaitingThread(thread);
         thread->wait_objects.clear();
     }
     thread->ResumeFromWait();
@@ -367,8 +367,8 @@ bool ThreadManager::HaveReadyThreads() {
 void ThreadManager::Reschedule() {
     if (Settings::values.priority_boost)
         PriorityBoostStarvedThreads();
-    Thread* cur{GetCurrentThread()};
-    Thread* next{PopNextReadyThread()};
+    auto cur{GetCurrentThread()};
+    auto next{PopNextReadyThread()};
     if (cur && next)
         LOG_TRACE(Kernel, "context switch {} -> {}", cur->GetObjectId(), next->GetObjectId());
     else if (cur)
@@ -398,11 +398,10 @@ VAddr Thread::GetCommandBufferAddress() const {
     return GetTLSAddress() + CommandHeaderOffset;
 }
 
-ThreadManager::ThreadManager(Core::Timing& timing) {
-    ThreadWakeupEventType =
-        timing.RegisterEvent("ThreadManager Wakeup Event", [this](u64 thread_id, s64 cycle_late) {
-            ThreadWakeupCallback(thread_id, cycle_late);
-        });
+ThreadManager::ThreadManager(Core::System& system) : system{system} {
+    ThreadWakeupEventType = system.CoreTiming().RegisterEvent(
+        "ThreadManager Wakeup Event",
+        [this](u64 thread_id, s64 cycle_late) { ThreadWakeupCallback(thread_id, cycle_late); });
 }
 
 ThreadManager::~ThreadManager() {

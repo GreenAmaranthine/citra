@@ -137,6 +137,7 @@ void System::Reschedule() {
 
 System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     LOG_DEBUG(HW_Memory, "initialized OK");
+    m_frontend = &frontend;
     timing = std::make_unique<Core::Timing>();
     kernel = std::make_unique<Kernel::KernelSystem>(*this);
     // Initialize FS, CFG and memory
@@ -145,7 +146,7 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     Service::FS::InstallInterfaces(*this);
     Service::CFG::InstallInterfaces(*this);
     kernel->InitializeMemory(system_mode);
-    cpu_core = std::make_unique<Cpu>();
+    cpu_core = std::make_unique<Cpu>(*this);
     dsp_core = std::make_unique<AudioCore::DspHle>(*this);
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching);
 #ifdef ENABLE_SCRIPTING
@@ -155,7 +156,7 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     sleep_mode_enabled = false;
     HW::Init();
     Service::Init(*this);
-    cheat_manager = std::make_unique<CheatCore::CheatManager>();
+    cheat_manager = std::make_unique<CheatCore::CheatManager>(*timing);
     ResultStatus result{VideoCore::Init(*this)};
     if (result != ResultStatus::Success)
         return result;

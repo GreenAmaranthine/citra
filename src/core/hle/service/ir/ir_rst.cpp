@@ -122,14 +122,14 @@ void IR_RST::Shutdown(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_IR, "called");
 }
 
-IR_RST::IR_RST(Core::System& system) : ServiceFramework{"ir:rst", 1} {
+IR_RST::IR_RST(Core::System& system) : ServiceFramework{"ir:rst", 1}, system{system} {
     // Note: these two kernel objects are even available before Initialize service function is
     // called.
     auto& kernel{system.Kernel()};
     shared_memory = kernel.CreateSharedMemory(nullptr, 0x1000, Kernel::MemoryPermission::ReadWrite,
                                               Kernel::MemoryPermission::Read, 0,
                                               Kernel::MemoryRegion::Base, "ir:rst shared_memory");
-    update_event = kernel.CreateEvent(Kernel::ResetType::OneShot, "ir_rst update_event");
+    update_event = kernel.CreateEvent(Kernel::ResetType::OneShot, "ir:rst update_event");
     update_callback_id =
         system.CoreTiming().RegisterEvent("IR Update Event", [this](u64 userdata, s64 cycles_late) {
             UpdateCallback(userdata, cycles_late);

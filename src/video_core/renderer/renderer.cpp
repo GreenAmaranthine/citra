@@ -158,7 +158,7 @@ void Renderer::SwapBuffers() {
     system.perf_stats.EndSystemFrame();
     // Swap buffers
     frontend.SwapBuffers();
-    system.frame_limiter.DoFrameLimiting(CoreTiming::GetGlobalTimeUs());
+    system.frame_limiter.DoFrameLimiting(system.CoreTiming().GetGlobalTimeUs());
     system.perf_stats.BeginSystemFrame();
     prev_state.Apply();
 }

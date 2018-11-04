@@ -1114,7 +1114,7 @@ void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx) {
 }
 
 // Sends a 802.11 beacon frame with information about the current network.
-void NWM_UDS::BeaconBroadcastCallback(u64 userdata, s64 cycles_late) {
+void NWM_UDS::BeaconBroadcastCallback(s64 cycles_late) {
     // Don't do anything if we're not actually hosting a network
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost))
         return;
@@ -1167,8 +1167,9 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework{"nwm::UDS"}, system{sy
     RegisterHandlers(functions);
     connection_status_event =
         system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "NWM::connection_status_event");
-    beacon_broadcast_event =
-        system.CoreTiming().RegisterEvent("UDS Beacon Broadcast Event", BeaconBroadcastCallback);
+    beacon_broadcast_event = system.CoreTiming().RegisterEvent(
+        "UDS Beacon Broadcast Event",
+        [this](u64, s64 cycles_late) { BeaconBroadcastCallback(cycles_late); });
     CryptoPP::AutoSeededRandomPool rng;
     auto mac{SharedPage::DefaultMac};
     // Keep the Nintendo 3DS MAC header and randomly generate the last 3 bytes

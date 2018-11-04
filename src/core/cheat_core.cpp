@@ -59,24 +59,24 @@ std::vector<Cheat> GetCheatsFromFile() {
     return cheats;
 }
 
-CheatManager::CheatManager() {
+CheatManager::CheatManager(Core::Timing& timing) : timing{timing} {
     std::string cheats_dir{FileUtil::GetUserPath(FileUtil::UserPath::UserDir) + "cheats"};
     if (!FileUtil::Exists(cheats_dir))
         FileUtil::CreateDir(cheats_dir);
     RefreshCheats();
-    tick_event = CoreTiming::RegisterEvent("CheatManager Tick Event", [this](u64, int cycles_late) {
+    tick_event = timing.RegisterEvent("CheatManager Tick Event", [this](u64, int cycles_late) {
         CheatTickCallback(cycles_late);
     });
-    CoreTiming::ScheduleEvent(BASE_CLOCK_RATE_ARM11, tick_event);
+    timing.ScheduleEvent(BASE_CLOCK_RATE_ARM11, tick_event);
 }
 
 CheatManager::~CheatManager() {
-    CoreTiming::UnscheduleEvent(tick_event, 0);
+    timing.UnscheduleEvent(tick_event, 0);
 }
 
 void CheatManager::CheatTickCallback(int cycles_late) {
     Run();
-    CoreTiming::ScheduleEvent(BASE_CLOCK_RATE_ARM11 - cycles_late, tick_event);
+    timing.ScheduleEvent(BASE_CLOCK_RATE_ARM11 - cycles_late, tick_event);
 }
 
 void CheatManager::RefreshCheats() {

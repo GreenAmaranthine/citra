@@ -33,7 +33,7 @@ TimingEventType* Timing::RegisterEvent(const std::string& name, TimedCallback ca
                name);
     auto info{event_types.emplace(name, TimingEventType{callback, nullptr})};
     auto event_type{&info.first->second};
-    event_type->name{&info.first->first};
+    event_type->name = &info.first->first;
     return event_type;
 }
 
@@ -59,7 +59,7 @@ u64 Timing::GetIdleTicks() const {
 void Timing::ScheduleEvent(s64 cycles_into_future, const TimingEventType* event_type,
                            u64 userdata) {
     ASSERT(event_type);
-    s64 timeout{GetTicks() + cycles_into_future};
+    s64 timeout{static_cast<s64>(GetTicks() + cycles_into_future)};
     // If this event needs to be scheduled before the next Advance(), force one early
     if (!is_global_timer_sane)
         ForceExceptionCheck(cycles_into_future);
@@ -72,16 +72,16 @@ void Timing::ScheduleEventThreadsafe(s64 cycles_into_future, const TimingEventTy
     ts_queue.Push(Event{global_timer + cycles_into_future, 0, userdata, event_type});
 }
 
-void Timing::UnscheduleEvent(const TimingEventType* event_type, u64 userdata){
+void Timing::UnscheduleEvent(const TimingEventType* event_type, u64 userdata) {
     auto itr{std::remove_if(event_queue.begin(), event_queue.end(), [&](const Event& e) {
         return e.type == event_type && e.userdata == userdata;
-    })}};
-// Removing random items breaks the invariant so we have to re-establish it.
-if (itr != event_queue.end()) {
-    event_queue.erase(itr, event_queue.end());
-    std::make_heap(event_queue.begin(), event_queue.end(), std::greater<>());
+    })};
+    // Removing random items breaks the invariant so we have to re-establish it.
+    if (itr != event_queue.end()) {
+        event_queue.erase(itr, event_queue.end());
+        std::make_heap(event_queue.begin(), event_queue.end(), std::greater<>());
+    }
 }
-} // namespace Core
 
 void Timing::RemoveEvent(const TimingEventType* event_type) {
     auto itr{std::remove_if(event_queue.begin(), event_queue.end(),

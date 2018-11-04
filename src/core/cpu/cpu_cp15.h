@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <memory>
 #include <dynarmic/A32/coprocessor.h>
 #include "core/cpu/common.h"
 
@@ -12,7 +11,7 @@ class CPUCP15 final : public Dynarmic::A32::Coprocessor {
 public:
     using CoprocReg = Dynarmic::A32::CoprocReg;
 
-    explicit CPUCP15(const std::shared_ptr<State>&);
+    explicit CPUCP15(State&);
     ~CPUCP15() override;
 
     std::optional<Callback> CompileInternalOperation(bool two, unsigned opc1, CoprocReg CRd,
@@ -30,5 +29,5 @@ public:
                                               std::optional<u8> option) override;
 
 private:
-    const std::shared_ptr<State>& state;
+    State& state;
 };

@@ -18,6 +18,8 @@ class Event;
 class SharedMemory;
 } // namespace Kernel
 
+namespace Service::IR {
+
 class BufferManager;
 class ExtraHID;
 

@@ -9,6 +9,10 @@
 #include "common/common_types.h"
 #include "core/cpu/common.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Memory {
 struct PageTable;
 } // namespace Memory
@@ -24,6 +28,7 @@ class ThreadContext final : NonCopyable {
 public:
     ThreadContext();
     ~ThreadContext();
+
     void Reset();
     u32 GetCpuRegister(std::size_t index) const;
     void SetCpuRegister(std::size_t index, u32 value);
@@ -47,7 +52,7 @@ private:
 
 class Cpu {
 public:
-    explicit Cpu();
+    explicit Cpu(Core::System& system);
     ~Cpu();
 
     void Run();
@@ -85,5 +90,5 @@ private:
     Dynarmic::A32::Jit* jit;
     Memory::PageTable* current_page_table;
     std::map<Memory::PageTable*, std::unique_ptr<Dynarmic::A32::Jit>> jits;
-    std::shared_ptr<State> state;
+    State state;
 };

@@ -1006,7 +1006,7 @@ static void SleepThread(s64 nanoseconds) {
 /// This returns the total CPU ticks elapsed since the CPU was powered-on
 static s64 GetSystemTick() {
     auto& timing{Core::System::GetInstance().CoreTiming()};
-    s64 result{timing.GetTicks()};
+    s64 result{static_cast<s64>(timing.GetTicks())};
     // Advance time to defeat dumb games (like Cubic Ninja) that busy-wait for the frame to end.
     // Measured time between two calls on a 9.2 o3DS with Ninjhax 1.1b
     timing.AddTicks(150);

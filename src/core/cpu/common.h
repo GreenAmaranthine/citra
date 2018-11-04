@@ -27,6 +27,6 @@ enum CP15Register {
 };
 
 struct State {
-    std::array<u32, 84> cp15;
-    std::array<u32, 7> vfp;
+    std::array<u32, 84> cp15{};
+    std::array<u32, 7> vfp{};
 };

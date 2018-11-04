@@ -143,7 +143,7 @@ ExtraHID::ExtraHID(Core::System& system, SendFunc send_func) : IRDevice{system, 
         0x65,
     }};
     hid_polling_callback_id = system.CoreTiming().RegisterEvent(
-        "ExtraHID Send HID Status Event", [this](u64, s64 cycles_late) {
+        "ExtraHID Send HID Status Event", [this, &system](u64, s64 cycles_late) {
             SendHIDStatus();
             system.CoreTiming().ScheduleEvent(msToCycles(hid_period) - cycles_late,
                                               hid_polling_callback_id);
