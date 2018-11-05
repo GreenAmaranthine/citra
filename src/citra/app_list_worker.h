@@ -12,6 +12,10 @@
 #include <QString>
 #include "common/common_types.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 /**
  * Asynchronous worker object for populating the application list.
  * Communicates with other threads through Qt's signal/slot system.
@@ -20,8 +24,8 @@ class AppListWorker : public QObject, public QRunnable {
     Q_OBJECT
 
 public:
-    explicit AppListWorker(QList<UISettings::AppDir>& app_dirs)
-        : QObject{}, QRunnable{}, app_dirs{app_dirs} {}
+    explicit AppListWorker(Core::System& system, QList<UISettings::AppDir>& app_dirs)
+        : QObject{}, QRunnable{}, app_dirs{app_dirs}, system{system} {}
 
 public slots:
     /// Starts the processing of directory tree information.
@@ -47,10 +51,11 @@ signals:
     void Finished(QStringList watch_list);
 
 private:
+    void AddFstEntriesToAppList(const std::string& dir_path, unsigned int recursion,
+                                AppListDir* parent_dir);
+
     QStringList watch_list;
     QList<UISettings::AppDir>& app_dirs;
     std::atomic_bool stop_processing{};
-
-    void AddFstEntriesToAppList(const std::string& dir_path, unsigned int recursion,
-                                AppListDir* parent_dir);
+    Core::System& system;
 };

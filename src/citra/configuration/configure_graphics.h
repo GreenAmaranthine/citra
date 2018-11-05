@@ -7,6 +7,10 @@
 #include <memory>
 #include <QWidget>
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Ui {
 class ConfigureGraphics;
 } // namespace Ui
@@ -18,10 +22,10 @@ public:
     explicit ConfigureGraphics(QWidget* parent = nullptr);
     ~ConfigureGraphics();
 
-    void ApplyConfiguration();
+    void LoadConfiguration(Core::System& system);
+    void ApplyConfiguration(Core::System& system);
 
 private:
-    void LoadConfiguration();
     QColor bg_color;
     std::unique_ptr<Ui::ConfigureGraphics> ui;
 };

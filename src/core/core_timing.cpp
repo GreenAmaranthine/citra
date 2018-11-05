@@ -5,9 +5,7 @@
 #include <algorithm>
 #include <cinttypes>
 #include <mutex>
-#include <string>
 #include <tuple>
-#include <unordered_map>
 #include "common/assert.h"
 #include "common/event.h"
 #include "common/logging/log.h"

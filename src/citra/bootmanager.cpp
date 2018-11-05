@@ -20,12 +20,11 @@
 #include "input_common/motion_emu.h"
 #include "video_core/video_core.h"
 
-EmuThread::EmuThread(Screens* screens) : screens{screens} {}
+EmuThread::EmuThread(Core::System& system, Screens* screens) : system{system}, screens{screens} {}
 
 void EmuThread::run() {
     screens->MakeCurrent();
     stop_run = false;
-    auto& system{Core::System::GetInstance()};
     while (!stop_run) {
         Core::System::ResultStatus result{system.RunLoop()};
         if (result == Core::System::ResultStatus::ShutdownRequested) {

@@ -10,8 +10,9 @@
 #include "core/settings.h"
 #include "ui_configure.h"
 
-ConfigurationDialog::ConfigurationDialog(QWidget* parent, const HotkeyRegistry& registry)
-    : QDialog{parent}, ui{std::make_unique<Ui::ConfigurationDialog>()} {
+ConfigurationDialog::ConfigurationDialog(QWidget* parent, const HotkeyRegistry& registry,
+                                         Core::System& system)
+    : QDialog{parent}, ui{std::make_unique<Ui::ConfigurationDialog>()}, system{system} {
     ui->setupUi(this);
     ui->generalTab->PopulateHotkeyList(registry);
     PopulateSelectionList();
@@ -23,6 +24,10 @@ ConfigurationDialog::ConfigurationDialog(QWidget* parent, const HotkeyRegistry& 
             &ConfigurationDialog::UpdateVisibleTabs);
     adjustSize();
     ui->selectorList->setCurrentRow(0);
+    ui->generalTab->LoadConfiguration(system);
+    ui->graphicsTab->LoadConfiguration(system);
+    ui->systemTab->LoadConfiguration(system);
+    ui->hacksTab->LoadConfiguration(system);
 }
 
 ConfigurationDialog::~ConfigurationDialog() {}
@@ -32,13 +37,13 @@ void ConfigurationDialog::ApplyConfiguration() {
     ui->systemTab->ApplyConfiguration();
     ui->inputTab->ApplyConfiguration();
     ui->inputTab->ApplyProfile();
-    ui->graphicsTab->ApplyConfiguration();
+    ui->graphicsTab->ApplyConfiguration(system);
     ui->audioTab->ApplyConfiguration();
     ui->cameraTab->ApplyConfiguration();
     ui->webTab->ApplyConfiguration();
-    ui->hacksTab->ApplyConfiguration();
+    ui->hacksTab->ApplyConfiguration(system);
     ui->uiTab->ApplyConfiguration();
-    Settings::Apply();
+    Settings::Apply(system);
     Settings::LogSettings();
 }
 

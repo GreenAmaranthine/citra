@@ -42,7 +42,7 @@ void Module::Interface::Open(Kernel::HLERequestContext& ctx) {
     mode.read_flag.Assign(1);
     mode.write_flag.Assign(1);
     mode.create_flag.Assign(1);
-    SessionData* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     session_data->ncch_program_id = ncch_program_id;
     session_data->open_mode.raw = open_mode.raw;
     session_data->data_path_type = path_type;
@@ -110,7 +110,7 @@ void Module::Interface::Read(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x02, 1, 2};
     const u32 write_buffer_size{rp.Pop<u32>()};
     auto& write_buffer{rp.PopMappedBuffer()};
-    SessionData* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     LOG_DEBUG(Service_CECD,
               "SessionData: ncch_program_id={:#010x}, data_path_type={:#04x}, "
               "path={}, open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
@@ -281,7 +281,7 @@ void Module::Interface::Write(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x05, 1, 2};
     const u32 read_buffer_size{rp.Pop<u32>()};
     auto& read_buffer{rp.PopMappedBuffer()};
-    SessionData* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     LOG_DEBUG(Service_CECD,
               "SessionData: ncch_program_id={:#010x}, data_path_type={:#04x}, "
               "path={}, open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",

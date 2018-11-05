@@ -95,7 +95,7 @@ System::ResultStatus System::RunLoop() {
 }
 
 System::ResultStatus System::Load(Frontend& frontend, const std::string& filepath) {
-    app_loader = Loader::GetLoader(filepath);
+    app_loader = Loader::GetLoader(*this, filepath);
     if (!app_loader) {
         LOG_ERROR(Core, "Failed to obtain loader for {}!", filepath);
         return ResultStatus::ErrorGetLoader;

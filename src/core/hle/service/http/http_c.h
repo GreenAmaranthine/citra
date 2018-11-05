@@ -13,14 +13,14 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace httplib {
 struct Response;
 struct Headers;
 } // namespace httplib
-
-namespace Core {
-class System;
-} // namespace Core
 
 namespace Service::HTTP {
 
@@ -185,7 +185,7 @@ struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
 
 class HTTP_C final : public ServiceFramework<HTTP_C, SessionData> {
 public:
-    HTTP_C();
+    explicit HTTP_C(Core::System& system);
 
 private:
     void Initialize(Kernel::HLERequestContext& ctx);
@@ -235,8 +235,8 @@ private:
     void SetBasicAuthorization(Kernel::HLERequestContext& ctx);
     void SetProxy(Kernel::HLERequestContext& ctx);
 
-    void DecryptClCertA();
-    void LoadDefaultCerts();
+    void DecryptClCertA(Core::System& system);
+    void LoadDefaultCerts(Core::System& system);
 
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory{};
 

@@ -230,20 +230,21 @@ ConfigureSystem::ConfigureSystem(QWidget* parent)
     for (u8 i{}; i < country_names.size(); i++)
         if (country_names.at(i) != "")
             ui->combo_country->addItem(country_names.at(i), i);
-    ConfigureTime();
 }
 
 ConfigureSystem::~ConfigureSystem() {}
 
-void ConfigureSystem::LoadConfiguration() {
-    enabled = !Core::System::GetInstance().IsPoweredOn();
+void ConfigureSystem::LoadConfiguration(Core::System& system) {
+    QDateTime dt;
+    dt.fromString("2000-01-01 00:00:01", "yyyy-MM-dd hh:mm:ss");
+    ui->edit_init_time->setMinimumDateTime(dt);
+    enabled = !system.IsPoweredOn();
     ui->combo_init_clock->setCurrentIndex(static_cast<u8>(Settings::values.init_clock));
     QDateTime date_time;
     date_time.setTime_t(Settings::values.init_time);
     ui->edit_init_time->setDateTime(date_time);
     if (!enabled) {
-        cfg = Core::System::GetInstance()
-                  .ServiceManager()
+        cfg = system.ServiceManager()
                   .GetService<Service::CFG::Module::Interface>("cfg:u")
                   ->GetModule();
         ReadSystemSettings();
@@ -255,6 +256,8 @@ void ConfigureSystem::LoadConfiguration() {
         ReadSystemSettings();
         ui->label_disable_info->hide();
     }
+    ui->edit_init_time->setCalendarPopup(true);
+    UpdateInitTime(ui->combo_init_clock->currentIndex());
 }
 
 void ConfigureSystem::ReadSystemSettings() {
@@ -358,15 +361,6 @@ void ConfigureSystem::UpdateBirthdayComboBox(int birthmonth_index) {
     ui->combo_birthday->setCurrentIndex(birthday_index);
 }
 
-void ConfigureSystem::ConfigureTime() {
-    ui->edit_init_time->setCalendarPopup(true);
-    QDateTime dt;
-    dt.fromString("2000-01-01 00:00:01", "yyyy-MM-dd hh:mm:ss");
-    ui->edit_init_time->setMinimumDateTime(dt);
-    LoadConfiguration();
-    UpdateInitTime(ui->combo_init_clock->currentIndex());
-}
-
 void ConfigureSystem::UpdateInitTime(int init_clock) {
     const bool is_fixed_time{static_cast<Settings::InitClock>(init_clock) ==
                              Settings::InitClock::FixedTime};
@@ -378,7 +372,7 @@ void ConfigureSystem::RefreshConsoleID() {
     QMessageBox::StandardButton reply{
         QMessageBox::critical(this, "Warning",
                               "This will replace your current virtual console with a new one."
-                              "Your current virtual 3DconsoleS will not be recoverable. "
+                              "Your current virtual console will not be recoverable. "
                               "This might have unexpected effects in games. This might fail, "
                               "if you use an outdated config savegame. Continue?",
                               QMessageBox::No | QMessageBox::Yes)};

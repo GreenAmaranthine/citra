@@ -9,6 +9,10 @@
 #include "common/common_types.h"
 #include "ui_settings.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 class AppListWorker;
 class AppListDir;
 class AppListSearchField;
@@ -42,7 +46,7 @@ public:
         COLUMN_COUNT, // Number of columns
     };
 
-    explicit AppList(GMainWindow* parent = nullptr);
+    explicit AppList(Core::System& system, GMainWindow* parent = nullptr);
     ~AppList() override;
 
     QString getLastFilterResultItem();
@@ -99,6 +103,7 @@ private:
     QStandardItemModel* item_model;
     AppListWorker* current_worker;
     QFileSystemWatcher* watcher;
+    Core::System& system;
 
     friend class AppListSearchField;
 };

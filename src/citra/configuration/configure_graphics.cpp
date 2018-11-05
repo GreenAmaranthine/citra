@@ -16,8 +16,26 @@
 ConfigureGraphics::ConfigureGraphics(QWidget* parent)
     : QWidget{parent}, ui{std::make_unique<Ui::ConfigureGraphics>()} {
     ui->setupUi(this);
-    LoadConfiguration();
-    ui->enable_shadows->setEnabled(!Core::System::GetInstance().IsPoweredOn());
+}
+
+ConfigureGraphics::~ConfigureGraphics() {}
+
+void ConfigureGraphics::LoadConfiguration(Core::System& system) {
+    ui->toggle_hw_shaders->setChecked(Settings::values.use_hw_shaders);
+    ui->toggle_accurate_gs->setChecked(Settings::values.shaders_accurate_gs);
+    ui->toggle_accurate_mul->setChecked(Settings::values.shaders_accurate_mul);
+    ui->resolution_factor_combobox->setCurrentIndex(Settings::values.resolution_factor - 1);
+    ui->toggle_frame_limit->setChecked(Settings::values.use_frame_limit);
+    ui->frame_limit->setValue(Settings::values.frame_limit);
+    ui->layout_combobox->setCurrentIndex(static_cast<int>(Settings::values.layout_option));
+    ui->swap_screen->setChecked(Settings::values.swap_screen);
+    bg_color.setRgbF(Settings::values.bg_red, Settings::values.bg_green, Settings::values.bg_blue);
+    ui->layout_bg->setStyleSheet(
+        QString("QPushButton { background-color: %1 }").arg(bg_color.name()));
+    ui->enable_shadows->setChecked(Settings::values.enable_shadows);
+    ui->screen_refresh_rate->setValue(Settings::values.screen_refresh_rate);
+    ui->min_vertices_per_thread->setValue(Settings::values.min_vertices_per_thread);
+    ui->enable_shadows->setEnabled(system.IsPoweredOn());
     ui->frame_limit->setEnabled(Settings::values.use_frame_limit);
     connect(ui->toggle_frame_limit, &QCheckBox::stateChanged, ui->frame_limit,
             &QSpinBox::setEnabled);
@@ -47,26 +65,7 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
 #endif
 }
 
-ConfigureGraphics::~ConfigureGraphics() {}
-
-void ConfigureGraphics::LoadConfiguration() {
-    ui->toggle_hw_shaders->setChecked(Settings::values.use_hw_shaders);
-    ui->toggle_accurate_gs->setChecked(Settings::values.shaders_accurate_gs);
-    ui->toggle_accurate_mul->setChecked(Settings::values.shaders_accurate_mul);
-    ui->resolution_factor_combobox->setCurrentIndex(Settings::values.resolution_factor - 1);
-    ui->toggle_frame_limit->setChecked(Settings::values.use_frame_limit);
-    ui->frame_limit->setValue(Settings::values.frame_limit);
-    ui->layout_combobox->setCurrentIndex(static_cast<int>(Settings::values.layout_option));
-    ui->swap_screen->setChecked(Settings::values.swap_screen);
-    bg_color.setRgbF(Settings::values.bg_red, Settings::values.bg_green, Settings::values.bg_blue);
-    ui->layout_bg->setStyleSheet(
-        QString("QPushButton { background-color: %1 }").arg(bg_color.name()));
-    ui->enable_shadows->setChecked(Settings::values.enable_shadows);
-    ui->screen_refresh_rate->setValue(Settings::values.screen_refresh_rate);
-    ui->min_vertices_per_thread->setValue(Settings::values.min_vertices_per_thread);
-}
-
-void ConfigureGraphics::ApplyConfiguration() {
+void ConfigureGraphics::ApplyConfiguration(Core::System& /* system */) {
     Settings::values.use_hw_shaders = ui->toggle_hw_shaders->isChecked();
     Settings::values.shaders_accurate_gs = ui->toggle_accurate_gs->isChecked();
     Settings::values.shaders_accurate_mul = ui->toggle_accurate_mul->isChecked();

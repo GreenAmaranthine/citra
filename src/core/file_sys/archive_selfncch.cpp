@@ -249,7 +249,7 @@ void ArchiveFactory_SelfNCCH::Register(Loader::AppLoader& app_loader) {
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SelfNCCH::Open(const Path& path) {
     auto archive{std::make_unique<SelfNCCHArchive>(
-        ncch_data[Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id])};
+        ncch_data[system.Kernel().GetCurrentProcess()->codeset->program_id])};
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 

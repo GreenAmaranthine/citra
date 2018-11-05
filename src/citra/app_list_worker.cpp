@@ -27,51 +27,38 @@ void AppListWorker::AddFstEntriesToAppList(const std::string& dir_path, unsigned
                                                       const std::string& directory,
                                                       const std::string& virtual_name) -> bool {
         std::string physical_name{fmt::format("{}/{}", directory, virtual_name)};
-
-        if (stop_processing) {
+        if (stop_processing)
             return false; // Breaks the callback loop.
-        }
-
         bool is_dir{FileUtil::IsDirectory(physical_name)};
         if (!is_dir && HasSupportedFileExtension(physical_name)) {
-            std::unique_ptr<Loader::AppLoader> loader{Loader::GetLoader(physical_name)};
+            std::unique_ptr<Loader::AppLoader> loader{Loader::GetLoader(system, physical_name)};
             if (!loader)
                 return true;
-
             u64 program_id;
             loader->ReadProgramId(program_id);
-
             u64 extdata_id;
             loader->ReadExtdataId(extdata_id);
-
-            std::vector<u8> smdh{[program_id, &loader]() -> std::vector<u8> {
+            std::vector<u8> smdh{[this, program_id, &loader]() -> std::vector<u8> {
                 std::vector<u8> original_smdh;
                 loader->ReadIcon(original_smdh);
-
                 if (program_id < 0x0004000000000000 || program_id > 0x00040000FFFFFFFF)
                     return original_smdh;
-
                 std::string update_path{Service::AM::GetTitleContentPath(
                     Service::FS::MediaType::SDMC, program_id + 0x0000000E00000000)};
-
                 if (!FileUtil::Exists(update_path))
                     return original_smdh;
-
-                std::unique_ptr<Loader::AppLoader> update_loader{Loader::GetLoader(update_path)};
-
+                std::unique_ptr<Loader::AppLoader> update_loader{
+                    Loader::GetLoader(system, update_path)};
                 if (!update_loader)
                     return original_smdh;
-
                 std::vector<u8> update_smdh;
                 update_loader->ReadIcon(update_smdh);
                 return update_smdh;
             }()};
-
             if (!Loader::IsValidSMDH(smdh) && UISettings::values.app_list_hide_no_icon) {
                 // Skip this invalid entry
                 return true;
             }
-
             emit EntryReady(
                 {
                     new AppListItemPath(QString::fromStdString(physical_name), smdh, program_id,
@@ -83,12 +70,10 @@ void AppListWorker::AddFstEntriesToAppList(const std::string& dir_path, unsigned
                     new AppListItemSize(FileUtil::GetSize(physical_name)),
                 },
                 parent_dir);
-
         } else if (is_dir && recursion > 0) {
             watch_list.append(QString::fromStdString(physical_name));
             AddFstEntriesToAppList(physical_name, recursion - 1, parent_dir);
         }
-
         return true;
     }};
 

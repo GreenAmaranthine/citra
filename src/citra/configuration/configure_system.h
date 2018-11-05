@@ -8,6 +8,10 @@
 #include <QWidget>
 #include "common/common_types.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Service::CFG {
 class Module;
 } // namespace Service::CFG
@@ -23,12 +27,11 @@ public:
     explicit ConfigureSystem(QWidget* parent = nullptr);
     ~ConfigureSystem() override;
 
+    void LoadConfiguration(Core::System& system);
     void ApplyConfiguration();
-    void LoadConfiguration();
 
 private:
     void ReadSystemSettings();
-    void ConfigureTime();
     void UpdateBirthdayComboBox(int birthmonth_index);
     void UpdateInitTime(int init_clock);
     void RefreshConsoleID();

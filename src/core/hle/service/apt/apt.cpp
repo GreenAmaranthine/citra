@@ -119,7 +119,7 @@ bool Module::LoadSharedFont() {
     }
     const u64_le shared_font_archive_id_low{
         static_cast<u64_le>(0x0004009b00014002 | ((font_region_code - 1) << 8))};
-    FileSys::NCCHArchive archive{shared_font_archive_id_low, FS::MediaType::NAND};
+    FileSys::NCCHArchive archive{system, shared_font_archive_id_low, FS::MediaType::NAND};
     std::vector<u8> romfs_path(20, 0); // 20-byte all zero path for opening RomFS
     FileSys::Path file_path{romfs_path};
     FileSys::Mode open_mode{};

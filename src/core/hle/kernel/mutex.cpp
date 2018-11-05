@@ -50,7 +50,7 @@ void Mutex::Acquire(Thread* thread) {
         thread->held_mutexes.insert(this);
         holding_thread = thread;
         thread->UpdatePriority();
-        Core::System::GetInstance().PrepareReschedule();
+        system.PrepareReschedule();
     }
     lock_count++;
 }
@@ -79,7 +79,7 @@ ResultCode Mutex::Release(Thread* thread) {
         holding_thread->UpdatePriority();
         holding_thread = nullptr;
         WakeupAllWaitingThreads();
-        Core::System::GetInstance().PrepareReschedule();
+        system.PrepareReschedule();
     }
     return RESULT_SUCCESS;
 }

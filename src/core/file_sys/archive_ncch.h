@@ -11,6 +11,10 @@
 #include "core/file_sys/file_backend.h"
 #include "core/hle/result.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Service::FS {
 enum class MediaType : u32;
 } // namespace Service::FS
@@ -31,8 +35,8 @@ enum class NCCHFileOpenType : u32 {
 /// Archive backend for NCCH Archives (RomFS, ExeFS)
 class NCCHArchive : public ArchiveBackend {
 public:
-    explicit NCCHArchive(u64 title_id, Service::FS::MediaType media_type)
-        : title_id{title_id}, media_type{media_type} {}
+    explicit NCCHArchive(Core::System& system, u64 title_id, Service::FS::MediaType media_type)
+        : system{system}, title_id{title_id}, media_type{media_type} {}
 
     std::string GetName() const override {
         return "NCCHArchive";
@@ -53,6 +57,7 @@ public:
 protected:
     u64 title_id;
     Service::FS::MediaType media_type;
+    Core::System& system;
 };
 
 // File backend for NCCH files
@@ -79,7 +84,7 @@ private:
 /// File system interface to the NCCH archive
 class ArchiveFactory_NCCH final : public ArchiveFactory {
 public:
-    explicit ArchiveFactory_NCCH();
+    explicit ArchiveFactory_NCCH(Core::System& system);
 
     std::string GetName() const override {
         return "NCCH";
@@ -88,6 +93,9 @@ public:
     ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) override;
     ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) override;
     ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path) const override;
+
+private:
+    Core::System& system;
 };
 
 Path MakeNCCHFilePath(NCCHFileOpenType open_type, u32 content_index, NCCHFilePathType filepath_type,

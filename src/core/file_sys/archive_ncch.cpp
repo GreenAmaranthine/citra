@@ -116,8 +116,7 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         if (high == shared_data_archive) {
             if (low == mii_data) {
                 LOG_ERROR(Service_FS, "Failed to get a handle for shared data archive: Mii Data.");
-                Core::System::GetInstance().SetStatus(Core::System::ResultStatus::ErrorSystemFiles,
-                                                      "Mii Data");
+                system.SetStatus(Core::System::ResultStatus::ErrorSystemFiles, "Mii Data");
             } else if (low == region_manifest) {
                 LOG_WARNING(
                     Service_FS,
@@ -243,7 +242,7 @@ bool NCCHFile::SetSize(const u64 size) const {
     return false;
 }
 
-ArchiveFactory_NCCH::ArchiveFactory_NCCH() {}
+ArchiveFactory_NCCH::ArchiveFactory_NCCH(Core::System& system) : system{system} {}
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_NCCH::Open(const Path& path) {
     if (path.GetType() != LowPathType::Binary) {
@@ -258,7 +257,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_NCCH::Open(const Path&
     NCCHArchivePath open_path;
     std::memcpy(&open_path, binary.data(), sizeof(NCCHArchivePath));
     auto archive{std::make_unique<NCCHArchive>(
-        open_path.tid, static_cast<Service::FS::MediaType>(open_path.media_type & 0xFF))};
+        system, open_path.tid, static_cast<Service::FS::MediaType>(open_path.media_type & 0xFF))};
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 

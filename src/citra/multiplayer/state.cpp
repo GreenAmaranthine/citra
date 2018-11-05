@@ -33,7 +33,8 @@ MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* app_list
             &MultiplayerState::OnNetworkStateChanged);
     qRegisterMetaType<Network::RoomMember::State>();
     qRegisterMetaType<Common::WebResult>();
-    announce_multiplayer_session = std::make_shared<Core::AnnounceMultiplayerSession>();
+    announce_multiplayer_session =
+        std::make_shared<Core::AnnounceMultiplayerSession>(system.Room());
     announce_multiplayer_session->BindErrorCallback(
         [this](const Common::WebResult& result) { emit AnnounceFailed(result); });
     connect(this, &MultiplayerState::AnnounceFailed, this, &MultiplayerState::OnAnnounceFailed);
@@ -85,7 +86,6 @@ void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& s
         break;
     case Network::RoomMember::State::Joined: {
         is_connected = true;
-        auto& system{Core::System::GetInstance()};
         if (system.IsPoweredOn())
             system.Kernel().GetSharedPageHandler().SetMacAddress(
                 system.RoomMember().GetMacAddress());

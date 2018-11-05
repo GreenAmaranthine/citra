@@ -8,12 +8,10 @@
 #include <regex>
 #include <string>
 #include <thread>
+#include <getopt.h>
 #include <glad/glad.h>
 
-#ifdef _MSC_VER
-#include <getopt.h>
-#else
-#include <getopt.h>
+#ifndef _MSC_VER
 #include <unistd.h>
 #endif
 
@@ -58,10 +56,8 @@ int main(int argc, char** argv) {
     Common::DetachedTasks detached_tasks;
     int option_index{};
     char* endarg;
-
     // This is just to be able to link against core
     gladLoadGL();
-
     std::string room_name;
     std::string password;
     std::string preferred_app;
@@ -71,8 +67,7 @@ int main(int argc, char** argv) {
     u64 preferred_app_id{};
     u32 port{Network::DefaultRoomPort};
     u32 max_members{16};
-
-    static struct option long_options[] = {
+    static struct option long_options[]{
         {"room-name", required_argument, 0, 'n'},
         {"port", required_argument, 0, 'p'},
         {"max_members", required_argument, 0, 'm'},
@@ -86,9 +81,8 @@ int main(int argc, char** argv) {
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0},
     };
-
     while (optind < argc) {
-        char arg = getopt_long(argc, argv, "n:p:m:w:g:u:t:a:i:hv", long_options, &option_index);
+        int arg{getopt_long(argc, argv, "n:p:m:w:g:u:t:a:i:hv", long_options, &option_index)};
         if (arg != -1) {
             switch (arg) {
             case 'n':
@@ -172,13 +166,13 @@ int main(int argc, char** argv) {
         Settings::values.citra_username = username;
         Settings::values.citra_token = token;
     }
-    auto& room{Core::System::GetInstance().Room()};
+    Network::Room room;
     if (!room.Create(room_name, "", port, password, max_members, preferred_app, preferred_app_id)) {
         std::cout << "Failed to create room!\n\n";
         return -1;
     }
     std::cout << "Room is open. Close with Q+Enter...\n\n";
-    auto announce_session{std::make_unique<Core::AnnounceMultiplayerSession>()};
+    auto announce_session{std::make_unique<Core::AnnounceMultiplayerSession>(room)};
     if (announce)
         announce_session->Start();
     while (room.IsOpen()) {

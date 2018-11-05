@@ -6,12 +6,17 @@
 
 #include "core/file_sys/archive_source_sd_savedata.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace FileSys {
 
 /// File system interface to the SaveData archive
 class ArchiveFactory_SaveData final : public ArchiveFactory {
 public:
-    explicit ArchiveFactory_SaveData(std::shared_ptr<ArchiveSource_SDSaveData> sd_savedata_source);
+    explicit ArchiveFactory_SaveData(Core::System& system,
+                                     std::shared_ptr<ArchiveSource_SDSaveData> sd_savedata_source);
 
     std::string GetName() const override {
         return "SaveData";
@@ -19,12 +24,12 @@ public:
 
     ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) override;
     ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) override;
-
     ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path) const override;
 
 private:
     std::string mount_point;
     std::shared_ptr<ArchiveSource_SDSaveData> sd_savedata_source;
+    Core::System& system;
 };
 
 } // namespace FileSys

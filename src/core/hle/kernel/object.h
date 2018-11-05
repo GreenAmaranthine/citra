@@ -67,7 +67,6 @@ public:
      */
     bool IsWaitable() const;
 
-protected:
     Core::System& system;
 
 private:

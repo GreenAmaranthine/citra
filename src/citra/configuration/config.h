@@ -8,11 +8,15 @@
 #include <memory>
 #include "core/settings.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 class QSettings;
 
 class Config {
 public:
-    Config();
+    explicit Config(Core::System& system);
     ~Config();
 
     void Save();
@@ -25,4 +29,5 @@ private:
     void Load();
 
     std::unique_ptr<QSettings> qt_config;
+    Core::System& system;
 };

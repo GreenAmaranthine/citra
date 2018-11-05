@@ -107,6 +107,7 @@ Message<T> Create(const T data, const u32 client_id = 0) {
     message.header.crc = crc.checksum();
     return message;
 }
+
 } // namespace Request
 
 namespace Response {

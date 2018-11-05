@@ -4,7 +4,6 @@
 
 #include "common/logging/log.h"
 #include "common/param_package.h"
-#include "core/core.h"
 #include "core/input.h"
 #include "core/settings.h"
 #include "input_common/udp/client.h"
@@ -17,8 +16,6 @@ public:
     explicit UDPTouchDevice(std::shared_ptr<DeviceStatus> status_) : status{std::move(status_)} {}
 
     std::tuple<float, float, bool> GetStatus() const {
-        if (Core::System::GetInstance().IsSleepModeEnabled())
-            return std::make_tuple(0.0f, 0.0f, false);
         std::lock_guard lock{status->update_mutex};
         return status->touch_status;
     }
@@ -32,8 +29,6 @@ public:
     explicit UDPMotionDevice(std::shared_ptr<DeviceStatus> status_) : status{std::move(status_)} {}
 
     std::tuple<Math::Vec3<float>, Math::Vec3<float>> GetStatus() const {
-        if (Core::System::GetInstance().IsSleepModeEnabled())
-            return std::make_tuple(Math::Vec3<float>(), Math::Vec3<float>());
         std::lock_guard lock{status->update_mutex};
         return status->motion_status;
     }
@@ -44,7 +39,7 @@ private:
 
 class UDPTouchFactory final : public Input::Factory<Input::TouchDevice> {
 public:
-    explicit UDPTouchFactory(std::shared_ptr<DeviceStatus> status_) : status(std::move(status_)) {}
+    explicit UDPTouchFactory(std::shared_ptr<DeviceStatus> status_) : status{std::move(status_)} {}
 
     std::unique_ptr<Input::TouchDevice> Create(const Common::ParamPackage& params) override {
         {
@@ -65,7 +60,7 @@ private:
 
 class UDPMotionFactory final : public Input::Factory<Input::MotionDevice> {
 public:
-    explicit UDPMotionFactory(std::shared_ptr<DeviceStatus> status_) : status(std::move(status_)) {}
+    explicit UDPMotionFactory(std::shared_ptr<DeviceStatus> status_) : status{std::move(status_)} {}
 
     std::unique_ptr<Input::MotionDevice> Create(const Common::ParamPackage& params) override {
         return std::make_unique<UDPMotionDevice>(status);
@@ -76,7 +71,7 @@ private:
 };
 
 State::State() {
-    auto status = std::make_shared<DeviceStatus>();
+    auto status{std::make_shared<DeviceStatus>()};
     client =
         std::make_unique<Client>(status, Settings::values.udp_input_address,
                                  Settings::values.udp_input_port, Settings::values.udp_pad_index);
@@ -99,4 +94,5 @@ void State::ReloadUDPClient() {
 std::unique_ptr<State> Init() {
     return std::make_unique<State>();
 }
+
 } // namespace InputCommon::CemuhookUDP

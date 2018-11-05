@@ -45,7 +45,7 @@ const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> Config:
     },
 }};
 
-Config::Config() {
+Config::Config(Core::System& system) : system{system} {
     std::string path{FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "qt-config.ini"};
     FileUtil::CreateFullPath(path);
     qt_config = std::make_unique<QSettings>(QString::fromStdString(path), QSettings::IniFormat);
@@ -541,5 +541,5 @@ void Config::RestoreDefaults() {
     Settings::values.profiles.clear();
     Load();
     Save();
-    Settings::Apply();
+    Settings::Apply(system);
 }

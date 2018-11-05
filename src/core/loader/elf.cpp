@@ -202,7 +202,7 @@ public:
         return (u32)(header->e_flags);
     }
 
-    SharedPtr<CodeSet> LoadInto(u32 vaddr);
+    SharedPtr<CodeSet> LoadInto(Core::System& system, u32 vaddr);
 
     int GetNumSegments() const {
         return (int)(header->e_phnum);
@@ -262,14 +262,14 @@ ElfReader::ElfReader(void* ptr) {
 const char* ElfReader::GetSectionName(int section) const {
     if (sections[section].sh_type == SHT_NULL)
         return nullptr;
-    unsigned int name_offset{sections[section].sh_name};
-    const char* ptr{reinterpret_cast<const char*>(GetSectionDataPtr(header->e_shstrndx))};
+    auto name_offset{sections[section].sh_name};
+    const auto ptr{reinterpret_cast<const char*>(GetSectionDataPtr(header->e_shstrndx))};
     if (ptr)
         return ptr + name_offset;
     return nullptr;
 }
 
-SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
+SharedPtr<CodeSet> ElfReader::LoadInto(Core::System& system, u32 vaddr) {
     LOG_DEBUG(Loader, "String section: {}", header->e_shstrndx);
     // Should we relocate?
     relocate = (header->e_type != ET_EXEC);
@@ -289,7 +289,7 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
     }
     std::vector<u8> program_image(total_image_size);
     std::size_t current_image_position{};
-    SharedPtr<CodeSet> codeset{Core::System::GetInstance().Kernel().CreateCodeSet("", 0)};
+    auto codeset{system.Kernel().CreateCodeSet("", 0)};
     for (unsigned int i{}; i < header->e_phnum; ++i) {
         Elf32_Phdr* p{&segments[i]};
         LOG_DEBUG(Loader, "Type: {} Vaddr: {:08X} Filesz: {:08X} Memsz: {:08X} ", p->p_type,
@@ -326,9 +326,7 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
     }
     codeset->entrypoint = base_addr + header->e_entry;
     codeset->memory = std::make_shared<std::vector<u8>>(std::move(program_image));
-
     LOG_DEBUG(Loader, "Done loading.");
-
     return codeset;
 }
 
@@ -346,9 +344,9 @@ namespace Loader {
 FileType AppLoader_ELF::IdentifyType(FileUtil::IOFile& file) {
     u32 magic;
     file.Seek(0, SEEK_SET);
-    if (1 != file.ReadArray<u32>(&magic, 1))
+    if (file.ReadArray<u32>(&magic, 1) != 1)
         return FileType::Error;
-    if (MakeMagic('\x7f', 'E', 'L', 'F') == magic)
+    if (magic == MakeMagic('\x7f', 'E', 'L', 'F'))
         return FileType::ELF;
     return FileType::Error;
 }
@@ -365,9 +363,9 @@ ResultStatus AppLoader_ELF::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     if (file.ReadBytes(&buffer[0], size) != size)
         return ResultStatus::Error;
     ElfReader elf_reader{&buffer[0]};
-    SharedPtr<CodeSet> codeset{elf_reader.LoadInto(Memory::PROCESS_IMAGE_VADDR)};
+    SharedPtr<CodeSet> codeset{elf_reader.LoadInto(system, Memory::PROCESS_IMAGE_VADDR)};
     codeset->name = filename;
-    auto& kernel{Core::System::GetInstance().Kernel()};
+    auto& kernel{system.Kernel()};
     process = kernel.CreateProcess(std::move(codeset));
     process->svc_access_mask.set();
     process->address_mappings = default_address_mappings;

@@ -86,11 +86,11 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     if (button_home->GetStatus())
         system.CloseApplication();
     // Get current circle pad position and update circle pad direction
-    s16 circle_pad_x, circle_pad_y;
+    s16 circle_pad_x{}, circle_pad_y{};
     if (use_override_circle_pad) {
         circle_pad_x = override_circle_x;
         circle_pad_y = override_circle_y;
-    } else {
+    } else if (!system.IsSleepModeEnabled()) {
         auto [circle_pad_x_f, circle_pad_y_f]{circle_pad->GetStatus()};
         constexpr int MAX_CIRCLEPAD_POS{0x9C}; // Max value for a circle pad position
         circle_pad_x = static_cast<s16>(circle_pad_x_f * MAX_CIRCLEPAD_POS);
@@ -129,12 +129,12 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     mem->touch.index = next_touch_index;
     next_touch_index = (next_touch_index + 1) % mem->touch.entries.size();
     // Get the current touch entry
-    TouchDataEntry& touch_entry = mem->touch.entries[mem->touch.index];
+    TouchDataEntry& touch_entry{mem->touch.entries[mem->touch.index]};
     if (use_override_touch) {
         touch_entry.x = override_touch_x;
         touch_entry.y = override_touch_y;
         touch_entry.valid.Assign(override_touch_valid ? 1 : 0);
-    } else {
+    } else if (!system.IsSleepModeEnabled()) {
         auto [x, y, pressed]{touch_device->GetStatus()};
         touch_entry.x = static_cast<u16>(x * Core::kScreenBottomWidth);
         touch_entry.y = static_cast<u16>(y * Core::kScreenBottomHeight);
@@ -167,7 +167,7 @@ void Module::UpdateAccelerometerCallback(u64 userdata, s64 cycles_late) {
         accelerometer_entry.x = override_motion_x;
         accelerometer_entry.y = override_motion_y;
         accelerometer_entry.z = override_motion_z;
-    } else {
+    } else if (!system.IsSleepModeEnabled()) {
         Math::Vec3<float> accel;
         std::tie(accel, std::ignore) = motion_device->GetStatus();
         accel *= accelerometer_coef;
@@ -208,7 +208,7 @@ void Module::UpdateGyroscopeCallback(u64 userdata, s64 cycles_late) {
         gyroscope_entry.x = override_motion_roll;
         gyroscope_entry.y = override_motion_pitch;
         gyroscope_entry.z = override_motion_yaw;
-    } else {
+    } else if (!system.IsSleepModeEnabled()) {
         Math::Vec3<float> gyro;
         std::tie(std::ignore, gyro) = motion_device->GetStatus();
         double stretch{system.perf_stats.GetLastFrameTimeScale()};

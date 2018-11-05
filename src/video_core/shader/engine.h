@@ -11,8 +11,8 @@
 namespace Pica::Shader {
 
 class Shader;
-class ShaderSetup;
-class UnitState;
+struct ShaderSetup;
+struct UnitState;
 
 class ShaderEngine {
 public:

@@ -24,7 +24,7 @@ class EmuThread : public QThread {
     Q_OBJECT
 
 public:
-    explicit EmuThread(Screens* screens);
+    explicit EmuThread(Core::System& system, Screens* screens);
 
     /**
      * Start emulation (on new thread)
@@ -41,8 +41,8 @@ public:
 private:
     bool running{};
     std::atomic_bool stop_run{};
-
     Screens* screens;
+    Core::System& system;
 
 signals:
     void ErrorThrown(Core::System::ResultStatus, const std::string&);

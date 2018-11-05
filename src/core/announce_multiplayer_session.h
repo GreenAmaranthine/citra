@@ -13,6 +13,10 @@
 #include "common/common_types.h"
 #include "common/event.h"
 
+namespace Network {
+class Room;
+} // namespace Network
+
 namespace Core {
 
 /**
@@ -24,7 +28,7 @@ class AnnounceMultiplayerSession : NonCopyable {
 public:
     using CallbackHandle = std::shared_ptr<std::function<void(const Common::WebResult&)>>;
 
-    AnnounceMultiplayerSession();
+    explicit AnnounceMultiplayerSession(Network::Room& room);
     ~AnnounceMultiplayerSession();
 
     /**
@@ -62,6 +66,7 @@ private:
     std::mutex callback_mutex;
     std::set<CallbackHandle> error_callbacks;
     std::unique_ptr<std::thread> announce_multiplayer_thread;
+    Network::Room& room;
 
     /// Backend interface that logs fields
     std::unique_ptr<AnnounceMultiplayerRoom::Backend> backend;

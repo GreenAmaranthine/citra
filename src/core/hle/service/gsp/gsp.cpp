@@ -10,12 +10,6 @@
 
 namespace Service::GSP {
 
-FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index) {
-    auto gpu{Core::System::GetInstance().ServiceManager().GetService<GSP_GPU>("gsp::Gpu")};
-    ASSERT(gpu);
-    return gpu->GetFrameBufferInfo(thread_id, screen_index);
-}
-
 void SignalInterrupt(InterruptId interrupt_id) {
     auto gpu{Core::System::GetInstance().ServiceManager().GetService<GSP_GPU>("gsp::Gpu")};
     ASSERT(gpu);

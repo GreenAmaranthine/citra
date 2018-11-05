@@ -7,6 +7,10 @@
 #include <memory>
 #include <QWidget>
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Ui {
 class ConfigureHacks;
 } // namespace Ui
@@ -18,9 +22,9 @@ public:
     explicit ConfigureHacks(QWidget* parent = nullptr);
     ~ConfigureHacks();
 
-    void ApplyConfiguration();
+    void LoadConfiguration(Core::System& system);
+    void ApplyConfiguration(Core::System& system);
 
 private:
-    void LoadConfiguration();
     std::unique_ptr<Ui::ConfigureHacks> ui;
 };

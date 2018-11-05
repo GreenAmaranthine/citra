@@ -126,7 +126,7 @@ void RPCServer::HandleSetBackgroundColor(Packet& packet, float r, float g, float
     Settings::values.bg_red = r;
     Settings::values.bg_green = g;
     Settings::values.bg_blue = b;
-    Settings::Apply();
+    Settings::Apply(system);
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }

@@ -82,7 +82,7 @@ struct FrameBufferInfo {
 static_assert(sizeof(FrameBufferInfo) == 0x1c, "Struct has incorrect size");
 
 struct FrameBufferUpdate {
-    BitField<0, 1, u8> index;    // Index used for GSP::SetBufferSwap
+    BitField<0, 1, u8> index;    // Index used for SetBufferSwap
     BitField<0, 1, u8> is_dirty; // true if GSP should update GPU framebuffer registers
     u16 pad1;
 
@@ -228,6 +228,7 @@ private:
     void WriteHWRegsWithMask(Kernel::HLERequestContext& ctx);
     void ReadHWRegs(Kernel::HLERequestContext& ctx);
     void SetBufferSwap(Kernel::HLERequestContext& ctx);
+    ResultCode SetBufferSwapImpl(u32 screen_id, const FrameBufferInfo& info);
     void FlushDataCache(Kernel::HLERequestContext& ctx);
     void SetLcdForceBlack(Kernel::HLERequestContext& ctx);
     void TriggerCmdReqQueue(Kernel::HLERequestContext& ctx);
@@ -236,7 +237,7 @@ private:
     void UnregisterInterruptRelayQueue(Kernel::HLERequestContext& ctx);
     void AcquireRight(Kernel::HLERequestContext& ctx);
     void ReleaseRight(Kernel::HLERequestContext& ctx);
-    void ReleaseRight(SessionData* session_data);
+    void ReleaseRight(auto session_data);
     void ImportDisplayCaptureInfo(Kernel::HLERequestContext& ctx);
     void StoreDataCache(Kernel::HLERequestContext& ctx);
     void SetLedForceOff(Kernel::HLERequestContext& ctx);
@@ -254,7 +255,5 @@ private:
 
     Core::System& system;
 };
-
-ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info);
 
 } // namespace Service::GSP

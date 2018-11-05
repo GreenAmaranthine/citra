@@ -1300,9 +1300,9 @@ void HTTP_C::SetProxy(Kernel::HLERequestContext& ctx) {
                 username, password, username);
 }
 
-void HTTP_C::DecryptClCertA() {
-    static constexpr u32 iv_length{16};
-    FileSys::NCCHArchive archive{0x0004001b00010002, Service::FS::MediaType::NAND};
+void HTTP_C::DecryptClCertA(Core::System& system) {
+    constexpr u32 iv_length{16};
+    FileSys::NCCHArchive archive{system, 0x0004001b00010002, Service::FS::MediaType::NAND};
     std::array<char, 8> exefs_filepath;
     FileSys::Path file_path{FileSys::MakeNCCHFilePath(
         FileSys::NCCHFileOpenType::NCCHData, 0, FileSys::NCCHFilePathType::RomFS, exefs_filepath)};
@@ -1363,7 +1363,7 @@ void HTTP_C::DecryptClCertA() {
     ClCertA.init = true;
 }
 
-void HTTP_C::LoadDefaultCerts() {
+void HTTP_C::LoadDefaultCerts(Core::System& system) {
     default_root_certs[0].cert_id = 0x1;
     default_root_certs[0].name = "Nintendo CA";
     default_root_certs[0].size = 897;
@@ -1397,7 +1397,7 @@ void HTTP_C::LoadDefaultCerts() {
     default_root_certs[10].cert_id = 0xB;
     default_root_certs[10].name = "DigiCert High Assurance EV Root CA";
     default_root_certs[10].size = 969;
-    FileSys::NCCHArchive archive{0x0004013000002F02, Service::FS::MediaType::NAND};
+    FileSys::NCCHArchive archive{system, 0x0004013000002F02, Service::FS::MediaType::NAND};
     std::array<char, 8> exefs_filepath{".code"};
     FileSys::Path file_path{FileSys::MakeNCCHFilePath(
         FileSys::NCCHFileOpenType::NCCHData, 0, FileSys::NCCHFilePathType::Code, exefs_filepath)};
@@ -1429,7 +1429,7 @@ void HTTP_C::LoadDefaultCerts() {
     }
 }
 
-HTTP_C::HTTP_C() : ServiceFramework{"http:C", 32} {
+HTTP_C::HTTP_C(Core::System& system) : ServiceFramework{"http:C", 32} {
     static const FunctionInfo functions[]{
         {0x00010044, &HTTP_C::Initialize, "Initialize"},
         {0x00020082, &HTTP_C::CreateContext, "CreateContext"},
@@ -1490,12 +1490,12 @@ HTTP_C::HTTP_C() : ServiceFramework{"http:C", 32} {
         {0x00390000, &HTTP_C::Finalize, "Finalize"},
     };
     RegisterHandlers(functions);
-    DecryptClCertA();
-    LoadDefaultCerts();
+    DecryptClCertA(system);
+    LoadDefaultCerts(system);
 }
 
 void InstallInterfaces(Core::System& system) {
-    auto& service_manager{system.ServiceManager()};
-    std::make_shared<HTTP_C>()->InstallAsService(service_manager);
+    std::make_shared<HTTP_C>(system)->InstallAsService(system.ServiceManager());
 }
+
 } // namespace Service::HTTP

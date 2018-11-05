@@ -31,7 +31,7 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
     std::memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
     using Kernel::MemoryPermission;
     // Create a SharedMemory that directly points to this heap block.
-    framebuffer_memory = Core::System::GetInstance().Kernel().CreateSharedMemoryForApplet(
+    framebuffer_memory = manager.System().Kernel().CreateSharedMemoryForApplet(
         0, capture_info.size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
         "MiiSelector Memory");
     // Send the response message with the newly created SharedMemory

@@ -101,7 +101,7 @@ static void InitializeLogging() {
         FileUtil::GetUserPath(FileUtil::UserPath::UserDir) + LOG_FILE));
 }
 
-GMainWindow::GMainWindow() : config{new Config()} {
+GMainWindow::GMainWindow() : config{new Config(system)} {
     InitializeLogging();
     ToggleConsole();
     Settings::LogSettings();
@@ -150,61 +150,48 @@ GMainWindow::~GMainWindow() {
 void GMainWindow::InitializeWidgets() {
     screens = new Screens(this, emu_thread.get());
     screens->hide();
-
-    app_list = new AppList(this);
+    app_list = new AppList(system, this);
     ui.horizontalLayout->addWidget(app_list);
-
     app_list_placeholder = new AppListPlaceholder(this);
     ui.horizontalLayout->addWidget(app_list_placeholder);
     app_list_placeholder->setVisible(false);
-
     multiplayer_state = new MultiplayerState(this, app_list->GetModel(), ui.action_Leave_Room,
                                              ui.action_Show_Room, system);
     multiplayer_state->setVisible(false);
-
     // Create status bar
     message_label = new QLabel();
-
     // Configured separately for left alignment
     message_label->setVisible(false);
     message_label->setFrameStyle(QFrame::NoFrame);
     message_label->setContentsMargins(4, 0, 4, 0);
     message_label->setAlignment(Qt::AlignLeft);
     statusBar()->addPermanentWidget(message_label, 1);
-
     progress_bar = new QProgressBar();
     progress_bar->setMaximum(INT_MAX);
     progress_bar->hide();
     statusBar()->addPermanentWidget(progress_bar);
-
     touch_label = new QLabel();
     touch_label->hide();
-
     perf_stats_label = new QLabel();
     perf_stats_label->hide();
     perf_stats_label->setToolTip("Performance information (Speed | FPS | Frametime)");
     perf_stats_label->setFrameStyle(QFrame::NoFrame);
     perf_stats_label->setContentsMargins(4, 0, 4, 0);
-
     statusBar()->addPermanentWidget(touch_label, 0);
     statusBar()->addPermanentWidget(perf_stats_label, 0);
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusIcon(), 0);
     statusBar()->setVisible(true);
-
     // Removes an ugly inner border from the status bar widgets under Linux
     setStyleSheet("QStatusBar::item{border: none;}");
-
     QActionGroup* actionGroup_ScreenLayouts{new QActionGroup(this)};
     actionGroup_ScreenLayouts->addAction(ui.action_Screen_Layout_Default);
     actionGroup_ScreenLayouts->addAction(ui.action_Screen_Layout_Single_Screen);
     actionGroup_ScreenLayouts->addAction(ui.action_Screen_Layout_Medium_Screen);
     actionGroup_ScreenLayouts->addAction(ui.action_Screen_Layout_Large_Screen);
     actionGroup_ScreenLayouts->addAction(ui.action_Screen_Layout_Side_by_Side);
-
     QActionGroup* actionGroup_NAND{new QActionGroup(this)};
     actionGroup_NAND->addAction(ui.action_NAND_Default);
     actionGroup_NAND->addAction(ui.action_NAND_Custom);
-
     QActionGroup* actionGroup_SDMC{new QActionGroup(this)};
     actionGroup_SDMC->addAction(ui.action_SDMC_Default);
     actionGroup_SDMC->addAction(ui.action_SDMC_Custom);
@@ -365,7 +352,7 @@ void GMainWindow::InitializeHotkeys() {
     connect(hotkey_registry.GetHotkey("Main Window", "Toggle Hardware Shaders", this),
             &QShortcut::activated, this, [&] {
                 Settings::values.use_hw_shaders = !Settings::values.use_hw_shaders;
-                Settings::Apply();
+                Settings::Apply(system);
             });
 }
 
@@ -614,22 +601,18 @@ void GMainWindow::BootApplication(const std::string& filename) {
         Core::Movie::GetInstance().PrepareForRecording();
     if (!LoadROM(filename))
         return;
-
     // Create and start the emulation thread
-    emu_thread = std::make_unique<EmuThread>(screens);
+    emu_thread = std::make_unique<EmuThread>(system, screens);
     emit EmulationStarting(emu_thread.get());
     screens->moveContext();
     emu_thread->start();
-
     connect(screens, &Screens::Closed, this, &GMainWindow::OnStopApplication);
     connect(screens, &Screens::TouchChanged, this, &GMainWindow::OnTouchChanged);
-
     // Update the GUI
     app_list->hide();
     app_list_placeholder->hide();
     ui.action_Sleep_Mode->setEnabled(true);
     ui.action_Sleep_Mode->setChecked(false);
-
     perf_stats_update_timer.start(2000);
     screens->show();
     screens->setFocus();
@@ -749,8 +732,7 @@ void GMainWindow::ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& is_
     case HLE::Applets::ErrEulaErrorType::EulaFirstBoot:
         if (QMessageBox::question(nullptr, "ErrEula", "Agree EULA?") ==
             QMessageBox::StandardButton::Yes)
-            Core::System::GetInstance()
-                .ServiceManager()
+            system.ServiceManager()
                 .GetService<Service::CFG::Module::Interface>("cfg:u")
                 ->GetModule()
                 ->AgreeEula();
@@ -1116,7 +1098,7 @@ void GMainWindow::ChangeScreenLayout() {
     else if (ui.action_Screen_Layout_Side_by_Side->isChecked())
         new_layout = Settings::LayoutOption::SideScreen;
     Settings::values.layout_option = new_layout;
-    Settings::Apply();
+    Settings::Apply(system);
 }
 
 void GMainWindow::ToggleScreenLayout() {
@@ -1140,20 +1122,24 @@ void GMainWindow::ToggleScreenLayout() {
     }
     Settings::values.layout_option = new_layout;
     SyncMenuUISettings();
-    Settings::Apply();
+    Settings::Apply(system);
 }
 
 void GMainWindow::OnSwapScreens() {
     Settings::values.swap_screen = ui.action_Screen_Layout_Swap_Screens->isChecked();
-    Settings::Apply();
+    Settings::Apply(system);
 }
 
 void GMainWindow::ToggleSleepMode() {
+    if (system.IsSleepModeEnabled())
+        Camera::QtMultimediaCameraHandler::ResumeCameras();
+    else
+        Camera::QtMultimediaCameraHandler::StopCameras();
     system.SetSleepModeEnabled(ui.action_Sleep_Mode->isChecked());
 }
 
 void GMainWindow::OnOpenConfiguration() {
-    ConfigurationDialog configuration_dialog{this, hotkey_registry};
+    ConfigurationDialog configuration_dialog{this, hotkey_registry, system};
     auto old_theme{UISettings::values.theme};
     auto old_profile{Settings::values.profile};
     auto old_profiles{Settings::values.profiles};
@@ -1388,7 +1374,7 @@ void GMainWindow::OnPlayMovie() {
                 QString action_path{actions_recent_files[i]->data().toString()};
                 if (!action_path.isEmpty()) {
                     if (QFile::exists(path)) {
-                        auto loader{Loader::GetLoader(action_path.toStdString())};
+                        auto loader{Loader::GetLoader(system, action_path.toStdString())};
                         u64 program_id_file;
                         if (loader->ReadProgramId(program_id_file) ==
                                 Loader::ResultStatus::Success &&

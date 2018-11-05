@@ -1,5 +1,5 @@
 # Generate cpp with Git revision from template
-# Also if this is a CI build, add the build number to the scm_rev file as well
+# Also if this is a CI build, add the build information to the scm_rev file as well
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp.in" "${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp" @ONLY)
 
 add_library(common STATIC

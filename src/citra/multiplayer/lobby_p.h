@@ -24,7 +24,6 @@ enum List {
 class LobbyItem : public QStandardItem {
 public:
     LobbyItem() = default;
-
     explicit LobbyItem(const QString& string) : QStandardItem{string} {}
     virtual ~LobbyItem() override = default;
 };

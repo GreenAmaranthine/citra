@@ -276,7 +276,8 @@ void ArchiveManager::RegisterArchiveTypes() {
                   sdmc_directory);
     // Create the SaveData archive
     auto sd_savedata_source{std::make_shared<FileSys::ArchiveSource_SDSaveData>(sdmc_directory)};
-    auto savedata_factory{std::make_unique<FileSys::ArchiveFactory_SaveData>(sd_savedata_source)};
+    auto savedata_factory{
+        std::make_unique<FileSys::ArchiveFactory_SaveData>(system, sd_savedata_source)};
     RegisterArchiveType(std::move(savedata_factory), ArchiveIdCode::SaveData);
     // Create the OtherSaveDataPermitted archive
     auto other_savedata_permitted_factory{
@@ -297,14 +298,14 @@ void ArchiveManager::RegisterArchiveTypes() {
         std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(nand_directory, true)};
     RegisterArchiveType(std::move(sharedextsavedata_factory), ArchiveIdCode::SharedExtSaveData);
     // Create the NCCH archive, basically a small variation of the RomFS archive
-    auto savedatacheck_factory{std::make_unique<FileSys::ArchiveFactory_NCCH>()};
+    auto savedatacheck_factory{std::make_unique<FileSys::ArchiveFactory_NCCH>(system)};
     RegisterArchiveType(std::move(savedatacheck_factory), ArchiveIdCode::NCCH);
     // Create the SystemSaveData archive
     auto systemsavedata_factory{
         std::make_unique<FileSys::ArchiveFactory_SystemSaveData>(nand_directory)};
     RegisterArchiveType(std::move(systemsavedata_factory), ArchiveIdCode::SystemSaveData);
     // Create the SelfNCCH archive
-    auto selfncch_factory{std::make_unique<FileSys::ArchiveFactory_SelfNCCH>()};
+    auto selfncch_factory{std::make_unique<FileSys::ArchiveFactory_SelfNCCH>(system)};
     RegisterArchiveType(std::move(selfncch_factory), ArchiveIdCode::SelfNCCH);
 }
 

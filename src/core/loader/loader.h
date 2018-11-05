@@ -16,6 +16,10 @@
 #include "core/file_sys/romfs_reader.h"
 #include "core/hle/kernel/object.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Kernel {
 struct AddressMapping;
 class Process;
@@ -23,7 +27,7 @@ class Process;
 
 namespace Loader {
 
-/// File types supported by CTR
+/// File types supported
 enum class FileType {
     Error,
     Unknown,
@@ -82,7 +86,8 @@ constexpr u32 MakeMagic(char a, char b, char c, char d) {
 /// Interface for loading an application
 class AppLoader : NonCopyable {
 public:
-    explicit AppLoader(FileUtil::IOFile&& file) : file{std::move(file)} {}
+    explicit AppLoader(Core::System& system, FileUtil::IOFile&& file)
+        : system{system}, file{std::move(file)} {}
     virtual ~AppLoader() {}
 
     /**
@@ -195,6 +200,7 @@ public:
 protected:
     FileUtil::IOFile file;
     bool is_loaded{};
+    Core::System& system;
 };
 
 /**
@@ -208,6 +214,6 @@ extern const std::initializer_list<Kernel::AddressMapping> default_address_mappi
  * @param filename String filename of bootable file
  * @return best loader for this file
  */
-std::unique_ptr<AppLoader> GetLoader(const std::string& filename);
+std::unique_ptr<AppLoader> GetLoader(Core::System& system, const std::string& filename);
 
 } // namespace Loader

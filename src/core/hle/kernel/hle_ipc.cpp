@@ -54,8 +54,8 @@ SharedPtr<Event> HLERequestContext::SleepClientThread(SharedPtr<Thread> thread,
         Memory::WriteBlock(*process, thread->GetCommandBufferAddress(), cmd_buff.data(),
                            cmd_buff.size() * sizeof(u32));
     };
-    auto event{Core::System::GetInstance().Kernel().CreateEvent(Kernel::ResetType::OneShot,
-                                                                "HLE Pause Event: " + reason)};
+    auto event{thread->system.Kernel().CreateEvent(Kernel::ResetType::OneShot,
+                                                   "HLE Pause Event: " + reason)};
     thread->status = ThreadStatus::WaitHleEvent;
     thread->wait_objects = {event};
     event->AddWaitingThread(thread);

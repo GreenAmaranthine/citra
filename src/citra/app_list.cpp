@@ -260,7 +260,7 @@ void AppList::onFilterCloseClicked() {
     main_window->filterBarSetChecked(false);
 }
 
-AppList::AppList(GMainWindow* parent) : QWidget{parent} {
+AppList::AppList(Core::System& system, GMainWindow* parent) : QWidget{parent}, system{system} {
     watcher = new QFileSystemWatcher(this);
     connect(watcher, &QFileSystemWatcher::directoryChanged, this, &AppList::Refresh,
             Qt::UniqueConnection);
@@ -388,7 +388,6 @@ void AppList::DonePopulating(QStringList watch_list) {
         item_model->invisibleRootItem()->appendRow(new AppListAddDir());
         emit ShowList(true);
     }
-
     // Clear out the old directories to watch for changes and add the new ones
     auto watch_dirs{watcher->directories()};
     if (!watch_dirs.isEmpty())
@@ -564,7 +563,7 @@ void AppList::PopulateAsync(QList<UISettings::AppDir>& app_dirs) {
     item_model->removeRows(0, item_model->rowCount());
     search_field->clear();
     emit ShouldCancelWorker();
-    AppListWorker* worker{new AppListWorker(app_dirs)};
+    auto worker{new AppListWorker(system, app_dirs)};
     connect(worker, &AppListWorker::EntryReady, this, &AppList::AddEntry, Qt::QueuedConnection);
     connect(worker, &AppListWorker::DirEntryReady, this, &AppList::AddDirEntry,
             Qt::QueuedConnection);

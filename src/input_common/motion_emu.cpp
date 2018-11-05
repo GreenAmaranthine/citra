@@ -11,7 +11,6 @@
 #include "common/math_util.h"
 #include "common/quaternion.h"
 #include "common/vector_math.h"
-#include "core/core.h"
 #include "input_common/motion_emu.h"
 
 namespace InputCommon {
@@ -60,8 +59,6 @@ public:
     }
 
     std::tuple<Math::Vec3<float>, Math::Vec3<float>> GetStatus() {
-        if (Core::System::GetInstance().IsSleepModeEnabled())
-            return std::make_tuple(Math::Vec3<float>(), Math::Vec3<float>());
         std::lock_guard lock{status_mutex};
         return status;
     }

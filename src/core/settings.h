@@ -11,6 +11,10 @@
 #include "common/common_types.h"
 #include "core/hle/service/cam/cam.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Settings {
 
 enum class KeyboardMode { StdIn, Qt };
@@ -205,9 +209,9 @@ struct Values {
 
 // A special value for Values::region_value indicating that citra will automatically select a region
 // value to fit the region lockout info of the application
-static constexpr int REGION_VALUE_AUTO_SELECT{-1};
+constexpr int REGION_VALUE_AUTO_SELECT{-1};
 
-void Apply();
+void Apply(Core::System& system);
 void LogSettings();
 
 // Controller profiles

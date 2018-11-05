@@ -55,7 +55,6 @@ protected:
 
     void SendParameter(const Service::APT::MessageParameter& parameter);
 
-private:
     Service::APT::AppletManager& manager;
 };
 

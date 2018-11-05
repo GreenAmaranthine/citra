@@ -116,7 +116,7 @@ union AppletAttributes {
     BitField<0, 3, u32> applet_pos;
     BitField<29, 1, u32> is_home_menu;
 
-    AppletAttributes() : raw(0) {}
+    AppletAttributes() : raw{0} {}
     AppletAttributes(u32 attributes) : raw{attributes} {}
 };
 
@@ -164,6 +164,10 @@ public:
     ResultVal<AppletInfo> GetAppletInfo(AppletId app_id);
 
     void ScheduleEvent(AppletId id);
+
+    Core::System& System() {
+        return system;
+    }
 
 private:
     /// Parameter data to be returned in the next call to Glance/ReceiveParameter.

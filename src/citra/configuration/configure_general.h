@@ -7,6 +7,10 @@
 #include <memory>
 #include <QWidget>
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Ui {
 class ConfigureGeneral;
 } // namespace Ui
@@ -20,6 +24,7 @@ public:
     explicit ConfigureGeneral(QWidget* parent = nullptr);
     ~ConfigureGeneral();
 
+    void LoadConfiguration(Core::System& system);
     void ApplyConfiguration();
     void PopulateHotkeyList(const HotkeyRegistry& registry);
 
@@ -27,7 +32,5 @@ signals:
     void RestoreDefaultsRequested();
 
 private:
-    void LoadConfiguration();
-
     std::unique_ptr<Ui::ConfigureGeneral> ui;
 };

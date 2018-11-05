@@ -20,7 +20,7 @@ namespace Core {
 // Time between room is announced to web services
 constexpr std::chrono::seconds announce_time_interval{15};
 
-AnnounceMultiplayerSession::AnnounceMultiplayerSession() {
+AnnounceMultiplayerSession::AnnounceMultiplayerSession(Network::Room& room) : room{room} {
 #ifdef ENABLE_WEB_SERVICE
     backend = std::make_unique<WebService::RoomJson>(Settings::values.web_api_url,
                                                      Settings::values.citra_username,
@@ -67,7 +67,6 @@ AnnounceMultiplayerSession::~AnnounceMultiplayerSession() {
 void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
     auto update_time{std::chrono::steady_clock::now()};
     std::future<Common::WebResult> future;
-    auto& room{Core::System::GetInstance().Room()};
     while (!shutdown_event.WaitUntil(update_time)) {
         update_time += announce_time_interval;
         if (!room.IsOpen())

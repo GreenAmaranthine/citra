@@ -338,9 +338,7 @@ void Renderer::DrawSingleScreenRotated(const ScreenInfo& screen_info, float x, f
     state.Apply();
 }
 
-/**
- * Draws the emulated screens to the emulator window.
- */
+/// Draws the emulated screens to the emulator window.
 void Renderer::DrawScreens(const Layout::FramebufferLayout& layout) {
     // Update background color before drawing if the user changed it
     if (VideoCore::g_bg_color_update_requested.exchange(false))
@@ -357,7 +355,7 @@ void Renderer::DrawScreens(const Layout::FramebufferLayout& layout) {
     // Bind texture in Texture Unit 0
     glActiveTexture(GL_TEXTURE0);
     glUniform1i(uniform_color_texture, 0);
-    if (Core::System::GetInstance().IsSleepModeEnabled())
+    if (system.IsSleepModeEnabled())
         return;
     if (layout.top_screen_enabled) {
         if (Settings::values.disable_mh_2xmsaa || Settings::values.factor_3d == 0)

@@ -26,7 +26,7 @@ struct NCCHData {
 /// File system interface to the SelfNCCH archive
 class ArchiveFactory_SelfNCCH final : public ArchiveFactory {
 public:
-    ArchiveFactory_SelfNCCH() = default;
+    explicit ArchiveFactory_SelfNCCH(Core::System& system) : system{system} {};
 
     /// Registers a loaded application so that we can open its SelfNCCH archive when requested.
     void Register(Loader::AppLoader& app_loader);
@@ -34,6 +34,7 @@ public:
     std::string GetName() const override {
         return "SelfNCCH";
     }
+
     ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) override;
     ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) override;
     ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path) const override;
@@ -41,6 +42,8 @@ public:
 private:
     /// Mapping of ProgramId -> NCCHData
     std::unordered_map<u64, NCCHData> ncch_data;
+
+    Core::System& system;
 };
 
 } // namespace FileSys

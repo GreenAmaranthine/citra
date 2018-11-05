@@ -7,6 +7,10 @@
 #include <memory>
 #include <QDialog>
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Ui {
 class ConfigurationDialog;
 } // namespace Ui
@@ -17,7 +21,8 @@ class ConfigurationDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit ConfigurationDialog(QWidget* parent, const HotkeyRegistry& registry);
+    explicit ConfigurationDialog(QWidget* parent, const HotkeyRegistry& registry,
+                                 Core::System& system);
     ~ConfigurationDialog();
 
     void ApplyConfiguration();
@@ -29,4 +34,5 @@ private:
     void PopulateSelectionList();
 
     std::unique_ptr<Ui::ConfigurationDialog> ui;
+    Core::System& system;
 };

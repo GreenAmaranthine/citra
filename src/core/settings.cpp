@@ -18,8 +18,7 @@ namespace Settings {
 
 Values values;
 
-void Apply() {
-    auto& system{Core::System::GetInstance()};
+void Apply(Core::System& system) {
     if (!system.IsPoweredOn())
         return;
     VideoCore::g_hw_shaders_enabled = values.use_hw_shaders;

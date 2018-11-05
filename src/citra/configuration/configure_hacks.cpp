@@ -10,8 +10,19 @@
 ConfigureHacks::ConfigureHacks(QWidget* parent)
     : QWidget{parent}, ui{std::make_unique<Ui::ConfigureHacks>()} {
     ui->setupUi(this);
-    LoadConfiguration();
-    bool is_powered_on{Core::System::GetInstance().IsPoweredOn()};
+}
+
+ConfigureHacks::~ConfigureHacks() {}
+
+void ConfigureHacks::LoadConfiguration(Core::System& system) {
+    ui->toggle_priority_boost->setChecked(Settings::values.priority_boost);
+    ui->combo_ticks_mode->setCurrentIndex(static_cast<int>(Settings::values.ticks_mode));
+    ui->spinbox_ticks->setValue(static_cast<int>(Settings::values.ticks));
+    ui->spinbox_ticks->setEnabled(Settings::values.ticks_mode == Settings::TicksMode::Custom);
+    ui->toggle_bos->setChecked(Settings::values.use_bos);
+    ui->toggle_force_memory_mode_7->setChecked(Settings::values.force_memory_mode_7);
+    ui->disable_mh_2xmsaa->setChecked(Settings::values.disable_mh_2xmsaa);
+    bool is_powered_on{system.IsPoweredOn()};
     ui->toggle_priority_boost->setEnabled(!is_powered_on);
     ui->toggle_force_memory_mode_7->setEnabled(!is_powered_on);
     ui->disable_mh_2xmsaa->setEnabled(!is_powered_on);
@@ -20,19 +31,7 @@ ConfigureHacks::ConfigureHacks(QWidget* parent)
             [&](int index) { ui->spinbox_ticks->setEnabled(index == 2); });
 }
 
-ConfigureHacks::~ConfigureHacks() {}
-
-void ConfigureHacks::LoadConfiguration() {
-    ui->toggle_priority_boost->setChecked(Settings::values.priority_boost);
-    ui->combo_ticks_mode->setCurrentIndex(static_cast<int>(Settings::values.ticks_mode));
-    ui->spinbox_ticks->setValue(static_cast<int>(Settings::values.ticks));
-    ui->spinbox_ticks->setEnabled(Settings::values.ticks_mode == Settings::TicksMode::Custom);
-    ui->toggle_bos->setChecked(Settings::values.use_bos);
-    ui->toggle_force_memory_mode_7->setChecked(Settings::values.force_memory_mode_7);
-    ui->disable_mh_2xmsaa->setChecked(Settings::values.disable_mh_2xmsaa);
-}
-
-void ConfigureHacks::ApplyConfiguration() {
+void ConfigureHacks::ApplyConfiguration(Core::System& system) {
     Settings::values.priority_boost = ui->toggle_priority_boost->isChecked();
     Settings::values.ticks_mode =
         static_cast<Settings::TicksMode>(ui->combo_ticks_mode->currentIndex());
@@ -40,7 +39,6 @@ void ConfigureHacks::ApplyConfiguration() {
     Settings::values.use_bos = ui->toggle_bos->isChecked();
     Settings::values.force_memory_mode_7 = ui->toggle_force_memory_mode_7->isChecked();
     Settings::values.disable_mh_2xmsaa = ui->disable_mh_2xmsaa->isChecked();
-    auto& system{Core::System::GetInstance()};
     if (system.IsPoweredOn())
         system.CPU().SyncSettings();
 }

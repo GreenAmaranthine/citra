@@ -13,9 +13,10 @@
 
 namespace Service::NS {
 
-Kernel::SharedPtr<Kernel::Process> LaunchTitleImpl(FS::MediaType media_type, u64 title_id) {
+Kernel::SharedPtr<Kernel::Process> LaunchTitleImpl(Core::System& system, FS::MediaType media_type,
+                                                   u64 title_id) {
     std::string path{AM::GetTitleContentPath(media_type, title_id)};
-    auto loader{Loader::GetLoader(path)};
+    auto loader{Loader::GetLoader(system, path)};
     if (!loader) {
         LOG_WARNING(Service_NS, "Could not find .app for title 0x{:016X}", title_id);
         return nullptr;
@@ -40,7 +41,7 @@ void NS_S::LaunchTitle(Kernel::HLERequestContext& ctx) {
         rb.Push(RESULT_SUCCESS);
         rb.Push<u32>(0);
     } else {
-        auto process{LaunchTitleImpl(media_type, title_id)};
+        auto process{LaunchTitleImpl(system, media_type, title_id)};
         IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
         rb.Push(RESULT_SUCCESS);
         rb.Push<u32>(process ? process->process_id : 0);
@@ -62,8 +63,7 @@ void NS_S::RebootSystemClean(Kernel::HLERequestContext& ctx) {
 }
 
 void InstallInterfaces(Core::System& system) {
-    auto& service_manager{system.ServiceManager()};
-    std::make_shared<NS_S>(system)->InstallAsService(service_manager);
+    std::make_shared<NS_S>(system)->InstallAsService(system.ServiceManager());
 }
 
 } // namespace Service::NS

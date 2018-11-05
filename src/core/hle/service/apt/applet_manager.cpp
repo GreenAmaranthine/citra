@@ -296,7 +296,8 @@ ResultCode AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
         return ResultCode(ErrorDescription::AlreadyExists, ErrorModule::Applet,
                           ErrorSummary::InvalidState, ErrorLevel::Status);
     if (Settings::values.use_lle_applets) {
-        auto process{NS::LaunchTitleImpl(FS::MediaType::NAND, GetTitleIdForApplet(applet_id))};
+        auto process{
+            NS::LaunchTitleImpl(system, FS::MediaType::NAND, GetTitleIdForApplet(applet_id))};
         if (process)
             return RESULT_SUCCESS;
         ASSERT_MSG(false, "Applet {:08X} not found, dump and install it",
@@ -316,7 +317,8 @@ ResultCode AppletManager::PreloadLibraryApplet(AppletId applet_id) {
         return ResultCode(ErrorDescription::AlreadyExists, ErrorModule::Applet,
                           ErrorSummary::InvalidState, ErrorLevel::Status);
     if (Settings::values.use_lle_applets) {
-        auto process{NS::LaunchTitleImpl(FS::MediaType::NAND, GetTitleIdForApplet(applet_id))};
+        auto process{
+            NS::LaunchTitleImpl(system, FS::MediaType::NAND, GetTitleIdForApplet(applet_id))};
         if (process)
             return RESULT_SUCCESS;
         ASSERT_MSG(false, "Applet {:08X} not found, dump and install it",

@@ -31,13 +31,12 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
             return;
         emit RestoreDefaultsRequested();
     });
-    ui->toggle_console->setEnabled(!Core::System::GetInstance().IsPoweredOn());
-    LoadConfiguration();
 }
 
 ConfigureGeneral::~ConfigureGeneral() {}
 
-void ConfigureGeneral::LoadConfiguration() {
+void ConfigureGeneral::LoadConfiguration(Core::System& system) {
+    ui->toggle_console->setEnabled(!system.IsPoweredOn());
     ui->combobox_keyboard_mode->setCurrentIndex(static_cast<int>(Settings::values.keyboard_mode));
     ui->use_lle_applets->setChecked(Settings::values.use_lle_applets);
     ui->toggle_console->setChecked(UISettings::values.show_console);

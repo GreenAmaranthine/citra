@@ -16,14 +16,6 @@ class System;
 } // namespace Core
 
 namespace Service::GSP {
-/**
- * Retrieves the framebuffer info stored in the GSP shared memory for the
- * specified screen index and thread id.
- * @param thread_id GSP thread id of the process that accesses the structure that we're requesting.
- * @param screen_index Index of the screen we're requesting (Top = 0, Bottom = 1).
- * @returns FramebufferUpdate Information about the specified framebuffer.
- */
-FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index);
 
 /**
  * Signals that the specified interrupt type has occurred to userland code
@@ -32,4 +24,5 @@ FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index);
 void SignalInterrupt(InterruptId interrupt_id);
 
 void InstallInterfaces(Core::System& system);
+
 } // namespace Service::GSP

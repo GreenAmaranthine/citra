@@ -16,7 +16,7 @@ namespace CheatCore {
 
 static std::string GetFilePath(Core::System& system) {
     u64 program_id{};
-    Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id);
+    system.GetAppLoader().ReadProgramId(program_id);
     return fmt::format("{}{:016X}.txt", FileUtil::GetUserPath(FileUtil::UserPath::CheatsDir),
                        program_id);
 }

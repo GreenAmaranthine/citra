@@ -6,7 +6,6 @@
 #include <list>
 #include <mutex>
 #include <utility>
-#include "core/core.h"
 #include "input_common/keyboard.h"
 
 namespace InputCommon {
@@ -19,8 +18,6 @@ public:
     ~KeyButton() override;
 
     bool GetStatus() const override {
-        if (Core::System::GetInstance().IsSleepModeEnabled())
-            return false;
         return status.load();
     }
 

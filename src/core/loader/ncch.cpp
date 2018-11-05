@@ -69,7 +69,7 @@ ResultStatus AppLoader_NCCH::LoadExec(Kernel::SharedPtr<Kernel::Process>& proces
         ResultStatus::Success == ReadProgramId(program_id)) {
         auto process_name{Common::StringFromFixedZeroTerminatedBuffer(
             (const char*)overlay_ncch->exheader_header.codeset_info.name, 8)};
-        auto codeset{Core::System::GetInstance().Kernel().CreateCodeSet(process_name, program_id)};
+        auto codeset{system.Kernel().CreateCodeSet(process_name, program_id)};
         codeset->CodeSegment().offset = 0;
         codeset->CodeSegment().addr = overlay_ncch->exheader_header.codeset_info.text.address;
         codeset->CodeSegment().size =
@@ -91,7 +91,7 @@ ResultStatus AppLoader_NCCH::LoadExec(Kernel::SharedPtr<Kernel::Process>& proces
             bss_page_size;
         codeset->entrypoint = codeset->CodeSegment().addr;
         codeset->memory = std::make_shared<std::vector<u8>>(std::move(code));
-        auto& kernel{Core::System::GetInstance().Kernel()};
+        auto& kernel{system.Kernel()};
         process = kernel.CreateProcess(std::move(codeset));
         // Attach a resource limit to the process based on the resource limit category
         process->resource_limit =
@@ -127,8 +127,7 @@ void AppLoader_NCCH::ParseRegionLockoutInfo() {
                 regions.push_back(region);
             region_lockout >>= 1;
         }
-        Core::System::GetInstance()
-            .ServiceManager()
+        system.ServiceManager()
             .GetService<Service::CFG::Module::Interface>("cfg:u")
             ->GetModule()
             ->SetPreferredRegionCodes(regions);
@@ -153,12 +152,12 @@ ResultStatus AppLoader_NCCH::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     Network::AppInfo app_info;
     ReadShortTitle(app_info.name);
     app_info.id = ncch_program_id;
-    Core::System::GetInstance().RoomMember().SendAppInfo(app_info);
+    system.RoomMember().SendAppInfo(app_info);
     is_loaded = true;           // Set state to loaded
     result = LoadExec(process); // Load the executable into memory for booting
     if (ResultStatus::Success != result)
         return result;
-    Core::System::GetInstance().ArchiveManager().RegisterSelfNCCH(*this);
+    system.ArchiveManager().RegisterSelfNCCH(*this);
     ParseRegionLockoutInfo();
     return ResultStatus::Success;
 }

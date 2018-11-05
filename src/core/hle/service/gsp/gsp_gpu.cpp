@@ -82,7 +82,7 @@ static inline InterruptRelayQueue* GetInterruptRelayQueue(
 }
 
 void GSP_GPU::ClientDisconnected(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
-    SessionData* session_data{GetSessionData(server_session)};
+    auto session_data{GetSessionData(server_session)};
     if (active_thread_id == session_data->thread_id)
         ReleaseRight(session_data);
     SessionRequestHandler::ClientDisconnected(server_session);
@@ -210,7 +210,7 @@ void GSP_GPU::ReadHWRegs(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x4, 2, 0};
     u32 reg_addr{rp.Pop<u32>()};
     u32 input_size{rp.Pop<u32>()};
-    static constexpr u32 MaxReadSize{0x80};
+    constexpr u32 MaxReadSize{0x80};
     u32 size{std::min(input_size, MaxReadSize)};
     if ((reg_addr % 4) != 0 || reg_addr >= 0x420000) {
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
@@ -226,15 +226,14 @@ void GSP_GPU::ReadHWRegs(Kernel::HLERequestContext& ctx) {
         return;
     }
     std::vector<u8> buffer(size);
-    for (u32 offset{}; offset < size; ++offset) {
+    for (u32 offset{}; offset < size; ++offset)
         HW::Read<u8>(buffer[offset], REGS_BEGIN + reg_addr + offset);
-    }
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(std::move(buffer), 0);
 }
 
-ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
+ResultCode GSP_GPU::SetBufferSwapImpl(u32 screen_id, const FrameBufferInfo& info) {
     u32 base_address{0x400000};
     PAddr phys_address_left{Memory::VirtualToPhysicalAddress(info.address_left)};
     PAddr phys_address_right{Memory::VirtualToPhysicalAddress(info.address_right)};
@@ -263,7 +262,7 @@ ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
         base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].active_fb)),
         info.shown_fb);
     if (screen_id == 0)
-        Core::System::GetInstance().perf_stats.EndAppFrame();
+        system.perf_stats.EndAppFrame();
     return RESULT_SUCCESS;
 }
 
@@ -272,7 +271,7 @@ void GSP_GPU::SetBufferSwap(Kernel::HLERequestContext& ctx) {
     u32 screen_id{rp.Pop<u32>()};
     auto fb_info{rp.PopRaw<FrameBufferInfo>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-    rb.Push(GSP::SetBufferSwap(screen_id, fb_info));
+    rb.Push(SetBufferSwapImpl(screen_id, fb_info));
 }
 
 void GSP_GPU::FlushDataCache(Kernel::HLERequestContext& ctx) {
@@ -302,7 +301,7 @@ void GSP_GPU::RegisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
     // TODO: return right error code instead of asserting
     ASSERT_MSG((interrupt_event), "handle isn't valid!");
     interrupt_event->SetName("GSP_GSP_GPU::interrupt_event");
-    SessionData* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     session_data->interrupt_event = std::move(interrupt_event);
     session_data->registered = true;
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
@@ -318,7 +317,7 @@ void GSP_GPU::RegisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
 }
 
 void GSP_GPU::UnregisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
-    SessionData* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     session_data->interrupt_event = nullptr;
     session_data->registered = false;
     IPC::ResponseBuilder rb{ctx, 0x14, 1, 0};
@@ -327,7 +326,7 @@ void GSP_GPU::UnregisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
 }
 
 void GSP_GPU::SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id) {
-    SessionData* session_data{FindRegisteredThreadData(thread_id)};
+    auto session_data{FindRegisteredThreadData(thread_id)};
     if (!session_data)
         return;
     auto interrupt_event{session_data->interrupt_event};
@@ -335,7 +334,7 @@ void GSP_GPU::SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id) 
         LOG_WARNING(Service_GSP, "cannot synchronize until GSP event has been created!");
         return;
     }
-    InterruptRelayQueue* interrupt_relay_queue{GetInterruptRelayQueue(shared_memory, thread_id)};
+    auto interrupt_relay_queue{GetInterruptRelayQueue(shared_memory, thread_id)};
     u8 next{interrupt_relay_queue->index};
     next += interrupt_relay_queue->number_interrupts;
     next = next % 0x34; // 0x34 is the number of interrupt slots
@@ -350,9 +349,9 @@ void GSP_GPU::SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id) 
     int screen_id{
         (interrupt_id == InterruptId::PDC0) ? 0 : (interrupt_id == InterruptId::PDC1) ? 1 : -1};
     if (screen_id != -1) {
-        FrameBufferUpdate* info{GetFrameBufferInfo(thread_id, screen_id)};
+        auto info{GetFrameBufferInfo(thread_id, screen_id)};
         if (info->is_dirty) {
-            GSP::SetBufferSwap(screen_id, info->framebuffer_info[info->index]);
+            SetBufferSwapImpl(screen_id, info->framebuffer_info[info->index]);
             info->is_dirty.Assign(false);
         }
     }
@@ -548,7 +547,7 @@ void GSP_GPU::AcquireRight(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x16, 1, 2};
     u32 flag{rp.Pop<u32>()};
     auto process{rp.PopObject<Kernel::Process>()};
-    SessionData* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     if (active_thread_id == session_data->thread_id) {
         rb.Push(ResultCode(ErrorDescription::AlreadyDone, ErrorModule::GX, ErrorSummary::Success,
@@ -563,14 +562,14 @@ void GSP_GPU::AcquireRight(Kernel::HLERequestContext& ctx) {
               session_data->thread_id);
 }
 
-void GSP_GPU::ReleaseRight(SessionData* session_data) {
+void GSP_GPU::ReleaseRight(auto session_data) {
     ASSERT_MSG(active_thread_id == session_data->thread_id,
                "Wrong thread tried to release GPU right");
     active_thread_id = -1;
 }
 
 void GSP_GPU::ReleaseRight(Kernel::HLERequestContext& ctx) {
-    SessionData* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ReleaseRight(session_data);
     IPC::ResponseBuilder rb{ctx, 0x17, 1, 0};
     rb.Push(RESULT_SUCCESS);

@@ -15,7 +15,8 @@
         var str = trs.map(tr => {
             const tds = tr.children
             const codes = tds[1].innerText.replace(/U\+/g, '')
-            var name = tds[3].innerText.trim().split(":").join("").split(" ").join("_").split("-").join("_").split("_&").join("_").split("“").join("").split("”").join("").split("(").join("").split(")").join("").split(".").join("").toLowerCase()
+            var name = tds[3].innerText.trim().split(":").join("").split("
+   ").join("_").split("-").join("_").split("_&").join("_").split("“").join("").split("”").join("").split("(").join("").split(")").join("").split(".").join("").toLowerCase()
             if (name.includes("flag_")) name = name.substring(0, "flag_".length + 2)
             if (name.includes('⊛')) return null;
             return "    {\""+ name + "\", \"" + codes.split(' ').map(s =>

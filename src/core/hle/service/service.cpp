@@ -146,7 +146,7 @@ void ServiceFrameworkBase::InstallAsNamedPort(Kernel::KernelSystem& kernel) {
     ASSERT(!port);
     auto [server_port, client_port]{kernel.CreatePortPair(max_sessions, service_name)};
     server_port->SetHleHandler(shared_from_this());
-    Core::System::GetInstance().Kernel().AddNamedPort(service_name, std::move(client_port));
+    kernel.AddNamedPort(service_name, std::move(client_port));
 }
 
 void ServiceFrameworkBase::RegisterHandlersBase(const FunctionInfoBase* functions, std::size_t n) {
@@ -163,7 +163,7 @@ void ServiceFrameworkBase::ReportUnimplementedFunction(u32* cmd_buf, const Funct
 }
 
 void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_session) {
-    auto& kernel{Core::System::GetInstance().Kernel()};
+    auto& kernel{server_session->system.Kernel()};
     auto thread{kernel.GetThreadManager().GetCurrentThread()};
     // TODO: avoid GetPointer
     u32* cmd_buf{reinterpret_cast<u32*>(Memory::GetPointer(thread->GetCommandBufferAddress()))};
@@ -188,11 +188,11 @@ void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_ses
         context.WriteToOutgoingCommandBuffer(cmd_buf, *current_process);
 }
 
-static bool AttemptLLE(const ServiceModuleInfo& service_module) {
+static bool AttemptLLE(Core::System& system, const ServiceModuleInfo& service_module) {
     if (!Settings::values.lle_modules.at(service_module.name))
         return false;
-    std::unique_ptr<Loader::AppLoader> loader{
-        Loader::GetLoader(AM::GetTitleContentPath(FS::MediaType::NAND, service_module.title_id))};
+    std::unique_ptr<Loader::AppLoader> loader{Loader::GetLoader(
+        system, AM::GetTitleContentPath(FS::MediaType::NAND, service_module.title_id))};
     if (!loader) {
         LOG_ERROR(Service,
                   "Service module \"{}\" could not be loaded; Defaulting to HLE implementation.",
@@ -209,7 +209,7 @@ static bool AttemptLLE(const ServiceModuleInfo& service_module) {
 void Init(Core::System& system) {
     SM::ServiceManager::InstallInterfaces(system);
     for (const auto& service_module : service_module_map)
-        if (!AttemptLLE(service_module))
+        if (!AttemptLLE(system, service_module))
             service_module.init_function(system);
     LOG_DEBUG(Service, "initialized OK");
 }
