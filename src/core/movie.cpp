@@ -400,7 +400,6 @@ static std::optional<CTMHeader> ReadHeader(const std::string& movie_file) {
         return {};
     CTMHeader header;
     save_record.ReadArray(&header, 1);
-    LOG_CRITICAL(Log, "{}", Common::ArrayToString(header.filetype.data(), sizeof(header.filetype)));
     if (header.filetype != header_magic_bytes)
         return {};
     return header;
