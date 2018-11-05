@@ -1735,6 +1735,5 @@ int main(int argc, char* argv[]) {
 #ifdef _WIN32
     WSACleanup();
 #endif
-    detached_tasks.WaitForAllTasks();
     return result;
 }

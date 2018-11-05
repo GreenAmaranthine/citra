@@ -197,6 +197,5 @@ int main(int argc, char** argv) {
         announce_session->Stop();
     announce_session.reset();
     room.Destroy();
-    detached_tasks.WaitForAllTasks();
     return 0;
 }

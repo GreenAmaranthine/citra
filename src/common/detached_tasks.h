@@ -9,18 +9,11 @@
 
 namespace Common {
 
-/**
- * A background manager which ensures that all detached tasks are finished before program exits.
- *
- * To make detached task safe, a single DetachedTasks object should be placed in the main(), and
- * call WaitForAllTasks() after all program execution but before global/static variable destruction.
- * Any potentially unsafe detached task should be executed via DetachedTasks::AddTask.
- */
+/// A background manager which ensures that all detached tasks are finished before program exits.
 class DetachedTasks {
 public:
     DetachedTasks();
     ~DetachedTasks();
-    void WaitForAllTasks();
 
     static void AddTask(std::function<void()> task);
 

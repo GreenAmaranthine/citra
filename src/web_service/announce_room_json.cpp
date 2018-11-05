@@ -103,7 +103,7 @@ void RoomJson::Delete() {
     json["id"] = room.UID;
     Common::DetachedTasks::AddTask(
         [host{this->host}, username{this->username}, token{this->token}, content{json.dump()}]() {
-            // create a new client here because the this->client might be destroyed.
+            // Create a new client here because the this->client might be destroyed.
             Client{host, username, token}.DeleteJson("/lobby", content, false);
         });
 }

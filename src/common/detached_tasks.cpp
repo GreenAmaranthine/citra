@@ -15,14 +15,10 @@ DetachedTasks::DetachedTasks() {
     instance = this;
 }
 
-void DetachedTasks::WaitForAllTasks() {
+DetachedTasks::~DetachedTasks() {
+    LOG_INFO(Common, "Waiting for all detached tasks to end...");
     std::unique_lock lock{mutex};
     cv.wait(lock, [this]() { return count == 0; });
-}
-
-DetachedTasks::~DetachedTasks() {
-    std::unique_lock lock{mutex};
-    ASSERT(count == 0);
     instance = nullptr;
 }
 
