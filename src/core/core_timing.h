@@ -136,7 +136,7 @@ public:
     ~Timing();
 
     /**
-     * This should only be called from the emu thread, if you are calling it any other thread, you
+     * This should only be called from the emu thread, if you're calling it any other thread, you
      * are doing something evil
      */
     u64 GetTicks() const;

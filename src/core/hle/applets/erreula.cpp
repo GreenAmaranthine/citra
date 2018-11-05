@@ -34,7 +34,7 @@ ResultCode ErrEula::ReceiveParameter(const Service::APT::MessageParameter& param
     Service::APT::MessageParameter result;
     result.signal = Service::APT::SignalType::Response;
     result.buffer.clear();
-    result.destination_id = Service::APT::AppletId::Application;
+    result.destination_id = AppletId::Application;
     result.sender_id = id;
     result.object = framebuffer_memory;
     SendParameter(result);
@@ -48,12 +48,11 @@ ResultCode ErrEula::StartImpl(const Service::APT::AppletStartupParameter& parame
 }
 
 void ErrEula::Update() {
-    bool open{};
-    cb(config, open);
+    cb(config, is_running);
     std::mutex m;
     std::unique_lock lock{m};
     std::condition_variable cv;
-    cv.wait(lock, [&open]() -> bool { return !open; });
+    cv.wait(lock, [this]() -> bool { return !is_running; });
     Finalize();
 }
 
@@ -63,10 +62,10 @@ void ErrEula::Finalize() {
     message.buffer.resize(sizeof(config));
     std::memcpy(message.buffer.data(), &config, message.buffer.size());
     message.signal = Service::APT::SignalType::WakeupByExit;
-    message.destination_id = Service::APT::AppletId::Application;
+    message.destination_id = AppletId::Application;
     message.sender_id = id;
     SendParameter(message);
-
     is_running = false;
 }
+
 } // namespace HLE::Applets

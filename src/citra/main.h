@@ -171,11 +171,11 @@ private:
     void UpdatePerformanceStats();
     void UpdateTitle();
 
-    Q_INVOKABLE void ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& open);
+    Q_INVOKABLE void ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& is_running);
     Q_INVOKABLE void SwkbdCallback(HLE::Applets::SoftwareKeyboardConfig& config,
-                                   std::u16string& text, bool& open);
+                                   std::u16string& text, bool& is_running);
     Q_INVOKABLE void MiiSelectorCallback(const HLE::Applets::MiiConfig& config,
-                                         HLE::Applets::MiiResult& result, bool& open);
+                                         HLE::Applets::MiiResult& result, bool& is_running);
     Q_INVOKABLE void Update3D();
     Q_INVOKABLE void UpdateFrameAdvancingCallback();
     Q_INVOKABLE void UpdateControlPanelNetwork();

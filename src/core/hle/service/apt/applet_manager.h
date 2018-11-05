@@ -6,36 +6,18 @@
 
 #include <array>
 #include <optional>
+#include <type_traits>
 #include <vector>
+#include "core/hle/applets/applet.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/result.h"
 #include "core/hle/service/fs/archive.h"
 
-namespace Service::APT {
+namespace HLE::Applets {
+class Applet;
+} // namespace HLE::Applets
 
-/// Signals used by APT functions
-enum class SignalType : u32 {
-    None = 0x0,
-    Wakeup = 0x1,
-    Request = 0x2,
-    Response = 0x3,
-    Exit = 0x4,
-    Message = 0x5,
-    HomeButtonSingle = 0x6,
-    HomeButtonDouble = 0x7,
-    DspSleep = 0x8,
-    DspWakeup = 0x9,
-    WakeupByExit = 0xA,
-    WakeupByPause = 0xB,
-    WakeupByCancel = 0xC,
-    WakeupByCancelAll = 0xD,
-    WakeupByPowerButtonClick = 0xE,
-    WakeupToJumpHome = 0xF,
-    RequestForSysApplet = 0x10,
-    WakeupToLaunchApplication = 0x11,
-};
-
-/// App Id's used by APT functions
+/// Applet id's used by APT functions
 enum class AppletId : u32 {
     None = 0,
     AnySystemApplet = 0x100,
@@ -72,6 +54,47 @@ enum class AppletId : u32 {
     Memolib2 = 0x409,
 };
 
+// Specializes std::hash for AppletId, so that we can use it in std::unordered_map.
+// Workaround for libstdc++ bug: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=60970
+namespace std {
+
+template <>
+struct hash<AppletId> {
+    using argument_type = AppletId;
+    using result_type = size_t;
+
+    result_type operator()(const argument_type& id_code) const {
+        using Type = std::underlying_type<argument_type>::type;
+        return std::hash<Type>()(static_cast<Type>(id_code));
+    }
+};
+
+} // namespace std
+
+namespace Service::APT {
+
+/// Signals used by APT functions
+enum class SignalType : u32 {
+    None = 0x0,
+    Wakeup = 0x1,
+    Request = 0x2,
+    Response = 0x3,
+    Exit = 0x4,
+    Message = 0x5,
+    HomeButtonSingle = 0x6,
+    HomeButtonDouble = 0x7,
+    DspSleep = 0x8,
+    DspWakeup = 0x9,
+    WakeupByExit = 0xA,
+    WakeupByPause = 0xB,
+    WakeupByCancel = 0xC,
+    WakeupByCancelAll = 0xD,
+    WakeupByPowerButtonClick = 0xE,
+    WakeupToJumpHome = 0xF,
+    RequestForSysApplet = 0x10,
+    WakeupToLaunchApplication = 0x11,
+};
+
 /// Holds information about the parameters used in Send/Glance/ReceiveParameter
 struct MessageParameter {
     AppletId sender_id{AppletId::None};
@@ -94,12 +117,12 @@ union AppletAttributes {
     BitField<29, 1, u32> is_home_menu;
 
     AppletAttributes() : raw(0) {}
-    AppletAttributes(u32 attributes) : raw(attributes) {}
+    AppletAttributes(u32 attributes) : raw{attributes} {}
 };
 
 class AppletManager : public std::enable_shared_from_this<AppletManager> {
 public:
-    AppletManager();
+    explicit AppletManager(Core::System& system);
     ~AppletManager();
 
     /**
@@ -140,6 +163,8 @@ public:
 
     ResultVal<AppletInfo> GetAppletInfo(AppletId app_id);
 
+    void ScheduleEvent(AppletId id);
+
 private:
     /// Parameter data to be returned in the next call to Glance/ReceiveParameter.
     std::optional<MessageParameter> next_parameter;
@@ -175,12 +200,22 @@ private:
     // Holds data about the concurrently running applets in the system.
     std::array<AppletSlotData, NumAppletSlot> applet_slots{};
 
+    void AppletUpdateEvent(u64 applet_id, s64 cycles_late);
+    u64 GetTitleIdForApplet(AppletId id);
+
     // This overload returns nullptr if no applet with the specified id has been started.
     AppletSlotData* GetAppletSlotData(AppletId id);
     AppletSlotData* GetAppletSlotData(AppletAttributes attributes);
 
     // Command that will be sent to the application when a library applet calls CloseLibraryApplet.
     SignalType library_applet_closing_command;
+
+    std::unordered_map<AppletId, std::shared_ptr<HLE::Applets::Applet>> hle_applets;
+
+    /// The CoreTiming event identifier for the Applet update callback.
+    Core::TimingEventType* applet_update_event;
+
+    Core::System& system;
 };
 
 } // namespace Service::APT

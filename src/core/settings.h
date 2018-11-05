@@ -138,6 +138,7 @@ struct Values {
 
     // LLE
     std::unordered_map<std::string, bool> lle_modules;
+    bool use_lle_applets;
 
     // Data Storage
     bool use_virtual_sd;

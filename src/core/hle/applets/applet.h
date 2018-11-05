@@ -15,22 +15,6 @@ public:
     virtual ~Applet() = default;
 
     /**
-     * Creates an instance of the Applet subclass identified by the parameter.
-     * and stores it in a global map.
-     * @param id Id of the applet to create.
-     * @returns ResultCode Whether the operation was successful or not.
-     */
-    static ResultCode Create(Service::APT::AppletId id,
-                             std::weak_ptr<Service::APT::AppletManager> manager);
-
-    /**
-     * Retrieves the Applet instance identified by the specified id.
-     * @param id Id of the Applet to retrieve.
-     * @returns Requested Applet or nullptr if not found.
-     */
-    static std::shared_ptr<Applet> Get(Service::APT::AppletId id);
-
-    /**
      * Handles a parameter from the application.
      * @param parameter Parameter data to handle.
      * @returns ResultCode Whether the operation was successful or not.
@@ -44,19 +28,18 @@ public:
      */
     ResultCode Start(const Service::APT::AppletStartupParameter& parameter);
 
-    /**
-     * Whether the applet is currently executing instead of the host application or not.
-     */
+    /// Whether the applet is currently executing instead of the host application or not.
     bool IsRunning() const;
 
-    /**
-     * Handles an update tick for the Applet, lets it update the screen, send commands, etc.
-     */
+    /// Handles an update tick for the Applet, lets it update the screen, send commands, etc.
     virtual void Update() = 0;
 
+    virtual bool IsLibraryApplet() {
+        return true;
+    }
+
 protected:
-    Applet(Service::APT::AppletId id, std::weak_ptr<Service::APT::AppletManager> manager)
-        : id{id}, manager{std::move(manager)} {}
+    explicit Applet(AppletId id, Service::APT::AppletManager& manager) : id{id}, manager{manager} {}
 
     /**
      * Handles the Applet start event, triggered from the application.
@@ -65,8 +48,7 @@ protected:
      */
     virtual ResultCode StartImpl(const Service::APT::AppletStartupParameter& parameter) = 0;
 
-    Service::APT::AppletId id;                    ///< Id of this Applet
-    std::shared_ptr<std::vector<u8>> heap_memory; ///< Heap memory for this Applet
+    AppletId id; ///< ID of this Applet
 
     /// Whether this applet is currently running instead of the host application or not.
     bool is_running{};
@@ -74,15 +56,7 @@ protected:
     void SendParameter(const Service::APT::MessageParameter& parameter);
 
 private:
-    std::weak_ptr<Service::APT::AppletManager> manager;
+    Service::APT::AppletManager& manager;
 };
 
-/// Returns whether a library applet is currently running
-bool IsLibraryAppletRunning();
-
-/// Initializes the HLE applets
-void Init();
-
-/// Shuts down the HLE applets
-void Shutdown();
 } // namespace HLE::Applets

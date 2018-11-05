@@ -80,8 +80,8 @@ SoftwareKeyboardDialog::SoftwareKeyboardDialog(QWidget* parent,
     });
     connect(ui->button0, &QPushButton::clicked, [&](bool) {
         text = ui->text->toPlainText().toStdU16String();
-        config.return_code = HLE::Applets::results[static_cast<u32>(config.num_buttons_m1)][0];
         config.text_length = static_cast<u16>(text.length());
+        config.return_code = HLE::Applets::results[static_cast<u32>(config.num_buttons_m1)][0];
         config.text_offset = 0;
         close();
     });

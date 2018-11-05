@@ -149,7 +149,7 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
     Service::APT::MessageParameter result;
     result.signal = Service::APT::SignalType::Response;
     result.buffer.clear();
-    result.destination_id = Service::APT::AppletId::Application;
+    result.destination_id = AppletId::Application;
     result.sender_id = id;
     result.object = framebuffer_memory;
     SendParameter(result);
@@ -302,12 +302,11 @@ void SoftwareKeyboard::Update() {
     }
     case Settings::KeyboardMode::Qt: {
         std::u16string text;
-        bool open{};
-        cb(config, text, open);
+        cb(config, text, is_running);
         std::mutex m;
         std::unique_lock lock{m};
         std::condition_variable cv;
-        cv.wait(lock, [&open]() -> bool { return !open; });
+        cv.wait(lock, [this]() -> bool { return !is_running; });
         std::memcpy(text_memory->GetPointer(), text.c_str(), text.length() * sizeof(char16_t));
         Finalize();
         break;
@@ -323,9 +322,10 @@ void SoftwareKeyboard::Finalize() {
     message.buffer.resize(sizeof(SoftwareKeyboardConfig));
     std::memcpy(message.buffer.data(), &config, message.buffer.size());
     message.signal = Service::APT::SignalType::WakeupByExit;
-    message.destination_id = Service::APT::AppletId::Application;
+    message.destination_id = AppletId::Application;
     message.sender_id = id;
     SendParameter(message);
     is_running = false;
 }
+
 } // namespace HLE::Applets

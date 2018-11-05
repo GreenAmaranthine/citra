@@ -38,7 +38,7 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
     Service::APT::MessageParameter result;
     result.signal = Service::APT::SignalType::Response;
     result.buffer.clear();
-    result.destination_id = Service::APT::AppletId::Application;
+    result.destination_id = AppletId::Application;
     result.sender_id = id;
     result.object = framebuffer_memory;
     SendParameter(result);
@@ -52,12 +52,13 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
     if (config.magic_value != MiiSelectorMagic)
         result.return_code = 1;
     else {
-        bool open{};
-        cb(config, result, open);
-        std::mutex m;
-        std::unique_lock lock{m};
-        std::condition_variable cv;
-        cv.wait(lock, [&open]() -> bool { return !open; });
+        cb(config, result, is_running);
+        /*        std::mutex m;
+                std::unique_lock lock{m};
+                std::condition_variable cv;
+                cv.wait(lock, [this]() -> bool { return !is_running; });*/
+        while (is_running)
+            std::this_thread::yield();
         result.mii_data_checksum = boost::crc<16, 0x1021, 0, 0, false, false>(
             result.selected_mii_data.data(),
             result.selected_mii_data.size() + sizeof(result.pad52));
@@ -67,7 +68,7 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
     message.buffer.resize(sizeof(MiiResult));
     std::memcpy(message.buffer.data(), &result, message.buffer.size());
     message.signal = Service::APT::SignalType::WakeupByExit;
-    message.destination_id = Service::APT::AppletId::Application;
+    message.destination_id = AppletId::Application;
     message.sender_id = id;
     SendParameter(message);
     is_running = false;

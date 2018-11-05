@@ -582,7 +582,7 @@ bool GMainWindow::LoadROM(const std::string& filename) {
         case Core::System::ResultStatus::ErrorVideoCore_ErrorGenericDrivers:
             QMessageBox::critical(
                 this, "Video Core Error",
-                "You are running default Windows drivers "
+                "you're running default Windows drivers "
                 "for your GPU. You need to install the "
                 "proper drivers for your graphics card from the manufacturer's website.");
             break;
@@ -636,15 +636,16 @@ void GMainWindow::BootApplication(const std::string& filename) {
     if (ui.action_Fullscreen->isChecked())
         ShowFullscreen();
     OnStartApplication();
-    HLE::Applets::ErrEula::cb = [this](HLE::Applets::ErrEulaConfig& config, bool& open) {
-        ErrEulaCallback(config, open);
+    HLE::Applets::ErrEula::cb = [this](HLE::Applets::ErrEulaConfig& config, bool& is_running) {
+        ErrEulaCallback(config, is_running);
     };
     HLE::Applets::SoftwareKeyboard::cb = [this](HLE::Applets::SoftwareKeyboardConfig& config,
-                                                std::u16string& text,
-                                                bool& open) { SwkbdCallback(config, text, open); };
+                                                std::u16string& text, bool& is_running) {
+        SwkbdCallback(config, text, is_running);
+    };
     HLE::Applets::MiiSelector::cb = [this](const HLE::Applets::MiiConfig& config,
-                                           HLE::Applets::MiiResult& result, bool& open) {
-        MiiSelectorCallback(config, result, open);
+                                           HLE::Applets::MiiResult& result, bool& is_running) {
+        MiiSelectorCallback(config, result, is_running);
     };
     SharedPage::Handler::update_3d = [this] { Update3D(); };
     RPC::RPCServer::cb_update_frame_advancing = [this] { UpdateFrameAdvancingCallback(); };
@@ -721,10 +722,11 @@ void GMainWindow::StoreRecentFile(const QString& filename) {
     UpdateRecentFiles();
 }
 
-void GMainWindow::ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& open) {
+void GMainWindow::ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& is_running) {
     if (QThread::currentThread() != thread()) {
         QMetaObject::invokeMethod(this, "ErrEulaCallback", Qt::BlockingQueuedConnection,
-                                  Q_ARG(HLE::Applets::ErrEulaConfig&, config), Q_ARG(bool&, open));
+                                  Q_ARG(HLE::Applets::ErrEulaConfig&, config),
+                                  Q_ARG(bool&, is_running));
         return;
     }
     switch (config.error_type) {
@@ -755,33 +757,34 @@ void GMainWindow::ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& ope
         break;
     }
     config.return_code = HLE::Applets::ErrEulaResult::Success;
-    open = false;
+    is_running = false;
 }
 
 void GMainWindow::SwkbdCallback(HLE::Applets::SoftwareKeyboardConfig& config, std::u16string& text,
-                                bool& open) {
+                                bool& is_running) {
     if (QThread::currentThread() != thread()) {
         QMetaObject::invokeMethod(this, "SwkbdCallback", Qt::BlockingQueuedConnection,
                                   Q_ARG(HLE::Applets::SoftwareKeyboardConfig&, config),
-                                  Q_ARG(std::u16string&, text), Q_ARG(bool&, open));
+                                  Q_ARG(std::u16string&, text), Q_ARG(bool&, is_running));
         return;
     }
     SoftwareKeyboardDialog dialog{this, config, text};
     dialog.exec();
-    open = false;
+    is_running = false;
 }
 
 void GMainWindow::MiiSelectorCallback(const HLE::Applets::MiiConfig& config,
-                                      HLE::Applets::MiiResult& result, bool& open) {
+                                      HLE::Applets::MiiResult& result, bool& is_running) {
     if (QThread::currentThread() != thread()) {
         QMetaObject::invokeMethod(this, "MiiSelectorCallback", Qt::BlockingQueuedConnection,
                                   Q_ARG(const HLE::Applets::MiiConfig&, config),
-                                  Q_ARG(HLE::Applets::MiiResult&, result), Q_ARG(bool&, open));
+                                  Q_ARG(HLE::Applets::MiiResult&, result),
+                                  Q_ARG(bool&, is_running));
         return;
     }
     MiiSelectorDialog dialog{this, config, result};
     dialog.exec();
-    open = false;
+    is_running = false;
 }
 
 void GMainWindow::Update3D() {
@@ -1326,7 +1329,7 @@ bool GMainWindow::ValidateMovie(const QString& path, u64 program_id) {
     case Movie::ValidationResult::RevisionDismatch:
         answer = QMessageBox::question(
             this, "Revision Dismatch",
-            "The movie file you are trying to load was created on a different revision of Citra."
+            "The movie file you're trying to load was created on a different revision of Citra."
             "<br/>Citra has had some changes during the time, and the playback may desync or not "
             "work as expected."
             "<br/><br/>Are you sure you still want to load the movie file?",
@@ -1337,7 +1340,7 @@ bool GMainWindow::ValidateMovie(const QString& path, u64 program_id) {
     case Movie::ValidationResult::AppDismatch:
         answer = QMessageBox::question(
             this, "Application Dismatch",
-            "The movie file you are trying to load was recorded with a different application."
+            "The movie file you're trying to load was recorded with a different application."
             "<br/>The playback may not work as expected, and it may cause unexpected results."
             "<br/><br/>Are you sure you still want to load the movie file?",
             QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
@@ -1347,7 +1350,7 @@ bool GMainWindow::ValidateMovie(const QString& path, u64 program_id) {
     case Movie::ValidationResult::Invalid:
         QMessageBox::critical(
             this, "Invalid Movie File",
-            "The movie file you are trying to load is invalid."
+            "The movie file you're trying to load is invalid."
             "<br/>Either the file is corrupted, or Citra has had made some major changes to the "
             "Movie module."
             "<br/>Please choose a different movie file and try again.");
@@ -1397,7 +1400,7 @@ void GMainWindow::OnPlayMovie() {
             if (app_path.isEmpty()) {
                 QMessageBox::warning(
                     this, "Application Not Found",
-                    "The movie you are trying to play is from a application that isn't "
+                    "The movie you're trying to play is from a application that isn't "
                     "in the application list and isn't in the recent files. If you have "
                     "the application, add the folder containing it to the application list or open "
                     "the "

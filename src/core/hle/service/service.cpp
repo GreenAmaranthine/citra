@@ -157,22 +157,22 @@ void ServiceFrameworkBase::RegisterHandlersBase(const FunctionInfoBase* function
 }
 
 void ServiceFrameworkBase::ReportUnimplementedFunction(u32* cmd_buf, const FunctionInfoBase* info) {
-    std::string function_name{!info ? fmt::format("{:#08x}", cmd_buf[0]) : info->name};
+    std::string function_name{!info ? fmt::format("0x{:08X}", cmd_buf[0]) : info->name};
     LOG_ERROR(Service, "unimplemented {}",
               MakeFunctionString(function_name.c_str(), service_name.c_str(), cmd_buf));
 }
 
 void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_session) {
-    Kernel::KernelSystem& kernel{Core::System::GetInstance().Kernel()};
+    auto& kernel{Core::System::GetInstance().Kernel()};
     auto thread{kernel.GetThreadManager().GetCurrentThread()};
     // TODO: avoid GetPointer
     u32* cmd_buf{reinterpret_cast<u32*>(Memory::GetPointer(thread->GetCommandBufferAddress()))};
     u32 header_code{cmd_buf[0]};
     auto itr{handlers.find(header_code)};
-    const FunctionInfoBase* info{itr == handlers.end() ? nullptr : &itr->second};
+    const auto info{itr == handlers.end() ? nullptr : &itr->second};
     if (!info || !info->handler_callback)
         return ReportUnimplementedFunction(cmd_buf, info);
-    Kernel::SharedPtr<Kernel::Process> current_process = kernel.GetCurrentProcess();
+    auto current_process{kernel.GetCurrentProcess()};
     // TODO: The kernel should be the one handling this as part of translation after
     // everything else is migrated
     Kernel::HLERequestContext context{std::move(server_session)};

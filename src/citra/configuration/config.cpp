@@ -176,6 +176,7 @@ void Config::Load() {
         bool use_lle{qt_config->value(QString::fromStdString(service_module.name), false).toBool()};
         Settings::values.lle_modules.emplace(service_module.name, use_lle);
     }
+    Settings::values.use_lle_applets = qt_config->value("use_lle_applets", false).toBool();
     qt_config->endGroup();
     qt_config->beginGroup("Renderer");
 #ifdef __APPLE__
@@ -403,6 +404,7 @@ void Config::Save() {
     qt_config->beginGroup("LLE");
     for (const auto& service_module : Settings::values.lle_modules)
         qt_config->setValue(QString::fromStdString(service_module.first), service_module.second);
+    qt_config->setValue("use_lle_applets", Settings::values.use_lle_applets);
     qt_config->endGroup();
     qt_config->beginGroup("Renderer");
     qt_config->setValue("use_hw_shaders", Settings::values.use_hw_shaders);

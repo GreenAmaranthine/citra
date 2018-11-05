@@ -48,52 +48,53 @@ void LogSetting(const std::string& name, const T& value) {
 
 void LogSettings() {
     LOG_INFO(Config, "Citra Configuration:");
-    LogSetting("ControlPanel_Volume", Settings::values.volume);
-    LogSetting("ControlPanel_Factor3d", Settings::values.factor_3d);
-    LogSetting("ControlPanel_HeadphonesConnected", Settings::values.headphones_connected);
-    LogSetting("ControlPanel_AdapterConnected", Settings::values.p_adapter_connected);
-    LogSetting("ControlPanel_BatteryCharging", Settings::values.p_battery_charging);
-    LogSetting("ControlPanel_BatteryLevel", Settings::values.p_battery_level);
-    LogSetting("ControlPanel_NetworkState", Settings::values.n_state);
-    LogSetting("ControlPanel_WifiLinkLevel", Settings::values.n_wifi_link_level);
-    LogSetting("ControlPanel_WifiStatus", Settings::values.n_wifi_status);
-    LogSetting("Core_KeyboardMode", static_cast<int>(Settings::values.keyboard_mode));
-    LogSetting("Core_EnableNSLaunch", Settings::values.enable_ns_launch);
-    LogSetting("Renderer_UseHwShaders", Settings::values.use_hw_shaders);
-    LogSetting("Renderer_ShadersAccurateGs", Settings::values.shaders_accurate_gs);
-    LogSetting("Renderer_ShadersAccurateMul", Settings::values.shaders_accurate_mul);
-    LogSetting("Renderer_ResolutionFactor", Settings::values.resolution_factor);
-    LogSetting("Renderer_UseFrameLimit", Settings::values.use_frame_limit);
-    LogSetting("Renderer_FrameLimit", Settings::values.frame_limit);
-    LogSetting("Renderer_MinVerticesPerThread", Settings::values.min_vertices_per_thread);
-    LogSetting("Layout_LayoutOption", static_cast<int>(Settings::values.layout_option));
-    LogSetting("Layout_SwapScreen", Settings::values.swap_screen);
+    LogSetting("ControlPanel_Volume", values.volume);
+    LogSetting("ControlPanel_Factor3d", values.factor_3d);
+    LogSetting("ControlPanel_HeadphonesConnected", values.headphones_connected);
+    LogSetting("ControlPanel_AdapterConnected", values.p_adapter_connected);
+    LogSetting("ControlPanel_BatteryCharging", values.p_battery_charging);
+    LogSetting("ControlPanel_BatteryLevel", values.p_battery_level);
+    LogSetting("ControlPanel_NetworkState", values.n_state);
+    LogSetting("ControlPanel_WifiLinkLevel", values.n_wifi_link_level);
+    LogSetting("ControlPanel_WifiStatus", values.n_wifi_status);
+    LogSetting("Core_KeyboardMode", static_cast<int>(values.keyboard_mode));
+    LogSetting("Core_EnableNSLaunch", values.enable_ns_launch);
+    LogSetting("Renderer_UseHwShaders", values.use_hw_shaders);
+    LogSetting("Renderer_ShadersAccurateGs", values.shaders_accurate_gs);
+    LogSetting("Renderer_ShadersAccurateMul", values.shaders_accurate_mul);
+    LogSetting("Renderer_ResolutionFactor", values.resolution_factor);
+    LogSetting("Renderer_UseFrameLimit", values.use_frame_limit);
+    LogSetting("Renderer_FrameLimit", values.frame_limit);
+    LogSetting("Renderer_MinVerticesPerThread", values.min_vertices_per_thread);
+    LogSetting("Layout_LayoutOption", static_cast<int>(values.layout_option));
+    LogSetting("Layout_SwapScreen", values.swap_screen);
     bool using_lle_modules{};
-    for (const auto& module : Settings::values.lle_modules)
+    for (const auto& module : values.lle_modules)
         if (module.second) {
             using_lle_modules = true;
             break;
         }
     LogSetting("LLE_UsingLLEModules", using_lle_modules);
-    LogSetting("Audio_EnableAudioStretching", Settings::values.enable_audio_stretching);
-    LogSetting("Audio_OutputDevice", Settings::values.output_device);
+    LogSetting("LLE_UseLLEApplets", values.use_lle_applets);
+    LogSetting("Audio_EnableAudioStretching", values.enable_audio_stretching);
+    LogSetting("Audio_OutputDevice", values.output_device);
     using namespace Service::CAM;
-    LogSetting("Camera_OuterRightName", Settings::values.camera_name[OuterRightCamera]);
-    LogSetting("Camera_OuterRightConfig", Settings::values.camera_config[OuterRightCamera]);
-    LogSetting("Camera_OuterRightFlip", Settings::values.camera_flip[OuterRightCamera]);
-    LogSetting("Camera_InnerName", Settings::values.camera_name[InnerCamera]);
-    LogSetting("Camera_InnerConfig", Settings::values.camera_config[InnerCamera]);
-    LogSetting("Camera_InnerFlip", Settings::values.camera_flip[InnerCamera]);
-    LogSetting("Camera_OuterLeftName", Settings::values.camera_name[OuterLeftCamera]);
-    LogSetting("Camera_OuterLeftConfig", Settings::values.camera_config[OuterLeftCamera]);
-    LogSetting("Camera_OuterLeftFlip", Settings::values.camera_flip[OuterLeftCamera]);
-    LogSetting("DataStorage_UseVirtualSd", Settings::values.use_virtual_sd);
-    LogSetting("System_RegionValue", Settings::values.region_value);
-    LogSetting("Hacks_PriorityBoost", Settings::values.priority_boost);
-    LogSetting("Hacks_Ticks", Settings::values.ticks);
-    LogSetting("Hacks_TicksMode", static_cast<int>(Settings::values.ticks_mode));
-    LogSetting("Hacks_UseBos", Settings::values.use_bos);
-    LogSetting("Hacks_DisableMh2xMsaa", Settings::values.disable_mh_2xmsaa);
+    LogSetting("Camera_OuterRightName", values.camera_name[OuterRightCamera]);
+    LogSetting("Camera_OuterRightConfig", values.camera_config[OuterRightCamera]);
+    LogSetting("Camera_OuterRightFlip", values.camera_flip[OuterRightCamera]);
+    LogSetting("Camera_InnerName", values.camera_name[InnerCamera]);
+    LogSetting("Camera_InnerConfig", values.camera_config[InnerCamera]);
+    LogSetting("Camera_InnerFlip", values.camera_flip[InnerCamera]);
+    LogSetting("Camera_OuterLeftName", values.camera_name[OuterLeftCamera]);
+    LogSetting("Camera_OuterLeftConfig", values.camera_config[OuterLeftCamera]);
+    LogSetting("Camera_OuterLeftFlip", values.camera_flip[OuterLeftCamera]);
+    LogSetting("DataStorage_UseVirtualSd", values.use_virtual_sd);
+    LogSetting("System_RegionValue", values.region_value);
+    LogSetting("Hacks_PriorityBoost", values.priority_boost);
+    LogSetting("Hacks_Ticks", values.ticks);
+    LogSetting("Hacks_TicksMode", static_cast<int>(values.ticks_mode));
+    LogSetting("Hacks_UseBos", values.use_bos);
+    LogSetting("Hacks_DisableMh2xMsaa", values.disable_mh_2xmsaa);
 }
 
 void LoadProfile(int index) {

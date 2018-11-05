@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>279</width>
-    <height>276</height>
+    <height>282</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -51,6 +51,13 @@
              </widget>
             </item>
            </layout>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="use_lle_applets">
+            <property name="text">
+             <string>Use LLE Applets</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>

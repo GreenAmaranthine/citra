@@ -235,8 +235,8 @@ ValidationError ValidateButton(const SoftwareKeyboardConfig& config, u8 button);
 
 class SoftwareKeyboard final : public Applet {
 public:
-    SoftwareKeyboard(Service::APT::AppletId id, std::weak_ptr<Service::APT::AppletManager> manager)
-        : Applet{id, std::move(manager)} {}
+    explicit SoftwareKeyboard(AppletId id, Service::APT::AppletManager& manager)
+        : Applet{id, manager} {}
 
     ResultCode ReceiveParameter(const Service::APT::MessageParameter& parameter) override;
     ResultCode StartImpl(const Service::APT::AppletStartupParameter& parameter) override;

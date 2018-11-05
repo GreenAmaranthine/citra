@@ -815,7 +815,7 @@ Module::Interface::Interface(std::shared_ptr<Module> apt, const char* name, u32 
 Module::Interface::~Interface() = default;
 
 Module::Module(Core::System& system) : system{system} {
-    applet_manager = std::make_shared<AppletManager>();
+    applet_manager = std::make_shared<AppletManager>(system);
     using Kernel::MemoryPermission;
     shared_font_mem =
         system.Kernel().CreateSharedMemory(nullptr, 0x332000, // 3272 KB

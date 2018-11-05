@@ -100,7 +100,7 @@ static_assert(std::is_trivially_copyable<u32_dsp>::value, "u32_dsp isn't trivial
 // communication and not storage of state.
 //
 // In the documentation below, filter and effect transfer functions are specified in the z domain.
-// (If you are more familiar with the Laplace transform, z = exp(sT). The z domain is the digital
+// (If you're more familiar with the Laplace transform, z = exp(sT). The z domain is the digital
 // frequency domain, just like how the s domain is the analog frequency domain.)
 
 #define INSERT_PADDING_DSPWORDS(num_words) INSERT_PADDING_BYTES(2 * (num_words))
