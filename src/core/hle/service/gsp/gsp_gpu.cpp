@@ -562,7 +562,7 @@ void GSP_GPU::AcquireRight(Kernel::HLERequestContext& ctx) {
               session_data->thread_id);
 }
 
-void GSP_GPU::ReleaseRight(auto session_data) {
+void GSP_GPU::ReleaseRight(SessionData* session_data) {
     ASSERT_MSG(active_thread_id == session_data->thread_id,
                "Wrong thread tried to release GPU right");
     active_thread_id = -1;

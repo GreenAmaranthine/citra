@@ -237,7 +237,7 @@ private:
     void UnregisterInterruptRelayQueue(Kernel::HLERequestContext& ctx);
     void AcquireRight(Kernel::HLERequestContext& ctx);
     void ReleaseRight(Kernel::HLERequestContext& ctx);
-    void ReleaseRight(auto session_data);
+    void ReleaseRight(SessionData* session_data);
     void ImportDisplayCaptureInfo(Kernel::HLERequestContext& ctx);
     void StoreDataCache(Kernel::HLERequestContext& ctx);
     void SetLedForceOff(Kernel::HLERequestContext& ctx);
