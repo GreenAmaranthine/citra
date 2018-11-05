@@ -52,10 +52,9 @@ void KernelSystem::MemoryInit(u32 mem_type) {
     ASSERT(mem_type != 1);
     // The kernel allocation regions (Application, System and Base) are laid out in sequence, with
     // the sizes specified in the memory_region_sizes table.
-    VAddr base = 0;
-    for (int i = 0; i < 3; ++i) {
+    VAddr base{};
+    for (int i{}; i < 3; ++i) {
         memory_regions[i].Reset(base, memory_region_sizes[mem_type][i]);
-
         base += memory_regions[i].size;
     }
     // We must've allocated the entire FCRAM by the end

@@ -243,7 +243,7 @@ private:
     // info from their parent processes first. Timer manager is destructed after process list
     // because timers are destructed along with process list and they need to clear info from the
     // timer manager.
-    // TODO (wwylele): refactor the cleanup sequence to make this less complicated and sensitive.
+    // TODO: refactor the cleanup sequence to make this less complicated and sensitive.
 
     std::unique_ptr<TimerManager> timer_manager;
 

@@ -93,7 +93,6 @@ add_library(core STATIC
     hle/kernel/errors.h
     hle/kernel/event.cpp
     hle/kernel/event.h
-    hle/kernel/function_wrappers.h
     hle/kernel/handle_table.cpp
     hle/kernel/handle_table.h
     hle/kernel/hle_ipc.cpp
@@ -125,6 +124,7 @@ add_library(core STATIC
     hle/kernel/shared_page.h
     hle/kernel/svc.cpp
     hle/kernel/svc.h
+    hle/kernel/svc_wrapper.h
     hle/kernel/thread.cpp
     hle/kernel/thread.h
     hle/kernel/timer.cpp

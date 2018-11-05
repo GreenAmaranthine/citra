@@ -90,9 +90,8 @@ void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
 void Module::Interface::ConfigureNew3DSCPU(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x818, 1, 0};
     u8 value{static_cast<u8>(rp.Pop<u8>() & 0xF)};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
-    rb.Push(Kernel::KernelSetState(static_cast<u32>(Kernel::KernelSetStateType::ConfigureNew3DSCPU),
-                                   value, 0, 0));
+    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_PTM, "stubbed");
 }
 

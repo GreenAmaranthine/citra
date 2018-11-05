@@ -8,7 +8,6 @@ namespace Service::BOSS {
 
 BOSS_P::BOSS_P(std::shared_ptr<Module> boss) : Module::Interface{std::move(boss), "boss:P"} {
     static const FunctionInfo functions[]{
-        // clang-format off
         {0x00010082, &BOSS_P::InitializeSession, "InitializeSession"},
         {0x00020100, &BOSS_P::SetStorageInfo, "RegisterStorage"},
         {0x00030000, &BOSS_P::UnregisterStorage, "UnregisterStorage"},
@@ -76,7 +75,6 @@ BOSS_P::BOSS_P(std::shared_ptr<Module> boss) : Module::Interface{std::move(boss)
         {0x041A0100, &BOSS_P::SetNsDataNewFlagPrivileged, "SetNsDataNewFlagPrivileged"},
         {0x041B00C0, &BOSS_P::GetNsDataNewFlagPrivileged, "GetNsDataNewFlagPrivileged"},
     };
-
     RegisterHandlers(functions);
 }
 

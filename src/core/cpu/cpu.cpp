@@ -28,7 +28,8 @@ static std::unordered_map<u64, u64> custom_ticks_map{{
 
 class UserCallbacks final : public Dynarmic::A32::UserCallbacks {
 public:
-    explicit UserCallbacks(Cpu& parent, Core::System& system) : parent{parent}, system{system} {
+    explicit UserCallbacks(Cpu& parent, Core::System& system)
+        : parent{parent}, system{system}, svc_context{system} {
         SyncSettings();
     }
 
@@ -72,7 +73,7 @@ public:
     }
 
     void CallSVC(std::uint32_t swi) override {
-        Kernel::CallSVC(swi);
+        svc_context.CallSVC(swi);
     }
 
     void ExceptionRaised(VAddr pc, Dynarmic::A32::Exception exception) override {
@@ -124,6 +125,7 @@ private:
     u64 custom_ticks{};
     bool use_custom_ticks{};
     Core::System& system;
+    Kernel::SVC svc_context;
 };
 
 ThreadContext::ThreadContext() {
