@@ -31,7 +31,8 @@ class HostRoomWindow : public QDialog {
 
 public:
     explicit HostRoomWindow(QWidget* parent, QStandardItemModel* list,
-                            std::shared_ptr<Core::AnnounceMultiplayerSession> session, Core::System& system);
+                            std::shared_ptr<Core::AnnounceMultiplayerSession> session,
+                            Core::System& system);
     ~HostRoomWindow();
 
 private slots:

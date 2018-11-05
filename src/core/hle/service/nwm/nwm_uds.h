@@ -5,14 +5,14 @@
 #pragma once
 
 #include <array>
-#include <cstddef>
-#include <list>
-#include <mutex>
-#include <vector>
-#include <deque>
-#include <unordered_map>
-#include <map>
 #include <atomic>
+#include <cstddef>
+#include <deque>
+#include <list>
+#include <map>
+#include <mutex>
+#include <unordered_map>
+#include <vector>
 #include "common/common_types.h"
 #include "common/swap.h"
 #include "core/hle/service/service.h"

@@ -26,8 +26,8 @@ class MultiplayerState : public QWidget {
 public:
     using Replies = std::unordered_map<std::string, std::string>;
 
-    explicit MultiplayerState(QWidget* parent, QStandardItemModel* app_list,
-                              QAction* leave_room, QAction* show_room, Core::System& system);
+    explicit MultiplayerState(QWidget* parent, QStandardItemModel* app_list, QAction* leave_room,
+                              QAction* show_room, Core::System& system);
     ~MultiplayerState();
 
     /**

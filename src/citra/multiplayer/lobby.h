@@ -16,8 +16,8 @@
 #include "ui_lobby.h"
 
 namespace Core {
-    class System;
-}//
+class System;
+} // namespace Core
 
 class LobbyModel;
 class LobbyFilterProxyModel;
