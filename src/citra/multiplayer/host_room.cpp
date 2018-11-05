@@ -8,6 +8,7 @@
 #include <QInputDialog>
 #include <QList>
 #include <QLocale>
+#include <QMessageBox>
 #include <QMetaType>
 #include <QTime>
 #include <QtConcurrent/QtConcurrentRun>
@@ -123,6 +124,12 @@ void HostRoomWindow::AddReply() {
     QString message{QInputDialog::getText(this, "Add Reply", "Message:")};
     if (message.isEmpty())
         return;
+    auto parent{static_cast<MultiplayerState*>(parentWidget())};
+    const auto& replies{parent->GetReplies()};
+    if (replies.find(message.toStdString()) != replies.end()) {
+        QMessageBox::critical(this, "Error", "A reply with this message already exists.");
+        return;
+    }
     QString reply{QInputDialog::getText(this, "Add Reply", "Reply:")};
     if (reply.isEmpty())
         return;
