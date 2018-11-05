@@ -315,7 +315,7 @@ void ArchiveManager::RegisterSelfNCCH(Loader::AppLoader& app_loader) {
                   "Could not register a new NCCH because the SelfNCCH archive hasn't been created");
         return;
     }
-    auto* factory{static_cast<FileSys::ArchiveFactory_SelfNCCH*>(itr->second.get())};
+    auto factory{static_cast<FileSys::ArchiveFactory_SelfNCCH*>(itr->second.get())};
     factory->Register(app_loader);
 }
 

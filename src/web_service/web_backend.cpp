@@ -57,20 +57,20 @@ struct Client::Impl {
                                   const std::string& data, const std::string& jwt = "",
                                   const std::string& username = "", const std::string& token = "") {
         if (!cli) {
-            auto parsedUrl{LUrlParser::clParseURL::ParseURL(host)};
+            auto parsed_url{LUrlParser::clParseURL::ParseURL(host)};
             int port;
-            if (parsedUrl.m_Scheme == "http") {
-                if (!parsedUrl.GetPort(&port))
+            if (parsed_url.m_Scheme == "http") {
+                if (!parsed_url.GetPort(&port))
                     port = HTTP_PORT;
-                cli = std::make_unique<httplib::Client>(parsedUrl.m_Host.c_str(), port,
+                cli = std::make_unique<httplib::Client>(parsed_url.m_Host.c_str(), port,
                                                         TIMEOUT_SECONDS);
-            } else if (parsedUrl.m_Scheme == "https") {
-                if (!parsedUrl.GetPort(&port))
+            } else if (parsed_url.m_Scheme == "https") {
+                if (!parsed_url.GetPort(&port))
                     port = HTTPS_PORT;
-                cli = std::make_unique<httplib::SSLClient>(parsedUrl.m_Host.c_str(), port,
+                cli = std::make_unique<httplib::SSLClient>(parsed_url.m_Host.c_str(), port,
                                                            TIMEOUT_SECONDS);
             } else {
-                LOG_ERROR(WebService, "Bad URL scheme {}", parsedUrl.m_Scheme);
+                LOG_ERROR(WebService, "Bad URL scheme {}", parsed_url.m_Scheme);
                 return Common::WebResult{Common::WebResult::Code::InvalidURL, "Bad URL scheme"};
             }
         }

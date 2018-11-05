@@ -72,20 +72,19 @@ u32 Context::GetResponseContentLength() const {
 }
 
 void Context::Send() {
-    using lup = LUrlParser::clParseURL;
     namespace hl = httplib;
-    lup parsedUrl{lup::ParseURL(url)};
+    auto parsed_url{LUrlParser::clParseURL::ParseURL(url)};
     std::unique_ptr<hl::Client> cli;
     int port;
-    if (parsedUrl.m_Scheme == "http") {
-        if (!parsedUrl.GetPort(&port))
+    if (parsed_url.m_Scheme == "http") {
+        if (!parsed_url.GetPort(&port))
             port = 80;
-        cli = std::make_unique<hl::Client>(parsedUrl.m_Host.c_str(), port,
+        cli = std::make_unique<hl::Client>(parsed_url.m_Host.c_str(), port,
                                            (timeout == 0) ? 300 : (timeout * std::pow(10, -9)));
-    } else if (parsedUrl.m_Scheme == "https") {
-        if (!parsedUrl.GetPort(&port))
+    } else if (parsed_url.m_Scheme == "https") {
+        if (!parsed_url.GetPort(&port))
             port = 443;
-        cli = std::make_unique<hl::SSLClient>(parsedUrl.m_Host.c_str(), port,
+        cli = std::make_unique<hl::SSLClient>(parsed_url.m_Host.c_str(), port,
                                               (timeout == 0) ? 300 : (timeout * std::pow(10, -9)));
     } else
         UNREACHABLE_MSG("Invalid scheme!");
@@ -98,7 +97,7 @@ void Context::Send() {
     if ((ssl_config.options & 0x200) == 0x200)
         cli->set_verify(hl::SSLVerifyMode::None);
     hl::Request request;
-    static const std::unordered_map<RequestMethod, std::string> methods_map_strings{{
+    static const std::unordered_map<RequestMethod, std::string> method_string_map{{
         {RequestMethod::Get, "GET"},
         {RequestMethod::Post, "POST"},
         {RequestMethod::Head, "HEAD"},
@@ -107,7 +106,7 @@ void Context::Send() {
         {RequestMethod::PostEmpty, "POST"},
         {RequestMethod::PutEmpty, "PUT"},
     }};
-    static const std::unordered_map<RequestMethod, bool> methods_map_body{{
+    static const std::unordered_map<RequestMethod, bool> method_body_map{{
         {RequestMethod::Get, false},
         {RequestMethod::Post, true},
         {RequestMethod::Head, false},
@@ -116,10 +115,10 @@ void Context::Send() {
         {RequestMethod::PostEmpty, false},
         {RequestMethod::PutEmpty, false},
     }};
-    request.method = methods_map_strings.find(method)->second;
-    request.path = '/' + parsedUrl.m_Path;
+    request.method = method_string_map.find(method)->second;
+    request.path = '/' + parsed_url.m_Path;
     request.headers = *headers;
-    if (methods_map_body.find(method)->second) {
+    if (method_body_map.find(method)->second) {
         for (const auto& item : post_data) {
             switch (item.type) {
             case PostData::Type::Ascii: {
@@ -141,7 +140,7 @@ void Context::Send() {
         if (!post_data.empty())
             request.body.pop_back();
     }
-    hl::detail::parse_query_text(parsedUrl.m_Query, request.params);
+    hl::detail::parse_query_text(parsed_url.m_Query, request.params);
     response = std::make_shared<hl::Response>();
     cli->send(request, *response);
     if (response)
@@ -159,9 +158,7 @@ void Context::SetKeepAlive(bool enable) {
 }
 
 std::string Context::GetRawResponseWithoutBody() const {
-    std::string str{"HTTP/1.1 "};
-    str += std::to_string(response->status);
-    str += " ";
+    std::string str{fmt::format("HTTP/1.1 {} ", response->status)};
     switch (response->status) {
     case 100:
         str += "Continue";
@@ -304,7 +301,7 @@ void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
     shared_memory = rp.PopObject<Kernel::SharedMemory>();
     if (shared_memory)
         shared_memory->name = "HTTP_C:shared_memory";
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     if (session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Tried to initialize an already initialized session");
@@ -323,7 +320,7 @@ void HTTP_C::InitializeConnectionSession(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x8, 1, 2};
     const Context::Handle context_handle{rp.Pop<u32>()};
     rp.PopPID();
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     if (session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Tried to initialize an already initialized session");
@@ -351,12 +348,12 @@ void HTTP_C::InitializeConnectionSession(Kernel::HLERequestContext& ctx) {
 void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x2, 2, 2};
     const u32 url_size{rp.Pop<u32>()};
-    const RequestMethod method{rp.PopEnum<RequestMethod>()};
+    const auto method{rp.PopEnum<RequestMethod>()};
     auto& buffer{rp.PopMappedBuffer()};
     // Copy the buffer into a string without the \0 at the end of the buffer
     std::string url(url_size, '\0');
     buffer.Read(&url[0], 0, url_size - 1);
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     if (!session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Tried to create a context on an uninitialized session");
@@ -374,7 +371,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
         rb.PushMappedBuffer(buffer);
         return;
     }
-    static constexpr std::size_t MaxConcurrentHTTPContexts{8};
+    constexpr std::size_t MaxConcurrentHTTPContexts{8};
     if (session_data->num_http_contexts >= MaxConcurrentHTTPContexts) {
         // There can only be 8 HTTP contexts open at the same time for any particular session.
         LOG_ERROR(Service_HTTP, "Tried to open too many HTTP contexts");
@@ -413,7 +410,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
 void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x3, 1, 0};
     u32 context_handle{rp.Pop<u32>()};
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     if (!session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Tried to close a context on an uninitialized session");
@@ -452,7 +449,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     // Copy the value_buffer into a string without the \0 at the end
     std::string value(value_size - 1, '\0');
     value_buffer.Read(&value[0], 0, value_size - 1);
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     if (!session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Tried to add a request header on an uninitialized session");
@@ -506,11 +503,11 @@ void HTTP_C::OpenClientCertContext(Kernel::HLERequestContext& ctx) {
     u32 key_size{rp.Pop<u32>()};
     auto& cert_buffer{rp.PopMappedBuffer()};
     auto& key_buffer{rp.PopMappedBuffer()};
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     ResultCode result{RESULT_SUCCESS};
     if (!session_data->initialized) {
-        LOG_ERROR(Service_HTTP, "Command called without Initialize");
+        LOG_ERROR(Service_HTTP, "Command called with uninitialized session");
         result = ERROR_STATE_ERROR;
     } else if (session_data->current_http_context) {
         LOG_ERROR(Service_HTTP, "Command called with a bound context");
@@ -539,10 +536,10 @@ void HTTP_C::OpenClientCertContext(Kernel::HLERequestContext& ctx) {
 void HTTP_C::OpenDefaultClientCertContext(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x33, 1, 0};
     u8 cert_id{rp.Pop<u8>()};
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     if (!session_data->initialized) {
-        LOG_ERROR(Service_HTTP, "Command called without Initialize");
+        LOG_ERROR(Service_HTTP, "Command called with uninitialized session");
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(ERROR_STATE_ERROR);
         return;
@@ -599,7 +596,7 @@ void HTTP_C::OpenDefaultClientCertContext(Kernel::HLERequestContext& ctx) {
 void HTTP_C::CloseClientCertContext(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x34, 1, 0};
     ClientCertContext::Handle cert_handle{rp.Pop<u32>()};
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     if (client_certs.find(cert_handle) == client_certs.end()) {
         LOG_ERROR(Service_HTTP, "Command called with a unknown client cert handle {}", cert_handle);
@@ -891,7 +888,7 @@ void HTTP_C::GetResponseStatusCodeTimeout(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::AddTrustedRootCA(Kernel::HLERequestContext& ctx) {
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     IPC::RequestParser rp{ctx, 0x24, 2, 2};
     const u32 context_id{rp.Pop<u32>()};
@@ -913,7 +910,7 @@ void HTTP_C::AddTrustedRootCA(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::AddDefaultCert(Kernel::HLERequestContext& ctx) {
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     IPC::RequestParser rp{ctx, 0x25, 2, 0};
     const u32 context_id{rp.Pop<u32>()};
@@ -933,7 +930,7 @@ void HTTP_C::AddDefaultCert(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::RootCertChainAddCert(Kernel::HLERequestContext& ctx) {
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     IPC::RequestParser rp{ctx, 0x2F, 2, 0};
     const u32 context_id{rp.Pop<u32>()};
@@ -971,7 +968,7 @@ void HTTP_C::RootCertChainRemoveCert(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::SetClientCertContext(Kernel::HLERequestContext& ctx) {
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     IPC::RequestParser rp{ctx, 0x29, 2, 0};
     const u32 context_id{rp.Pop<u32>()};
@@ -1130,7 +1127,7 @@ void HTTP_C::SetSocketBufferSize(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::Finalize(Kernel::HLERequestContext& ctx) {
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     session_data->initialized = false;
     session_data->current_http_context.reset();
     IPC::ResponseBuilder rb{ctx, 0x39, 1, 0};
@@ -1150,7 +1147,7 @@ void HTTP_C::GetSSLError(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::CreateRootCertChain(Kernel::HLERequestContext& ctx) {
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     RootCertChain chain;
     chain.session_id = session_data->session_id;
@@ -1163,7 +1160,7 @@ void HTTP_C::CreateRootCertChain(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::DestroyRootCertChain(Kernel::HLERequestContext& ctx) {
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     IPC::RequestParser rp{ctx, 0x2E, 1, 0};
     const u32 context_id{rp.Pop<u32>()};
@@ -1176,7 +1173,7 @@ void HTTP_C::DestroyRootCertChain(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::RootCertChainAddDefaultCert(Kernel::HLERequestContext& ctx) {
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     IPC::RequestParser rp{ctx, 0x30, 2, 0};
     const u32 context_id{rp.Pop<u32>()};
@@ -1195,7 +1192,7 @@ void HTTP_C::RootCertChainAddDefaultCert(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::SelectRootCertChain(Kernel::HLERequestContext& ctx) {
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     IPC::RequestParser rp{ctx, 0x26, 2, 0};
     const u32 context_id{rp.Pop<u32>()};
@@ -1210,7 +1207,7 @@ void HTTP_C::SelectRootCertChain(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::SetClientCert(Kernel::HLERequestContext& ctx) {
-    auto* session_data{GetSessionData(ctx.Session())};
+    auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     IPC::RequestParser rp{ctx, 0x27, 3, 4};
     const u32 context_id{rp.Pop<u32>()};
@@ -1422,7 +1419,7 @@ void HTTP_C::LoadDefaultCerts() {
         return;
     }
     for (auto& c : default_root_certs) {
-        auto* cert{&c};
+        auto cert{&c};
         if (pos + cert->size > code_buffer.size()) {
             LOG_ERROR(Service_HTTP, "SSL module size too small");
             return;

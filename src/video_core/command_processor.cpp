@@ -180,7 +180,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 else {
                     immediate_attribute_id = 0;
                     Shader::OutputVertex::ValidateSemantics(regs.rasterizer);
-                    auto* shader_engine{Shader::GetEngine()};
+                    auto shader_engine{Shader::GetEngine()};
                     shader_engine->SetupBatch(g_state.vs, regs.vs.main_offset);
                     // Send to vertex shader
                     Shader::UnitState shader_unit;
@@ -282,7 +282,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             return is_indexed ? (index_u16 ? index_address_16[index] : index_address_8[index])
                               : (index + regs.pipeline.vertex_offset);
         }};
-        auto* shader_engine{Shader::GetEngine()};
+        auto shader_engine{Shader::GetEngine()};
         Shader::UnitState shader_unit;
         shader_engine->SetupBatch(g_state.vs, regs.vs.main_offset);
         const bool use_gs{regs.pipeline.use_gs == PipelineRegs::UseGS::Yes};

@@ -388,7 +388,7 @@ void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
         ASSERT(maybe_paddr);
         PAddr physical_start{*maybe_paddr};
         u32 overlap_size{overlap_end - overlap_start};
-        auto* rasterizer{VideoCore::g_renderer->GetRasterizer()};
+        auto rasterizer{VideoCore::g_renderer->GetRasterizer()};
         switch (mode) {
         case FlushMode::Flush:
             rasterizer->FlushRegion(physical_start, overlap_size);

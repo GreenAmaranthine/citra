@@ -50,7 +50,7 @@ void ConfigurationDialog::PopulateSelectionList() {
         {"Controls", {"Input"}},
     }};
     for (const auto& entry : items) {
-        auto* item{new QListWidgetItem(entry.first)};
+        auto item{new QListWidgetItem(entry.first)};
         item->setData(Qt::UserRole, entry.second);
         ui->selectorList->addItem(item);
     }
