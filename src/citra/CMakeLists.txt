@@ -53,6 +53,8 @@ add_executable(citra
     multiplayer/chat_room.h
     multiplayer/client_room.cpp
     multiplayer/client_room.h
+    multiplayer/delimited_completer.cpp
+    multiplayer/delimited_completer.h
     multiplayer/direct_connect.cpp
     multiplayer/direct_connect.h
     multiplayer/host_room.cpp

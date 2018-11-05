@@ -5,9 +5,6 @@
 #include <array>
 #include <future>
 #include <QColor>
-#include <QComboBox>
-#include <QCompleter>
-#include <QDialogButtonBox>
 #include <QImage>
 #include <QLabel>
 #include <QList>
@@ -15,7 +12,6 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QMetaType>
-#include <QStringListModel>
 #include <QTime>
 #include <QVBoxLayout>
 #include <QtConcurrent/QtConcurrentRun>
@@ -101,13 +97,18 @@ ChatRoom::ChatRoom(QWidget* parent)
     system.RoomMember().BindOnChatMessageRecieved(
         [this](const Network::ChatEntry& chat) { emit ChatReceived(chat); });
     connect(this, &ChatRoom::ChatReceived, this, &ChatRoom::OnChatReceive);
+    // Load emoji list
+    QStringList emoji_list;
+    for (const auto& emoji : EmojiMap)
+        emoji_list.append(QString(":%1:").arg(QString::fromStdString(emoji.first)));
+    completer = new DelimitedCompleter(ui->chat_message, ' ', std::move(emoji_list));
+    completer->setCaseSensitivity(Qt::CaseInsensitive);
     // Connect all the widgets to the appropriate events
     connect(ui->member_view, &QTreeView::customContextMenuRequested, this,
             &ChatRoom::PopupContextMenu);
     connect(ui->chat_message, &QLineEdit::returnPressed, ui->send_message, &QPushButton::released);
     connect(ui->chat_message, &QLineEdit::textChanged, this, &ChatRoom::OnChatTextChanged);
     connect(ui->send_message, &QPushButton::released, this, &ChatRoom::OnSendChat);
-    connect(ui->insert_emoji, &QPushButton::released, this, &ChatRoom::OnInsertEmoji);
 }
 
 ChatRoom::~ChatRoom() = default;
@@ -121,11 +122,17 @@ void ChatRoom::AppendStatusMessage(const QString& msg) {
     ui->chat_history->append(StatusMessage(msg).GetSystemChatMessage());
 }
 
-bool ChatRoom::Send(const QString& msg) {
+bool ChatRoom::Send(QString msg) {
+    // Check if we are in a room
     auto& member{system.RoomMember()};
     if (member.GetState() != Network::RoomMember::State::Joined)
         return false;
-    auto message{msg.toStdString()};
+    // Replace emojis
+    for (const auto& emoji : EmojiMap)
+        msg.replace(QString(":%1:").arg(QString::fromStdString(emoji.first)),
+                    QString::fromStdString(emoji.second));
+    // Validate and send message
+    auto message{std::move(msg).toStdString()};
     if (!ValidateMessage(message))
         return false;
     auto nick{member.GetNickname()};
@@ -162,13 +169,11 @@ bool ChatRoom::ValidateMessage(const std::string& msg) {
 void ChatRoom::Disable() {
     ui->send_message->setDisabled(true);
     ui->chat_message->setDisabled(true);
-    ui->insert_emoji->setDisabled(true);
 }
 
 void ChatRoom::Enable() {
     ui->send_message->setEnabled(true);
     ui->chat_message->setEnabled(true);
-    ui->insert_emoji->setEnabled(true);
 }
 
 void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
@@ -254,40 +259,4 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
         }
     });
     context_menu.exec(ui->member_view->viewport()->mapToGlobal(menu_location));
-}
-
-void ChatRoom::OnInsertEmoji() {
-    QDialog dialog;
-    auto dialog_layout{new QVBoxLayout(&dialog)};
-    auto emoji_combobox{new QComboBox()};
-    emoji_combobox->setEditable(true);
-    auto preview{new QLabel()};
-    auto model{new QStringListModel()};
-    emoji_combobox->setModel(model);
-    for (const auto& emoji : EmojiMap)
-        emoji_combobox->addItem(QString::fromStdString(emoji.first));
-    auto completer{new QCompleter(model->stringList())};
-    completer->setCaseSensitivity(Qt::CaseInsensitive);
-    emoji_combobox->setCompleter(completer);
-    auto button_box{new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel)};
-    connect(button_box, &QDialogButtonBox::accepted, [&] { dialog.accept(); });
-    connect(button_box, &QDialogButtonBox::rejected, [&] { dialog.reject(); });
-    connect(emoji_combobox, &QComboBox::currentTextChanged, [&](const QString& text) {
-        auto itr{EmojiMap.find(text.toStdString())};
-        if (itr != EmojiMap.end()) {
-            preview->setText(QString("Preview: %1").arg(QString::fromStdString(itr->second)));
-            button_box->button(QDialogButtonBox::Ok)->setEnabled(true);
-        } else
-            button_box->button(QDialogButtonBox::Ok)->setEnabled(false);
-    });
-    dialog_layout->addWidget(emoji_combobox);
-    dialog_layout->addWidget(preview);
-    dialog_layout->addWidget(button_box);
-    preview->setText(QString("Preview: %1")
-                         .arg(QString::fromStdString(
-                             EmojiMap.find(emoji_combobox->currentText().toStdString())->second)));
-    auto code{dialog.exec()};
-    if (code == QDialog::Accepted)
-        ui->chat_message->insert(QString::fromStdString(
-            EmojiMap.find(emoji_combobox->currentText().toStdString())->second));
 }

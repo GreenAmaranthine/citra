@@ -47,12 +47,12 @@ void ShowError(const ConnectionError& e) {
 
 bool WarnCloseRoom() {
     return WarnMessage("Leave Room",
-                       "you're about to close the room. Any network connections will be closed.");
+                       "You're about to close the room. Any network connections will be closed.");
 }
 
 bool WarnDisconnect() {
     return WarnMessage("Disconnect",
-                       "you're about to leave the room. Any network connections will be closed.");
+                       "You're about to leave the room. Any network connections will be closed.");
 }
 
 } // namespace NetworkMessage

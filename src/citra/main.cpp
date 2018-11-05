@@ -582,7 +582,7 @@ bool GMainWindow::LoadROM(const std::string& filename) {
         case Core::System::ResultStatus::ErrorVideoCore_ErrorGenericDrivers:
             QMessageBox::critical(
                 this, "Video Core Error",
-                "you're running default Windows drivers "
+                "You're running default Windows drivers "
                 "for your GPU. You need to install the "
                 "proper drivers for your graphics card from the manufacturer's website.");
             break;

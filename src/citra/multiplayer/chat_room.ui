@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>689</width>
-    <height>430</height>
+    <width>657</width>
+    <height>421</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -45,13 +45,6 @@
         <widget class="QPushButton" name="send_message">
          <property name="text">
           <string>Send Message</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="insert_emoji">
-         <property name="text">
-          <string>Insert Emoji</string>
          </property>
         </widget>
        </item>

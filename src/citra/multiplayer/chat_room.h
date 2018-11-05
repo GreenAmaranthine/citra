@@ -10,6 +10,7 @@
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
 #include <QVariant>
+#include "citra/multiplayer/delimited_completer.h"
 #include "network/room.h"
 #include "network/room_member.h"
 
@@ -36,13 +37,12 @@ public:
     void SetMemberList(const Network::RoomMember::MemberList& member_list);
     void Clear();
     void AppendStatusMessage(const QString& msg);
-    bool Send(const QString& msg);
+    bool Send(QString msg);
     void HandleNewMessage(const QString& msg);
 
 public slots:
     void OnChatReceive(const Network::ChatEntry&);
     void OnSendChat();
-    void OnInsertEmoji();
     void OnChatTextChanged();
     void PopupContextMenu(const QPoint& menu_location);
     void Disable();
@@ -58,6 +58,7 @@ private:
     QStandardItemModel* member_list;
     std::unique_ptr<Ui::ChatRoom> ui;
     std::unordered_set<std::string> block_list;
+    DelimitedCompleter* completer;
     Core::System& system;
 };
 
