@@ -764,4 +764,9 @@ std::optional<VAddr> PhysicalToVirtualAddress(const PAddr addr) {
     return {};
 }
 
+u32 GetFCRAMOffset(u8* pointer) {
+    ASSERT(pointer >= fcram.data() && pointer < fcram.data() + fcram.size());
+    return pointer - fcram.data();
+}
+
 } // namespace Memory

@@ -45,17 +45,9 @@ SharedPtr<SharedMemory> KernelSystem::CreateSharedMemory(Process* owner_process,
     } else {
         auto& vm_manager{shared_memory->owner_process->vm_manager};
         // The memory is already available and mapped in the owner process.
-        // Iterate through VMA and record the backing blocks
-        VAddr interval_target{address};
-        while (interval_target != address + size) {
-            auto vma{vm_manager.FindVMA(interval_target)};
-            ASSERT_MSG(vma->second.type == VMAType::BackingMemory, "Trying to share freed memory");
-            VAddr interval_end{std::min(address + size, vma->second.base + vma->second.size)};
-            u32 interval_size{interval_end - interval_target};
-            u8* backing_memory{vma->second.backing_memory + (interval_target - vma->second.base)};
-            shared_memory->backing_blocks.push_back({backing_memory, interval_size});
-            interval_target += interval_size;
-        }
+        auto backing_blocks{vm_manager.GetBackingBlocksForRange(address, size)};
+        ASSERT_MSG(backing_blocks.Succeeded(), "Trying to share freed memory");
+        shared_memory->backing_blocks = std::move(backing_blocks).Unwrap();
     }
     shared_memory->base_address = address;
     return shared_memory;

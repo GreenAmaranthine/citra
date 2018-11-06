@@ -195,20 +195,9 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
     if (size == 0)
         return RESULT_SUCCESS;
     // Free heaps block by block
-    VAddr interval_target = target;
-    while (interval_target != target + size) {
-        auto vma{vm_manager.FindVMA(interval_target)};
-        if (vma->second.type != VMAType::BackingMemory) {
-            LOG_ERROR(Kernel, "Trying to free already freed memory");
-            return ERR_INVALID_ADDRESS_STATE;
-        }
-        VAddr interval_end{std::min(target + size, vma->second.base + vma->second.size)};
-        u32 interval_size{interval_end - interval_target};
-        u8* backing_memory{vma->second.backing_memory + (interval_target - vma->second.base)};
-        u32 backing_offset{static_cast<u32>(backing_memory - Memory::fcram.data())};
-        memory_region->Free(backing_offset, interval_size);
-        interval_target += interval_size;
-    }
+    CASCADE_RESULT(auto backing_blocks, vm_manager.GetBackingBlocksForRange(target, size));
+    for (const auto [backing_memory, block_size] : backing_blocks)
+        memory_region->Free(Memory::GetFCRAMOffset(backing_memory), block_size);
     ResultCode result{vm_manager.UnmapRange(target, size)};
     ASSERT(result.IsSuccess());
     memory_used -= size;
@@ -291,27 +280,16 @@ ResultCode Process::Map(VAddr target, VAddr source, u32 size, VMAPermission perm
         LOG_ERROR(Kernel, "Trying to map to already allocated memory");
         return ERR_INVALID_ADDRESS_STATE;
     }
-    std::vector<std::pair<u8*, u32>> backing_blocks;
     // Mark source region as Aliased
     CASCADE_CODE(vm_manager.ChangeMemoryState(source, size, MemoryState::Private,
                                               VMAPermission::ReadWrite, MemoryState::Aliased,
                                               VMAPermission::ReadWrite));
-    // Map source to target block by block
-    VAddr interval_source{source};
+    CASCADE_RESULT(auto backing_blocks, vm_manager.GetBackingBlocksForRange(source, size));
     VAddr interval_target{target};
-    while (interval_source != source + size) {
-        auto source_vma{vm_manager.FindVMA(interval_source)};
-        VAddr interval_end{
-            std::min(target + size, source_vma->second.base + source_vma->second.size)};
-        u32 interval_size{interval_end - interval_source};
-        u8* backing_memory{source_vma->second.backing_memory +
-                           (interval_source - source_vma->second.base)};
-        auto target_vma{vm_manager.MapBackingMemory(interval_target, backing_memory, interval_size,
-                                                    MemoryState::Alias)};
-        ASSERT(target_vma.Succeeded());
-        vm_manager.Reprotect(target_vma.Unwrap(), perms);
-        interval_target += interval_size;
-        interval_source += interval_size;
+    for (const auto [backing_memory, block_size] : backing_blocks) {
+        auto target_vma = vm_manager.MapBackingMemory(interval_target, backing_memory, block_size,
+                                                      MemoryState::Alias);
+        interval_target += block_size;
     }
     return RESULT_SUCCESS;
 }
