@@ -23,7 +23,6 @@ public:
     }
 
     static const HandleType HANDLE_TYPE{HandleType::SharedMemory};
-
     HandleType GetHandleType() const override {
         return HANDLE_TYPE;
     }
@@ -65,12 +64,13 @@ public:
     /// Address of shared memory block in the owner process if specified.
     VAddr base_address;
 
-    /// Physical address of the shared memory block in the linear heap if no address was specified
+    /// Offset in FCRAM of the shared memory block in the linear heap if no address was specified
     /// during creation.
-    PAddr linear_heap_phys_address;
+    PAddr linear_heap_phys_offset;
 
     /// Backing memory for this shared memory block.
     std::vector<std::pair<u8*, u32>> backing_blocks;
+
     /// Size of the memory block. Page-aligned.
     u32 size;
 

@@ -148,7 +148,7 @@ VAddr Process::GetLinearHeapLimit() const {
 
 ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission perms,
                                        MemoryState memory_state, bool skip_range_check) {
-    LOG_INFO(Kernel, "Allocate heap target={:08X}, size={:08X}", target, size);
+    LOG_DEBUG(Kernel, "Allocate heap target={:08X}, size={:08X}", target, size);
     if (target < Memory::HEAP_VADDR || target + size > Memory::HEAP_VADDR_END ||
         target + size < target) {
         if (!skip_range_check) {
@@ -163,15 +163,15 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
     }
     auto allocated_fcram{memory_region->HeapAllocate(size)};
     if (allocated_fcram.empty()) {
-        LOG_ERROR(Kernel, "No enough space");
+        LOG_ERROR(Kernel, "Not enough space");
         return ERR_OUT_OF_HEAP_MEMORY;
     }
     // Maps heap block by block
     VAddr interval_target = target;
     for (const auto& interval : allocated_fcram) {
         u32 interval_size = interval.upper() - interval.lower();
-        LOG_INFO(Kernel, "Allocated FCRAM region lower={:08X}, upper={:08X}", interval.lower(),
-                 interval.upper());
+        LOG_DEBUG(Kernel, "Allocated FCRAM region lower={:08X}, upper={:08X}", interval.lower(),
+                  interval.upper());
         std::fill(Memory::fcram.begin() + interval.lower(),
                   Memory::fcram.begin() + interval.upper(), 0);
         auto vma{vm_manager.MapBackingMemory(
@@ -186,7 +186,7 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
 }
 
 ResultCode Process::HeapFree(VAddr target, u32 size) {
-    LOG_INFO(Kernel, "Free heap target={:08X}, size={:08X}", target, size);
+    LOG_DEBUG(Kernel, "Free heap target={:08X}, size={:08X}", target, size);
     if (target < Memory::HEAP_VADDR || target + size > Memory::HEAP_VADDR_END ||
         target + size < target) {
         LOG_ERROR(Kernel, "Invalid heap address");
@@ -217,12 +217,12 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
 }
 
 ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission perms) {
-    LOG_INFO(Kernel, "Allocate linear heap target={:08X}, size={:08X}", target, size);
+    LOG_DEBUG(Kernel, "Allocate linear heap target={:08X}, size={:08X}", target, size);
     u32 physical_offset;
     if (target == 0) {
         auto offset{memory_region->LinearAllocate(size)};
         if (!offset) {
-            LOG_ERROR(Kernel, "No enough space");
+            LOG_ERROR(Kernel, "Not enough space");
             return ERR_OUT_OF_HEAP_MEMORY;
         }
         physical_offset = *offset;
@@ -252,12 +252,12 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
     vm_manager.Reprotect(vma.Unwrap(), perms);
     memory_used += size;
     resource_limit->current_commit += size;
-    LOG_INFO(Kernel, "Allocated at target={:08X}", target);
+    LOG_DEBUG(Kernel, "Allocated at target={:08X}", target);
     return MakeResult<VAddr>(target);
 }
 
 ResultCode Process::LinearFree(VAddr target, u32 size) {
-    LOG_INFO(Kernel, "Free linear heap target={:08X}, size={:08X}", target, size);
+    LOG_DEBUG(Kernel, "Free linear heap target={:08X}, size={:08X}", target, size);
     if (target < GetLinearHeapBase() || target + size > GetLinearHeapLimit() ||
         target + size < target) {
         LOG_ERROR(Kernel, "Invalid linear heap address");
@@ -278,8 +278,8 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
 }
 
 ResultCode Process::Map(VAddr target, VAddr source, u32 size, VMAPermission perms) {
-    LOG_INFO(Kernel, "Map memory target={:08X}, source={:08X}, size={:08X}, perms={:08X}", target,
-             source, size, static_cast<u8>(perms));
+    LOG_DEBUG(Kernel, "Map memory target={:08X}, source={:08X}, size={:08X}, perms={:08X}", target,
+              source, size, static_cast<u8>(perms));
     if (source < Memory::HEAP_VADDR || source + size > Memory::HEAP_VADDR_END ||
         source + size < source) {
         LOG_ERROR(Kernel, "Invalid source address");
@@ -317,8 +317,8 @@ ResultCode Process::Map(VAddr target, VAddr source, u32 size, VMAPermission perm
 }
 
 ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission perms) {
-    LOG_INFO(Kernel, "Unmap memory target={:08X}, source={:08X}, size={:08X}, perms={:08X}", target,
-             source, size, static_cast<u8>(perms));
+    LOG_DEBUG(Kernel, "Unmap memory target={:08X}, source={:08X}, size={:08X}, perms={:08X}",
+              target, source, size, static_cast<u8>(perms));
     if (source < Memory::HEAP_VADDR || source + size > Memory::HEAP_VADDR_END ||
         source + size < source) {
         LOG_ERROR(Kernel, "Invalid source address");

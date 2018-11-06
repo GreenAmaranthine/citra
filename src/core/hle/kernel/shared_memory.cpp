@@ -38,7 +38,7 @@ SharedPtr<SharedMemory> KernelSystem::CreateSharedMemory(Process* owner_process,
         std::fill(Memory::fcram.data() + *offset, Memory::fcram.data() + *offset + size, 0);
         shared_memory->backing_blocks = {{Memory::fcram.data() + *offset, size}};
         shared_memory->holding_memory += MemoryRegionInfo::Interval(*offset, *offset + size);
-        shared_memory->linear_heap_phys_address = Memory::FCRAM_PADDR + *offset;
+        shared_memory->linear_heap_phys_offset = *offset;
         // Increase the amount of used linear heap memory for the owner process.
         if (shared_memory->owner_process)
             shared_memory->owner_process->memory_used += size;
@@ -128,8 +128,7 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
     VAddr target_address{address};
     if (base_address == 0 && target_address == 0)
         // Calculate the address at which to map the memory block.
-        target_address = linear_heap_phys_address - Memory::FCRAM_PADDR +
-                         target_process->GetLinearHeapAreaAddress();
+        target_address = linear_heap_phys_offset + target_process->GetLinearHeapAreaAddress();
     auto vma{target_process->vm_manager.FindVMA(target_address)};
     if (vma->second.type != VMAType::Free ||
         vma->second.base + vma->second.size < target_address + size) {
