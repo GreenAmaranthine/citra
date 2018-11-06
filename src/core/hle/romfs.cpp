@@ -50,7 +50,7 @@ static bool MatchName(const u8* buffer, u32 name_length, const std::u16string& n
     return name == std::u16string(name_buffer.begin(), name_buffer.end());
 }
 
-RomFSFile::RomFSFile(const u8* data, u64 length) : data(data), length(length) {}
+RomFSFile::RomFSFile(const u8* data, u64 length) : data{data}, length{length} {}
 
 const u8* RomFSFile::Data() const {
     return data;
@@ -62,15 +62,13 @@ u64 RomFSFile::Length() const {
 
 const RomFSFile GetFile(const u8* romfs, const std::vector<std::u16string>& path) {
     constexpr u32 INVALID_FIELD{0xFFFFFFFF};
-
     // Split path into directory names and file name
     std::vector<std::u16string> dir_names{path};
     dir_names.pop_back();
     const std::u16string& file_name{path.back()};
-
+    // Copy header to a variable
     Header header;
     std::memcpy(&header, romfs, sizeof(header));
-
     // Find directories of each level
     DirectoryMetadata dir;
     const u8* current_dir{romfs + header.dir_table_offset};
@@ -78,9 +76,8 @@ const RomFSFile GetFile(const u8* romfs, const std::vector<std::u16string>& path
     for (const std::u16string& dir_name : dir_names) {
         u32 child_dir_offset{dir.first_child_dir_offset};
         for (;;) {
-            if (child_dir_offset == INVALID_FIELD) {
+            if (child_dir_offset == INVALID_FIELD)
                 return RomFSFile();
-            }
             const u8* current_child_dir{romfs + header.dir_table_offset + child_dir_offset};
             std::memcpy(&dir, current_child_dir, sizeof(dir));
             if (MatchName(current_child_dir + sizeof(dir), dir.name_length, dir_name)) {
@@ -90,16 +87,14 @@ const RomFSFile GetFile(const u8* romfs, const std::vector<std::u16string>& path
             child_dir_offset = dir.next_dir_offset;
         }
     }
-
     // Find the file
     FileMetadata file;
     u32 file_offset{dir.first_file_offset};
     while (file_offset != INVALID_FIELD) {
         const u8* current_file{romfs + header.file_table_offset + file_offset};
         std::memcpy(&file, current_file, sizeof(file));
-        if (MatchName(current_file + sizeof(file), file.name_length, file_name)) {
+        if (MatchName(current_file + sizeof(file), file.name_length, file_name))
             return RomFSFile(romfs + header.data_offset + file.data_offset, file.data_length);
-        }
         file_offset = file.next_file_offset;
     }
     return RomFSFile();
