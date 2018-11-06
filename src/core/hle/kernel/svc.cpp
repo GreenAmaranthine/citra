@@ -528,7 +528,7 @@ ResultCode ReplyAndReceive(Core::System& system, s32* index, VAddr handles_addre
     if (reply_target != 0 && header.command_id != 0xFFFF) {
         auto session{current_process->handle_table.Get<ServerSession>(reply_target)};
         if (!session) {
-            LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
+            LOG_ERROR(Kernel, "Invalid handle {:08X}", reply_target);
             return ERR_INVALID_HANDLE;
         }
         auto request_thread{std::move(session->currently_handling)};
@@ -664,7 +664,7 @@ ResultCode GetResourceLimit(Core::System& system, Handle* resource_limit, Handle
     auto current_process{system.Kernel().GetCurrentProcess()};
     auto process{current_process->handle_table.Get<Process>(process_handle)};
     if (!process) {
-        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", process_handle);
         return ERR_INVALID_HANDLE;
     }
     *resource_limit = current_process->handle_table.Create(process->resource_limit);
@@ -680,7 +680,7 @@ ResultCode GetResourceLimitCurrentValues(Core::System& system, VAddr values,
     auto resource_limit{system.Kernel().GetCurrentProcess()->handle_table.Get<ResourceLimit>(
         resource_limit_handle)};
     if (!resource_limit) {
-        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", resource_limit_handle);
         return ERR_INVALID_HANDLE;
     }
     for (unsigned int i{}; i < name_count; ++i) {
@@ -699,7 +699,7 @@ ResultCode GetResourceLimitLimitValues(Core::System& system, VAddr values,
     auto resource_limit{system.Kernel().GetCurrentProcess()->handle_table.Get<ResourceLimit>(
         resource_limit_handle)};
     if (!resource_limit) {
-        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", resource_limit_handle);
         return ERR_INVALID_HANDLE;
     }
     for (unsigned int i{}; i < name_count; ++i) {
@@ -831,7 +831,7 @@ ResultCode GetProcessId(Core::System& system, u32* process_id, Handle process_ha
     const auto process{
         system.Kernel().GetCurrentProcess()->handle_table.Get<Process>(process_handle)};
     if (!process) {
-        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", process_handle);
         return ERR_INVALID_HANDLE;
     }
     *process_id = process->process_id;
@@ -843,7 +843,7 @@ ResultCode GetProcessIdOfThread(Core::System& system, u32* process_id, Handle th
     LOG_TRACE(Kernel_SVC, "thread=0x{:08X}", thread_handle);
     const auto thread{system.Kernel().GetCurrentProcess()->handle_table.Get<Thread>(thread_handle)};
     if (!thread) {
-        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", thread_handle);
         return ERR_INVALID_HANDLE;
     }
     const auto process{thread->owner_process};
@@ -893,7 +893,7 @@ ResultCode QueryProcessMemory(Core::System& system, MemoryInfo* memory_info, Pag
                               Handle process_handle, u32 addr) {
     auto process{system.Kernel().GetCurrentProcess()->handle_table.Get<Process>(process_handle)};
     if (!process) {
-        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", process_handle);
         return ERR_INVALID_HANDLE;
     }
     auto vma{process->vm_manager.FindVMA(addr)};
