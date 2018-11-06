@@ -24,15 +24,17 @@ Handle HandleTable::Create(SharedPtr<Object> obj) {
 ResultVal<Handle> HandleTable::Duplicate(Handle handle) {
     SharedPtr<Object> object{GetGeneric(handle)};
     if (!object) {
-        LOG_ERROR(Kernel, "Tried to duplicate invalid handle: {:08X}", handle);
+        LOG_ERROR(Kernel, "Tried to duplicate invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
     }
     return MakeResult<Handle>(Create(std::move(object)));
 }
 
 ResultCode HandleTable::Close(Handle handle) {
-    if (!IsValid(handle))
+    if (!IsValid(handle)) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     objects.erase(handle);
     return RESULT_SUCCESS;
 }

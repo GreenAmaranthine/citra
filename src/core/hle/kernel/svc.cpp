@@ -218,12 +218,14 @@ void ExitProcess(Core::System& system) {
 ResultCode MapMemoryBlock(Core::System& system, Handle handle, u32 addr, u32 permissions,
                           u32 other_permissions) {
     LOG_TRACE(Kernel_SVC,
-              "memblock=0x{:08X}, addr=0x{:08X}, mypermissions=0x{:08X}, otherpermission={}",
-              handle, addr, permissions, other_permissions);
+              "handle=0x{:08X}, addr=0x{:08X}, mypermissions=0x{:08X}, otherpermission={}", handle,
+              addr, permissions, other_permissions);
     auto current_process{system.Kernel().GetCurrentProcess()};
     auto shared_memory{current_process->handle_table.Get<SharedMemory>(handle)};
-    if (!shared_memory)
+    if (!shared_memory) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     MemoryPermission permissions_type{static_cast<MemoryPermission>(permissions)};
     switch (permissions_type) {
     case MemoryPermission::Read:
@@ -247,8 +249,10 @@ ResultCode UnmapMemoryBlock(Core::System& system, Handle handle, u32 addr) {
     // TODO: Return E0A01BF5 if the address isn't in the application's heap
     SharedPtr<Process> current_process{system.Kernel().GetCurrentProcess()};
     SharedPtr<SharedMemory> shared_memory{current_process->handle_table.Get<SharedMemory>(handle)};
-    if (!shared_memory)
+    if (!shared_memory) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     return shared_memory->Unmap(current_process.get(), addr);
 }
 
@@ -281,8 +285,10 @@ ResultCode SendSyncRequest(Core::System& system, Handle handle) {
     auto& kernel{system.Kernel()};
     SharedPtr<ClientSession> session{
         kernel.GetCurrentProcess()->handle_table.Get<ClientSession>(handle)};
-    if (!session)
+    if (!session) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     LOG_TRACE(Kernel_SVC, "handle=0x{:08X}({})", handle, session->GetName());
     system.PrepareReschedule();
     return session->SendSyncRequest(kernel.GetThreadManager().GetCurrentThread());
@@ -323,8 +329,10 @@ ResultCode WaitSynchronization1(Core::System& system, Handle handle, s64 nano_se
     auto& kernel{system.Kernel()};
     auto object{kernel.GetCurrentProcess()->handle_table.Get<WaitObject>(handle)};
     Thread* thread{kernel.GetThreadManager().GetCurrentThread()};
-    if (!object)
+    if (!object) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     LOG_TRACE(Kernel_SVC, "handle=0x{:08X}({}:{}), nanoseconds={}", handle, object->GetTypeName(),
               object->GetName(), nano_seconds);
     if (object->ShouldWait(thread)) {
@@ -375,8 +383,10 @@ ResultCode WaitSynchronizationN(Core::System& system, s32* out, VAddr handles_ad
     for (int i{}; i < handle_count; ++i) {
         Handle handle{Memory::Read32(handles_address + i * sizeof(Handle))};
         auto object{kernel.GetCurrentProcess()->handle_table.Get<WaitObject>(handle)};
-        if (!object)
+        if (!object) {
+            LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
             return ERR_INVALID_HANDLE;
+        }
         objects[i] = object;
     }
     if (wait_all) {
@@ -504,8 +514,10 @@ ResultCode ReplyAndReceive(Core::System& system, s32* index, VAddr handles_addre
     for (int i{}; i < handle_count; ++i) {
         Handle handle{Memory::Read32(handles_address + i * sizeof(Handle))};
         auto object{current_process->handle_table.Get<WaitObject>(handle)};
-        if (!object)
+        if (!object) {
+            LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
             return ERR_INVALID_HANDLE;
+        }
         objects[i] = object;
     }
     // We're also sending a command reply.
@@ -515,8 +527,10 @@ ResultCode ReplyAndReceive(Core::System& system, s32* index, VAddr handles_addre
     IPC::Header header{cmd_buff_header};
     if (reply_target != 0 && header.command_id != 0xFFFF) {
         auto session{current_process->handle_table.Get<ServerSession>(reply_target)};
-        if (!session)
+        if (!session) {
+            LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
             return ERR_INVALID_HANDLE;
+        }
         auto request_thread{std::move(session->currently_handling)};
         // Mark the request as "handled".
         session->currently_handling = nullptr;
@@ -603,8 +617,10 @@ ResultCode ArbitrateAddress(Core::System& system, Handle handle, u32 address, u3
               handle, address, type, value);
     auto& kernel{system.Kernel()};
     auto arbiter{kernel.GetCurrentProcess()->handle_table.Get<AddressArbiter>(handle)};
-    if (!arbiter)
+    if (!arbiter) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     auto res{arbiter->ArbitrateAddress(kernel.GetThreadManager().GetCurrentThread(),
                                        static_cast<ArbitrationType>(type), address, value,
                                        nanoseconds)};
@@ -647,8 +663,10 @@ ResultCode GetResourceLimit(Core::System& system, Handle* resource_limit, Handle
     LOG_TRACE(Kernel_SVC, "process=0x{:08X}", process_handle);
     auto current_process{system.Kernel().GetCurrentProcess()};
     auto process{current_process->handle_table.Get<Process>(process_handle)};
-    if (!process)
+    if (!process) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     *resource_limit = current_process->handle_table.Create(process->resource_limit);
     return RESULT_SUCCESS;
 }
@@ -661,8 +679,10 @@ ResultCode GetResourceLimitCurrentValues(Core::System& system, VAddr values,
               resource_limit_handle, names, name_count);
     auto resource_limit{system.Kernel().GetCurrentProcess()->handle_table.Get<ResourceLimit>(
         resource_limit_handle)};
-    if (!resource_limit)
+    if (!resource_limit) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     for (unsigned int i{}; i < name_count; ++i) {
         u32 name{Memory::Read32(names + i * sizeof(u32))};
         s64 value{static_cast<s64>(resource_limit->GetCurrentResourceValue(name))};
@@ -678,8 +698,10 @@ ResultCode GetResourceLimitLimitValues(Core::System& system, VAddr values,
               resource_limit_handle, names, name_count);
     auto resource_limit{system.Kernel().GetCurrentProcess()->handle_table.Get<ResourceLimit>(
         resource_limit_handle)};
-    if (!resource_limit)
+    if (!resource_limit) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     for (unsigned int i{}; i < name_count; ++i) {
         u32 name{Memory::Read32(names + i * sizeof(u32))};
         s64 value{static_cast<s64>(resource_limit->GetMaxResourceValue(name))};
@@ -748,8 +770,10 @@ void ExitThread(Core::System& system) {
 /// Gets the priority for the specified thread
 ResultCode GetThreadPriority(Core::System& system, u32* priority, Handle handle) {
     const auto thread{system.Kernel().GetCurrentProcess()->handle_table.Get<Thread>(handle)};
-    if (!thread)
+    if (!thread) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     *priority = thread->GetPriority();
     return RESULT_SUCCESS;
 }
@@ -760,8 +784,10 @@ ResultCode SetThreadPriority(Core::System& system, Handle handle, u32 priority) 
         return ERR_OUT_OF_RANGE;
     auto current_process{system.Kernel().GetCurrentProcess()};
     auto thread{current_process->handle_table.Get<Thread>(handle)};
-    if (!thread)
+    if (!thread) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     // Note: The kernel uses the current process's resource limit instead of
     // the one from the thread owner's resource limit.
     auto& resource_limit{current_process->resource_limit};
@@ -792,8 +818,10 @@ ResultCode ReleaseMutex(Core::System& system, Handle handle) {
     LOG_TRACE(Kernel_SVC, "handle=0x{:08X}", handle);
     auto& kernel{system.Kernel()};
     auto mutex{kernel.GetCurrentProcess()->handle_table.Get<Mutex>(handle)};
-    if (!mutex)
+    if (!mutex) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     return mutex->Release(kernel.GetThreadManager().GetCurrentThread());
 }
 
@@ -802,8 +830,10 @@ ResultCode GetProcessId(Core::System& system, u32* process_id, Handle process_ha
     LOG_TRACE(Kernel_SVC, "process=0x{:08X}", process_handle);
     const auto process{
         system.Kernel().GetCurrentProcess()->handle_table.Get<Process>(process_handle)};
-    if (!process)
+    if (!process) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     *process_id = process->process_id;
     return RESULT_SUCCESS;
 }
@@ -812,8 +842,10 @@ ResultCode GetProcessId(Core::System& system, u32* process_id, Handle process_ha
 ResultCode GetProcessIdOfThread(Core::System& system, u32* process_id, Handle thread_handle) {
     LOG_TRACE(Kernel_SVC, "thread=0x{:08X}", thread_handle);
     const auto thread{system.Kernel().GetCurrentProcess()->handle_table.Get<Thread>(thread_handle)};
-    if (!thread)
+    if (!thread) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     const auto process{thread->owner_process};
     ASSERT_MSG(process, "Invalid parent process for thread={:#010X}", thread_handle);
     *process_id = process->process_id;
@@ -824,8 +856,10 @@ ResultCode GetProcessIdOfThread(Core::System& system, u32* process_id, Handle th
 ResultCode GetThreadId(Core::System& system, u32* thread_id, Handle handle) {
     LOG_TRACE(Kernel_SVC, "thread=0x{:08X}", handle);
     const auto thread{system.Kernel().GetCurrentProcess()->handle_table.Get<Thread>(handle)};
-    if (!thread)
+    if (!thread) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     *thread_id = thread->GetThreadId();
     return RESULT_SUCCESS;
 }
@@ -846,8 +880,10 @@ ResultCode CreateSemaphore(Core::System& system, Handle* out_handle, s32 initial
 ResultCode ReleaseSemaphore(Core::System& system, s32* count, Handle handle, s32 release_count) {
     LOG_TRACE(Kernel_SVC, "release_count={}, handle=0x{:08X}", release_count, handle);
     auto semaphore{system.Kernel().GetCurrentProcess()->handle_table.Get<Semaphore>(handle)};
-    if (!semaphore)
+    if (!semaphore) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     CASCADE_RESULT(*count, semaphore->Release(release_count));
     return RESULT_SUCCESS;
 }
@@ -856,8 +892,10 @@ ResultCode ReleaseSemaphore(Core::System& system, s32* count, Handle handle, s32
 ResultCode QueryProcessMemory(Core::System& system, MemoryInfo* memory_info, PageInfo* page_info,
                               Handle process_handle, u32 addr) {
     auto process{system.Kernel().GetCurrentProcess()->handle_table.Get<Process>(process_handle)};
-    if (!process)
+    if (!process) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     auto vma{process->vm_manager.FindVMA(addr)};
     if (vma == process->vm_manager.vma_map.end())
         return ERR_INVALID_ADDRESS;
@@ -897,8 +935,10 @@ ResultCode DuplicateHandle(Core::System& system, Handle* out, Handle handle) {
 ResultCode SignalEvent(Core::System& system, Handle handle) {
     LOG_TRACE(Kernel_SVC, "handle=0x{:08X}", handle);
     auto evt{system.Kernel().GetCurrentProcess()->handle_table.Get<Event>(handle)};
-    if (!evt)
+    if (!evt) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     evt->Signal();
     return RESULT_SUCCESS;
 }
@@ -907,8 +947,10 @@ ResultCode SignalEvent(Core::System& system, Handle handle) {
 ResultCode ClearEvent(Core::System& system, Handle handle) {
     LOG_TRACE(Kernel_SVC, "handle=0x{:08X}", handle);
     auto evt{system.Kernel().GetCurrentProcess()->handle_table.Get<Event>(handle)};
-    if (!evt)
+    if (!evt) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     evt->Clear();
     return RESULT_SUCCESS;
 }
@@ -927,8 +969,10 @@ ResultCode CreateTimer(Core::System& system, Handle* out_handle, u32 reset_type)
 ResultCode ClearTimer(Core::System& system, Handle handle) {
     LOG_TRACE(Kernel_SVC, "timer=0x{:08X}", handle);
     auto timer{system.Kernel().GetCurrentProcess()->handle_table.Get<Timer>(handle)};
-    if (!timer)
+    if (!timer) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     timer->Clear();
     return RESULT_SUCCESS;
 }
@@ -939,8 +983,10 @@ ResultCode SetTimer(Core::System& system, Handle handle, s64 initial, s64 interv
     if (initial < 0 || interval < 0)
         return ERR_OUT_OF_RANGE_KERNEL;
     auto timer{system.Kernel().GetCurrentProcess()->handle_table.Get<Timer>(handle)};
-    if (!timer)
+    if (!timer) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     timer->Set(initial, interval);
     return RESULT_SUCCESS;
 }
@@ -949,8 +995,10 @@ ResultCode SetTimer(Core::System& system, Handle handle, s64 initial, s64 interv
 ResultCode CancelTimer(Core::System& system, Handle handle) {
     LOG_TRACE(Kernel_SVC, "timer=0x{:08X}", handle);
     auto timer{system.Kernel().GetCurrentProcess()->handle_table.Get<Timer>(handle)};
-    if (!timer)
+    if (!timer) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", handle);
         return ERR_INVALID_HANDLE;
+    }
     timer->Cancel();
     return RESULT_SUCCESS;
 }
@@ -1046,8 +1094,10 @@ ResultCode CreateSessionToPort(Core::System& system, Handle* out_client_session,
                                Handle client_port_handle) {
     auto current_process{system.Kernel().GetCurrentProcess()};
     auto client_port{current_process->handle_table.Get<ClientPort>(client_port_handle)};
-    if (!client_port)
+    if (!client_port) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", client_port_handle);
         return ERR_INVALID_HANDLE;
+    }
     CASCADE_RESULT(auto session, client_port->Connect());
     *out_client_session = current_process->handle_table.Create(std::move(session));
     return RESULT_SUCCESS;
@@ -1069,8 +1119,10 @@ ResultCode AcceptSession(Core::System& system, Handle* out_server_session,
                          Handle server_port_handle) {
     auto current_process{system.Kernel().GetCurrentProcess()};
     auto server_port{current_process->handle_table.Get<ServerPort>(server_port_handle)};
-    if (!server_port)
+    if (!server_port) {
+        LOG_ERROR(Kernel, "Invalid handle {:08X}", server_port_handle);
         return ERR_INVALID_HANDLE;
+    }
     CASCADE_RESULT(auto session, server_port->Accept());
     *out_server_session = current_process->handle_table.Create(std::move(session));
     return RESULT_SUCCESS;
