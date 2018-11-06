@@ -399,11 +399,13 @@ public:
             parent.SetReg(3, memory_info.permission);
             parent.SetReg(4, memory_info.state);
             parent.SetReg(5, page_info.flags);
+            break;
         }
         default:
             LOG_ERROR(Kernel_SVC, "Unimplemented SVC 0x{:02X}", swi);
-            break;
+            return;
         }
+        LOG_DEBUG(Kernel_SVC, "SVC 0x{:02X} called", swi);
     }
 
     void ExceptionRaised(VAddr pc, Dynarmic::A32::Exception exception) override {
