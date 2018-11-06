@@ -154,11 +154,9 @@ void ConfigureMotionTouch::UpdateUIDisplay() {
 }
 
 void ConfigureMotionTouch::ConnectEvents() {
-    connect(ui->motion_provider,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
+    connect(ui->motion_provider, qOverload<int>(&QComboBox::currentIndexChanged), this,
             [this](int) { UpdateUIDisplay(); });
-    connect(ui->touch_provider,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
+    connect(ui->touch_provider, qOverload<int>(&QComboBox::currentIndexChanged), this,
             [this](int) { UpdateUIDisplay(); });
     connect(ui->udp_test, &QPushButton::clicked, this, &ConfigureMotionTouch::OnCemuhookUDPTest);
     connect(ui->touch_calibration_config, &QPushButton::clicked, this,

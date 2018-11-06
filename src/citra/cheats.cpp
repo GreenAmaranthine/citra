@@ -49,10 +49,10 @@ CheatDialog::CheatDialog(Core::System& system, QWidget* parent)
     connect(ui->textLines, &QPlainTextEdit::textChanged, this, &CheatDialog::OnLinesChanged);
     connect(ui->btnNextScan, &QPushButton::clicked, this, [this] { OnScan(true); });
     connect(ui->btnFirstScan, &QPushButton::clicked, this, [this] { OnScan(false); });
-    connect(ui->cbScanType, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-            this, [this](int index) { OnScanTypeChanged(index); });
-    connect(ui->cbValueType, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-            this, [this](int index) { OnValueTypeChanged(index); });
+    connect(ui->cbScanType, qOverload<int>(&QComboBox::currentIndexChanged), this,
+            [this](int index) { OnScanTypeChanged(index); });
+    connect(ui->cbValueType, qOverload<int>(&QComboBox::currentIndexChanged), this,
+            [this](int index) { OnValueTypeChanged(index); });
     connect(ui->chkHex, &QCheckBox::clicked, this,
             [this](bool state) { OnHexCheckedChanged(state); });
     connect(ui->tableFound, &QTableWidget::doubleClicked, this, [&](QModelIndex i) {

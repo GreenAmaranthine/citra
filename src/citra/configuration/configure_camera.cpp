@@ -42,41 +42,37 @@ ConfigureCamera::~ConfigureCamera() {
 }
 
 void ConfigureCamera::ConnectEvents() {
-    connect(ui->image_source,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, [this] {
-                stopPreviewing();
-                UpdateImageSourceUI();
-            });
-    connect(ui->camera_selection,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, [this] {
-                stopPreviewing();
-                if (GetCameraSelection() != current_selected) {
-                    RecordConfig();
-                }
-                if (ui->camera_selection->currentIndex() == 1) {
-                    ui->camera_mode->setCurrentIndex(1); // Double
-                    if (camera_name[0] == camera_name[2] && camera_config[0] == camera_config[2]) {
-                        ui->camera_mode->setCurrentIndex(0); // Single
-                    }
-                }
-                updateCameraMode();
-                LoadConfiguration();
-            });
-    connect(ui->camera_mode, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-            this, [this] {
-                stopPreviewing();
-                ui->camera_position_label->setVisible(ui->camera_mode->currentIndex() == 1);
-                ui->camera_position->setVisible(ui->camera_mode->currentIndex() == 1);
-                current_selected = GetCameraSelection();
-            });
-    connect(ui->camera_position,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, [this] {
-                stopPreviewing();
-                if (GetCameraSelection() != current_selected) {
-                    RecordConfig();
-                }
-                LoadConfiguration();
-            });
+    connect(ui->image_source, qOverload<int>(&QComboBox::currentIndexChanged), this, [this] {
+        stopPreviewing();
+        UpdateImageSourceUI();
+    });
+    connect(ui->camera_selection, qOverload<int>(&QComboBox::currentIndexChanged), this, [this] {
+        stopPreviewing();
+        if (GetCameraSelection() != current_selected) {
+            RecordConfig();
+        }
+        if (ui->camera_selection->currentIndex() == 1) {
+            ui->camera_mode->setCurrentIndex(1); // Double
+            if (camera_name[0] == camera_name[2] && camera_config[0] == camera_config[2]) {
+                ui->camera_mode->setCurrentIndex(0); // Single
+            }
+        }
+        updateCameraMode();
+        LoadConfiguration();
+    });
+    connect(ui->camera_mode, qOverload<int>(&QComboBox::currentIndexChanged), this, [this] {
+        stopPreviewing();
+        ui->camera_position_label->setVisible(ui->camera_mode->currentIndex() == 1);
+        ui->camera_position->setVisible(ui->camera_mode->currentIndex() == 1);
+        current_selected = GetCameraSelection();
+    });
+    connect(ui->camera_position, qOverload<int>(&QComboBox::currentIndexChanged), this, [this] {
+        stopPreviewing();
+        if (GetCameraSelection() != current_selected) {
+            RecordConfig();
+        }
+        LoadConfiguration();
+    });
     connect(ui->toolButton, &QToolButton::clicked, this, &ConfigureCamera::OnToolButtonClicked);
     connect(ui->preview_button, &QPushButton::clicked, this, [&] { startPreviewing(); });
     connect(ui->prompt_before_load, &QCheckBox::stateChanged, this, [this](int state) {
@@ -87,11 +83,10 @@ void ConfigureCamera::ConnectEvents() {
         }
     });
     connect(ui->camera_file, &QLineEdit::textChanged, this, [&] { stopPreviewing(); });
-    connect(ui->system_camera,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
+    connect(ui->system_camera, qOverload<int>(&QComboBox::currentIndexChanged), this,
             [&] { stopPreviewing(); });
-    connect(ui->camera_flip, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-            this, [&] { stopPreviewing(); });
+    connect(ui->camera_flip, qOverload<int>(&QComboBox::currentIndexChanged), this,
+            [&] { stopPreviewing(); });
 }
 
 void ConfigureCamera::updateCameraMode() {

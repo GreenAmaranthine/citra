@@ -219,11 +219,9 @@ constexpr std::array<const char*, 187> country_names{{
 ConfigureSystem::ConfigureSystem(QWidget* parent)
     : QWidget{parent}, ui{std::make_unique<Ui::ConfigureSystem>()} {
     ui->setupUi(this);
-    connect(ui->combo_birthmonth,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
+    connect(ui->combo_birthmonth, qOverload<int>(&QComboBox::currentIndexChanged), this,
             &ConfigureSystem::UpdateBirthdayComboBox);
-    connect(ui->combo_init_clock,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
+    connect(ui->combo_init_clock, qOverload<int>(&QComboBox::currentIndexChanged), this,
             &ConfigureSystem::UpdateInitTime);
     connect(ui->button_regenerate_console_id, &QPushButton::clicked, this,
             &ConfigureSystem::RefreshConsoleID);

@@ -176,7 +176,6 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                         QMenu context_menu;
                         QAction* clear_action{context_menu.addAction("Clear")};
                         QAction* restore_default_action{context_menu.addAction("Restore Default")};
-
                         connect(clear_action, &QAction::triggered, [=] {
                             analogs_param[analog_id].Erase(analog_sub_buttons[sub_button_id]);
                             analog_map_buttons[analog_id][sub_button_id]->setText("[not set]");
@@ -210,7 +209,6 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                         InputCommon::Polling::DeviceType::Analog);
         });
     }
-
     connect(ui->buttonMotionTouch, &QPushButton::released, [this] {
         QDialog* motion_touch_dialog{new ConfigureMotionTouch(this)};
         return motion_touch_dialog->exec();
@@ -220,17 +218,14 @@ ConfigureInput::ConfigureInput(QWidget* parent)
     connect(ui->buttonNew, &QPushButton::released, [this] { OnNewProfile(); });
     connect(ui->buttonDelete, &QPushButton::released, [this] { OnDeleteProfile(); });
     connect(ui->buttonRename, &QPushButton::released, [this] { OnRenameProfile(); });
-    connect(ui->profile, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-            [this](int i) {
-                ApplyConfiguration();
-                Settings::SaveProfile(Settings::values.profile);
-                Settings::LoadProfile(i);
-                LoadConfiguration();
-            });
-
+    connect(ui->profile, qOverload<int>(&QComboBox::currentIndexChanged), [this](int i) {
+        ApplyConfiguration();
+        Settings::SaveProfile(Settings::values.profile);
+        Settings::LoadProfile(i);
+        LoadConfiguration();
+    });
     timeout_timer->setSingleShot(true);
     connect(timeout_timer.get(), &QTimer::timeout, [this]() { setPollingResult({}, true); });
-
     connect(poll_timer.get(), &QTimer::timeout, [this]() {
         Common::ParamPackage params{};
         for (auto& poller : device_pollers) {
@@ -241,8 +236,17 @@ ConfigureInput::ConfigureInput(QWidget* parent)
             }
         }
     });
-
     LoadConfiguration();
+}
+
+void ConfigureInput::LoadConfiguration() {
+    std::transform(Settings::values.buttons.begin(), Settings::values.buttons.end(),
+                   buttons_param.begin(),
+                   [](const std::string& str) { return Common::ParamPackage(str); });
+    std::transform(Settings::values.analogs.begin(), Settings::values.analogs.end(),
+                   analogs_param.begin(),
+                   [](const std::string& str) { return Common::ParamPackage(str); });
+    UpdateButtonLabels();
 }
 
 void ConfigureInput::ApplyConfiguration() {
@@ -254,16 +258,6 @@ void ConfigureInput::ApplyConfiguration() {
 
 void ConfigureInput::ApplyProfile() {
     Settings::values.profile = ui->profile->currentIndex();
-}
-
-void ConfigureInput::LoadConfiguration() {
-    std::transform(Settings::values.buttons.begin(), Settings::values.buttons.end(),
-                   buttons_param.begin(),
-                   [](const std::string& str) { return Common::ParamPackage(str); });
-    std::transform(Settings::values.analogs.begin(), Settings::values.analogs.end(),
-                   analogs_param.begin(),
-                   [](const std::string& str) { return Common::ParamPackage(str); });
-    UpdateButtonLabels();
 }
 
 void ConfigureInput::RestoreDefaults() {
@@ -283,32 +277,25 @@ void ConfigureInput::RestoreDefaults() {
 }
 
 void ConfigureInput::ClearAll() {
-    for (int button_id{}; button_id < Settings::NativeButton::NumButtons; button_id++) {
+    for (int button_id{}; button_id < Settings::NativeButton::NumButtons; button_id++)
         if (button_map[button_id] && button_map[button_id]->isEnabled())
             buttons_param[button_id].Clear();
-    }
-    for (int analog_id{}; analog_id < Settings::NativeAnalog::NumAnalogs; analog_id++) {
-        for (int sub_button_id{}; sub_button_id < ANALOG_SUB_BUTTONS_NUM; sub_button_id++) {
+    for (int analog_id{}; analog_id < Settings::NativeAnalog::NumAnalogs; analog_id++)
+        for (int sub_button_id{}; sub_button_id < ANALOG_SUB_BUTTONS_NUM; sub_button_id++)
             if (analog_map_buttons[analog_id][sub_button_id] &&
                 analog_map_buttons[analog_id][sub_button_id]->isEnabled())
                 analogs_param[analog_id].Erase(analog_sub_buttons[sub_button_id]);
-        }
-    }
     UpdateButtonLabels();
 }
 
 void ConfigureInput::UpdateButtonLabels() {
-    for (int button{}; button < Settings::NativeButton::NumButtons; button++) {
+    for (int button{}; button < Settings::NativeButton::NumButtons; button++)
         button_map[button]->setText(ButtonToText(buttons_param[button]));
-    }
-
     for (int analog_id{}; analog_id < Settings::NativeAnalog::NumAnalogs; analog_id++) {
-        for (int sub_button_id{}; sub_button_id < ANALOG_SUB_BUTTONS_NUM; sub_button_id++) {
-            if (analog_map_buttons[analog_id][sub_button_id]) {
+        for (int sub_button_id{}; sub_button_id < ANALOG_SUB_BUTTONS_NUM; sub_button_id++)
+            if (analog_map_buttons[analog_id][sub_button_id])
                 analog_map_buttons[analog_id][sub_button_id]->setText(
                     AnalogToText(analogs_param[analog_id], analog_sub_buttons[sub_button_id]));
-            }
-        }
         analog_map_stick[analog_id]->setText("Set Analog Stick");
     }
 }
@@ -318,18 +305,12 @@ void ConfigureInput::HandleClick(QPushButton* button,
                                  InputCommon::Polling::DeviceType type) {
     button->setText("[press key]");
     button->setFocus();
-
     input_setter = new_input_setter;
-
     device_pollers = InputCommon::Polling::GetPollers(type);
-
     // Keyboard keys can only be used as button devices
     want_keyboard_keys = type == InputCommon::Polling::DeviceType::Button;
-
-    for (auto& poller : device_pollers) {
+    for (auto& poller : device_pollers)
         poller->Start();
-    }
-
     grabKeyboard();
     grabMouse();
     timeout_timer->start(5000); // Cancel after 5 seconds
@@ -341,14 +322,10 @@ void ConfigureInput::setPollingResult(const Common::ParamPackage& params, bool a
     releaseMouse();
     timeout_timer->stop();
     poll_timer->stop();
-    for (auto& poller : device_pollers) {
+    for (auto& poller : device_pollers)
         poller->Stop();
-    }
-
-    if (!abort && input_setter) {
+    if (!abort && input_setter)
         (*input_setter)(params);
-    }
-
     UpdateButtonLabels();
     input_setter.reset();
 }
@@ -356,24 +333,22 @@ void ConfigureInput::setPollingResult(const Common::ParamPackage& params, bool a
 void ConfigureInput::keyPressEvent(QKeyEvent* event) {
     if (!input_setter || !event)
         return;
-
     if (event->key() != Qt::Key_Escape) {
-        if (want_keyboard_keys) {
+        if (want_keyboard_keys)
             setPollingResult(Common::ParamPackage{InputCommon::GenerateKeyboardParam(event->key())},
                              false);
-        } else {
-            // Escape key wasn't pressed and we don't want any keyboard keys, so don't stop polling
+        else
+            // Escape key wasn't pressed and we don't want any keyboard keys, so don't stop
+            // polling
             return;
-        }
     }
     setPollingResult({}, true);
 }
 
 void ConfigureInput::OnNewProfile() {
     QString name{QInputDialog::getText(this, "New Profile", "Enter the name for the new profile.")};
-    if (name.isEmpty()) {
+    if (name.isEmpty())
         return;
-    }
     ApplyConfiguration();
     Settings::SaveProfile(ui->profile->currentIndex());
     Settings::CreateProfile(name.toStdString());
@@ -389,9 +364,8 @@ void ConfigureInput::OnDeleteProfile() {
     }
     QMessageBox::StandardButton answer{QMessageBox::question(
         this, "Delete Profile", QString("Delete profile %1?").arg(ui->profile->currentText()))};
-    if (answer != QMessageBox::Yes) {
+    if (answer != QMessageBox::Yes)
         return;
-    }
     int index{ui->profile->currentIndex()};
     ui->profile->removeItem(index);
     ui->profile->setCurrentIndex(0);
@@ -401,9 +375,8 @@ void ConfigureInput::OnDeleteProfile() {
 
 void ConfigureInput::OnRenameProfile() {
     QString new_name{QInputDialog::getText(this, "Rename Profile", "New name:")};
-    if (new_name.isEmpty()) {
+    if (new_name.isEmpty())
         return;
-    }
     ui->profile->setItemText(ui->profile->currentIndex(), new_name);
     Settings::RenameCurrentProfile(new_name.toStdString());
 }
