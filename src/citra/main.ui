@@ -110,6 +110,7 @@
     <addaction name="action_Configuration"/>
     <addaction name="action_Control_Panel"/>
     <addaction name="action_Cheats"/>
+    <addaction name="action_Dump_RAM"/>
    </widget>
    <widget class="QMenu" name="menu_View">
     <property name="title">
@@ -487,6 +488,14 @@
    </property>
    <property name="text">
     <string>Custom</string>
+   </property>
+  </action>
+  <action name="action_Dump_RAM">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Dump RAM</string>
    </property>
   </action>
  </widget>

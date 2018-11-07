@@ -275,6 +275,7 @@ void Config::Load() {
     Settings::values.disable_mh_2xmsaa = qt_config->value("disable_mh_2xmsaa", false).toBool();
     qt_config->endGroup();
     qt_config->beginGroup("UI");
+    UISettings::values.confirm_close = qt_config->value("confirm_close", true).toBool();
     UISettings::values.enable_discord_rpc = qt_config->value("enable_discord_rpc", true).toBool();
     UISettings::values.theme = qt_config->value("theme", UISettings::themes[0].second).toString();
     u16 screenshot_resolution_factor{
@@ -303,6 +304,12 @@ void Config::Load() {
     UISettings::values.app_list_hide_no_icon = qt_config->value("hideNoIcon", false).toBool();
     qt_config->endGroup();
     qt_config->beginGroup("Paths");
+    UISettings::values.amiibo_dir = qt_config->value("amiibo_dir", ".").toString();
+    UISettings::values.apps_dir = qt_config->value("apps_dir", ".").toString();
+    UISettings::values.movies_dir = qt_config->value("movies_dir", ".").toString();
+    UISettings::values.ram_dumps_dir = qt_config->value("ram_dumps_dir", ".").toString();
+    UISettings::values.screenshots_dir = qt_config->value("screenshots_dir", ".").toString();
+    UISettings::values.seeds_dir = qt_config->value("seeds_dir", ".").toString();
     size = qt_config->beginReadArray("appdirs");
     for (int i{}; i < size; ++i) {
         qt_config->setArrayIndex(i);
@@ -325,10 +332,10 @@ void Config::Load() {
     UISettings::values.recent_files = qt_config->value("recentFiles").toStringList();
     qt_config->endGroup();
     qt_config->beginGroup("Shortcuts");
-    QStringList groups{qt_config->childGroups()};
+    auto groups{qt_config->childGroups()};
     for (const auto& group : groups) {
         qt_config->beginGroup(group);
-        QStringList hotkeys{qt_config->childGroups()};
+        auto hotkeys{qt_config->childGroups()};
         for (const auto& hotkey : hotkeys) {
             qt_config->beginGroup(hotkey);
             UISettings::values.shortcuts.emplace_back(UISettings::Shortcut{
@@ -483,6 +490,7 @@ void Config::Save() {
     qt_config->setValue("disable_mh_2xmsaa", Settings::values.disable_mh_2xmsaa);
     qt_config->endGroup();
     qt_config->beginGroup("UI");
+    qt_config->setValue("confirm_close", UISettings::values.confirm_close);
     qt_config->setValue("enable_discord_rpc", UISettings::values.enable_discord_rpc);
     qt_config->setValue("theme", UISettings::values.theme);
     qt_config->setValue("screenshot_resolution_factor",
@@ -500,6 +508,12 @@ void Config::Save() {
     qt_config->setValue("hideNoIcon", UISettings::values.app_list_hide_no_icon);
     qt_config->endGroup();
     qt_config->beginGroup("Paths");
+    qt_config->setValue("amiibo_dir", UISettings::values.amiibo_dir);
+    qt_config->setValue("apps_dir", UISettings::values.apps_dir);
+    qt_config->setValue("movies_dir", UISettings::values.movies_dir);
+    qt_config->setValue("ram_dumps_dir", UISettings::values.ram_dumps_dir);
+    qt_config->setValue("screenshots_dir", UISettings::values.screenshots_dir);
+    qt_config->setValue("seeds_dir", UISettings::values.seeds_dir);
     qt_config->beginWriteArray("appdirs");
     for (int i{}; i < UISettings::values.app_dirs.size(); ++i) {
         qt_config->setArrayIndex(i);

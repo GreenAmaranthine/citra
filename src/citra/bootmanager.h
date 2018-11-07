@@ -33,7 +33,7 @@ public:
     void run() override;
 
     /// Requests for the emulation thread to stop running
-    void RequestStop(Core::System& system) {
+    void RequestStop() {
         stop_run = true;
         system.SetRunning(false);
     }

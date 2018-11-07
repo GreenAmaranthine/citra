@@ -59,6 +59,13 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QCheckBox" name="confirm_close">
+            <property name="text">
+             <string>Confirm Close</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
        </layout>

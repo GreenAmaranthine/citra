@@ -24,12 +24,14 @@ struct AppDir {
     QString path;
     bool deep_scan;
     bool expanded;
+
     bool operator==(const AppDir& rhs) const {
         return path == rhs.path;
-    };
+    }
+
     bool operator!=(const AppDir& rhs) const {
         return !operator==(rhs);
-    };
+    }
 };
 
 enum class AppListIconSize {
@@ -58,6 +60,13 @@ struct Values {
     bool show_filter_bar;
     bool show_status_bar;
 
+    QString amiibo_dir;
+    QString apps_dir;
+    QString movies_dir;
+    QString ram_dumps_dir;
+    QString screenshots_dir;
+    QString seeds_dir;
+
     // Application List
     AppListIconSize app_list_icon_size;
     AppListText app_list_row_1;
@@ -69,6 +78,7 @@ struct Values {
     QList<UISettings::AppDir> app_dirs;
     QStringList recent_files;
 
+    bool confirm_close;
     bool enable_discord_rpc;
 
     QString theme;

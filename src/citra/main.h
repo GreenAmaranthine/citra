@@ -114,6 +114,7 @@ private slots:
     void OnPlayMovie();
     void OnStopRecordingPlayback();
     void OnCaptureScreenshot();
+    void OnDumpRAM();
     void OnCoreError(Core::System::ResultStatus, const std::string&);
 
     /// Called when user selects Help -> About Citra

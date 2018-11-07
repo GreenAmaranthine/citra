@@ -41,6 +41,7 @@ void ConfigureGeneral::LoadConfiguration(Core::System& system) {
     ui->use_lle_applets->setChecked(Settings::values.use_lle_applets);
     ui->toggle_console->setChecked(UISettings::values.show_console);
     ui->log_filter_edit->setText(QString::fromStdString(Settings::values.log_filter));
+    ui->confirm_close->setChecked(UISettings::values.confirm_close);
 }
 
 void ConfigureGeneral::ApplyConfiguration() {
@@ -49,6 +50,7 @@ void ConfigureGeneral::ApplyConfiguration() {
     Settings::values.use_lle_applets = ui->use_lle_applets->isChecked();
     UISettings::values.show_console = ui->toggle_console->isChecked();
     Settings::values.log_filter = ui->log_filter_edit->text().toStdString();
+    UISettings::values.confirm_close = ui->confirm_close->isChecked();
     ToggleConsole();
     Log::Filter filter;
     filter.ParseFilterString(Settings::values.log_filter);

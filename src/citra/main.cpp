@@ -107,6 +107,8 @@ GMainWindow::GMainWindow() : config{new Config(system)} {
     Settings::LogSettings();
     // Register types to use in slots and signals
     qRegisterMetaType<std::size_t>("std::size_t");
+    qRegisterMetaType<std::string>("std::string");
+    qRegisterMetaType<Core::System::ResultStatus>("Core::System::ResultStatus");
     qRegisterMetaType<Service::AM::InstallStatus>("Service::AM::InstallStatus");
     setAcceptDrops(true);
     ui.setupUi(this);
@@ -236,7 +238,7 @@ void GMainWindow::InitializeHotkeys() {
     hotkey_registry.RegisterHotkey("Main Window", "Decrease Internal Resolution",
                                    QKeySequence("CTRL+D"));
     hotkey_registry.RegisterHotkey("Main Window", "Capture Screenshot", QKeySequence("CTRL+S"));
-    hotkey_registry.RegisterHotkey("Main Window", "Toggle Sleep Mode", QKeySequence("F2"));
+    hotkey_registry.RegisterHotkey("Main Window", "Toggle Sleep Mode", QKeySequence(Qt::Key_F2));
     hotkey_registry.RegisterHotkey("Main Window", "Change CPU Ticks", QKeySequence("CTRL+T"));
     hotkey_registry.RegisterHotkey("Main Window", "Toggle Frame Advancing", QKeySequence("CTRL+A"));
     hotkey_registry.RegisterHotkey("Main Window", "Advance Frame", QKeySequence(Qt::Key_Backslash));
@@ -257,7 +259,7 @@ void GMainWindow::InitializeHotkeys() {
             });
     connect(hotkey_registry.GetHotkey("Main Window", "Continue/Pause", this), &QShortcut::activated,
             this, [&] {
-                if (system.IsPoweredOn()) {
+                if (system.IsPoweredOn() && !system.IsSleepModeEnabled()) {
                     if (system.IsRunning())
                         OnPauseApplication();
                     else
@@ -323,14 +325,13 @@ void GMainWindow::InitializeHotkeys() {
     connect(hotkey_registry.GetHotkey("Main Window", "Toggle Sleep Mode", this),
             &QShortcut::activated, this, [&] {
                 if (system.IsPoweredOn()) {
-                    bool new_value{!system.IsSleepModeEnabled()};
-                    system.SetSleepModeEnabled(new_value);
-                    ui.action_Sleep_Mode->setChecked(new_value);
+                    ui.action_Sleep_Mode->setChecked(!ui.action_Sleep_Mode->isChecked());
+                    ToggleSleepMode();
                 }
             });
     connect(hotkey_registry.GetHotkey("Main Window", "Change CPU Ticks", this),
             &QShortcut::activated, this, [&] {
-                QString str{QInputDialog::getText(this, "Change CPU Ticks", "Ticks:")};
+                auto str{QInputDialog::getText(this, "Change CPU Ticks", "Ticks:")};
                 if (str.isEmpty())
                     return;
                 bool ok{};
@@ -429,6 +430,7 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Configuration, &QAction::triggered, this, &GMainWindow::OnOpenConfiguration);
     connect(ui.action_Cheats, &QAction::triggered, this, &GMainWindow::OnCheats);
     connect(ui.action_Control_Panel, &QAction::triggered, this, &GMainWindow::OnControlPanel);
+    connect(ui.action_Dump_RAM, &QAction::triggered, this, &GMainWindow::OnDumpRAM);
 
     // View
     ui.action_Show_Filter_Bar->setShortcut(QKeySequence("CTRL+F"));
@@ -611,14 +613,18 @@ void GMainWindow::BootApplication(const std::string& filename) {
     // Update the GUI
     app_list->hide();
     app_list_placeholder->hide();
-    ui.action_Sleep_Mode->setEnabled(true);
-    ui.action_Sleep_Mode->setChecked(false);
     perf_stats_update_timer.start(2000);
     screens->show();
     screens->setFocus();
     if (ui.action_Fullscreen->isChecked())
         ShowFullscreen();
     OnStartApplication();
+    if (movie_record_on_start) {
+        Core::Movie::GetInstance().StartRecording(movie_record_path.toStdString());
+        movie_record_on_start = false;
+        movie_record_path.clear();
+    }
+    connect(emu_thread.get(), &EmuThread::ErrorThrown, this, &GMainWindow::OnCoreError);
     HLE::Applets::ErrEula::cb = [this](HLE::Applets::ErrEulaConfig& config, bool& is_running) {
         ErrEulaCallback(config, is_running);
     };
@@ -641,22 +647,18 @@ void GMainWindow::BootApplication(const std::string& filename) {
 
 void GMainWindow::ShutdownApplication() {
     OnStopRecordingPlayback();
-    emu_thread->RequestStop(system);
-
+    emu_thread->RequestStop();
     // Frame advancing must be cancelled in order to release the emu thread from waiting
     system.frame_limiter.SetFrameAdvancing(false);
 
     emit EmulationStopping();
-
     // Wait for emulation thread to complete and delete it
     emu_thread->wait();
     emu_thread = nullptr;
 
     Camera::QtMultimediaCameraHandler::ReleaseHandlers();
-
     // The emulation is stopped, so closing the window or not doesn't matter anymore
     disconnect(screens, &Screens::Closed, this, &GMainWindow::OnStopApplication);
-
     // Update the GUI
     ui.action_Start->setEnabled(false);
     ui.action_Start->setText("Start");
@@ -676,13 +678,13 @@ void GMainWindow::ShutdownApplication() {
     ui.action_Advance_Frame->setEnabled(false);
     ui.action_Sleep_Mode->setEnabled(false);
     ui.action_Sleep_Mode->setChecked(false);
+    ui.action_Dump_RAM->setEnabled(false);
     screens->hide();
     if (app_list->isEmpty())
         app_list_placeholder->show();
     else
         app_list->show();
     app_list->setFilterFocus();
-
     // Disable status bar updates
     perf_stats_update_timer.stop();
     message_label->setVisible(false);
@@ -905,9 +907,11 @@ void GMainWindow::OnAppListShowList(bool show) {
 void GMainWindow::OnMenuLoadFile() {
     const QString extensions{QString("*.").append(AppList::supported_file_extensions.join(" *."))};
     const QString file_filter{QString("3DS Executable (%1);;All Files (*.*)").arg(extensions)};
-    const QString filename{QFileDialog::getOpenFileName(this, "Load File", ".", file_filter)};
+    const QString filename{
+        QFileDialog::getOpenFileName(this, "Load File", UISettings::values.apps_dir, file_filter)};
     if (filename.isEmpty())
         return;
+    UISettings::values.apps_dir = QFileInfo(filename).path();
     BootApplication(filename.toStdString());
 }
 
@@ -934,22 +938,27 @@ void GMainWindow::OnMenuInstallCIA() {
 }
 
 void GMainWindow::OnMenuAddSeed() {
-    const QString filepath{QFileDialog::getOpenFileName(this, "Add Seed", ".")};
+    const QString filepath{
+        QFileDialog::getOpenFileName(this, "Add Seed", UISettings::values.seeds_dir)};
     if (filepath.isEmpty())
         return;
-    const QString program_id_s{QInputDialog::getText(this, "Add Seed", "Enter the program ID")};
+    UISettings::values.seeds_dir = QFileInfo(filepath).path();
+    const QString program_id_s{QInputDialog::getText(this, "Citra", "Enter the program ID")};
     if (program_id_s.isEmpty())
         return;
     bool ok{};
     u64 program_id{program_id_s.toULongLong(&ok, 16)};
     if (!ok) {
-        QMessageBox::critical(this, "Error", "Invalid program ID");
+        QMessageBox::critical(this, "Citra", "Invalid program ID");
         return;
     }
     FileSys::Seed seed{};
     seed.title_id = program_id;
     FileUtil::IOFile file{filepath.toStdString(), "rb"};
-    file.ReadBytes(seed.data.data(), seed.data.size());
+    if (file.ReadBytes(seed.data.data(), seed.data.size()) != seed.data.size()) {
+        QMessageBox::critical(this, "Citra", "Failed to read seed data fully");
+        return;
+    }
     FileSys::SeedDB db;
     db.Load();
     db.Add(seed);
@@ -1019,14 +1028,6 @@ void GMainWindow::OnMenuRecentFile() {
 
 void GMainWindow::OnStartApplication() {
     Camera::QtMultimediaCameraHandler::ResumeCameras();
-    if (movie_record_on_start) {
-        Core::Movie::GetInstance().StartRecording(movie_record_path.toStdString());
-        movie_record_on_start = false;
-        movie_record_path.clear();
-    }
-    qRegisterMetaType<Core::System::ResultStatus>("Core::System::ResultStatus");
-    qRegisterMetaType<std::string>("std::string");
-    connect(emu_thread.get(), &EmuThread::ErrorThrown, this, &GMainWindow::OnCoreError);
     system.SetRunning(true);
     ui.action_Start->setEnabled(false);
     ui.action_Start->setText("Continue");
@@ -1041,6 +1042,9 @@ void GMainWindow::OnStartApplication() {
     ui.action_Capture_Screenshot->setEnabled(true);
     ui.action_Load_Amiibo->setEnabled(true);
     ui.action_Enable_Frame_Advancing->setEnabled(true);
+    ui.action_Sleep_Mode->setEnabled(true);
+    ui.action_Sleep_Mode->setChecked(false);
+    ui.action_Dump_RAM->setEnabled(true);
 }
 
 void GMainWindow::OnPauseApplication() {
@@ -1049,6 +1053,7 @@ void GMainWindow::OnPauseApplication() {
     ui.action_Start->setEnabled(true);
     ui.action_Pause->setEnabled(false);
     ui.action_Stop->setEnabled(true);
+    ui.action_Sleep_Mode->setEnabled(false);
 }
 
 void GMainWindow::OnStopApplication() {
@@ -1131,10 +1136,19 @@ void GMainWindow::OnSwapScreens() {
 }
 
 void GMainWindow::ToggleSleepMode() {
-    if (system.IsSleepModeEnabled())
+    if (!system.IsRunning()) {
+        ui.action_Sleep_Mode->setChecked(false);
+        return;
+    }
+    if (system.IsSleepModeEnabled()) {
         Camera::QtMultimediaCameraHandler::ResumeCameras();
-    else
+        ui.action_Start->setEnabled(false);
+        ui.action_Pause->setEnabled(true);
+    } else {
         Camera::QtMultimediaCameraHandler::StopCameras();
+        ui.action_Start->setEnabled(false);
+        ui.action_Pause->setEnabled(false);
+    }
     system.SetSleepModeEnabled(ui.action_Sleep_Mode->isChecked());
 }
 
@@ -1236,11 +1250,15 @@ void GMainWindow::OnSDMCCustom() {
 }
 
 void GMainWindow::OnLoadAmiibo() {
+    if (system.IsSleepModeEnabled())
+        return;
     OnPauseApplication();
-    const QString file_filter{QString("Amiibo File") + " (*.bin);;" + "All Files (*.*)"};
-    const QString filename{QFileDialog::getOpenFileName(this, "Load Amiibo", ".", file_filter)};
+    const auto file_filter{QString("Amiibo File") + " (*.bin);;" + "All Files (*.*)"};
+    const auto filename{QFileDialog::getOpenFileName(this, "Load Amiibo",
+                                                     UISettings::values.amiibo_dir, file_filter)};
     OnStartApplication();
     if (!filename.isEmpty()) {
+        UISettings::values.amiibo_dir = QFileInfo(filename).path();
         std::string filename_std{filename.toStdString()};
         FileUtil::IOFile file{filename_std, "rb"};
         if (!file) {
@@ -1266,6 +1284,8 @@ void GMainWindow::OnLoadAmiibo() {
 }
 
 void GMainWindow::OnRemoveAmiibo() {
+    if (system.IsSleepModeEnabled())
+        return;
     auto nfc{system.ServiceManager().GetService<Service::NFC::Module::Interface>("nfc:u")};
     nfc->RemoveAmiibo();
     ui.action_Remove_Amiibo->setEnabled(false);
@@ -1281,7 +1301,7 @@ void GMainWindow::OnToggleFilterBar() {
 
 void GMainWindow::OnRecordMovie() {
     if (system.IsPoweredOn()) {
-        QMessageBox::StandardButton answer{QMessageBox::warning(
+        auto answer{QMessageBox::warning(
             this, "Record Movie",
             "To keep consistency with the RNG, it is recommended to record the movie from game "
             "start.<br>Are you sure you still want to record movies now?",
@@ -1289,10 +1309,11 @@ void GMainWindow::OnRecordMovie() {
         if (answer == QMessageBox::No)
             return;
     }
-    const QString path{
-        QFileDialog::getSaveFileName(this, "Record Movie", ".", "Citra TAS Movie (*.ctm)")};
+    const auto path{QFileDialog::getSaveFileName(
+        this, "Record Movie", UISettings::values.movies_dir, "Citra TAS Movie (*.ctm)")};
     if (path.isEmpty())
         return;
+    UISettings::values.movies_dir = QFileInfo(path).path();
     if (system.IsPoweredOn())
         Core::Movie::GetInstance().StartRecording(path.toStdString());
     else {
@@ -1349,7 +1370,7 @@ bool GMainWindow::ValidateMovie(const QString& path, u64 program_id) {
 
 void GMainWindow::OnPlayMovie() {
     if (system.IsPoweredOn()) {
-        QMessageBox::StandardButton answer{QMessageBox::warning(
+        auto answer{QMessageBox::warning(
             this, "Play Movie",
             "To keep consistency with the RNG, it is recommended to play the movie from game "
             "start.<br>Are you sure you still want to play movies now?",
@@ -1357,10 +1378,11 @@ void GMainWindow::OnPlayMovie() {
         if (answer == QMessageBox::No)
             return;
     }
-    const QString path{
-        QFileDialog::getOpenFileName(this, "Play Movie", ".", "Citra TAS Movie (*.ctm)")};
+    const auto path{QFileDialog::getOpenFileName(this, "Play Movie", UISettings::values.movies_dir,
+                                                 "Citra TAS Movie (*.ctm)")};
     if (path.isEmpty())
         return;
+    UISettings::values.movies_dir = QFileInfo(path).path();
     if (system.IsPoweredOn()) {
         if (!ValidateMovie(path))
             return;
@@ -1425,12 +1447,27 @@ void GMainWindow::OnStopRecordingPlayback() {
 
 void GMainWindow::OnCaptureScreenshot() {
     OnPauseApplication();
-    const QString path{
-        QFileDialog::getSaveFileName(this, "Capture Screenshot", ".", "PNG Image (*.png)")};
+    const auto path{QFileDialog::getSaveFileName(
+        this, "Capture Screenshot", UISettings::values.screenshots_dir, "PNG Image (*.png)")};
     OnStartApplication();
     if (path.isEmpty())
         return;
+    UISettings::values.screenshots_dir = QFileInfo(path).path();
     screens->CaptureScreenshot(UISettings::values.screenshot_resolution_factor, path);
+}
+
+void GMainWindow::OnDumpRAM() {
+    const auto path{QFileDialog::getSaveFileName(this, "Dump RAM", UISettings::values.ram_dumps_dir,
+                                                 "RAM Dump (*.bin)")};
+    if (path.isEmpty())
+        return;
+    LOG_INFO(Frontend, "Dumping memory...");
+    OnPauseApplication();
+    UISettings::values.ram_dumps_dir = QFileInfo(path).path();
+    FileUtil::IOFile file{path.toStdString(), "wb"};
+    file.WriteBytes(Memory::fcram.data(), Memory::fcram.size());
+    OnStartApplication();
+    LOG_INFO(Frontend, "Memory dump finished.");
 }
 
 void GMainWindow::UpdatePerformanceStats() {
@@ -1517,11 +1554,10 @@ void GMainWindow::OnMenuAboutCitra() {
 }
 
 bool GMainWindow::ConfirmClose() {
-    if (!emu_thread)
+    if (!emu_thread || !UISettings::values.confirm_close)
         return true;
-    QMessageBox::StandardButton answer{
-        QMessageBox::question(this, "Citra", "Are you sure you want to close Citra?",
-                              QMessageBox::Yes | QMessageBox::No, QMessageBox::No)};
+    auto answer{QMessageBox::question(this, "Citra", "Are you sure you want to close Citra?",
+                                      QMessageBox::Yes | QMessageBox::No, QMessageBox::No)};
     return answer != QMessageBox::No;
 }
 
@@ -1548,21 +1584,20 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     QWidget::closeEvent(event);
 }
 
-static bool IsSingleFileDropEvent(QDropEvent* event) {
-    const QMimeData* mimeData{event->mimeData()};
-    return mimeData->hasUrls() && mimeData->urls().length() == 1;
+static bool IsSingleFileDropEvent(const QMimeData* mime_data) {
+    return mime_data->hasUrls() && mime_data->urls().length() == 1;
 }
 
 void GMainWindow::dropEvent(QDropEvent* event) {
-    if (IsSingleFileDropEvent(event) && ConfirmChangeApplication()) {
-        const QMimeData* mimeData{event->mimeData()};
-        QString filename{mimeData->urls().at(0).toLocalFile()};
+    const auto mime_data{event->mimeData()};
+    if (IsSingleFileDropEvent(mime_data) && ConfirmChangeApplication()) {
+        auto filename{mime_data->urls().at(0).toLocalFile()};
         BootApplication(filename.toStdString());
     }
 }
 
 void GMainWindow::dragEnterEvent(QDragEnterEvent* event) {
-    if (IsSingleFileDropEvent(event))
+    if (IsSingleFileDropEvent(event->mimeData()))
         event->acceptProposedAction();
 }
 
@@ -1586,10 +1621,10 @@ void GMainWindow::filterBarSetChecked(bool state) {
 }
 
 void GMainWindow::UpdateUITheme() {
-    QStringList theme_paths{default_theme_paths};
+    auto theme_paths{default_theme_paths};
     if (UISettings::values.theme != UISettings::themes[0].second &&
         !UISettings::values.theme.isEmpty()) {
-        const QString theme_uri{":" + UISettings::values.theme + "/style.qss"};
+        const auto theme_uri{":" + UISettings::values.theme + "/style.qss"};
         QFile f{theme_uri};
         if (f.open(QFile::ReadOnly | QFile::Text)) {
             QTextStream ts{&f};

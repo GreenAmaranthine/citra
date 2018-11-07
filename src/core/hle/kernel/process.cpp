@@ -167,9 +167,9 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
         return ERR_OUT_OF_HEAP_MEMORY;
     }
     // Maps heap block by block
-    VAddr interval_target = target;
+    auto interval_target{target};
     for (const auto& interval : allocated_fcram) {
-        u32 interval_size = interval.upper() - interval.lower();
+        u32 interval_size{interval.upper() - interval.lower()};
         LOG_DEBUG(Kernel, "Allocated FCRAM region lower={:08X}, upper={:08X}", interval.lower(),
                   interval.upper());
         std::fill(Memory::fcram.begin() + interval.lower(),
@@ -198,7 +198,7 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
     CASCADE_RESULT(auto backing_blocks, vm_manager.GetBackingBlocksForRange(target, size));
     for (const auto [backing_memory, block_size] : backing_blocks)
         memory_region->Free(Memory::GetFCRAMOffset(backing_memory), block_size);
-    ResultCode result{vm_manager.UnmapRange(target, size)};
+    auto result{vm_manager.UnmapRange(target, size)};
     ASSERT(result.IsSuccess());
     memory_used -= size;
     resource_limit->current_commit -= size;
@@ -254,7 +254,7 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
     }
     if (size == 0)
         return RESULT_SUCCESS;
-    ResultCode result{vm_manager.UnmapRange(target, size)};
+    auto result{vm_manager.UnmapRange(target, size)};
     if (result.IsError()) {
         LOG_ERROR(Kernel, "Trying to free already freed memory");
         return result;
@@ -285,10 +285,10 @@ ResultCode Process::Map(VAddr target, VAddr source, u32 size, VMAPermission perm
                                               VMAPermission::ReadWrite, MemoryState::Aliased,
                                               VMAPermission::ReadWrite));
     CASCADE_RESULT(auto backing_blocks, vm_manager.GetBackingBlocksForRange(source, size));
-    VAddr interval_target{target};
+    auto interval_target{target};
     for (const auto [backing_memory, block_size] : backing_blocks) {
-        auto target_vma = vm_manager.MapBackingMemory(interval_target, backing_memory, block_size,
-                                                      MemoryState::Alias);
+        auto target_vma{vm_manager.MapBackingMemory(interval_target, backing_memory, block_size,
+                                                    MemoryState::Alias)};
         interval_target += block_size;
     }
     return RESULT_SUCCESS;
