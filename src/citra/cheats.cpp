@@ -39,8 +39,6 @@ CheatDialog::CheatDialog(Core::System& system, QWidget* parent)
                 fmt::format("{:016X}", system.Kernel().GetCurrentProcess()->codeset->program_id))));
     ui->lblTo->hide();
     ui->txtSearchTo->hide();
-    ui->tableFound->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    ui->tableFound->setSelectionBehavior(QAbstractItemView::SelectRows);
     connect(ui->buttonClose, &QPushButton::clicked, this, &CheatDialog::OnClose);
     connect(ui->buttonNewCheat, &QPushButton::clicked, this, &CheatDialog::OnAddCheat);
     connect(ui->buttonSave, &QPushButton::clicked, this, &CheatDialog::OnSave);

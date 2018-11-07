@@ -1388,12 +1388,12 @@ void GMainWindow::OnPlayMovie() {
             return;
     } else {
         u64 program_id{Core::Movie::GetInstance().GetMovieProgramID(path.toStdString())};
-        QString app_path{app_list->FindApplicationByProgramID(program_id)};
+        auto app_path{app_list->FindApplicationByProgramID(program_id)};
         if (app_path.isEmpty()) {
             const int num_recent_files{
                 std::min(UISettings::values.recent_files.size(), max_recent_files_item)};
             for (int i{}; i < num_recent_files; i++) {
-                QString action_path{actions_recent_files[i]->data().toString()};
+                auto action_path{actions_recent_files[i]->data().toString()};
                 if (!action_path.isEmpty()) {
                     if (QFile::exists(path)) {
                         auto loader{Loader::GetLoader(system, action_path.toStdString())};
