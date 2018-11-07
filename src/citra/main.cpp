@@ -804,7 +804,7 @@ void GMainWindow::UpdateRecentFiles() {
     const int num_recent_files{
         std::min(UISettings::values.recent_files.size(), max_recent_files_item)};
     for (int i{}; i < num_recent_files; i++) {
-        const QString text{QString("%1. %2").arg(i + 1).arg(
+        const auto text{QString("%1. %2").arg(i + 1).arg(
             QFileInfo(UISettings::values.recent_files[i]).fileName())};
         actions_recent_files[i]->setText(text);
         actions_recent_files[i]->setData(UISettings::values.recent_files[i]);
@@ -905,9 +905,9 @@ void GMainWindow::OnAppListShowList(bool show) {
 }
 
 void GMainWindow::OnMenuLoadFile() {
-    const QString extensions{QString("*.").append(AppList::supported_file_extensions.join(" *."))};
-    const QString file_filter{QString("3DS Executable (%1);;All Files (*.*)").arg(extensions)};
-    const QString filename{
+    const auto extensions{QString("*.").append(AppList::supported_file_extensions.join(" *."))};
+    const auto file_filter{QString("3DS Executable (%1);;All Files (*.*)").arg(extensions)};
+    const auto filename{
         QFileDialog::getOpenFileName(this, "Load File", UISettings::values.apps_dir, file_filter)};
     if (filename.isEmpty())
         return;
@@ -938,12 +938,12 @@ void GMainWindow::OnMenuInstallCIA() {
 }
 
 void GMainWindow::OnMenuAddSeed() {
-    const QString filepath{
+    const auto filepath{
         QFileDialog::getOpenFileName(this, "Add Seed", UISettings::values.seeds_dir)};
     if (filepath.isEmpty())
         return;
     UISettings::values.seeds_dir = QFileInfo(filepath).path();
-    const QString program_id_s{QInputDialog::getText(this, "Citra", "Enter the program ID")};
+    const auto program_id_s{QInputDialog::getText(this, "Citra", "Enter the program ID")};
     if (program_id_s.isEmpty())
         return;
     bool ok{};
@@ -972,7 +972,7 @@ void GMainWindow::OnUpdateProgress(std::size_t written, std::size_t total) {
 }
 
 void GMainWindow::OnCIAInstallReport(Service::AM::InstallStatus status, const QString& filepath) {
-    const QString filename{QFileInfo{filepath}.fileName()};
+    const auto filename{QFileInfo{filepath}.fileName()};
     switch (status) {
     case Service::AM::InstallStatus::Success:
         statusBar()->showMessage(QString("%1 installed").arg(filename));
@@ -1012,9 +1012,9 @@ void GMainWindow::OnCIAInstallFinished() {
 }
 
 void GMainWindow::OnMenuRecentFile() {
-    QAction* action{qobject_cast<QAction*>(sender())};
+    auto action{qobject_cast<QAction*>(sender())};
     ASSERT(action);
-    const QString filename{action->data().toString()};
+    const auto filename{action->data().toString()};
     if (QFileInfo::exists(filename))
         BootApplication(filename.toStdString());
     else {

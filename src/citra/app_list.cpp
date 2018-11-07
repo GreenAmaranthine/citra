@@ -201,19 +201,18 @@ void AppList::onTextChanged(const QString& newText) {
         int result_count{};
         for (int i{}; i < folderCount; ++i) {
             folder = item_model->item(i, 0);
-            QModelIndex folder_index{folder->index()};
+            auto folder_index{folder->index()};
             int childrenCount{folder->rowCount()};
             for (int j{}; j < childrenCount; ++j) {
                 ++childrenTotal;
-                const QStandardItem* child{folder->child(j, 0)};
-                const QString file_path{
+                const auto child{folder->child(j, 0)};
+                const auto file_path{
                     child->data(AppListItemPath::FullPathRole).toString().toLower()};
-                QString file_name{file_path.mid(file_path.lastIndexOf("/") + 1)};
-                const QString file_title{
+                auto file_name{file_path.mid(file_path.lastIndexOf("/") + 1)};
+                auto file_title{
                     child->data(AppListItemPath::TitleRole).toString().toLower()};
-                const QString file_programid{
+               auto file_programid{
                     child->data(AppListItemPath::ProgramIdRole).toString().toLower()};
-
                 // Only items which filename in combination with its title contains all words
                 // that are in the searchfield will be visible in the applist
                 // The search is case insensitive because of toLower()
