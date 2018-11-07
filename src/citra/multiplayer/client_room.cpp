@@ -31,6 +31,8 @@ ClientRoomWindow::ClientRoomWindow(QWidget* parent, Core::System& system)
         [this](const Network::RoomMember::State& state) { emit StateChanged(state); });
     connect(this, &ClientRoomWindow::RoomInformationChanged, this, &ClientRoomWindow::OnRoomUpdate);
     connect(this, &ClientRoomWindow::StateChanged, this, &ClientRoomWindow::OnStateChange);
+    // Update the state
+    OnStateChange(member.GetState());
     connect(ui->disconnect, &QPushButton::released, [this] { Disconnect(); });
     ui->disconnect->setDefault(false);
     ui->disconnect->setAutoDefault(false);
