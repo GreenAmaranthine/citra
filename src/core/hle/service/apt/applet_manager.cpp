@@ -85,7 +85,7 @@ void AppletManager::AppletUpdateEvent(u64 applet_id, s64 cycles_late) {
     auto id{static_cast<AppletId>(applet_id)};
     auto itr{hle_applets.find(id)};
     std::shared_ptr<HLE::Applets::Applet> applet{itr == hle_applets.end() ? nullptr : itr->second};
-    ASSERT_MSG(applet, "Applet doesn't exist! applet_id={:08X}", static_cast<u32>(id));
+    ASSERT_MSG(applet, "Applet 0x{:03X} doesn't exist!", static_cast<u32>(id));
     applet->Update();
     // If the applet is still running after the last update, reschedule the event
     if (applet->IsRunning())
@@ -300,15 +300,15 @@ ResultCode AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
             NS::LaunchTitleImpl(system, FS::MediaType::NAND, GetTitleIdForApplet(applet_id))};
         if (process)
             return RESULT_SUCCESS;
-        ASSERT_MSG(false, "Applet {:08X} not found, dump and install it",
-                   static_cast<u32>(applet_id));
+        ASSERT_MSG(false, "Applet 0x{:016X} not found, dump and install it",
+                   GetTitleIdForApplet(applet_id));
     }
     // Use HLE applet
     auto itr{hle_applets.find(applet_id)};
     if (itr != hle_applets.end())
         return RESULT_SUCCESS;
     else
-        ASSERT_MSG(false, "Applet {:08X} unimplemented", static_cast<u32>(applet_id));
+        ASSERT_MSG(false, "Applet 0x{:03X} unimplemented", static_cast<u32>(applet_id));
 }
 
 ResultCode AppletManager::PreloadLibraryApplet(AppletId applet_id) {
@@ -321,15 +321,15 @@ ResultCode AppletManager::PreloadLibraryApplet(AppletId applet_id) {
             NS::LaunchTitleImpl(system, FS::MediaType::NAND, GetTitleIdForApplet(applet_id))};
         if (process)
             return RESULT_SUCCESS;
-        ASSERT_MSG(false, "Applet {:08X} not found, dump and install it",
-                   static_cast<u32>(applet_id));
+        ASSERT_MSG(false, "Applet 0x{:016X} not found, dump and install it",
+                   GetTitleIdForApplet(applet_id));
     }
     // Use HLE applet
     auto itr{hle_applets.find(applet_id)};
     if (itr != hle_applets.end())
         return RESULT_SUCCESS;
     else
-        ASSERT_MSG(false, "Applet {:08X} unimplemented", static_cast<u32>(applet_id));
+        ASSERT_MSG(false, "Applet {:03X} unimplemented", static_cast<u32>(applet_id));
 }
 
 ResultCode AppletManager::FinishPreloadingLibraryApplet(AppletId applet_id) {
