@@ -460,11 +460,8 @@ bool Rasterizer::Draw(bool accelerate, bool is_indexed) {
                              2),
         regs.rasterizer.viewport_corner.y // bottom
     };
-    Surface color_surface;
-    Surface depth_surface;
-    MathUtil::Rectangle<u32> surfaces_rect;
-    std::tie(color_surface, depth_surface, surfaces_rect) =
-        res_cache.GetFramebufferSurfaces(using_color_fb, using_depth_fb, viewport_rect_unscaled);
+    auto [color_surface, depth_surface, surfaces_rect]{
+        res_cache.GetFramebufferSurfaces(using_color_fb, using_depth_fb, viewport_rect_unscaled)};
     const u16 res_scale{static_cast<u16>(color_surface
                                              ? color_surface->res_scale
                                              : (!depth_surface ? 1u : depth_surface->res_scale))};
@@ -1221,17 +1218,12 @@ bool Rasterizer::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransferConfi
     dst_params.is_tiled = config.input_linear != config.dont_swizzle;
     dst_params.pixel_format = SurfaceParams::PixelFormatFromGPUPixelFormat(config.output_format);
     dst_params.UpdateParams();
-    MathUtil::Rectangle<u32> src_rect;
-    Surface src_surface;
-    std::tie(src_surface, src_rect) =
-        res_cache.GetSurfaceSubRect(src_params, ScaleMatch::Ignore, true);
+    auto [src_surface, src_rect]{res_cache.GetSurfaceSubRect(src_params, ScaleMatch::Ignore, true)};
     if (!src_surface)
         return false;
     dst_params.res_scale = src_surface->res_scale;
-    MathUtil::Rectangle<u32> dst_rect;
-    Surface dst_surface;
-    std::tie(dst_surface, dst_rect) =
-        res_cache.GetSurfaceSubRect(dst_params, ScaleMatch::Upscale, false);
+    auto [dst_surface,
+          dst_rect]{res_cache.GetSurfaceSubRect(dst_params, ScaleMatch::Upscale, false)};
     if (!dst_surface)
         return false;
     if (src_surface->is_tiled != dst_surface->is_tiled)
@@ -1275,9 +1267,7 @@ bool Rasterizer::AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& c
     src_params.height = copy_size / input_width;
     src_params.size = ((src_params.height - 1) * src_params.stride) + src_params.width;
     src_params.end = src_params.addr + src_params.size;
-    MathUtil::Rectangle<u32> src_rect;
-    Surface src_surface;
-    std::tie(src_surface, src_rect) = res_cache.GetTexCopySurface(src_params);
+    auto [src_surface, src_rect]{res_cache.GetTexCopySurface(src_params)};
     if (!src_surface)
         return false;
     if (output_gap != 0 &&
@@ -1296,10 +1286,8 @@ bool Rasterizer::AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& c
     dst_params.UpdateParams();
     // Since we're going to invalidate the gap if there is one, we will have to load it first
     const bool load_gap{output_gap != 0};
-    MathUtil::Rectangle<u32> dst_rect;
-    Surface dst_surface;
-    std::tie(dst_surface, dst_rect) =
-        res_cache.GetSurfaceSubRect(dst_params, ScaleMatch::Upscale, load_gap);
+    auto [dst_surface,
+          dst_rect]{res_cache.GetSurfaceSubRect(dst_params, ScaleMatch::Upscale, load_gap)};
     if (!dst_surface)
         return false;
     if (dst_surface->type == SurfaceType::Texture)
@@ -1331,10 +1319,7 @@ bool Rasterizer::AccelerateDisplay(const GPU::Regs::FramebufferConfig& config,
     src_params.is_tiled = false;
     src_params.pixel_format = SurfaceParams::PixelFormatFromGPUPixelFormat(config.color_format);
     src_params.UpdateParams();
-    MathUtil::Rectangle<u32> src_rect;
-    Surface src_surface;
-    std::tie(src_surface, src_rect) =
-        res_cache.GetSurfaceSubRect(src_params, ScaleMatch::Ignore, true);
+    auto [src_surface, src_rect]{res_cache.GetSurfaceSubRect(src_params, ScaleMatch::Ignore, true)};
     if (!src_surface)
         return false;
     u32 scaled_width{src_surface->GetScaledWidth()};
@@ -1707,12 +1692,9 @@ void Rasterizer::SyncAndUploadLUTs() {
         !uniform_block_data.proctex_diff_lut_dirty) {
         return;
     }
-    u8* buffer;
-    GLintptr offset;
-    bool invalidate;
     std::size_t bytes_used{};
     glBindBuffer(GL_TEXTURE_BUFFER, texture_buffer.GetHandle());
-    std::tie(buffer, offset, invalidate) = texture_buffer.Map(max_size, sizeof(GLvec4));
+    auto [buffer, offset, invalidate]{texture_buffer.Map(max_size, sizeof(GLvec4))};
     // Sync the lighting luts
     if (uniform_block_data.lighting_lut_dirty_any || invalidate) {
         for (unsigned index{}; index < uniform_block_data.lighting_lut_dirty.size(); index++) {
@@ -1840,11 +1822,7 @@ void Rasterizer::UploadUniforms(bool accelerate_draw, bool use_gs) {
     std::size_t uniform_size{uniform_size_aligned_vs + uniform_size_aligned_gs +
                              uniform_size_aligned_fs};
     std::size_t used_bytes{};
-    u8* uniforms;
-    GLintptr offset;
-    bool invalidate;
-    std::tie(uniforms, offset, invalidate) =
-        uniform_buffer.Map(uniform_size, uniform_buffer_alignment);
+    auto [uniforms, offset, invalidate]{uniform_buffer.Map(uniform_size, uniform_buffer_alignment)};
     if (sync_vs) {
         VSUniformData vs_uniforms;
         vs_uniforms.uniforms.SetFromRegs(Pica::g_state.regs.vs, Pica::g_state.vs);

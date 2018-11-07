@@ -503,7 +503,7 @@ ResultCode SVC::ArbitrateAddress(Handle handle, u32 address, u32 type, u32 value
     auto res{arbiter->ArbitrateAddress(kernel.GetThreadManager().GetCurrentThread(),
                                        static_cast<ArbitrationType>(type), address, value,
                                        nanoseconds)};
-    // TODO(Subv): Identify in which specific cases this call should cause a reschedule.
+    // TODO: Identify in which specific cases this call should cause a reschedule.
     system.PrepareReschedule();
     return res;
 }
@@ -613,7 +613,7 @@ ResultCode SVC::CreateThread(Handle* out_handle, u32 entry_point, u32 arg, VAddr
                   "Newly created thread must run in the SysCore (Core2), unimplemented.");
         break;
     default:
-        // TODO(bunnei): Implement support for other processor IDs
+        // TODO: Implement support for other processor IDs
         ASSERT_MSG(false, "Unsupported thread processor ID: {}", processor_id);
         break;
     }
@@ -1000,7 +1000,7 @@ ResultCode SVC::GetProcessInfo(s64* out, Handle process_handle, u32 type) {
     switch (type) {
     case 0:
     case 2:
-        // TODO(yuriks): Type 0 returns a slightly higher number than type 2, but I'm not sure
+        // TODO: Type 0 returns a slightly higher number than type 2, but I'm not sure
         // what's the difference between them.
         *out = process->memory_used;
         if (*out % Memory::PAGE_SIZE != 0) {

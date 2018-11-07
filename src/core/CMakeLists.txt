@@ -313,8 +313,6 @@ add_library(core STATIC
     hle/service/ldr_ro/cro_helper.h
     hle/service/ldr_ro/ldr_ro.cpp
     hle/service/ldr_ro/ldr_ro.h
-    hle/service/ldr_ro/memory_synchronizer.cpp
-    hle/service/ldr_ro/memory_synchronizer.h
     hle/service/mcu/cam.cpp
     hle/service/mcu/cam.h
     hle/service/mcu/cdc.cpp
