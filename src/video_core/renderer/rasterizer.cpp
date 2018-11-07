@@ -548,7 +548,7 @@ bool Rasterizer::Draw(bool accelerate, bool is_indexed) {
         uniform_block_data.dirty = true;
     }
     bool need_texture_barrier{};
-    auto CheckBarrier{[&need_texture_barrier, &color_surface](GLuint handle) {
+    auto CheckBarrier{[&need_texture_barrier, &color_surface = color_surface](GLuint handle) {
         if (color_surface && color_surface->texture.handle == handle) {
             need_texture_barrier = true;
         }
@@ -1736,21 +1736,22 @@ void Rasterizer::SyncAndUploadLUTs() {
         uniform_block_data.fog_lut_dirty = false;
     }
     // Helper function for SyncProcTexNoiseLUT/ColorMap/AlphaMap
-    auto SyncProcTexValueLUT{[this, buffer, offset, invalidate, &bytes_used](
-                                 const std::array<Pica::State::ProcTex::ValueEntry, 128>& lut,
-                                 std::array<GLvec2, 128>& lut_data, GLint& lut_offset) {
-        std::array<GLvec2, 128> new_data;
-        std::transform(lut.begin(), lut.end(), new_data.begin(), [](const auto& entry) {
-            return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
-        });
-        if (new_data != lut_data || invalidate) {
-            lut_data = new_data;
-            std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(GLvec2));
-            lut_offset = (offset + bytes_used) / sizeof(GLvec2);
-            uniform_block_data.dirty = true;
-            bytes_used += new_data.size() * sizeof(GLvec2);
-        }
-    }};
+    auto SyncProcTexValueLUT{
+        [this, &buffer = buffer, &offset = offset, &invalidate = invalidate,
+         &bytes_used](const std::array<Pica::State::ProcTex::ValueEntry, 128>& lut,
+                      std::array<GLvec2, 128>& lut_data, GLint& lut_offset) {
+            std::array<GLvec2, 128> new_data;
+            std::transform(lut.begin(), lut.end(), new_data.begin(), [](const auto& entry) {
+                return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
+            });
+            if (new_data != lut_data || invalidate) {
+                lut_data = new_data;
+                std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(GLvec2));
+                lut_offset = (offset + bytes_used) / sizeof(GLvec2);
+                uniform_block_data.dirty = true;
+                bytes_used += new_data.size() * sizeof(GLvec2);
+            }
+        }};
     // Sync the proctex noise lut
     if (uniform_block_data.proctex_noise_lut_dirty || invalidate) {
         SyncProcTexValueLUT(Pica::g_state.proctex.noise_table, proctex_noise_lut_data,

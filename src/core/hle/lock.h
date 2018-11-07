@@ -7,6 +7,7 @@
 #include <mutex>
 
 namespace HLE {
+
 /*
  * Synchronizes access to the internal HLE kernel structures, it is acquired when a guest
  * application thread performs a syscall. It should be acquired by any host threads that read or
@@ -14,5 +15,7 @@ namespace HLE {
  * to the emulated memory isn't protected by this mutex, and should be avoided in any threads other
  * than the CPU thread.
  */
+
 extern std::recursive_mutex g_hle_lock;
+
 } // namespace HLE
