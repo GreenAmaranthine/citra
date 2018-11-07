@@ -11,6 +11,8 @@ Citra emulates a subset of the hardware and therefore is useful for running/debu
 
 Citra is licensed under the GPLv2 (or any later version). Refer to the license.txt file included.
 
+Discord: https://discordapp.com/invite/YtUcETb
+
 ### Development
 
 Most of the development happens on GitHub. It's also where [our central repository](https://github.com/citra-valentin/citra) is hosted.
