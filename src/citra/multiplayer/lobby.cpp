@@ -76,7 +76,7 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
 QString Lobby::PasswordPrompt() {
     bool ok{};
     const auto text{QInputDialog::getText(this, "Password Required to Join",
-                                             "Password:", QLineEdit::Password, "", &ok)};
+                                          "Password:", QLineEdit::Password, "", &ok)};
     return ok ? text : QString();
 }
 

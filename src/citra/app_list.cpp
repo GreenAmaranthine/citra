@@ -209,9 +209,8 @@ void AppList::onTextChanged(const QString& newText) {
                 const auto file_path{
                     child->data(AppListItemPath::FullPathRole).toString().toLower()};
                 auto file_name{file_path.mid(file_path.lastIndexOf("/") + 1)};
-                auto file_title{
-                    child->data(AppListItemPath::TitleRole).toString().toLower()};
-               auto file_programid{
+                auto file_title{child->data(AppListItemPath::TitleRole).toString().toLower()};
+                auto file_programid{
                     child->data(AppListItemPath::ProgramIdRole).toString().toLower()};
                 // Only items which filename in combination with its title contains all words
                 // that are in the searchfield will be visible in the applist
