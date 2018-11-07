@@ -292,7 +292,7 @@ ResultCode Process::Map(VAddr target, VAddr source, u32 size, VMAPermission perm
     }
     auto source_state{privileged ? MemoryState::Locked : MemoryState::Aliased};
     auto targed_state{privileged ? MemoryState::AliasCode : MemoryState::Alias};
-    auto source_perm {privileged ? VMAPermission::None : VMAPermission::ReadWrite};
+    auto source_perm{privileged ? VMAPermission::None : VMAPermission::ReadWrite};
     // Mark source region as Aliased
     CASCADE_CODE(vm_manager.ChangeMemoryState(source, size, MemoryState::Private,
                                               VMAPermission::ReadWrite, source_state, source_perm));
