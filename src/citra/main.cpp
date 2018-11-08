@@ -1131,7 +1131,7 @@ void GMainWindow::ToggleScreenLayout() {
 }
 
 void GMainWindow::OnSwapScreens() {
-    Settings::values.swap_screen = ui.action_Screen_Layout_Swap_Screens->isChecked();
+    Settings::values.swap_screens = ui.action_Screen_Layout_Swap_Screens->isChecked();
     Settings::Apply(system);
 }
 
@@ -1670,7 +1670,7 @@ void GMainWindow::SyncMenuUISettings() {
                                                      Settings::LayoutOption::LargeScreen);
     ui.action_Screen_Layout_Side_by_Side->setChecked(Settings::values.layout_option ==
                                                      Settings::LayoutOption::SideScreen);
-    ui.action_Screen_Layout_Swap_Screens->setChecked(Settings::values.swap_screen);
+    ui.action_Screen_Layout_Swap_Screens->setChecked(Settings::values.swap_screens);
 }
 
 void GMainWindow::InitializeDiscordRPC() {

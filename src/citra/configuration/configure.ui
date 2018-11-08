@@ -9,64 +9,68 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QListWidget" name="selectorList">
-       <property name="minimumWidth">
-        <number>150</number>
-       </property>
-       <property name="maximumWidth">
-        <number>150</number>
-       </property>
-      </widget>
+      <widget class="QListWidget" name="selectorList"/>
      </item>
      <item>
-      <widget class="QTabWidget" name="tabWidget">
-       <property name="currentIndex">
-        <number>0</number>
+      <widget class="QScrollArea" name="scrollArea">
+       <property name="widgetResizable">
+        <bool>true</bool>
        </property>
-       <widget class="ConfigureGeneral" name="generalTab">
-        <attribute name="title">
-         <string>General</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureSystem" name="systemTab">
-        <attribute name="title">
-         <string>System</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureInput" name="inputTab">
-        <attribute name="title">
-         <string>Input</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureGraphics" name="graphicsTab">
-        <attribute name="title">
-         <string>Graphics</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureAudio" name="audioTab">
-        <attribute name="title">
-         <string>Audio</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureCamera" name="cameraTab">
-        <attribute name="title">
-         <string>Camera</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureHacks" name="hacksTab">
-        <attribute name="title">
-         <string>Hacks</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureWeb" name="webTab">
-        <attribute name="title">
-         <string>Web</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureUi" name="uiTab">
-        <attribute name="title">
-         <string>UI</string>
-        </attribute>
+       <widget class="QWidget" name="scrollAreaWidgetContents">
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QTabWidget" name="tabWidget">
+           <property name="currentIndex">
+            <number>0</number>
+           </property>
+           <widget class="ConfigureGeneral" name="generalTab">
+            <attribute name="title">
+             <string>General</string>
+            </attribute>
+           </widget>
+           <widget class="ConfigureSystem" name="systemTab">
+            <attribute name="title">
+             <string>System</string>
+            </attribute>
+           </widget>
+           <widget class="ConfigureInput" name="inputTab">
+            <attribute name="title">
+             <string>Input</string>
+            </attribute>
+           </widget>
+           <widget class="ConfigureGraphics" name="graphicsTab">
+            <attribute name="title">
+             <string>Graphics</string>
+            </attribute>
+           </widget>
+           <widget class="ConfigureAudio" name="audioTab">
+            <attribute name="title">
+             <string>Audio</string>
+            </attribute>
+           </widget>
+           <widget class="ConfigureCamera" name="cameraTab">
+            <attribute name="title">
+             <string>Camera</string>
+            </attribute>
+           </widget>
+           <widget class="ConfigureHacks" name="hacksTab">
+            <attribute name="title">
+             <string>Hacks</string>
+            </attribute>
+           </widget>
+           <widget class="ConfigureWeb" name="webTab">
+            <attribute name="title">
+             <string>Web</string>
+            </attribute>
+           </widget>
+           <widget class="ConfigureUi" name="uiTab">
+            <attribute name="title">
+             <string>UI</string>
+            </attribute>
+           </widget>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </widget>
      </item>

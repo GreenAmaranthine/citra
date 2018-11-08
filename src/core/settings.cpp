@@ -66,7 +66,7 @@ void LogSettings() {
     LogSetting("Renderer_FrameLimit", values.frame_limit);
     LogSetting("Renderer_MinVerticesPerThread", values.min_vertices_per_thread);
     LogSetting("Layout_LayoutOption", static_cast<int>(values.layout_option));
-    LogSetting("Layout_SwapScreen", values.swap_screen);
+    LogSetting("Layout_SwapScreens", values.swap_screens);
     bool using_lle_modules{};
     for (const auto& module : values.lle_modules)
         if (module.second) {

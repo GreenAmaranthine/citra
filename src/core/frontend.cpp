@@ -117,24 +117,24 @@ std::tuple<unsigned, unsigned> Frontend::TouchMoved(unsigned framebuffer_x,
 void Frontend::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) {
     Layout::FramebufferLayout layout;
     if (Settings::values.custom_layout)
-        layout = Layout::CustomFrameLayout(width, height, Settings::values.swap_screen);
+        layout = Layout::CustomFrameLayout(width, height, Settings::values.swap_screens);
     else {
         switch (Settings::values.layout_option) {
         case Settings::LayoutOption::SingleScreen:
-            layout = Layout::SingleFrameLayout(width, height, Settings::values.swap_screen);
+            layout = Layout::SingleFrameLayout(width, height, Settings::values.swap_screens);
             break;
         case Settings::LayoutOption::MediumScreen:
-            layout = Layout::MediumFrameLayout(width, height, Settings::values.swap_screen);
+            layout = Layout::MediumFrameLayout(width, height, Settings::values.swap_screens);
             break;
         case Settings::LayoutOption::LargeScreen:
-            layout = Layout::LargeFrameLayout(width, height, Settings::values.swap_screen);
+            layout = Layout::LargeFrameLayout(width, height, Settings::values.swap_screens);
             break;
         case Settings::LayoutOption::SideScreen:
-            layout = Layout::SideFrameLayout(width, height, Settings::values.swap_screen);
+            layout = Layout::SideFrameLayout(width, height, Settings::values.swap_screens);
             break;
         case Settings::LayoutOption::Default:
         default:
-            layout = Layout::DefaultFrameLayout(width, height, Settings::values.swap_screen);
+            layout = Layout::DefaultFrameLayout(width, height, Settings::values.swap_screens);
             break;
         }
     }

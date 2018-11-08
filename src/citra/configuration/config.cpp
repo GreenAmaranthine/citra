@@ -207,7 +207,7 @@ void Config::Load() {
     qt_config->beginGroup("Layout");
     Settings::values.layout_option =
         static_cast<Settings::LayoutOption>(qt_config->value("layout_option").toInt());
-    Settings::values.swap_screen = qt_config->value("swap_screen", false).toBool();
+    Settings::values.swap_screens = qt_config->value("swap_screens", false).toBool();
     Settings::values.custom_layout = qt_config->value("custom_layout", false).toBool();
     Settings::values.custom_top_left = qt_config->value("custom_top_left", 0).toInt();
     Settings::values.custom_top_top = qt_config->value("custom_top_top", 0).toInt();
@@ -430,7 +430,7 @@ void Config::Save() {
     qt_config->endGroup();
     qt_config->beginGroup("Layout");
     qt_config->setValue("layout_option", static_cast<int>(Settings::values.layout_option));
-    qt_config->setValue("swap_screen", Settings::values.swap_screen);
+    qt_config->setValue("swap_screens", Settings::values.swap_screens);
     qt_config->setValue("custom_layout", Settings::values.custom_layout);
     qt_config->setValue("custom_top_left", Settings::values.custom_top_left);
     qt_config->setValue("custom_top_top", Settings::values.custom_top_top);

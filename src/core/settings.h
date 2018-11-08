@@ -166,7 +166,7 @@ struct Values {
     int min_vertices_per_thread;
 
     LayoutOption layout_option;
-    bool swap_screen;
+    bool swap_screens;
     bool custom_layout;
     u16 custom_top_left;
     u16 custom_top_top;
