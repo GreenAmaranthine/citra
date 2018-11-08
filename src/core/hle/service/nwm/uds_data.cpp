@@ -24,10 +24,8 @@ namespace Service::NWM {
 static std::vector<u8> GenerateLLCHeader(EtherType protocol) {
     LLCHeader header{};
     header.protocol = protocol;
-
     std::vector<u8> buffer(sizeof(header));
     std::memcpy(buffer.data(), &header, sizeof(header));
-
     return buffer;
 }
 
@@ -49,10 +47,8 @@ static std::vector<u8> GenerateSecureDataHeader(u16 data_size, u8 channel, u16 d
     header.sequence_number = sequence_number;
     header.dest_node_id = dest_node_id;
     header.src_node_id = src_node_id;
-
     std::vector<u8> buffer(sizeof(header));
     std::memcpy(buffer.data(), &header, sizeof(header));
-
     return buffer;
 }
 
@@ -64,15 +60,12 @@ static std::vector<u8> GenerateSecureDataHeader(u16 data_size, u8 channel, u16 d
 static std::array<u8, CryptoPP::Weak::MD5::DIGESTSIZE> GetDataCryptoCTR(
     const NetworkInfo& network_info) {
     DataFrameCryptoCTR data{};
-
     data.host_mac = network_info.host_mac_address;
     data.wlan_comm_id = network_info.wlan_comm_id;
     data.id = network_info.id;
     data.network_id = network_info.network_id;
-
     std::array<u8, CryptoPP::Weak::MD5::DIGESTSIZE> hash;
     CryptoPP::Weak::MD5().CalculateDigest(hash.data(), reinterpret_cast<u8*>(&data), sizeof(data));
-
     return hash;
 }
 
@@ -86,9 +79,7 @@ static std::array<u8, CryptoPP::AES::BLOCKSIZE> GenerateDataCCMPKey(
     std::array<u8, CryptoPP::Weak::MD5::DIGESTSIZE> passphrase_hash{};
     CryptoPP::Weak::MD5().CalculateDigest(passphrase_hash.data(), passphrase.data(),
                                           passphrase.size());
-
     std::array<u8, CryptoPP::AES::BLOCKSIZE> ccmp_key{};
-
     // The CCMP key is the result of encrypting the MD5 hash of the passphrase with AES-CTR using
     // keyslot 0x2D.
     using CryptoPP::AES;
@@ -97,7 +88,6 @@ static std::array<u8, CryptoPP::AES::BLOCKSIZE> GenerateDataCCMPKey(
     CryptoPP::CTR_Mode<AES>::Encryption aes;
     aes.SetKeyWithIV(key.data(), AES::BLOCKSIZE, counter.data());
     aes.ProcessData(ccmp_key.data(), passphrase_hash.data(), passphrase_hash.size());
-
     return ccmp_key;
 }
 
@@ -153,55 +143,44 @@ static std::vector<u8> DecryptDataFrame(const std::vector<u8>& encrypted_payload
                                         const MacAddress& sender, const MacAddress& receiver,
                                         const MacAddress& bssid, u16 sequence_number,
                                         u16 frame_control) {
-
     // Reference: IEEE 802.11-2007
-
     std::vector<u8> aad{GenerateCCMPAAD(sender, receiver, bssid, frame_control)};
-
     std::vector<u8> packet_number{0,
                                   0,
                                   0,
                                   0,
                                   static_cast<u8>((sequence_number >> 8) & 0xFF),
                                   static_cast<u8>(sequence_number & 0xFF)};
-
     // 8.3.3.3.3 Construct CCM nonce (13 bytes)
     std::vector<u8> nonce{};
-    nonce.push_back(0);                                                    // priority
+    nonce.push_back(0);                                                    // Priority
     nonce.insert(nonce.end(), sender.begin(), sender.end());               // Address 2
     nonce.insert(nonce.end(), packet_number.begin(), packet_number.end()); // PN
-
     try {
-        CryptoPP::CCM<CryptoPP::AES, 8>::Decryption d{};
+        CryptoPP::CCM<CryptoPP::AES, 8>::Decryption d;
         d.SetKeyWithIV(ccmp_key.data(), ccmp_key.size(), nonce.data(), nonce.size());
         d.SpecifyDataLengths(aad.size(), encrypted_payload.size() - 8, 0);
-
         CryptoPP::AuthenticatedDecryptionFilter df{
             d, nullptr,
             CryptoPP::AuthenticatedDecryptionFilter::MAC_AT_END |
                 CryptoPP::AuthenticatedDecryptionFilter::THROW_EXCEPTION};
-        // put aad
+        // Put aad
         df.ChannelPut(CryptoPP::AAD_CHANNEL, aad.data(), aad.size());
-
-        // put cipher with mac
+        // Put cipher with MAC
         df.ChannelPut(CryptoPP::DEFAULT_CHANNEL, encrypted_payload.data(),
                       encrypted_payload.size() - 8);
         df.ChannelPut(CryptoPP::DEFAULT_CHANNEL,
                       encrypted_payload.data() + encrypted_payload.size() - 8, 8);
-
         df.ChannelMessageEnd(CryptoPP::AAD_CHANNEL);
         df.ChannelMessageEnd(CryptoPP::DEFAULT_CHANNEL);
         df.SetRetrievalChannel(CryptoPP::DEFAULT_CHANNEL);
-
         std::size_t size{df.MaxRetrievable()};
-
         std::vector<u8> pdata(size);
         df.Get(pdata.data(), size);
         return pdata;
     } catch (CryptoPP::Exception&) {
         LOG_ERROR(Service_NWM, "failed to decrypt");
     }
-
     return {};
 }
 
@@ -215,56 +194,45 @@ static std::vector<u8> EncryptDataFrame(const std::vector<u8>& payload,
                                         const MacAddress& bssid, u16 sequence_number,
                                         u16 frame_control) {
     // Reference: IEEE 802.11-2007
-
-    std::vector<u8> aad{GenerateCCMPAAD(sender, receiver, bssid, frame_control)};
-
+    auto aad{GenerateCCMPAAD(sender, receiver, bssid, frame_control)};
     std::vector<u8> packet_number{0,
                                   0,
                                   0,
                                   0,
                                   static_cast<u8>((sequence_number >> 8) & 0xFF),
                                   static_cast<u8>(sequence_number & 0xFF)};
-
     // 8.3.3.3.3 Construct CCM nonce (13 bytes)
     std::vector<u8> nonce;
-    nonce.push_back(0);                                                    // priority
+    nonce.push_back(0);                                                    // Priority
     nonce.insert(nonce.end(), sender.begin(), sender.end());               // Address 2
     nonce.insert(nonce.end(), packet_number.begin(), packet_number.end()); // PN
-
     try {
-        CryptoPP::CCM<CryptoPP::AES, 8>::Encryption d{};
+        CryptoPP::CCM<CryptoPP::AES, 8>::Encryption d;
         d.SetKeyWithIV(ccmp_key.data(), ccmp_key.size(), nonce.data(), nonce.size());
         d.SpecifyDataLengths(aad.size(), payload.size(), 0);
-
         CryptoPP::AuthenticatedEncryptionFilter df{d};
-        // put aad
+        // Put aad
         df.ChannelPut(CryptoPP::AAD_CHANNEL, aad.data(), aad.size());
         df.ChannelMessageEnd(CryptoPP::AAD_CHANNEL);
-
-        // put plaintext
+        // Put plaintext
         df.ChannelPut(CryptoPP::DEFAULT_CHANNEL, payload.data(), payload.size());
         df.ChannelMessageEnd(CryptoPP::DEFAULT_CHANNEL);
-
         df.SetRetrievalChannel(CryptoPP::DEFAULT_CHANNEL);
-
-        std::size_t size{df.MaxRetrievable()};
-
+        auto size{df.MaxRetrievable()};
         std::vector<u8> cipher(size);
         df.Get(cipher.data(), size);
         return cipher;
     } catch (CryptoPP::Exception&) {
         LOG_ERROR(Service_NWM, "failed to encrypt");
     }
-
     return {};
 }
 
 std::vector<u8> GenerateDataPayload(const std::vector<u8>& data, u8 channel, u16 dest_node,
                                     u16 src_node, u16 sequence_number) {
-    std::vector<u8> buffer{GenerateLLCHeader(EtherType::SecureData)};
-    std::vector<u8> securedata_header{GenerateSecureDataHeader(
-        static_cast<u16>(data.size()), channel, dest_node, src_node, sequence_number)};
-
+    auto buffer{GenerateLLCHeader(EtherType::SecureData)};
+    auto securedata_header{GenerateSecureDataHeader(static_cast<u16>(data.size()), channel,
+                                                    dest_node, src_node, sequence_number)};
     buffer.insert(buffer.end(), securedata_header.begin(), securedata_header.end());
     buffer.insert(buffer.end(), data.begin(), data.end());
     return buffer;
