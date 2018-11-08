@@ -377,7 +377,8 @@ static ResultCode ReceiveIPCRequest(SharedPtr<ServerSession> server_session,
     auto target_address{thread->GetCommandBufferAddress()};
     auto source_address{server_session->currently_handling->GetCommandBufferAddress()};
     auto translation_result{TranslateCommandBuffer(server_session->currently_handling, thread,
-                                                   source_address, target_address, false)};
+                                                   source_address, target_address,
+                                                   server_session->mapped_buffer_context, false)};
     // If a translation error occurred, immediately resume the client thread.
     if (translation_result.IsError()) {
         // Set the output of SendSyncRequest in the client thread to the translation output.
@@ -426,10 +427,21 @@ ResultCode SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_co
             *index = -1;
             return ERR_SESSION_CLOSED_BY_REMOTE;
         }
+<<<<<<< HEAD
         auto source_address{thread->GetCommandBufferAddress()};
         auto target_address{request_thread->GetCommandBufferAddress()};
         auto translation_result{
             TranslateCommandBuffer(thread, request_thread, source_address, target_address, true)};
+=======
+
+        VAddr source_address = thread->GetCommandBufferAddress();
+        VAddr target_address = request_thread->GetCommandBufferAddress();
+
+        ResultCode translation_result =
+            TranslateCommandBuffer(thread, request_thread, source_address, target_address,
+                                   session->mapped_buffer_context, true);
+
+>>>>>>> 0b8d2ecab... IPC: store mapped buffer info in session context
         // Note: The real kernel seems to always panic if the Server->Client buffer translation
         // fails for whatever reason.
         ASSERT(translation_result.IsSuccess());
