@@ -288,9 +288,6 @@ VMManager::VMAIter VMManager::SplitVMA(VMAIter vma_handle, u32 offset_in_vma) {
     switch (new_vma.type) {
     case VMAType::Free:
         break;
-    case VMAType::AllocatedMemoryBlock:
-        new_vma.offset += offset_in_vma;
-        break;
     case VMAType::BackingMemory:
         new_vma.backing_memory += offset_in_vma;
         break;
@@ -323,10 +320,6 @@ void VMManager::UpdatePageTableForVMA(const VirtualMemoryArea& vma) {
     switch (vma.type) {
     case VMAType::Free:
         Memory::UnmapRegion(page_table, vma.base, vma.size);
-        break;
-    case VMAType::AllocatedMemoryBlock:
-        Memory::MapMemoryRegion(page_table, vma.base, vma.size,
-                                vma.backing_block->data() + vma.offset);
         break;
     case VMAType::BackingMemory:
         Memory::MapMemoryRegion(page_table, vma.base, vma.size, vma.backing_memory);
