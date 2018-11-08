@@ -55,7 +55,7 @@
           <item>
            <widget class="QCheckBox" name="use_lle_applets">
             <property name="text">
-             <string>Use LLE Applets</string>
+             <string>Use LLE Applets (broken)</string>
             </property>
            </widget>
           </item>
