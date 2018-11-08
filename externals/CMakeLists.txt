@@ -50,7 +50,8 @@ target_include_directories(enet INTERFACE ./enet/include)
 
 if (ENABLE_DISCORD_RPC)
     # Discord RPC
-    add_subdirectory(discord-rpc)
+    set(BUILD_EXAMPLES OFF CACHE BOOL "")
+    add_subdirectory(discord-rpc EXCLUDE_FROM_ALL)
     target_include_directories(discord-rpc INTERFACE ./discord-rpc/include)
 endif()
 
