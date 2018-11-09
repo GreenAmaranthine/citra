@@ -1,4 +1,4 @@
-**BEFORE FILING AN ISSUE, READ THE RELEVANT SECTION IN THE [CONTRIBUTING](https://github.com/citra-valentin/citra/blob/master/CONTRIBUTING.md#reporting-issues) FILE!!!**
+**BEFORE FILING AN ISSUE, READ THE RELEVANT SECTION IN [Contributing](https://github.com/citra-valentin/citra/wiki/Contributing)!!!**
 
 Citra
 ==============
@@ -17,7 +17,7 @@ Discord: https://discordapp.com/invite/YtUcETb
 
 Most of the development happens on GitHub. It's also where [our central repository](https://github.com/citra-valentin/citra) is hosted.
 
-If you want to contribute please take a look at the [Contributor's Guide](CONTRIBUTING.md), [Developer Information](https://github.com/citra-valentin/citra/wiki/Developer-Information) and [TODO List](https://github.com/citra-valentin/citra/wiki/TODO-List)
+If you want to contribute please take a look at [Contributing](https://github.com/citra-valentin/citra/wiki/Contributing), [Developer Information](https://github.com/citra-valentin/citra/wiki/Developer-Information) and [TODO List](https://github.com/citra-valentin/citra/wiki/TODO-List)
 
 ### Building
 
