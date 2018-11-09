@@ -185,16 +185,16 @@ void GMainWindow::InitializeWidgets() {
     statusBar()->setVisible(true);
     // Removes an ugly inner border from the status bar widgets under Linux
     setStyleSheet("QStatusBar::item{border: none;}");
-    QActionGroup* actionGroup_ScreenLayouts{new QActionGroup(this)};
+    auto actionGroup_ScreenLayouts{new QActionGroup(this)};
     actionGroup_ScreenLayouts->addAction(ui.action_Screen_Layout_Default);
     actionGroup_ScreenLayouts->addAction(ui.action_Screen_Layout_Single_Screen);
     actionGroup_ScreenLayouts->addAction(ui.action_Screen_Layout_Medium_Screen);
     actionGroup_ScreenLayouts->addAction(ui.action_Screen_Layout_Large_Screen);
     actionGroup_ScreenLayouts->addAction(ui.action_Screen_Layout_Side_by_Side);
-    QActionGroup* actionGroup_NAND{new QActionGroup(this)};
+    auto actionGroup_NAND{new QActionGroup(this)};
     actionGroup_NAND->addAction(ui.action_NAND_Default);
     actionGroup_NAND->addAction(ui.action_NAND_Custom);
-    QActionGroup* actionGroup_SDMC{new QActionGroup(this)};
+    auto actionGroup_SDMC{new QActionGroup(this)};
     actionGroup_SDMC->addAction(ui.action_SDMC_Default);
     actionGroup_SDMC->addAction(ui.action_SDMC_Custom);
 }
@@ -207,7 +207,7 @@ void GMainWindow::InitializeRecentFileMenuActions() {
         ui.menu_recent_files->addAction(actions_recent_files[i]);
     }
     ui.menu_recent_files->addSeparator();
-    QAction* action_clear_recent_files{new QAction(this)};
+    auto action_clear_recent_files{new QAction(this)};
     action_clear_recent_files->setText("Clear Recent Files");
     connect(action_clear_recent_files, &QAction::triggered, this, [this] {
         UISettings::values.recent_files.clear();
@@ -454,6 +454,8 @@ void GMainWindow::ConnectMenuEvents() {
             &GMainWindow::ChangeScreenLayout);
     connect(ui.action_Screen_Layout_Swap_Screens, &QAction::triggered, this,
             &GMainWindow::OnSwapScreens);
+    connect(ui.action_Screen_Layout_Custom_Layout, &QAction::triggered, this,
+            &GMainWindow::OnCustomLayout);
 
     // Tools
     connect(ui.action_Record_Movie, &QAction::triggered, this, &GMainWindow::OnRecordMovie);
@@ -1091,7 +1093,7 @@ void GMainWindow::HideFullscreen() {
 }
 
 void GMainWindow::ChangeScreenLayout() {
-    Settings::LayoutOption new_layout{Settings::LayoutOption::Default};
+    auto new_layout{Settings::LayoutOption::Default};
     if (ui.action_Screen_Layout_Default->isChecked())
         new_layout = Settings::LayoutOption::Default;
     else if (ui.action_Screen_Layout_Single_Screen->isChecked())
@@ -1107,7 +1109,7 @@ void GMainWindow::ChangeScreenLayout() {
 }
 
 void GMainWindow::ToggleScreenLayout() {
-    Settings::LayoutOption new_layout{Settings::LayoutOption::Default};
+    auto new_layout{Settings::LayoutOption::Default};
     switch (Settings::values.layout_option) {
     case Settings::LayoutOption::Default:
         new_layout = Settings::LayoutOption::SingleScreen;
@@ -1132,6 +1134,12 @@ void GMainWindow::ToggleScreenLayout() {
 
 void GMainWindow::OnSwapScreens() {
     Settings::values.swap_screens = ui.action_Screen_Layout_Swap_Screens->isChecked();
+    Settings::Apply(system);
+}
+
+void GMainWindow::OnCustomLayout() {
+    Settings::values.custom_layout = ui.action_Screen_Layout_Custom_Layout->isChecked();
+    SyncMenuUISettings();
     Settings::Apply(system);
 }
 
@@ -1671,6 +1679,7 @@ void GMainWindow::SyncMenuUISettings() {
     ui.action_Screen_Layout_Side_by_Side->setChecked(Settings::values.layout_option ==
                                                      Settings::LayoutOption::SideScreen);
     ui.action_Screen_Layout_Swap_Screens->setChecked(Settings::values.swap_screens);
+    ui.action_Screen_Layout_Custom_Layout->setChecked(Settings::values.custom_layout);
 }
 
 void GMainWindow::InitializeDiscordRPC() {

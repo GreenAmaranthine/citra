@@ -127,6 +127,7 @@
      <addaction name="action_Screen_Layout_Side_by_Side"/>
      <addaction name="separator"/>
      <addaction name="action_Screen_Layout_Swap_Screens"/>
+     <addaction name="action_Screen_Layout_Custom_Layout"/>
     </widget>
     <addaction name="action_Fullscreen"/>
     <addaction name="menu_Screen_Layout"/>
@@ -496,6 +497,14 @@
    </property>
    <property name="text">
     <string>Dump RAM</string>
+   </property>
+  </action>
+  <action name="action_Screen_Layout_Custom_Layout">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Custom Layout</string>
    </property>
   </action>
  </widget>

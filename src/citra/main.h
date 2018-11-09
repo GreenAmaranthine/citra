@@ -107,6 +107,7 @@ private slots:
     void ChangeScreenLayout();
     void ToggleScreenLayout();
     void OnSwapScreens();
+    void OnCustomLayout();
     void ToggleSleepMode();
     void ShowFullscreen();
     void HideFullscreen();
