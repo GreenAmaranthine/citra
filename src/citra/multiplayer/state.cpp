@@ -28,8 +28,6 @@ MultiplayerState::MultiplayerState(QWidget* parent, QAction* leave_room, QAction
         [this](const Network::RoomMember::State& state) { emit NetworkStateChanged(state); });
     connect(this, &MultiplayerState::NetworkStateChanged, this,
             &MultiplayerState::OnNetworkStateChanged);
-    qRegisterMetaType<Network::RoomMember::State>();
-    qRegisterMetaType<Common::WebResult>();
     announce_multiplayer_session =
         std::make_shared<Core::AnnounceMultiplayerSession>(system.Room());
     announce_multiplayer_session->BindErrorCallback(

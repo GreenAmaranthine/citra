@@ -63,7 +63,7 @@ public:
     }
 
     QString GetSystemChatMessage() const {
-        return QString("[%1] <font color='#888888'><i>%2</i></font>").arg(timestamp, message);
+        return QString("[%1] <font color='#FF8C00'>* %2</font>").arg(timestamp, message);
     }
 
 private:
@@ -89,14 +89,15 @@ ChatRoom::ChatRoom(QWidget* parent)
     member_list->setHeaderData(COLUMN_APP, Qt::Horizontal, "Program");
     constexpr int MaxChatLines{1000};
     ui->chat_history->document()->setMaximumBlockCount(MaxChatLines);
-    // Register the network structs to use in slots and signals
-    qRegisterMetaType<Network::ChatEntry>();
-    qRegisterMetaType<Network::RoomInformation>();
-    qRegisterMetaType<Network::RoomMember::State>();
     // Setup the callbacks for network updates
-    system.RoomMember().BindOnChatMessageRecieved(
+    auto& member{system.RoomMember()};
+    member.BindOnChatMessageRecieved(
         [this](const Network::ChatEntry& chat) { emit ChatReceived(chat); });
+    member.BindOnStatusMessageReceived([this](const Network::StatusMessageEntry& status_message) {
+        emit StatusMessageReceived(status_message);
+    });
     connect(this, &ChatRoom::ChatReceived, this, &ChatRoom::OnChatReceive);
+    connect(this, &ChatRoom::StatusMessageReceived, this, &ChatRoom::OnStatusMessageReceive);
     // Load emoji list
     QStringList emoji_list;
     for (const auto& emoji : EmojiMap)
@@ -201,8 +202,21 @@ void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
     HandleNewMessage(message.remove(QChar('\0')));
 }
 
+void ChatRoom::OnStatusMessageReceive(const Network::StatusMessageEntry& status_message) {
+    switch (status_message.type) {
+    case Network::IdMemberJoin:
+        message = QString("%1 has joined").arg(QString::fromStdString());
+        break;
+    case Network::IdMemberLeave:
+        message = QString("%1 has left").arg(name);
+        break;
+    }
+    if (!message.isEmpty())
+        AppendStatusMessage(message);
+}
+
 void ChatRoom::OnSendChat() {
-    QString message{ui->chat_message->text()};
+    auto message{ui->chat_message->text()};
     if (!Send(message))
         return;
     ui->chat_message->clear();

@@ -42,6 +42,7 @@ public:
 
 public slots:
     void OnChatReceive(const Network::ChatEntry&);
+    void OnStatusMessageReceive(const Network::StatusMessageEntry&);
     void OnSendChat();
     void OnChatTextChanged();
     void PopupContextMenu(const QPoint& menu_location);
@@ -50,6 +51,7 @@ public slots:
 
 signals:
     void ChatReceived(const Network::ChatEntry&);
+    void StatusMessageReceived(const Network::StatusMessageEntry&);
 
 private:
     void AppendChatMessage(const QString&);
@@ -63,5 +65,6 @@ private:
 };
 
 Q_DECLARE_METATYPE(Network::ChatEntry);
+Q_DECLARE_METATYPE(Network::StatusMessageEntry);
 Q_DECLARE_METATYPE(Network::RoomInformation);
 Q_DECLARE_METATYPE(Network::RoomMember::State);

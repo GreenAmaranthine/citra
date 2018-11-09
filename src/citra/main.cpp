@@ -1727,6 +1727,12 @@ int main(int argc, char* argv[]) {
     qRegisterMetaType<std::string>("std::string");
     qRegisterMetaType<Core::System::ResultStatus>("Core::System::ResultStatus");
     qRegisterMetaType<Service::AM::InstallStatus>("Service::AM::InstallStatus");
+    qRegisterMetaType<Network::ChatEntry>();
+    qRegisterMetaType<Network::StatusMessageEntry>();
+    qRegisterMetaType<Network::RoomInformation>();
+    qRegisterMetaType<Network::RoomMember::State>();
+    qRegisterMetaType<Common::WebResult>();
+    qRegisterMetaType<QList<QStandardItem*>>("QList<QStandardItem*>");
     // Create application
     QCoreApplication::setOrganizationName("Citra Valentin team");
     QCoreApplication::setApplicationName("Citra");
