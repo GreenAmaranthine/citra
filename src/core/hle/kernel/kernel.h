@@ -81,7 +81,7 @@ public:
     ~KernelSystem();
 
     /// Initialize memory.
-    void InitializeMemory(u32 system_mode);
+    void MemoryInit(u32 mem_type);
 
     /**
      * Creates a address arbiter.
@@ -233,8 +233,6 @@ public:
     }
 
 private:
-    void MemoryInit(u32 mem_type);
-
     std::unique_ptr<ResourceLimitList> resource_limits;
     std::atomic<u32> next_object_id{};
 

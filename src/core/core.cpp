@@ -168,7 +168,7 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
     Service::FS::InstallInterfaces(*this);
     Service::CFG::InstallInterfaces(*this);
-    kernel->InitializeMemory(system_mode);
+    kernel->MemoryInit(system_mode);
     cpu_core = std::make_unique<Cpu>(*this);
     dsp_core = std::make_unique<AudioCore::DspHle>(*this);
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching);

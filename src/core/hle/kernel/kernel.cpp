@@ -25,10 +25,6 @@ KernelSystem::KernelSystem(Core::System& system) : system{system} {
 
 KernelSystem::~KernelSystem() = default;
 
-void KernelSystem::InitializeMemory(u32 system_mode) {
-    MemoryInit(system_mode);
-}
-
 ResourceLimitList& KernelSystem::ResourceLimit() {
     return *resource_limits;
 }
