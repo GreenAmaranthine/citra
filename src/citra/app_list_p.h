@@ -157,10 +157,9 @@ public:
         setData(app_path, FullPathRole);
         setData(qulonglong(program_id), ProgramIdRole);
         setData(qulonglong(extdata_id), ExtdataIdRole);
-        if (UISettings::values.app_list_icon_size == UISettings::AppListIconSize::NoIcon) {
+        if (UISettings::values.app_list_icon_size == UISettings::AppListIconSize::NoIcon)
             // Don't display icons
             setData(QPixmap{}, Qt::DecorationRole);
-        }
         bool large{UISettings::values.app_list_icon_size == UISettings::AppListIconSize::LargeIcon};
         if (!Loader::IsValidSMDH(smdh_data)) {
             // SMDH isn't valid, set a default icon
@@ -188,8 +187,8 @@ public:
     QVariant data(int role) const override {
         if (role == Qt::DisplayRole) {
             std::string path, filename, extension;
-            std::string sdmc_dir{FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir,
-                                                       Settings::values.sdmc_dir + "/")};
+            auto sdmc_dir{FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir,
+                                                Settings::values.sdmc_dir + "/")};
             Common::SplitPath(data(FullPathRole).toString().toStdString(), &path, &filename,
                               &extension);
             const std::unordered_map<UISettings::AppListText, QString> display_texts{
@@ -200,7 +199,7 @@ public:
                  QString::fromStdString(fmt::format("{:016X}", data(ProgramIdRole).toULongLong()))},
                 {UISettings::AppListText::Publisher, data(PublisherRole).toString()},
             };
-            const QString& row1{display_texts.at(UISettings::values.app_list_row_1)};
+            const auto& row1{display_texts.at(UISettings::values.app_list_row_1)};
             QString row2;
             auto row_2_id{UISettings::values.app_list_row_2};
             if (row_2_id != UISettings::AppListText::NoText)
@@ -224,13 +223,12 @@ public:
 
     explicit AppListItemCompat(u64 program_id) {
         auto it{compatibility_database.find(program_id)};
-        if (it == compatibility_database.end() || it->second.empty()) {
+        if (it == compatibility_database.end() || it->second.empty())
             setText("0 Issues");
-        } else {
+        else
             setText(QString("%1 Issue%2")
                         .arg(QString::number(it->second.size()),
                              it->second.size() == 1 ? QString() : "s"));
-        }
     }
 
     int type() const override {
@@ -243,12 +241,11 @@ public:
     AppListItemRegion() : AppListItem{} {}
 
     explicit AppListItemRegion(const std::vector<u8>& smdh_data) {
-        if (!Loader::IsValidSMDH(smdh_data)) {
+        if (!Loader::IsValidSMDH(smdh_data))
             setText("Invalid region");
-        } else {
+        else {
             Loader::SMDH smdh;
             std::memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
-
             setText(GetRegionFromSMDH(smdh));
         }
     }
@@ -274,9 +271,8 @@ public:
             qulonglong size_bytes{value.toULongLong()};
             AppListItem::setData(ReadableByteSize(size_bytes), Qt::DisplayRole);
             AppListItem::setData(value, SizeRole);
-        } else {
+        } else
             AppListItem::setData(value, role);
-        }
     }
 
     int type() const override {
@@ -303,7 +299,7 @@ public:
     explicit AppListDir(UISettings::AppDir& directory,
                         AppListItemType type = AppListItemType::CustomDir)
         : dir_type{type} {
-        UISettings::AppDir* app_dir{&directory};
+        auto app_dir{&directory};
         setData(QVariant::fromValue(app_dir), AppDirRole);
         int icon_size{IconSizes.at(UISettings::values.app_list_icon_size)};
         switch (dir_type) {
@@ -316,7 +312,7 @@ public:
             setData("System Titles", Qt::DisplayRole);
             break;
         case AppListItemType::CustomDir:
-            QString icon_name = QFileInfo::exists(app_dir->path) ? "folder" : "bad_folder";
+            QString icon_name{QFileInfo::exists(app_dir->path) ? "folder" : "bad_folder"};
             setData(QIcon::fromTheme(icon_name).pixmap(icon_size), Qt::DecorationRole);
             setData(app_dir->path, Qt::DisplayRole);
             break;
@@ -337,7 +333,6 @@ class AppListAddDir : public AppListItem {
 public:
     explicit AppListAddDir() : AppListItem{} {
         setData(type(), TypeRole);
-
         int icon_size{IconSizes.at(UISettings::values.app_list_icon_size)};
         setData(QIcon::fromTheme("plus").pixmap(icon_size), Qt::DecorationRole);
         setData("Add New Application Directory", Qt::DisplayRole);
