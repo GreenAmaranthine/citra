@@ -105,7 +105,7 @@ void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
 }
 
 Module::Module(Core::System& system) : system{system} {
-    std::string nand_directory{
+    auto nand_directory{
         FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir + "/")};
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory{nand_directory, true};
     // Open the SharedExtSaveData archive 0xF000000B and create the gamecoin.dat file if it doesn't
@@ -136,7 +136,7 @@ Module::Module(Core::System& system) : system{system} {
 }
 
 void SetPlayCoins(u16 play_coins) {
-    std::string nand_directory{
+    auto nand_directory{
         FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir + "/")};
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory{nand_directory, true};
     FileSys::Path archive_path{ptm_shared_extdata_id};
@@ -151,7 +151,7 @@ void SetPlayCoins(u16 play_coins) {
     auto gamecoin_result{archive->OpenFile(gamecoin_path, open_mode)};
     if (gamecoin_result.Succeeded()) {
         auto gamecoin{std::move(gamecoin_result).Unwrap()};
-        GameCoin game_coin{};
+        GameCoin game_coin;
         gamecoin->Read(0, sizeof(GameCoin), reinterpret_cast<u8*>(&game_coin));
         game_coin.total_coins = play_coins;
         gamecoin->Write(0, sizeof(GameCoin), true, reinterpret_cast<const u8*>(&game_coin));

@@ -235,10 +235,10 @@ ResultCode ArchiveManager::DeleteExtSaveData(MediaType media_type, u32 high, u32
 ResultCode ArchiveManager::DeleteSystemSaveData(u32 high, u32 low) {
     // Construct the binary path to the archive first
     FileSys::Path path{FileSys::ConstructSystemSaveDataBinaryPath(high, low)};
-    std::string nand_directory{
+    auto nand_directory{
         FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir)};
-    std::string base_path{FileSys::GetSystemSaveDataContainerPath(nand_directory)};
-    std::string systemsavedata_path{FileSys::GetSystemSaveDataPath(base_path, path)};
+    auto base_path{FileSys::GetSystemSaveDataContainerPath(nand_directory)};
+    auto systemsavedata_path{FileSys::GetSystemSaveDataPath(base_path, path)};
     if (!FileUtil::DeleteDirRecursively(systemsavedata_path))
         return ResultCode(-1); // TODO: Find the right error code
     return RESULT_SUCCESS;
@@ -247,10 +247,10 @@ ResultCode ArchiveManager::DeleteSystemSaveData(u32 high, u32 low) {
 ResultCode ArchiveManager::CreateSystemSaveData(u32 high, u32 low) {
     // Construct the binary path to the archive first
     FileSys::Path path{FileSys::ConstructSystemSaveDataBinaryPath(high, low)};
-    std::string nand_directory{
+    auto nand_directory{
         FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir)};
-    std::string base_path{FileSys::GetSystemSaveDataContainerPath(nand_directory)};
-    std::string systemsavedata_path{FileSys::GetSystemSaveDataPath(base_path, path)};
+    auto base_path{FileSys::GetSystemSaveDataContainerPath(nand_directory)};
+    auto systemsavedata_path{FileSys::GetSystemSaveDataPath(base_path, path)};
     if (!FileUtil::CreateFullPath(systemsavedata_path))
         return ResultCode(-1); // TODO: Find the right error code
     return RESULT_SUCCESS;
@@ -259,9 +259,9 @@ ResultCode ArchiveManager::CreateSystemSaveData(u32 high, u32 low) {
 void ArchiveManager::RegisterArchiveTypes() {
     // TODO: Add the other archive types (see here for the known types:
     // http://3dbrew.org/wiki/FS:OpenArchive#Archive_idcodes).
-    std::string sdmc_directory{
+    auto sdmc_directory{
         FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir, Settings::values.sdmc_dir)};
-    std::string nand_directory{
+    auto nand_directory{
         FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir)};
     auto sdmc_factory{std::make_unique<FileSys::ArchiveFactory_SDMC>(sdmc_directory)};
     if (sdmc_factory->Initialize())
