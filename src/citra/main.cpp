@@ -1713,8 +1713,13 @@ void GMainWindow::UpdateDiscordRPC(const Network::RoomInformation& info) {
             room_name = info.name;
             presence.state = room_name.c_str();
         }
+        static std::string details;
         if (!short_title.empty())
-            presence.details = short_title.c_str();
+            details =
+                fmt::format("{}-{} | {}", Common::g_scm_branch, Common::g_scm_desc, short_title);
+        else
+            details = fmt::format("{}-{}", Common::g_scm_branch, Common::g_scm_desc);
+        presence.details = details.c_str();
         presence.startTimestamp = discord_rpc_start_time;
         presence.largeImageKey = "icon";
         Discord_UpdatePresence(&presence);
