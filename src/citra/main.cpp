@@ -1725,7 +1725,7 @@ void GMainWindow::UpdateDiscordRPC(const Network::RoomInformation& info) {
         static std::string details;
         if (!short_title.empty())
             details =
-                fmt::format("{}-{} | {}", Common::g_scm_branch, Common::g_scm_desc, short_title);
+                fmt::format("{} | {}-{}", short_title, Common::g_scm_branch, Common::g_scm_desc);
         else
             details = fmt::format("{}-{}", Common::g_scm_branch, Common::g_scm_desc);
         presence.details = details.c_str();
