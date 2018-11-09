@@ -294,15 +294,12 @@ u8* GetPhysicalPointer(PAddr address) {
 
 /// For a rasterizer-accessible PAddr, gets a list of all possible VAddr
 static std::vector<VAddr> PhysicalToVirtualAddressForRasterizer(PAddr addr) {
-    if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END) {
+    if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END)
         return {addr - VRAM_PADDR + VRAM_VADDR};
-    }
-    if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END) {
+    if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END)
         return {addr - FCRAM_PADDR + LINEAR_HEAP_VADDR, addr - FCRAM_PADDR + NEW_LINEAR_HEAP_VADDR};
-    }
-    if (addr >= FCRAM_PADDR_END && addr < FCRAM_N3DS_PADDR_END) {
+    if (addr >= FCRAM_PADDR_END && addr < FCRAM_N3DS_PADDR_END)
         return {addr - FCRAM_PADDR + NEW_LINEAR_HEAP_VADDR};
-    }
     // While the physical <-> virtual mapping is 1:1 for the regions supported by the cache,
     // some games (like Pokemon Super Mystery Dungeon) will try to use textures that go beyond
     // the end address of VRAM, causing the Virtual->Physical translation to fail when flushing
