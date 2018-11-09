@@ -43,7 +43,7 @@ void ToggleConsole() {
         } else if (FreeConsole()) {
             // In order to close the console, we have to also detach the streams on it.
             // Just redirect them to NUL if there is no console window
-            Log::RemoveBackend(Log::ColorConsoleBackend::Name());
+            Log::RemoveBackend(Log::ColorConsoleBackend::Name);
             freopen_s(&temp, "NUL", "r", stdin);
             freopen_s(&temp, "NUL", "w", stdout);
             freopen_s(&temp, "NUL", "w", stderr);
