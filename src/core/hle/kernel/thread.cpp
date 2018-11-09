@@ -301,10 +301,9 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
         available_slot = 0; // Use the first slot in the new page
         auto& vm_manager{owner_process.vm_manager};
         // Map the page to the current process' address space.
-        // TODO: Find the correct MemoryState for this region.
         vm_manager.MapBackingMemory(Memory::TLS_AREA_VADDR + available_page * Memory::PAGE_SIZE,
                                     Memory::fcram.data() + *offset, Memory::PAGE_SIZE,
-                                    MemoryState::Private);
+                                    MemoryState::Locked);
     }
     // Mark the slot as used
     tls_slots[available_page].set(available_slot);
