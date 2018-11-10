@@ -28,7 +28,7 @@ private:
     enum class CameraPosition { RearRight, Front, RearLeft, RearBoth, Null };
     static const std::array<std::string, 3> Implementations;
     void RecordConfig();        ///< Record the current configuration
-    void updateCameraMode();    ///< Updates camera mode
+    void UpdateCameraMode();    ///< Updates camera mode
     void UpdateImageSourceUI(); ///< Updates image source
     void startPreviewing();
     void stopPreviewing();
