@@ -35,7 +35,7 @@ void ConfigureGraphics::LoadConfiguration(Core::System& system) {
     ui->enable_shadows->setChecked(Settings::values.enable_shadows);
     ui->screen_refresh_rate->setValue(Settings::values.screen_refresh_rate);
     ui->min_vertices_per_thread->setValue(Settings::values.min_vertices_per_thread);
-    ui->enable_shadows->setEnabled(system.IsPoweredOn());
+    ui->enable_shadows->setEnabled(!system.IsPoweredOn());
     ui->frame_limit->setEnabled(Settings::values.use_frame_limit);
     ui->custom_layout->setChecked(Settings::values.custom_layout);
     ui->layout_combobox->setEnabled(!Settings::values.custom_layout);
