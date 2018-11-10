@@ -19,9 +19,11 @@ void CSND_SND::Initialize(Kernel::HLERequestContext& ctx) {
     const u32 offset3{rp.Pop<u32>()};
     using Kernel::MemoryPermission;
     mutex = system.Kernel().CreateMutex(false, "CSND:mutex");
-    shared_memory = system.Kernel().CreateSharedMemory(
-        nullptr, size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite, 0,
-        Kernel::MemoryRegion::Base, "CSND:SharedMemory");
+    shared_memory = system.Kernel()
+                        .CreateSharedMemory(nullptr, size, MemoryPermission::ReadWrite,
+                                            MemoryPermission::ReadWrite, 0,
+                                            Kernel::MemoryRegion::Base, "CSND Shared Memory")
+                        .Unwrap();
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 3)};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(mutex, shared_memory);

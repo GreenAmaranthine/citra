@@ -16,13 +16,15 @@ SharedMemory::~SharedMemory() {
     for (const auto& interval : holding_memory)
         kernel.GetMemoryRegion(MemoryRegion::System)
             ->Free(interval.lower(), interval.upper() - interval.lower());
+    if (base_address != 0 && owner_process)
+        owner_process->vm_manager.ChangeMemoryState(base_address, size, MemoryState::Locked,
+                                                    VMAPermission::None, MemoryState::Private,
+                                                    VMAPermission::ReadWrite);
 }
 
-SharedPtr<SharedMemory> KernelSystem::CreateSharedMemory(Process* owner_process, u32 size,
-                                                         MemoryPermission permissions,
-                                                         MemoryPermission other_permissions,
-                                                         VAddr address, MemoryRegion region,
-                                                         std::string name) {
+ResultVal<SharedPtr<SharedMemory>> KernelSystem::CreateSharedMemory(
+    Process* owner_process, u32 size, MemoryPermission permissions,
+    MemoryPermission other_permissions, VAddr address, MemoryRegion region, std::string name) {
     SharedPtr<SharedMemory> shared_memory{new SharedMemory(*this)};
     shared_memory->owner_process = owner_process;
     shared_memory->name = std::move(name);
@@ -32,7 +34,7 @@ SharedPtr<SharedMemory> KernelSystem::CreateSharedMemory(Process* owner_process,
     if (address == 0) {
         // We need to allocate a block from the Linear Heap ourselves.
         // We'll manually allocate some memory from the linear heap in the specified region.
-        MemoryRegionInfo* memory_region{GetMemoryRegion(region)};
+        auto memory_region{GetMemoryRegion(region)};
         auto offset{memory_region->LinearAllocate(size)};
         ASSERT_MSG(offset, "Not enough space in region to allocate shared memory!");
         std::fill(Memory::fcram.data() + *offset, Memory::fcram.data() + *offset + size, 0);
@@ -45,12 +47,15 @@ SharedPtr<SharedMemory> KernelSystem::CreateSharedMemory(Process* owner_process,
     } else {
         auto& vm_manager{shared_memory->owner_process->vm_manager};
         // The memory is already available and mapped in the owner process.
+        CASCADE_CODE(vm_manager.ChangeMemoryState(address, size, MemoryState::Private,
+                                                  VMAPermission::ReadWrite, MemoryState::Locked,
+                                                  SharedMemory::ConvertPermissions(permissions)));
         auto backing_blocks{vm_manager.GetBackingBlocksForRange(address, size)};
-        ASSERT_MSG(backing_blocks.Succeeded(), "Trying to share freed memory");
+        ASSERT(backing_blocks.Succeeded()); // should success after verifying memory state above
         shared_memory->backing_blocks = std::move(backing_blocks).Unwrap();
     }
     shared_memory->base_address = address;
-    return shared_memory;
+    return MakeResult(shared_memory);
 }
 
 SharedPtr<SharedMemory> KernelSystem::CreateSharedMemoryForApplet(
@@ -58,7 +63,7 @@ SharedPtr<SharedMemory> KernelSystem::CreateSharedMemoryForApplet(
     std::string name) {
     SharedPtr<SharedMemory> shared_memory{new SharedMemory(*this)};
     // Allocate memory in heap
-    MemoryRegionInfo* memory_region{GetMemoryRegion(MemoryRegion::System)};
+    auto memory_region{GetMemoryRegion(MemoryRegion::System)};
     auto backing_blocks{memory_region->HeapAllocate(size)};
     ASSERT_MSG(!backing_blocks.empty(), "Not enough space in region to allocate shared memory!");
     shared_memory->holding_memory = backing_blocks;
@@ -80,8 +85,8 @@ SharedPtr<SharedMemory> KernelSystem::CreateSharedMemoryForApplet(
 ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermission permissions,
                              MemoryPermission other_permissions) {
 
-    MemoryPermission own_other_permissions{
-        target_process == owner_process ? this->permissions : this->other_permissions};
+    auto own_other_permissions{target_process == owner_process ? this->permissions
+                                                               : this->other_permissions};
     // Automatically allocated memory blocks can only be mapped with other_permissions = DontCare
     if (base_address == 0 && other_permissions != MemoryPermission::DontCare)
         return ERR_INVALID_COMBINATION;
@@ -117,7 +122,7 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
                       GetObjectId(), address, name);
             return ERR_INVALID_ADDRESS;
         }
-    VAddr target_address{address};
+    auto target_address{address};
     if (base_address == 0 && target_address == 0)
         // Calculate the address at which to map the memory block.
         // Note: even on new firmware versions, the target address is still in the old linear heap
