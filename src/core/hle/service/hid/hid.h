@@ -29,9 +29,7 @@ class SharedMemory;
 
 namespace Service::HID {
 
-/**
- * Structure of a Pad controller state.
- */
+/// Structure of a Pad controller state.
 struct PadState {
     union {
         u32 hex{};
@@ -56,9 +54,7 @@ struct PadState {
     };
 };
 
-/**
- * Structure of a single entry of Pad state history within HID shared memory
- */
+/// Structure of a single entry of Pad state history within HID shared memory
 struct PadDataEntry {
     PadState current_state;
     PadState delta_additions;
@@ -68,36 +64,28 @@ struct PadDataEntry {
     s16 circle_pad_y;
 };
 
-/**
- * Structure of a single entry of touch state history within HID shared memory
- */
+/// Structure of a single entry of touch state history within HID shared memory
 struct TouchDataEntry {
     u16 x;                     ///< Y-coordinate of a touchpad press on the lower screen
     u16 y;                     ///< X-coordinate of a touchpad press on the lower screen
     BitField<0, 7, u32> valid; ///< Set to 1 when this entry contains actual X/Y data, otherwise 0
 };
 
-/**
- * Structure of a single entry of accelerometer state history within HID shared memory
- */
+/// Structure of a single entry of accelerometer state history within HID shared memory
 struct AccelerometerDataEntry {
     s16 x;
     s16 y;
     s16 z;
 };
 
-/**
- * Structure of a single entry of gyroscope state history within HID shared memory
- */
+/// Structure of a single entry of gyroscope state history within HID shared memory
 struct GyroscopeDataEntry {
     s16 x;
     s16 y;
     s16 z;
 };
 
-/**
- * Structure of data stored in HID shared memory
- */
+/// Structure of data stored in HID shared memory
 struct SharedMem {
     /// Pad data, this is used for buttons and the circle pad
     struct {
@@ -160,9 +148,7 @@ struct SharedMem {
     } gyroscope;
 };
 
-/**
- * Structure of calibrate params that GetGyroscopeLowCalibrateParam returns
- */
+/// Structure of calibrate params that GetGyroscopeLowCalibrateParam returns
 struct GyroscopeCalibrateParam {
     struct {
         // TODO: figure out the exact meaning of these params
@@ -203,6 +189,7 @@ public:
     class Interface : public ServiceFramework<Interface> {
     public:
         Interface(std::shared_ptr<Module> hid, const char* name);
+
         std::shared_ptr<Module> GetModule();
 
     protected:
