@@ -61,7 +61,7 @@ void AppListWorker::AddFstEntriesToAppList(const std::string& dir_path, unsigned
                 {
                     new AppListItemPath(QString::fromStdString(physical_name), smdh, program_id,
                                         extdata_id),
-                    new AppListItemCompat(program_id),
+                    new AppListItemIssues(program_id),
                     new AppListItemRegion(smdh),
                     new AppListItem(
                         QString::fromStdString(Loader::GetFileTypeString(loader->GetFileType()))),

@@ -6,6 +6,7 @@ cmake_policy(SET CMP0071 NEW)
 
 add_executable(citra
     Info.plist
+    issues_map.h
     aboutdialog.cpp
     aboutdialog.h
     bootmanager.cpp
@@ -21,7 +22,6 @@ add_executable(citra
     camera/qt_multimedia_camera.cpp
     camera/qt_multimedia_camera.h
     citra.rc
-    compatibility.h
     camera/still_image_camera.cpp
     camera/still_image_camera.h
     configuration/config.cpp

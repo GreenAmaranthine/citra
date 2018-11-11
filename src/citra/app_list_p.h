@@ -13,7 +13,7 @@
 #include <QStandardItem>
 #include <QString>
 #include <QWidget>
-#include "citra/compatibility.h"
+#include "citra/issues_map.h"
 #include "citra/ui_settings.h"
 #include "citra/util/util.h"
 #include "common/file_util.h"
@@ -120,11 +120,6 @@ static QString GetRegionFromSMDH(const Loader::SMDH& smdh) {
     }
 }
 
-struct CompatStatus {
-    QString text;
-    QString tooltip;
-};
-
 class AppListItem : public QStandardItem {
 public:
     AppListItem() : QStandardItem{} {}
@@ -216,18 +211,16 @@ public:
     static const int PublisherRole{Qt::UserRole + 5};
 };
 
-class AppListItemCompat : public AppListItem {
+class AppListItemIssues : public AppListItem {
 public:
-    AppListItemCompat() : AppListItem{} {}
+    AppListItemIssues() : AppListItem{} {}
 
-    explicit AppListItemCompat(u64 program_id) {
-        auto it{compatibility_database.find(program_id)};
-        if (it == compatibility_database.end() || it->second.empty())
-            setText("0 Issues");
+    explicit AppListItemIssues(u64 program_id) {
+        auto it{issues_map.find(program_id)};
+        if (it == issues_map.end())
+            setText("0");
         else
-            setText(QString("%1 Issue%2")
-                        .arg(QString::number(it->second.size()),
-                             it->second.size() == 1 ? QString() : "s"));
+            setText(QString::number(it->second.size()));
     }
 
     int type() const override {

@@ -14,7 +14,7 @@ static inline QString GitHubIssue(const QString& repo, int number) {
         .arg(repo, QString::number(number));
 }
 
-static const std::unordered_map<u64, QStringList> compatibility_database{{
+static const std::unordered_map<u64, QStringList> issues_map{{
     // FBI
     {0x000400000F800100, {GitHubIssue("citra-valentin/citra", 451)}},
 

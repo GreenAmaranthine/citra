@@ -39,7 +39,7 @@ class AppList : public QWidget {
 public:
     enum {
         COLUMN_NAME,
-        COLUMN_COMPATIBILITY,
+        COLUMN_ISSUES,
         COLUMN_REGION,
         COLUMN_FILE_TYPE,
         COLUMN_SIZE,

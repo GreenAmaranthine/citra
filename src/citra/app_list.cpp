@@ -276,12 +276,12 @@ AppList::AppList(Core::System& system, GMainWindow* parent) : QWidget{parent}, s
     tree_view->setContextMenuPolicy(Qt::CustomContextMenu);
     item_model->insertColumns(0, COLUMN_COUNT);
     item_model->setHeaderData(COLUMN_NAME, Qt::Horizontal, "Name");
-    item_model->setHeaderData(COLUMN_COMPATIBILITY, Qt::Horizontal, "Compatibility");
+    item_model->setHeaderData(COLUMN_ISSUES, Qt::Horizontal, "Issues");
     item_model->setHeaderData(COLUMN_REGION, Qt::Horizontal, "Region");
     item_model->setHeaderData(COLUMN_FILE_TYPE, Qt::Horizontal, "File type");
     item_model->setHeaderData(COLUMN_SIZE, Qt::Horizontal, "Size");
     tree_view->setColumnWidth(COLUMN_NAME, 500);
-    tree_view->setColumnWidth(COLUMN_COMPATIBILITY, 115);
+    //    tree_view->setColumnWidth(COLUMN_COMPATIBILITY, 115);
     item_model->setSortRole(AppListItemPath::TitleRole);
     connect(main_window, &GMainWindow::UpdateThemedIcons, this, &AppList::OnUpdateThemedIcons);
     connect(tree_view, &QTreeView::activated, this, &AppList::ValidateEntry);
@@ -483,8 +483,8 @@ void AppList::AddAppPopup(QMenu& context_menu, QStandardItem* child) {
         QApplication::clipboard()->setText(
             QString::fromStdString(fmt::format("{:016X}", program_id)));
     });
-    auto it{compatibility_database.find(program_id)};
-    if (it != compatibility_database.end() && it->second.size() != 0) {
+    auto it{issues_map.find(program_id)};
+    if (it != issues_map.end() && it->second.size() != 0) {
         auto issues{context_menu.addAction("Issues")};
         connect(issues, &QAction::triggered, [&, list = it->second]() {
             QMessageBox::information(this, "Issues", list.join("<br>"));
