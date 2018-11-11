@@ -148,9 +148,8 @@ public:
             std::size_t shift{8 * sizeof(T) - bits};
             return static_cast<T>(static_cast<UnderlyingType>(storage << (shift - position)) >>
                                   shift);
-        } else {
+        } else
             return static_cast<T>((storage & mask) >> position);
-        }
     }
 
     // This constructor and assignment operator might be considered ambiguous:
