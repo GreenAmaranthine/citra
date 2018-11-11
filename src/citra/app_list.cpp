@@ -40,19 +40,17 @@ bool AppListSearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* even
     // If it isn't a KeyRelease event then continue with standard event processing
     if (event->type() != QEvent::KeyRelease)
         return QObject::eventFilter(obj, event);
-
-    QKeyEvent* keyEvent{static_cast<QKeyEvent*>(event)};
-    QString edit_filter_text{applist->search_field->edit_filter->text().toLower()};
-
+    auto keyEvent{static_cast<QKeyEvent*>(event)};
+    auto edit_filter_text{applist->search_field->edit_filter->text().toLower()};
     // If the searchfield's text hasn't changed special function keys get checked
     // If no function key changes the searchfield's text the filter doesn't need to get reloaded
     if (edit_filter_text == edit_filter_text_old) {
         switch (keyEvent->key()) {
         // Escape: Resets the searchfield
         case Qt::Key_Escape: {
-            if (edit_filter_text_old.isEmpty()) {
+            if (edit_filter_text_old.isEmpty())
                 return QObject::eventFilter(obj, event);
-            } else {
+            else {
                 applist->search_field->edit_filter->clear();
                 edit_filter_text.clear();
             }
@@ -64,15 +62,14 @@ bool AppListSearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* even
         case Qt::Key_Return:
         case Qt::Key_Enter: {
             if (applist->search_field->visible == 1) {
-                QString file_path{applist->getLastFilterResultItem()};
+                auto file_path{applist->getLastFilterResultItem()};
                 // To avoid loading error dialog loops while confirming them using enter
                 // Also users usually want to run a different application after closing one
                 applist->search_field->edit_filter->clear();
                 edit_filter_text.clear();
                 emit applist->ApplicationChosen(file_path);
-            } else {
+            } else
                 return QObject::eventFilter(obj, event);
-            }
             break;
         }
         default:
@@ -86,7 +83,6 @@ bool AppListSearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* even
 void AppListSearchField::setFilterResult(int visible, int total) {
     this->visible = visible;
     this->total = total;
-
     label_filter_result->setText(
         QString("%1 of %3 %4").arg(visible).arg(total).arg(total == 1 ? "result" : "results"));
 }
@@ -100,12 +96,11 @@ QString AppList::getLastFilterResultItem() {
         folder = item_model->item(i, 0);
         auto folder_index{folder->index()};
         int childrenCount{folder->rowCount()};
-        for (int j{}; j < childrenCount; ++j) {
+        for (int j{}; j < childrenCount; ++j)
             if (!tree_view->isRowHidden(j, folder_index)) {
                 child = folder->child(j, 0);
                 file_path = child->data(AppListItemPath::FullPathRole).toString();
             }
-        }
     }
     return file_path;
 }
@@ -281,7 +276,6 @@ AppList::AppList(Core::System& system, GMainWindow* parent) : QWidget{parent}, s
     item_model->setHeaderData(COLUMN_FILE_TYPE, Qt::Horizontal, "File type");
     item_model->setHeaderData(COLUMN_SIZE, Qt::Horizontal, "Size");
     tree_view->setColumnWidth(COLUMN_NAME, 500);
-    //    tree_view->setColumnWidth(COLUMN_COMPATIBILITY, 115);
     item_model->setSortRole(AppListItemPath::TitleRole);
     connect(main_window, &GMainWindow::UpdateThemedIcons, this, &AppList::OnUpdateThemedIcons);
     connect(tree_view, &QTreeView::activated, this, &AppList::ValidateEntry);
