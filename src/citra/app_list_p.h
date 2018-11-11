@@ -96,7 +96,6 @@ static QString GetQStringPublisherFromSMDH(const Loader::SMDH& smdh,
  */
 static QString GetRegionFromSMDH(const Loader::SMDH& smdh) {
     const Loader::SMDH::Region region{smdh.GetRegion()};
-
     switch (region) {
     case Loader::SMDH::Region::Invalid:
         return "Invalid region";
