@@ -1179,12 +1179,8 @@ void GMainWindow::OnOpenConfiguration() {
                 UpdateUITheme();
                 emit UpdateThemedIcons();
             }
-            if (Settings::values.disable_mh_2xmsaa != old_disable_mh_2xmsaa) {
-                if (system.IsPoweredOn())
-                    system.Kernel().GetSharedPageHandler().Update3DSettings();
-                if (control_panel)
-                    control_panel->Update3D();
-            }
+            if (Settings::values.disable_mh_2xmsaa != old_disable_mh_2xmsaa && control_panel)
+                control_panel->Update3D();
             SyncMenuUISettings();
             app_list->Refresh();
             config->Save();
