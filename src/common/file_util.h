@@ -195,34 +195,21 @@ public:
         return items_written;
     }
 
-<<<<<<< HEAD
-    std::size_t ReadBytes(void* data, std::size_t length) {
-        return ReadArray(reinterpret_cast<char*>(data), length);
-    }
-
-    std::size_t WriteBytes(const void* data, std::size_t length) {
-=======
     template <typename T>
-    size_t ReadBytes(T* data, size_t length) {
+    std::size_t ReadBytes(T* data, std::size_t length) {
         static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
         return ReadArray(reinterpret_cast<char*>(data), length);
     }
 
     template <typename T>
-    size_t WriteBytes(const T* data, size_t length) {
+    std::size_t WriteBytes(const T* data, std::size_t length) {
         static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
->>>>>>> bf964ac6e... common: Convert type traits templates over to variable template versions where applicable
         return WriteArray(reinterpret_cast<const char*>(data), length);
     }
 
     template <typename T>
-<<<<<<< HEAD
-    std::size_t WriteObject(const T& object) {
-        static_assert(!std::is_pointer<T>::value, "Given object is a pointer");
-=======
     size_t WriteObject(const T& object) {
         static_assert(!std::is_pointer_v<T>, "WriteObject arguments must not be a pointer");
->>>>>>> bf964ac6e... common: Convert type traits templates over to variable template versions where applicable
         return WriteArray(&object, 1);
     }
 

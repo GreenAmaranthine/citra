@@ -19,15 +19,18 @@ namespace Common {
 /// @tparam T            Element type
 /// @tparam capacity     Number of slots in ring buffer
 /// @tparam granularity  Slot size in terms of number of elements
-template <typename T, size_t capacity, size_t granularity = 1>
+template <typename T, std::size_t capacity, std::size_t granularity = 1>
 class RingBuffer {
     /// A "slot" is made of `granularity` elements of `T`.
-    static constexpr size_t slot_size = granularity * sizeof(T);
+    static constexpr size_t slot_size{granularity * sizeof(T)};
+
     // T must be safely memcpy-able and have a trivial default constructor.
     static_assert(std::is_trivial_v<T>);
+
     // Ensure capacity is sensible.
     static_assert(capacity < std::numeric_limits<size_t>::max() / 2 / granularity);
     static_assert((capacity & (capacity - 1)) == 0, "capacity must be a power of two");
+
     // Ensure lock-free.
     static_assert(std::atomic<size_t>::is_always_lock_free);
 
@@ -40,18 +43,14 @@ public:
         const std::size_t write_index{m_write_index.load()};
         const std::size_t slots_free{capacity + m_read_index.load() - write_index};
         const std::size_t push_count{std::min(slot_count, slots_free)};
-
         const std::size_t pos{write_index % capacity};
         const std::size_t first_copy{std::min(capacity - pos, push_count)};
         const std::size_t second_copy{push_count - first_copy};
-
         const char* in{static_cast<const char*>(new_slots)};
         std::memcpy(m_data.data() + pos * granularity, in, first_copy * slot_size);
         in += first_copy * slot_size;
         std::memcpy(m_data.data(), in, second_copy * slot_size);
-
         m_write_index.store(write_index + push_count);
-
         return push_count;
     }
 
@@ -63,22 +62,18 @@ public:
     /// @param output     Where to store the popped slots
     /// @param max_slots  Maximum number of slots to pop
     /// @returns The number of slots actually popped
-    std::size_t Pop(void* output, size_t max_slots = ~std::size_t(0)) {
+    std::size_t Pop(void* output, std::size_t max_slots = ~std::size_t(0)) {
         const std::size_t read_index{m_read_index.load()};
         const std::size_t slots_filled{m_write_index.load() - read_index};
         const std::size_t pop_count{std::min(slots_filled, max_slots)};
-
         const std::size_t pos{read_index % capacity};
         const std::size_t first_copy{std::min(capacity - pos, pop_count)};
         const std::size_t second_copy{pop_count - first_copy};
-
         char* out{static_cast<char*>(output)};
         std::memcpy(out, m_data.data() + pos * granularity, first_copy * slot_size);
         out += first_copy * slot_size;
         std::memcpy(out, m_data.data(), second_copy * slot_size);
-
         m_read_index.store(read_index + pop_count);
-
         return pop_count;
     }
 
