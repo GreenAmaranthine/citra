@@ -107,11 +107,7 @@ static inline int LeastSignificantSetBit(u64 val) {
 
 template <typename IntTy>
 class BitSet {
-<<<<<<< HEAD
-    static_assert(!std::is_signed<IntTy>::value, "BitSet shouldn't be used with signed types");
-=======
     static_assert(!std::is_signed_v<IntTy>, "BitSet should not be used with signed types");
->>>>>>> bf964ac6e... common: Convert type traits templates over to variable template versions where applicable
 
 public:
     // A reference to a particular bit, returned from operator[].
@@ -252,6 +248,7 @@ public:
     Iterator begin() const {
         return Iterator(m_val);
     }
+
     Iterator end() const {
         return Iterator(0);
     }
