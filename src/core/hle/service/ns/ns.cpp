@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyrigh { 2017 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -22,7 +22,7 @@ Kernel::SharedPtr<Kernel::Process> LaunchTitleImpl(Core::System& system, FS::Med
         return nullptr;
     }
     Kernel::SharedPtr<Kernel::Process> process;
-    Loader::ResultStatus result{loader->Load(process)};
+    auto result{loader->Load(process)};
     if (result != Loader::ResultStatus::Success) {
         LOG_WARNING(Service_NS, "Error loading .app for title 0x{:016X}", title_id);
         return nullptr;

@@ -20,7 +20,7 @@ Loader::ResultStatus TitleMetadata::Load(const std::string& file_path) {
     std::vector<u8> file_data(file.GetSize());
     if (!file.ReadBytes(file_data.data(), file.GetSize()))
         return Loader::ResultStatus::Error;
-    Loader::ResultStatus result{Load(file_data)};
+    auto result{Load(file_data)};
     if (result != Loader::ResultStatus::Success)
         LOG_ERROR(Service_FS, "Failed to load TMD from file {}!", file_path);
     return result;
@@ -32,7 +32,7 @@ Loader::ResultStatus TitleMetadata::Load(const std::vector<u8> file_data, std::s
         return Loader::ResultStatus::Error;
     std::memcpy(&signature_type, &file_data[offset], sizeof(u32_be));
     // Signature lengths are variable, and the body follows the signature
-    u32 signature_size = GetSignatureSize(signature_type);
+    u32 signature_size{GetSignatureSize(signature_type)};
     if (signature_size == 0)
         return Loader::ResultStatus::Error;
     // The TMD body start position is rounded to the nearest 0x40 after the signature

@@ -22,10 +22,10 @@ void ConfigureHacks::LoadConfiguration(Core::System& system) {
     ui->toggle_bos->setChecked(Settings::values.use_bos);
     ui->toggle_force_memory_mode_7->setChecked(Settings::values.force_memory_mode_7);
     ui->disable_mh_2xmsaa->setChecked(Settings::values.disable_mh_2xmsaa);
-    bool is_powered_on{system.IsPoweredOn()};
-    ui->toggle_priority_boost->setEnabled(!is_powered_on);
-    ui->toggle_force_memory_mode_7->setEnabled(!is_powered_on);
-    ui->disable_mh_2xmsaa->setEnabled(!is_powered_on);
+    bool powered_on{system.IsPoweredOn()};
+    ui->toggle_priority_boost->setEnabled(!powered_on);
+    ui->toggle_force_memory_mode_7->setEnabled(!powered_on);
+    ui->disable_mh_2xmsaa->setEnabled(!powered_on);
     connect(ui->combo_ticks_mode, qOverload<int>(&QComboBox::currentIndexChanged), this,
             [&](int index) { ui->spinbox_ticks->setEnabled(index == 2); });
 }

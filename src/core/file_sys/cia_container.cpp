@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright 20 {7 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -23,7 +23,7 @@ Loader::ResultStatus CIAContainer::Load(const FileBackend& backend) {
     if (read_result.Failed() || *read_result != sizeof(Header))
         return Loader::ResultStatus::Error;
 
-    Loader::ResultStatus result{LoadHeader(header_data)};
+    auto result{LoadHeader(header_data)};
     if (result != Loader::ResultStatus::Success)
         return result;
 
@@ -62,7 +62,7 @@ Loader::ResultStatus CIAContainer::Load(const std::string& filepath) {
     if (file.ReadBytes(header_data.data(), sizeof(Header)) != sizeof(Header))
         return Loader::ResultStatus::Error;
 
-    Loader::ResultStatus result{LoadHeader(header_data)};
+    auto result{LoadHeader(header_data)};
     if (result != Loader::ResultStatus::Success)
         return result;
 
@@ -92,7 +92,7 @@ Loader::ResultStatus CIAContainer::Load(const std::string& filepath) {
 }
 
 Loader::ResultStatus CIAContainer::Load(const std::vector<u8>& file_data) {
-    Loader::ResultStatus result{LoadHeader(file_data)};
+    auto result{LoadHeader(file_data)};
     if (result != Loader::ResultStatus::Success)
         return result;
 
