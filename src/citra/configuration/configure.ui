@@ -58,6 +58,11 @@
              <string>Hacks</string>
             </attribute>
            </widget>
+           <widget class="ConfigureLLE" name="lleTab">
+            <attribute name="title">
+             <string>LLE</string>
+            </attribute>
+           </widget>
            <widget class="ConfigureWeb" name="webTab">
             <attribute name="title">
              <string>Web</string>
@@ -114,6 +119,12 @@
    <class>ConfigureHacks</class>
    <extends>QWidget</extends>
    <header>configuration/configure_hacks.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ConfigureLLE</class>
+   <extends>QWidget</extends>
+   <header>configuration/configure_lle.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>

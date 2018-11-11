@@ -30,6 +30,10 @@ add_executable(citra
     configuration/configure_audio.h
     configuration/configure_camera.cpp
     configuration/configure_camera.h
+    configuration/configure_hacks.cpp
+    configuration/configure_hacks.h
+    configuration/configure_lle.cpp
+    configuration/configure_lle.h
     configuration/configure_dialog.cpp
     configuration/configure_dialog.h
     configuration/configure_general.cpp
@@ -46,8 +50,6 @@ add_executable(citra
     configuration/configure_web.h
     configuration/configure_ui.cpp
     configuration/configure_ui.h
-    configuration/configure_hacks.cpp
-    configuration/configure_hacks.h
     multiplayer/emojis.h
     multiplayer/chat_room.cpp
     multiplayer/chat_room.h
@@ -94,6 +96,8 @@ set(UIS
     configuration/configure.ui
     configuration/configure_audio.ui
     configuration/configure_camera.ui
+    configuration/configure_hacks.ui
+    configuration/configure_lle.ui
     configuration/configure_general.ui
     configuration/configure_graphics.ui
     configuration/configure_input.ui
@@ -101,7 +105,6 @@ set(UIS
     configuration/configure_system.ui
     configuration/configure_web.ui
     configuration/configure_ui.ui
-    configuration/configure_hacks.ui
     swkbd.ui
     mii_selector.ui
     aboutdialog.ui

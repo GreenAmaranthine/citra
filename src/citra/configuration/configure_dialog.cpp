@@ -28,6 +28,7 @@ ConfigurationDialog::ConfigurationDialog(QWidget* parent, const HotkeyRegistry& 
     ui->graphicsTab->LoadConfiguration(system);
     ui->systemTab->LoadConfiguration(system);
     ui->hacksTab->LoadConfiguration(system);
+    ui->lleTab->LoadConfiguration(system);
 }
 
 ConfigurationDialog::~ConfigurationDialog() {}
@@ -40,17 +41,18 @@ void ConfigurationDialog::ApplyConfiguration() {
     ui->graphicsTab->ApplyConfiguration(system);
     ui->audioTab->ApplyConfiguration();
     ui->cameraTab->ApplyConfiguration();
-    ui->webTab->ApplyConfiguration();
     ui->hacksTab->ApplyConfiguration(system);
+    ui->lleTab->ApplyConfiguration();
     ui->uiTab->ApplyConfiguration();
+    ui->webTab->ApplyConfiguration();
     Settings::Apply(system);
     Settings::LogSettings();
 }
 
 void ConfigurationDialog::PopulateSelectionList() {
     const std::array<std::pair<QString, QStringList>, 4> items{{
-        {"General", {"General", "Web", "Hacks", "UI"}},
-        {"System", {"System", "Audio", "Camera"}},
+        {"General", {"General", "UI", "Web"}},
+        {"System", {"System", "Audio", "Camera", "Hacks", "LLE"}},
         {"Graphics", {"Graphics"}},
         {"Controls", {"Input"}},
     }};
@@ -72,13 +74,13 @@ void ConfigurationDialog::UpdateVisibleTabs() {
         {"Graphics", ui->graphicsTab},
         {"Audio", ui->audioTab},
         {"Camera", ui->cameraTab},
-        {"Camera", ui->cameraTab},
         {"Hacks", ui->hacksTab},
-        {"Web", ui->webTab},
+        {"LLE", ui->lleTab},
         {"UI", ui->uiTab},
+        {"Web", ui->webTab},
     }};
     ui->tabWidget->clear();
-    QStringList tabs{items[0]->data(Qt::UserRole).toStringList()};
+    auto tabs{items[0]->data(Qt::UserRole).toStringList()};
     for (const auto& tab : tabs)
         ui->tabWidget->addTab(widgets[tab], tab);
 }
