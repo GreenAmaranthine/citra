@@ -26,12 +26,17 @@
 #include "video_core/renderer/stream_buffer.h"
 #include "video_core/shader/shader.h"
 
+namespace Core {
+class Timing;
+struct TimingEventType;
+} // namespace Core
+
 class ShaderProgramManager;
 struct ScreenInfo;
 
 class Rasterizer {
 public:
-    explicit Rasterizer();
+    explicit Rasterizer(Core::Timing& timing);
     ~Rasterizer();
 
     void AddTriangle(const Pica::Shader::OutputVertex& v0, const Pica::Shader::OutputVertex& v1,
@@ -300,4 +305,7 @@ private:
     std::array<GLvec4, 256> proctex_diff_lut_data{};
 
     bool allow_shadow;
+
+    Core::Timing& timing;
+    Core::TimingEventType* cache_clear_event{};
 };

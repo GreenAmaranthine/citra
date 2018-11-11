@@ -13,6 +13,7 @@
 #include "common/math_util.h"
 #include "common/scope_exit.h"
 #include "common/vector_math.h"
+#include "core/core_timing.h"
 #include "core/hw/gpu.h"
 #include "core/settings.h"
 #include "video_core/pica_state.h"
@@ -26,6 +27,8 @@
 using PixelFormat = SurfaceParams::PixelFormat;
 using SurfaceType = SurfaceParams::SurfaceType;
 
+constexpr int ClearCacheMs{10000};
+
 static bool IsVendorAmd() {
     std::string gpu_vendor{reinterpret_cast<char const*>(glGetString(GL_VENDOR))};
     std::string gpu_renderer{reinterpret_cast<char const*>(glGetString(GL_RENDERER))};
@@ -34,11 +37,11 @@ static bool IsVendorAmd() {
            gpu_renderer == "Intel(R) HD Graphics 4400";
 }
 
-Rasterizer::Rasterizer()
+Rasterizer::Rasterizer(Core::Timing& timing)
     : is_amd{IsVendorAmd()}, vertex_buffer{GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE, is_amd},
       uniform_buffer{GL_UNIFORM_BUFFER, UNIFORM_BUFFER_SIZE, false},
       index_buffer{GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE, false},
-      texture_buffer{GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE, false} {
+      texture_buffer{GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE, false}, timing{timing} {
     allow_shadow = GLAD_GL_ARB_shader_image_load_store && GLAD_GL_ARB_shader_image_size &&
                    GLAD_GL_ARB_framebuffer_no_attachments;
     if (!allow_shadow)
@@ -127,9 +130,22 @@ Rasterizer::Rasterizer()
         std::make_unique<ShaderProgramManager>(GLAD_GL_ARB_separate_shader_objects, is_amd);
     glEnable(GL_BLEND);
     SyncEntireState();
+    if (Settings::values.enable_cache_clear) {
+        cache_clear_event = timing.RegisterEvent(
+            "Rasterizer Cache Clear Event", [&timing, this](u64 userdata, s64 cycles_late) {
+                res_cache.Clear();
+                timing.ScheduleEvent(msToCycles(ClearCacheMs), cache_clear_event);
+            });
+        timing.ScheduleEvent(msToCycles(ClearCacheMs), cache_clear_event);
+    }
 }
 
-Rasterizer::~Rasterizer() {}
+Rasterizer::~Rasterizer() {
+    if (cache_clear_event) {
+        timing.UnscheduleEvent(cache_clear_event, 0);
+        cache_clear_event = nullptr;
+    }
+}
 
 void Rasterizer::SyncEntireState() {
     // Sync fixed function OpenGL state

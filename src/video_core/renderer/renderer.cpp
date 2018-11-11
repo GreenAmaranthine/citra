@@ -96,7 +96,7 @@ Renderer::~Renderer() = default;
 /// Swap buffers (render frame)
 void Renderer::SwapBuffers() {
     // Maintain the rasterizer's OpenGLState as a priority
-    OpenGLState prev_state{OpenGLState::GetCurState()};
+    auto prev_state{OpenGLState::GetCurState()};
     state.Apply();
     for (int i : {0, 1, 2}) {
         int fb_id{i == 2 ? 1 : 0};
@@ -459,7 +459,7 @@ Core::System::ResultStatus Renderer::Init() {
     if (!GLAD_GL_VERSION_3_3)
         return Core::System::ResultStatus::ErrorVideoCore_ErrorBelowGL33;
     InitOpenGLObjects();
-    rasterizer = std::make_unique<Rasterizer>();
+    rasterizer = std::make_unique<Rasterizer>(system.CoreTiming());
     VideoCore::g_bg_color_update_requested = true;
     return Core::System::ResultStatus::Success;
 }

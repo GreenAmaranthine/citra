@@ -203,6 +203,7 @@ void Config::Load() {
     Settings::values.screen_refresh_rate = qt_config->value("screen_refresh_rate", 60).toInt();
     Settings::values.min_vertices_per_thread =
         qt_config->value("min_vertices_per_thread", 10).toInt();
+    Settings::values.enable_cache_clear = qt_config->value("enable_cache_clear", false).toBool();
     qt_config->endGroup();
     qt_config->beginGroup("Layout");
     Settings::values.layout_option =
@@ -427,6 +428,7 @@ void Config::Save() {
     qt_config->setValue("enable_shadows", Settings::values.enable_shadows);
     qt_config->setValue("screen_refresh_rate", Settings::values.screen_refresh_rate);
     qt_config->setValue("min_vertices_per_thread", Settings::values.min_vertices_per_thread);
+    qt_config->setValue("enable_cache_clear", Settings::values.enable_cache_clear);
     qt_config->endGroup();
     qt_config->beginGroup("Layout");
     qt_config->setValue("layout_option", static_cast<int>(Settings::values.layout_option));

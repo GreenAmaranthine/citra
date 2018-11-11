@@ -164,6 +164,7 @@ struct Values {
     bool enable_shadows;
     int screen_refresh_rate;
     int min_vertices_per_thread;
+    bool enable_cache_clear;
 
     LayoutOption layout_option;
     bool swap_screens;

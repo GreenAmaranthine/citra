@@ -32,22 +32,20 @@ static void SetShaderUniformBlockBindings(GLuint shader) {
 
 static void SetShaderSamplerBinding(GLuint shader, const char* name,
                                     TextureUnits::TextureUnit binding) {
-    GLint uniform_tex{glGetUniformLocation(shader, name)};
-    if (uniform_tex != -1) {
+    auto uniform_tex{glGetUniformLocation(shader, name)};
+    if (uniform_tex != -1)
         glUniform1i(uniform_tex, binding.id);
-    }
 }
 
 static void SetShaderImageBinding(GLuint shader, const char* name, GLuint binding) {
     GLint uniform_tex{glGetUniformLocation(shader, name)};
-    if (uniform_tex != -1) {
+    if (uniform_tex != -1)
         glUniform1i(uniform_tex, static_cast<GLint>(binding));
-    }
 }
 
 static void SetShaderSamplerBindings(GLuint shader) {
-    OpenGLState cur_state{OpenGLState::GetCurState()};
-    GLuint old_program{std::exchange(cur_state.draw.shader_program, shader)};
+    auto cur_state{OpenGLState::GetCurState()};
+    auto old_program{std::exchange(cur_state.draw.shader_program, shader)};
     cur_state.Apply();
     // Set the texture samplers to correspond to different texture units
     SetShaderSamplerBinding(shader, "tex0", TextureUnits::PicaTexture(0));

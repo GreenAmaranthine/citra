@@ -173,7 +173,7 @@ static constexpr std::array<void (*)(u32, u32, u8*, PAddr, PAddr, PAddr), 18> gl
 // Allocate an uninitialized texture of appropriate size and format for the surface
 static void AllocateSurfaceTexture(GLuint texture, const FormatTuple& format_tuple, u32 width,
                                    u32 height) {
-    OpenGLState cur_state{OpenGLState::GetCurState()};
+    auto cur_state{OpenGLState::GetCurState()};
     // Keep track of previous texture bindings
     GLuint old_tex{cur_state.texture_units[0].texture_2d};
     cur_state.texture_units[0].texture_2d = texture;
@@ -191,7 +191,7 @@ static void AllocateSurfaceTexture(GLuint texture, const FormatTuple& format_tup
 }
 
 static void AllocateTextureCube(GLuint texture, const FormatTuple& format_tuple, u32 width) {
-    OpenGLState cur_state{OpenGLState::GetCurState()};
+    auto cur_state{OpenGLState::GetCurState()};
     // Keep track of previous texture bindings
     GLuint old_tex{cur_state.texture_cube_unit.texture_cube};
     cur_state.texture_cube_unit.texture_cube = texture;
@@ -216,7 +216,7 @@ static void AllocateTextureCube(GLuint texture, const FormatTuple& format_tuple,
 static bool BlitTextures(GLuint src_tex, const MathUtil::Rectangle<u32>& src_rect, GLuint dst_tex,
                          const MathUtil::Rectangle<u32>& dst_rect, SurfaceType type,
                          GLuint read_fb_handle, GLuint draw_fb_handle) {
-    OpenGLState prev_state{OpenGLState::GetCurState()};
+    auto prev_state{OpenGLState::GetCurState()};
     SCOPE_EXIT({ prev_state.Apply(); });
     OpenGLState state;
     state.draw.read_framebuffer = read_fb_handle;
@@ -263,7 +263,7 @@ static bool BlitTextures(GLuint src_tex, const MathUtil::Rectangle<u32>& src_rec
 
 static bool FillSurface(const Surface& surface, const u8* fill_data,
                         const MathUtil::Rectangle<u32>& fill_rect, GLuint draw_fb_handle) {
-    OpenGLState prev_state{OpenGLState::GetCurState()};
+    auto prev_state{OpenGLState::GetCurState()};
     SCOPE_EXIT({ prev_state.Apply(); });
     OpenGLState state;
     state.scissor.enabled = true;
@@ -633,7 +633,7 @@ void CachedSurface::UploadGLTexture(const MathUtil::Rectangle<u32>& rect, GLuint
         AllocateSurfaceTexture(unscaled_tex.handle, tuple, rect.GetWidth(), rect.GetHeight());
         target_tex = unscaled_tex.handle;
     }
-    OpenGLState cur_state{OpenGLState::GetCurState()};
+    auto cur_state{OpenGLState::GetCurState()};
     GLuint old_tex{cur_state.texture_units[0].texture_2d};
     cur_state.texture_units[0].texture_2d = target_tex;
     cur_state.Apply();
@@ -668,7 +668,7 @@ void CachedSurface::DownloadGLTexture(const MathUtil::Rectangle<u32>& rect, GLui
         gl_buffer.reset(new u8[gl_buffer_size]);
     }
     OpenGLState state{OpenGLState::GetCurState()};
-    OpenGLState prev_state{state};
+    auto prev_state{state};
     SCOPE_EXIT({ prev_state.Apply(); });
     const FormatTuple& tuple{GetFormatTuple(pixel_format)};
     // Ensure no bad interactions with GL_PACK_ALIGNMENT
@@ -840,7 +840,7 @@ void main() {
 )"};
     d24s8_abgr_shader.Create(vs_source, fs_source);
     OpenGLState state{OpenGLState::GetCurState()};
-    GLuint old_program{state.draw.shader_program};
+    auto old_program{state.draw.shader_program};
     state.draw.shader_program = d24s8_abgr_shader.handle;
     state.Apply();
     GLint tbo_u_id{glGetUniformLocation(d24s8_abgr_shader.handle, "tbo")};
@@ -872,7 +872,7 @@ bool RasterizerCache::BlitSurfaces(const Surface& src_surface,
 
 void RasterizerCache::ConvertD24S8toABGR(GLuint src_tex, const MathUtil::Rectangle<u32>& src_rect,
                                          GLuint dst_tex, const MathUtil::Rectangle<u32>& dst_rect) {
-    OpenGLState prev_state{OpenGLState::GetCurState()};
+    auto prev_state{OpenGLState::GetCurState()};
     SCOPE_EXIT({ prev_state.Apply(); });
     OpenGLState state;
     state.draw.read_framebuffer = read_framebuffer.handle;
@@ -1096,7 +1096,7 @@ const CachedTextureCube& RasterizerCache::GetTextureCube(const TextureCubeConfig
             cube.res_scale * config.width);
     }
     u32 scaled_size{cube.res_scale * config.width};
-    OpenGLState prev_state{OpenGLState::GetCurState()};
+    auto prev_state{OpenGLState::GetCurState()};
     SCOPE_EXIT({ prev_state.Apply(); });
     OpenGLState state;
     state.draw.read_framebuffer = read_framebuffer.handle;
