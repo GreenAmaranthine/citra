@@ -9,7 +9,7 @@
 
 namespace Core {
 class System;
-}
+} // namespace Core
 
 namespace Ui {
 class ControlPanel;
