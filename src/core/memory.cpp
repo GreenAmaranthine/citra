@@ -247,7 +247,7 @@ u8* GetPhysicalPointer(PAddr address) {
         {VRAM_PADDR, VRAM_N3DS_SIZE},
         {IO_AREA_PADDR, IO_AREA_SIZE},
         {DSP_RAM_PADDR, DSP_RAM_SIZE},
-        {FCRAM_PADDR, FCRAM_SIZE},
+        {FCRAM_PADDR, FCRAM_N3DS_SIZE},
         {N3DS_EXTRA_RAM_PADDR, N3DS_EXTRA_RAM_SIZE},
         {L2C_PADDR, L2C_SIZE},
     };
@@ -319,27 +319,18 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
             if (cached)
                 // Switch page type to cached if now cached
                 switch (page_type) {
-                case PageType::Unmapped:
-                    // It is not necessary for a process to have this region mapped into its address
-                    // space, for example, a system module need not have a VRAM mapping.
-                    break;
                 case PageType::Memory:
                     page_type = PageType::RasterizerCachedMemory;
                     current_page_table->pointers[vaddr >> PAGE_BITS] = nullptr;
                     break;
                 default:
-                    UNREACHABLE();
+                    break;
                 }
             else
                 // Switch page type to uncached if now uncached
                 switch (page_type) {
-                case PageType::Unmapped:
-                case PageType::Memory:
-                    // It is not necessary for a process to have this region mapped into its address
-                    // space, for example, a system module need not have a VRAM mapping.
-                    break;
                 case PageType::RasterizerCachedMemory: {
-                    auto pointer{GetPointerFromVMA(vaddr & ~PAGE_MASK)};
+                    u8* pointer{GetPointerFromVMA(vaddr & ~PAGE_MASK)};
                     if (!pointer)
                         // It's possible that this function has been called while updating the
                         // pagetable after unmapping a VMA. In that case the underlying VMA will no
@@ -352,7 +343,7 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
                     break;
                 }
                 default:
-                    UNREACHABLE_MSG("Invalid page type {}", static_cast<u32>(page_type));
+                    break;
                 }
         }
     }
