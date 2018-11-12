@@ -40,15 +40,11 @@ struct KeyDesc {
 };
 
 AESKey HexToKey(const std::string& hex) {
-    if (hex.size() < 32) {
-        throw std::invalid_argument("hex string is too short");
-    }
-
+    if (hex.size() < 32)
+        throw std::invalid_argument{"hex string is too short"};
     AESKey key;
-    for (std::size_t i{}; i < key.size(); ++i) {
+    for (std::size_t i{}; i < key.size(); ++i)
         key[i] = static_cast<u8>(std::stoi(hex.substr(i * 2, 2), 0, 16));
-    }
-
     return key;
 }
 
@@ -72,11 +68,10 @@ struct KeySlot {
     }
 
     void GenerateNormalKey() {
-        if (x && y) {
+        if (x && y)
             normal = Lrot128(Add128(Xor128(Lrot128(*x, 2), *y), generator_constant), 87);
-        } else {
+        else
             normal.reset();
-        }
     }
 
     void Clear() {
@@ -91,9 +86,8 @@ std::array<std::optional<AESKey>, 6> common_key_y_slots;
 
 std::string KeyToString(AESKey& key) {
     std::string s;
-    for (auto byte : key) {
+    for (auto byte : key)
         s += fmt::format("{:02X}", byte);
-    }
     return s;
 }
 

@@ -213,11 +213,10 @@ void OpenGLState::Apply() const {
         glBindProgramPipeline(draw.program_pipeline);
     // Scissor test
     if (scissor.enabled != cur_state.scissor.enabled)
-        if (scissor.enabled) {
+        if (scissor.enabled)
             glEnable(GL_SCISSOR_TEST);
-        } else {
+        else
             glDisable(GL_SCISSOR_TEST);
-        }
     if (scissor.x != cur_state.scissor.x || scissor.y != cur_state.scissor.y ||
         scissor.width != cur_state.scissor.width || scissor.height != cur_state.scissor.height)
         glScissor(scissor.x, scissor.y, scissor.width, scissor.height);
@@ -226,13 +225,11 @@ void OpenGLState::Apply() const {
         glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
     // Clip distance
     for (std::size_t i{}; i < clip_distance.size(); ++i)
-        if (clip_distance[i] != cur_state.clip_distance[i]) {
-            if (clip_distance[i]) {
+        if (clip_distance[i] != cur_state.clip_distance[i])
+            if (clip_distance[i])
                 glEnable(GL_CLIP_DISTANCE0 + static_cast<GLenum>(i));
-            } else {
+            else
                 glDisable(GL_CLIP_DISTANCE0 + static_cast<GLenum>(i));
-            }
-        }
     cur_state = *this;
 }
 

@@ -22,6 +22,7 @@ using CryptoPP::AES;
 using CryptoPP::CCM_Base;
 using CryptoPP::CCM_Final;
 using CryptoPP::lword;
+
 template <bool T_IsEncryption>
 class CCM_3DSVariant_Final : public CCM_Final<AES, CCM_MAC_SIZE, T_IsEncryption> {
 public:
@@ -45,12 +46,10 @@ public:
 
 std::vector<u8> EncryptSignCCM(const std::vector<u8>& pdata, const CCMNonce& nonce,
                                std::size_t slot_id) {
-    if (!IsNormalKeyAvailable(slot_id)) {
+    if (!IsNormalKeyAvailable(slot_id))
         LOG_ERROR(HW_AES, "Key slot {} not available. Will use zero key.", slot_id);
-    }
-    const AESKey normal = GetNormalKey(slot_id);
+    const auto normal{GetNormalKey(slot_id)};
     std::vector<u8> cipher(pdata.size() + CCM_MAC_SIZE);
-
     try {
         CCM_3DSVariant::Encryption e;
         e.SetKeyWithIV(normal.data(), AES_BLOCK_SIZE, nonce.data(), CCM_NONCE_SIZE);
@@ -59,33 +58,31 @@ std::vector<u8> EncryptSignCCM(const std::vector<u8>& pdata, const CCMNonce& non
                                  new CryptoPP::AuthenticatedEncryptionFilter(
                                      e, new CryptoPP::ArraySink(cipher.data(), cipher.size())));
     } catch (const CryptoPP::Exception& e) {
-        LOG_ERROR(HW_AES, "FAILED with: {}", e.what());
+        LOG_ERROR(HW_AES, "Failed with: {}", e.what());
     }
     return cipher;
 }
 
 std::vector<u8> DecryptVerifyCCM(const std::vector<u8>& cipher, const CCMNonce& nonce,
                                  std::size_t slot_id) {
-    if (!IsNormalKeyAvailable(slot_id)) {
+    if (!IsNormalKeyAvailable(slot_id))
         LOG_ERROR(HW_AES, "Key slot {} not available. Will use zero key.", slot_id);
-    }
-    const AESKey normal = GetNormalKey(slot_id);
-    const std::size_t pdata_size = cipher.size() - CCM_MAC_SIZE;
+    const auto normal{GetNormalKey(slot_id)};
+    const std::size_t pdata_size{cipher.size() - CCM_MAC_SIZE};
     std::vector<u8> pdata(pdata_size);
-
     try {
         CCM_3DSVariant::Decryption d;
         d.SetKeyWithIV(normal.data(), AES_BLOCK_SIZE, nonce.data(), CCM_NONCE_SIZE);
         d.SpecifyDataLengths(0, pdata_size, 0);
-        CryptoPP::AuthenticatedDecryptionFilter df(
-            d, new CryptoPP::ArraySink(pdata.data(), pdata_size));
-        CryptoPP::ArraySource as(cipher.data(), cipher.size(), true, new CryptoPP::Redirector(df));
+        CryptoPP::AuthenticatedDecryptionFilter df{
+            d, new CryptoPP::ArraySink(pdata.data(), pdata_size)};
+        CryptoPP::ArraySource as{cipher.data(), cipher.size(), true, new CryptoPP::Redirector(df)};
         if (!df.GetLastResult()) {
-            LOG_ERROR(HW_AES, "FAILED");
+            LOG_ERROR(HW_AES, "failed");
             return {};
         }
     } catch (const CryptoPP::Exception& e) {
-        LOG_ERROR(HW_AES, "FAILED with: {}", e.what());
+        LOG_ERROR(HW_AES, "Failed with: {}", e.what());
         return {};
     }
     return pdata;
