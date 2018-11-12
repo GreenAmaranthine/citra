@@ -30,11 +30,14 @@ const std::size_t PAGE_TABLE_NUM_ENTRIES{1 << (32 - PAGE_BITS)};
 enum class PageType {
     /// Page is unmapped and should cause an access error.
     Unmapped,
+
     /// Page is mapped to regular memory. This is the only type you can get pointers to.
     Memory,
+
     /// Page is mapped to regular memory, but also needs to check for rasterizer cache flushing and
     /// invalidation
     RasterizerCachedMemory,
+
     /// Page is mapped to a I/O region. Writing and reading to this page is handled by functions.
     Special,
 };

@@ -334,24 +334,25 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
                 // Switch page type to uncached if now uncached
                 switch (page_type) {
                 case PageType::Unmapped:
+                case PageType::Memory:
                     // It is not necessary for a process to have this region mapped into its address
                     // space, for example, a system module need not have a VRAM mapping.
                     break;
                 case PageType::RasterizerCachedMemory: {
-                    u8* pointer = GetPointerFromVMA(vaddr & ~PAGE_MASK);
-                    if (pointer == nullptr) {
+                    auto pointer{GetPointerFromVMA(vaddr & ~PAGE_MASK)};
+                    if (!pointer)
                         // It's possible that this function has been called while updating the
                         // pagetable after unmapping a VMA. In that case the underlying VMA will no
                         // longer exist, and we should just leave the pagetable entry blank.
                         page_type = PageType::Unmapped;
-                    } else {
+                    else {
                         page_type = PageType::Memory;
                         current_page_table->pointers[vaddr >> PAGE_BITS] = pointer;
                     }
                     break;
                 }
                 default:
-                    UNREACHABLE();
+                    UNREACHABLE_MSG("Invalid page type {}", static_cast<u32>(page_type));
                 }
         }
     }
