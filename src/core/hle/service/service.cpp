@@ -157,7 +157,7 @@ void ServiceFrameworkBase::RegisterHandlersBase(const FunctionInfoBase* function
 }
 
 void ServiceFrameworkBase::ReportUnimplementedFunction(u32* cmd_buf, const FunctionInfoBase* info) {
-    std::string function_name{!info ? fmt::format("0x{:08X}", cmd_buf[0]) : info->name};
+    auto function_name{!info ? fmt::format("0x{:08X}", cmd_buf[0]) : info->name};
     LOG_ERROR(Service, "unimplemented {}",
               MakeFunctionString(function_name.c_str(), service_name.c_str(), cmd_buf));
 }
@@ -191,7 +191,7 @@ void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_ses
 static bool AttemptLLE(Core::System& system, const ServiceModuleInfo& service_module) {
     if (!Settings::values.lle_modules.at(service_module.name))
         return false;
-    std::unique_ptr<Loader::AppLoader> loader{Loader::GetLoader(
+    auto loader{Loader::GetLoader(
         system, AM::GetTitleContentPath(FS::MediaType::NAND, service_module.title_id))};
     if (!loader) {
         LOG_ERROR(Service,
