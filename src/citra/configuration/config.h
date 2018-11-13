@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <vector>
 #include <memory>
 #include "core/settings.h"
 
@@ -19,6 +20,7 @@ public:
     explicit Config(Core::System& system);
     ~Config();
 
+    void LogErrors();
     void Save();
     void RestoreDefaults();
 
@@ -29,5 +31,6 @@ private:
     void Load();
 
     std::unique_ptr<QSettings> qt_config;
+    std::vector<std::string> errors;
     Core::System& system;
 };

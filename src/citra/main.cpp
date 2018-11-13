@@ -104,6 +104,7 @@ static void InitializeLogging() {
 GMainWindow::GMainWindow() : config{new Config(system)} {
     InitializeLogging();
     ToggleConsole();
+    config->LogErrors();
     Settings::LogSettings();
     // Register types to use in slots and signals
     qRegisterMetaType<std::size_t>("std::size_t");

@@ -162,7 +162,7 @@ void Config::Load() {
     }
     if (Settings::values.profile >= size) {
         Settings::values.profile = 0;
-        LOG_ERROR(Config, "Invalid profile index");
+        errors.push_back("Invalid profile index");
     }
     Settings::LoadProfile(Settings::values.profile);
     qt_config->endGroup();
@@ -283,6 +283,7 @@ void Config::Load() {
         static_cast<u16>(qt_config->value("screenshot_resolution_factor", 1).toInt())};
     if (screenshot_resolution_factor == 0)
         screenshot_resolution_factor = 1;
+    UISettings::values.screenshot_resolution_factor = screenshot_resolution_factor;
     qt_config->beginGroup("UILayout");
     UISettings::values.geometry = qt_config->value("geometry").toByteArray();
     UISettings::values.state = qt_config->value("state").toByteArray();
@@ -368,6 +369,12 @@ void Config::Load() {
     UISettings::values.app_id = qt_config->value("app_id", 0).toULongLong();
     qt_config->endGroup();
     qt_config->endGroup();
+}
+
+void Config::LogErrors() {
+    for (const auto& error : errors)
+        LOG_ERROR(Config, "{}", error);
+    errors.clear();
 }
 
 void Config::Save() {

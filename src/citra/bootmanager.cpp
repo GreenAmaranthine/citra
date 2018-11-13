@@ -262,7 +262,7 @@ void Screens::InitRenderTarget() {
 void Screens::CaptureScreenshot(u16 res_scale, const QString& screenshot_path) {
     if (!res_scale)
         res_scale = Settings::values.resolution_factor;
-    const Layout::FramebufferLayout layout{Layout::FrameLayoutFromResolutionScale(res_scale)};
+    const auto layout{Layout::FrameLayoutFromResolutionScale(res_scale)};
     screenshot_image = QImage(QSize(layout.width, layout.height), QImage::Format_RGB32);
     VideoCore::RequestScreenshot(screenshot_image.bits(),
                                  [=] {
