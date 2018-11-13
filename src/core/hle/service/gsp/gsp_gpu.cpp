@@ -534,7 +534,7 @@ void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
 
 void GSP_GPU::ImportDisplayCaptureInfo(Kernel::HLERequestContext& ctx) {
     auto top_screen{GetFrameBufferInfo(active_thread_id, 0)};
-    autobottom_screen{GetFrameBufferInfo(active_thread_id, 1)};
+    auto bottom_screen{GetFrameBufferInfo(active_thread_id, 1)};
     struct CaptureInfoEntry {
         u32_le address_left;
         u32_le address_right;

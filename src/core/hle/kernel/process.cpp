@@ -150,12 +150,11 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
                                        MemoryState memory_state, bool skip_range_check) {
     LOG_DEBUG(Kernel, "Allocate heap target={:08X}, size={:08X}", target, size);
     if (target < Memory::HEAP_VADDR || target + size > Memory::HEAP_VADDR_END ||
-        target + size < target) {
+        target + size < target)
         if (!skip_range_check) {
             LOG_ERROR(Kernel, "Invalid heap address");
             return ERR_INVALID_ADDRESS;
         }
-    }
     auto vma{vm_manager.FindVMA(target)};
     if (vma->second.type != VMAType::Free || vma->second.base + vma->second.size < target + size) {
         LOG_ERROR(Kernel, "Trying to allocate already allocated memory");
