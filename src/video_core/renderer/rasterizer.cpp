@@ -459,7 +459,6 @@ bool Rasterizer::Draw(bool accelerate, bool is_indexed) {
         !shadow_rendering && regs.framebuffer.framebuffer.GetDepthBufferPhysicalAddress() != 0 &&
         (write_depth_fb || regs.framebuffer.output_merger.depth_test_enabled != 0 ||
          (has_stencil && state.stencil.test_enabled))};
-
     MathUtil::Rectangle<s32> viewport_rect_unscaled{
         // These registers hold half-width and half-height, so must be multiplied by 2
         regs.rasterizer.viewport_corner.x,  // left
@@ -1335,9 +1334,9 @@ bool Rasterizer::AccelerateDisplay(const GPU::Regs::FramebufferConfig& config,
         return false;
     u32 scaled_width{src_surface->GetScaledWidth()};
     u32 scaled_height{src_surface->GetScaledHeight()};
-    screen_info.display_texcoords = MathUtil::Rectangle<float>(
+    screen_info.display_texcoords = MathUtil::Rectangle<float>{
         (float)src_rect.bottom / (float)scaled_height, (float)src_rect.left / (float)scaled_width,
-        (float)src_rect.top / (float)scaled_height, (float)src_rect.right / (float)scaled_width);
+        (float)src_rect.top / (float)scaled_height, (float)src_rect.right / (float)scaled_width};
     screen_info.display_texture = src_surface->texture.handle;
     return true;
 }
