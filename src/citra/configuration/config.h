@@ -5,8 +5,8 @@
 #pragma once
 
 #include <array>
-#include <vector>
 #include <memory>
+#include <vector>
 #include "core/settings.h"
 
 namespace Core {
