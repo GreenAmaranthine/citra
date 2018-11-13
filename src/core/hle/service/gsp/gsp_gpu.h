@@ -212,6 +212,7 @@ public:
      */
     void SignalInterrupt(InterruptId interrupt_id);
 
+private:
     /**
      * Retrieves the framebuffer info stored in the GSP shared memory for the
      * specified screen index and thread id.
@@ -222,7 +223,6 @@ public:
      */
     FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index);
 
-private:
     void SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id);
     void WriteHWRegs(Kernel::HLERequestContext& ctx);
     void WriteHWRegsWithMask(Kernel::HLERequestContext& ctx);
