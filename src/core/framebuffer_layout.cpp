@@ -129,8 +129,7 @@ FramebufferLayout LargeFrameLayout(unsigned width, unsigned height, bool swapped
     auto large_screen_aspect_ratio{swapped ? BOT_SCREEN_ASPECT_RATIO : TOP_SCREEN_ASPECT_RATIO};
     auto small_screen_aspect_ratio{swapped ? TOP_SCREEN_ASPECT_RATIO : BOT_SCREEN_ASPECT_RATIO};
     MathUtil::Rectangle<unsigned> screen_window_area{0, 0, width, height};
-    MathUtil::Rectangle<unsigned> total_rect{
-        MaxRectangle(screen_window_area, emulation_aspect_ratio)};
+    auto total_rect{MaxRectangle(screen_window_area, emulation_aspect_ratio)};
     auto large_screen{MaxRectangle(total_rect, large_screen_aspect_ratio)};
     auto fourth_size_rect{total_rect.Scale(.25f)};
     auto small_screen{MaxRectangle(fourth_size_rect, small_screen_aspect_ratio)};
@@ -157,9 +156,8 @@ FramebufferLayout SideFrameLayout(unsigned width, unsigned height, bool swapped)
                                        (Core::kScreenTopWidth + Core::kScreenBottomWidth)};
     float window_aspect_ratio{static_cast<float>(height) / width};
     MathUtil::Rectangle<unsigned> screen_window_area{0, 0, width, height};
-    // Find largest Rectangle that can fit in the window size with the given aspect ratio
-    MathUtil::Rectangle<unsigned> screen_rect{
-        MaxRectangle(screen_window_area, emulation_aspect_ratio)};
+    // Find largest rectangle that can fit in the window size with the given aspect ratio
+    auto screen_rect{MaxRectangle(screen_window_area, emulation_aspect_ratio)};
     // Find sizes of top and bottom screen
     auto top_screen{MaxRectangle(screen_rect, TOP_SCREEN_ASPECT_RATIO)};
     auto bot_screen{MaxRectangle(screen_rect, BOT_SCREEN_ASPECT_RATIO)};
