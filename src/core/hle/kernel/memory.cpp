@@ -98,7 +98,7 @@ void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mappin
     };
     // The order of entries in this array is important. The VRAM and IO VAddr ranges overlap, and
     // VRAM must be tried first.
-    static constexpr MemoryArea memory_areas[]{
+    constexpr MemoryArea memory_areas[]{
         {VRAM_VADDR, VRAM_PADDR, VRAM_N3DS_SIZE},
         {IO_AREA_VADDR, IO_AREA_PADDR, IO_AREA_SIZE},
         {DSP_RAM_VADDR, DSP_RAM_PADDR, DSP_RAM_SIZE},

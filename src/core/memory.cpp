@@ -243,7 +243,7 @@ u8* GetPhysicalPointer(PAddr address) {
         PAddr paddr_base;
         u32 size;
     };
-    static constexpr MemoryArea memory_areas[]{
+    constexpr MemoryArea memory_areas[]{
         {VRAM_PADDR, VRAM_N3DS_SIZE},
         {IO_AREA_PADDR, IO_AREA_SIZE},
         {DSP_RAM_PADDR, DSP_RAM_SIZE},
