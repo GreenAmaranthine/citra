@@ -19,7 +19,7 @@ void ConfigureHacks::LoadConfiguration(Core::System& system) {
     ui->combo_ticks_mode->setCurrentIndex(static_cast<int>(Settings::values.ticks_mode));
     ui->spinbox_ticks->setValue(static_cast<int>(Settings::values.ticks));
     ui->spinbox_ticks->setEnabled(Settings::values.ticks_mode == Settings::TicksMode::Custom);
-    ui->toggle_bos->setChecked(Settings::values.use_bos);
+    ui->ignore_format_reinterpretation->setChecked(Settings::values.ignore_format_reinterpretation);
     ui->toggle_force_memory_mode_7->setChecked(Settings::values.force_memory_mode_7);
     ui->disable_mh_2xmsaa->setChecked(Settings::values.disable_mh_2xmsaa);
     bool powered_on{system.IsPoweredOn()};
@@ -35,7 +35,8 @@ void ConfigureHacks::ApplyConfiguration(Core::System& system) {
     Settings::values.ticks_mode =
         static_cast<Settings::TicksMode>(ui->combo_ticks_mode->currentIndex());
     Settings::values.ticks = static_cast<u64>(ui->spinbox_ticks->value());
-    Settings::values.use_bos = ui->toggle_bos->isChecked();
+    Settings::values.ignore_format_reinterpretation =
+        ui->ignore_format_reinterpretation->isChecked();
     Settings::values.force_memory_mode_7 = ui->toggle_force_memory_mode_7->isChecked();
     Settings::values.disable_mh_2xmsaa = ui->disable_mh_2xmsaa->isChecked();
     if (system.IsPoweredOn())

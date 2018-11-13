@@ -1295,7 +1295,7 @@ void RasterizerCache::ValidateSurface(const Surface& surface, PAddr addr, u32 si
                 continue;
             }
         }
-        if (Settings::values.use_bos) {
+        if (Settings::values.ignore_format_reinterpretation) {
             // HACK: Ignore format reinterpretation
             // This is a placeholder for HW texture decoding/encoding
             bool retry{};

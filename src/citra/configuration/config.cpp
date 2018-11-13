@@ -271,7 +271,8 @@ void Config::Load() {
     Settings::values.ticks_mode =
         static_cast<Settings::TicksMode>(qt_config->value("ticks_mode", 0).toInt());
     Settings::values.ticks = qt_config->value("ticks", 0).toULongLong();
-    Settings::values.use_bos = qt_config->value("use_bos", false).toBool();
+    Settings::values.ignore_format_reinterpretation =
+        qt_config->value("ignore_format_reinterpretation", false).toBool();
     Settings::values.force_memory_mode_7 = qt_config->value("force_memory_mode_7", false).toBool();
     Settings::values.disable_mh_2xmsaa = qt_config->value("disable_mh_2xmsaa", false).toBool();
     qt_config->endGroup();
@@ -494,7 +495,8 @@ void Config::Save() {
     qt_config->setValue("priority_boost", Settings::values.priority_boost);
     qt_config->setValue("ticks_mode", static_cast<int>(Settings::values.ticks_mode));
     qt_config->setValue("ticks", static_cast<unsigned long long>(Settings::values.ticks));
-    qt_config->setValue("use_bos", Settings::values.use_bos);
+    qt_config->setValue("ignore_format_reinterpretation",
+                        Settings::values.ignore_format_reinterpretation);
     qt_config->setValue("force_memory_mode_7", Settings::values.force_memory_mode_7);
     qt_config->setValue("disable_mh_2xmsaa", Settings::values.disable_mh_2xmsaa);
     qt_config->endGroup();

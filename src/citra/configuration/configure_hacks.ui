@@ -106,7 +106,7 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
-         <widget class="QCheckBox" name="toggle_bos">
+         <widget class="QCheckBox" name="ignore_format_reinterpretation">
           <property name="text">
            <string>Ignore Format Reinterpretation</string>
           </property>

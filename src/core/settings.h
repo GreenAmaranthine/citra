@@ -203,7 +203,7 @@ struct Values {
     bool priority_boost;
     TicksMode ticks_mode;
     u64 ticks;
-    bool use_bos;
+    bool ignore_format_reinterpretation;
     bool disable_mh_2xmsaa;
     bool force_memory_mode_7;
 } extern values;

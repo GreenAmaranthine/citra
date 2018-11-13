@@ -92,7 +92,7 @@ void LogSettings() {
     LogSetting("Hacks_PriorityBoost", values.priority_boost);
     LogSetting("Hacks_Ticks", values.ticks);
     LogSetting("Hacks_TicksMode", static_cast<int>(values.ticks_mode));
-    LogSetting("Hacks_UseBos", values.use_bos);
+    LogSetting("Hacks_IgnoreFormatReinterpretation", values.ignore_format_reinterpretation);
     LogSetting("Hacks_DisableMh2xMsaa", values.disable_mh_2xmsaa);
 }
 
