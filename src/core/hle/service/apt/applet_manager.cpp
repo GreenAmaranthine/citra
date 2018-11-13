@@ -187,11 +187,12 @@ ResultCode AppletManager::SendParameter(const MessageParameter& parameter) {
         return ResultCode(ErrCodes::ParameterPresent, ErrorModule::Applet,
                           ErrorSummary::InvalidState, ErrorLevel::Status);
     CancelAndSendParameter(parameter);
+    if (Settings::values.use_lle_applets)
+        return RESULT_SUCCESS;
     auto itr{hle_applets.find(parameter.destination_id)};
     if (itr != hle_applets.end())
         return itr->second->ReceiveParameter(parameter);
-    else
-        return RESULT_SUCCESS;
+    return RESULT_SUCCESS;
 }
 
 ResultVal<MessageParameter> AppletManager::GlanceParameter(AppletId app_id) {
