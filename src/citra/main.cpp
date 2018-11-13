@@ -172,11 +172,14 @@ void GMainWindow::InitializeWidgets() {
     progress_bar->setMaximum(INT_MAX);
     progress_bar->hide();
     statusBar()->addPermanentWidget(progress_bar);
+    touch_label = new QLabel();
+    touch_label->hide();
     perf_stats_label = new QLabel();
     perf_stats_label->hide();
     perf_stats_label->setToolTip("Performance information (Speed | FPS | Frametime)");
     perf_stats_label->setFrameStyle(QFrame::NoFrame);
     perf_stats_label->setContentsMargins(4, 0, 4, 0);
+    statusBar()->addPermanentWidget(touch_label, 0);
     statusBar()->addPermanentWidget(perf_stats_label, 0);
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusIcon(), 0);
     statusBar()->setVisible(true);
@@ -608,6 +611,7 @@ void GMainWindow::BootApplication(const std::string& filename) {
     screens->moveContext();
     emu_thread->start();
     connect(screens, &Screens::Closed, this, &GMainWindow::OnStopApplication);
+    connect(screens, &Screens::TouchChanged, this, &GMainWindow::OnTouchChanged);
     // Update the GUI
     app_list->hide();
     app_list_placeholder->hide();
@@ -687,6 +691,7 @@ void GMainWindow::ShutdownApplication() {
     perf_stats_update_timer.stop();
     message_label->setVisible(false);
     perf_stats_label->setVisible(false);
+    touch_label->setVisible(false);
 
     short_title.clear();
     UpdateTitle();
@@ -1055,6 +1060,11 @@ void GMainWindow::OnStopApplication() {
     ShutdownApplication();
     if (cheats_window)
         cheats_window->close();
+}
+
+void GMainWindow::OnTouchChanged(unsigned x, unsigned y) {
+    touch_label->setText(QString("Touch: %1, %2").arg(QString::number(x), QString::number(y)));
+    touch_label->setVisible(true);
 }
 
 void GMainWindow::ToggleFullscreen() {

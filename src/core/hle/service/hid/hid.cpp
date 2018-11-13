@@ -129,7 +129,7 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     mem->touch.index = next_touch_index;
     next_touch_index = (next_touch_index + 1) % mem->touch.entries.size();
     // Get the current touch entry
-    auto& touch_entry{mem->touch.entries[mem->touch.index]};
+    TouchDataEntry& touch_entry{mem->touch.entries[mem->touch.index]};
     if (use_override_touch) {
         touch_entry.x = override_touch_x;
         touch_entry.y = override_touch_y;

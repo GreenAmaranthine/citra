@@ -76,9 +76,10 @@ std::tuple<unsigned, unsigned> Frontend::ClipToTouchScreen(unsigned new_x, unsig
     return std::make_tuple(new_x, new_y);
 }
 
-void Frontend::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
+std::tuple<unsigned, unsigned> Frontend::TouchPressed(unsigned framebuffer_x,
+                                                      unsigned framebuffer_y) {
     if (!IsWithinTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y))
-        return;
+        return {};
     std::lock_guard lock{touch_state->mutex};
     if (Settings::values.factor_3d != 0)
         touch_state->touch_x =
@@ -93,6 +94,8 @@ void Frontend::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
         static_cast<float>(framebuffer_y - framebuffer_layout.bottom_screen.top) /
         (framebuffer_layout.bottom_screen.bottom - framebuffer_layout.bottom_screen.top);
     touch_state->touch_pressed = true;
+    return {touch_state->touch_x * Core::kScreenBottomWidth,
+            touch_state->touch_y * Core::kScreenBottomHeight};
 }
 
 void Frontend::TouchReleased() {
@@ -102,12 +105,13 @@ void Frontend::TouchReleased() {
     touch_state->touch_y = 0;
 }
 
-void Frontend::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
+std::tuple<unsigned, unsigned> Frontend::TouchMoved(unsigned framebuffer_x,
+                                                    unsigned framebuffer_y) {
     if (!touch_state->touch_pressed)
-        return;
+        return {};
     if (!IsWithinTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y))
         std::tie(framebuffer_x, framebuffer_y) = ClipToTouchScreen(framebuffer_x, framebuffer_y);
-    TouchPressed(framebuffer_x, framebuffer_y);
+    return TouchPressed(framebuffer_x, framebuffer_y);
 }
 
 void Frontend::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) {

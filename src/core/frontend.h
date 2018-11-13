@@ -15,9 +15,9 @@ public:
 
     void UpdateCurrentFramebufferLayout(unsigned width, unsigned height);
 
-    void TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y);
+    std::tuple<unsigned, unsigned> TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y);
     void TouchReleased();
-    void TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y);
+    std::tuple<unsigned, unsigned> TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y);
     std::tuple<unsigned, unsigned> ClipToTouchScreen(unsigned new_x, unsigned new_y);
 
     const Layout::FramebufferLayout& GetFramebufferLayout() {
