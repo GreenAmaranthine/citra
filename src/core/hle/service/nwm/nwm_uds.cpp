@@ -515,8 +515,8 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     // 'Official user processes create a new event handle which is then passed to this command.
     // However, those user processes don't save that handle anywhere afterwards.'
     // So we don't save/use that event too.
-    Kernel::SharedPtr<Kernel::Event> input_event{rp.PopObject<Kernel::Event>()};
-    Kernel::MappedBuffer out_buffer{rp.PopMappedBuffer()};
+    auto input_event{rp.PopObject<Kernel::Event>()};
+    auto& out_buffer{rp.PopMappedBuffer()};
     ASSERT(out_buffer.GetSize() == out_buffer_size);
     std::size_t cur_buffer_size{sizeof(BeaconDataReplyHeader)};
     // Retrieve all beacon frames that were received from the desired MAC address.
