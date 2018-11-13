@@ -166,8 +166,7 @@ void Screens::mousePressEvent(QMouseEvent* event) {
     auto pos{event->pos()};
     if (event->button() == Qt::LeftButton) {
         const auto [x, y]{ScaleTouch(pos)};
-        const auto [x2, y2]{TouchPressed(x, y)};
-        emit TouchChanged(x2, y2);
+        TouchPressed(x, y);
     } else if (event->button() == Qt::RightButton)
         InputCommon::GetMotionEmu()->BeginTilt(pos.x(), pos.y());
 }
@@ -177,18 +176,16 @@ void Screens::mouseMoveEvent(QMouseEvent* event) {
         return; // Touch input is handled in TouchUpdateEvent
     auto pos{event->pos()};
     const auto [x, y]{ScaleTouch(pos)};
-    const auto [x2, y2]{TouchMoved(x, y)};
+    TouchMoved(x, y);
     InputCommon::GetMotionEmu()->Tilt(pos.x(), pos.y());
-    emit TouchChanged(x2, y2);
 }
 
 void Screens::mouseReleaseEvent(QMouseEvent* event) {
     if (event->source() == Qt::MouseEventSynthesizedBySystem)
         return; // Touch input is handled in TouchEndEvent
-    if (event->button() == Qt::LeftButton) {
+    if (event->button() == Qt::LeftButton)
         TouchReleased();
-        emit TouchChanged(0, 0);
-    } else if (event->button() == Qt::RightButton)
+    else if (event->button() == Qt::RightButton)
         InputCommon::GetMotionEmu()->EndTilt();
 }
 

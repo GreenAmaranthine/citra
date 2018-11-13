@@ -75,7 +75,6 @@ private slots:
     void OnStartApplication();
     void OnPauseApplication();
     void OnStopApplication();
-    void OnTouchChanged(unsigned, unsigned);
 
     /// Called when user selects an application in the application list widget.
     void OnAppListLoadFile(const QString& path);
@@ -194,7 +193,6 @@ private:
     QProgressBar* progress_bar;
     QLabel* message_label;
     QLabel* perf_stats_label;
-    QLabel* touch_label;
 
     s64 discord_rpc_start_time;
 
