@@ -110,11 +110,11 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     next_pad_index = (next_pad_index + 1) % mem->pad.entries.size();
     // Get the previous Pad state
     u32 last_entry_index{static_cast<u32>((mem->pad.index - 1) % mem->pad.entries.size())};
-    PadState old_state{mem->pad.entries[last_entry_index].current_state};
+    auto old_state{mem->pad.entries[last_entry_index].current_state};
     // Compute bitmask with 1s for bits different from the old state
     PadState changed{(state.hex ^ old_state.hex)};
     // Get the current Pad entry
-    PadDataEntry& pad_entry{mem->pad.entries[mem->pad.index]};
+    auto& pad_entry{mem->pad.entries[mem->pad.index]};
     // Update entry properties
     pad_entry.current_state.hex = state.hex;
     pad_entry.delta_additions.hex = changed.hex & state.hex;
@@ -129,7 +129,7 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     mem->touch.index = next_touch_index;
     next_touch_index = (next_touch_index + 1) % mem->touch.entries.size();
     // Get the current touch entry
-    TouchDataEntry& touch_entry{mem->touch.entries[mem->touch.index]};
+    auto& touch_entry{mem->touch.entries[mem->touch.index]};
     if (use_override_touch) {
         touch_entry.x = override_touch_x;
         touch_entry.y = override_touch_y;
@@ -161,8 +161,7 @@ void Module::UpdateAccelerometerCallback(u64 userdata, s64 cycles_late) {
     auto& timing{system.CoreTiming()};
     mem->accelerometer.index = next_accelerometer_index;
     next_accelerometer_index = (next_accelerometer_index + 1) % mem->accelerometer.entries.size();
-    AccelerometerDataEntry& accelerometer_entry{
-        mem->accelerometer.entries[mem->accelerometer.index]};
+    auto& accelerometer_entry{mem->accelerometer.entries[mem->accelerometer.index]};
     if (use_override_motion) {
         accelerometer_entry.x = override_motion_x;
         accelerometer_entry.y = override_motion_y;
@@ -203,7 +202,7 @@ void Module::UpdateGyroscopeCallback(u64 userdata, s64 cycles_late) {
     auto& timing{system.CoreTiming()};
     mem->gyroscope.index = next_gyroscope_index;
     next_gyroscope_index = (next_gyroscope_index + 1) % mem->gyroscope.entries.size();
-    GyroscopeDataEntry& gyroscope_entry{mem->gyroscope.entries[mem->gyroscope.index]};
+    auto& gyroscope_entry{mem->gyroscope.entries[mem->gyroscope.index]};
     if (use_override_motion) {
         gyroscope_entry.x = override_motion_roll;
         gyroscope_entry.y = override_motion_pitch;

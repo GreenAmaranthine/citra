@@ -77,7 +77,7 @@ void IR_RST::UpdateCallback(u64 userdata, s64 cycles_late) {
     // Compute bitmask with 1s for bits different from the old state
     PadState changed{state.hex ^ old_state.hex};
     // Get the current Pad entry
-    PadDataEntry& pad_entry{mem->entries[mem->index]};
+    auto& pad_entry{mem->entries[mem->index]};
     // Update entry properties
     pad_entry.current_state.hex = state.hex;
     pad_entry.delta_additions.hex = changed.hex & state.hex;

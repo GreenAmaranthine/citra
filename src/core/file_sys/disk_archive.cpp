@@ -17,7 +17,6 @@ ResultVal<std::size_t> DiskFile::Read(const u64 offset, const std::size_t length
                                       u8* buffer) const {
     if (!mode.read_flag)
         return ERROR_INVALID_OPEN_FLAGS;
-
     file->Seek(offset, SEEK_SET);
     return MakeResult<std::size_t>(file->ReadBytes(buffer, length));
 }
@@ -26,7 +25,6 @@ ResultVal<std::size_t> DiskFile::Write(const u64 offset, const std::size_t lengt
                                        const u8* buffer) {
     if (!mode.write_flag)
         return ERROR_INVALID_OPEN_FLAGS;
-
     file->Seek(offset, SEEK_SET);
     std::size_t written{file->WriteBytes(buffer, length)};
     if (flush)
@@ -57,35 +55,28 @@ DiskDirectory::DiskDirectory(const std::string& path) {
 
 u32 DiskDirectory::Read(const u32 count, Entry* entries) {
     u32 entries_read{};
-
     while (entries_read < count && children_iterator != directory.children.cend()) {
         const FileUtil::FSTEntry& file{*children_iterator};
         const std::string& filename{file.virtualName};
-        Entry& entry{entries[entries_read]};
-
+        auto& entry{entries[entries_read]};
         LOG_TRACE(Service_FS, "File {}: size={}, isDirectory={}", filename, file.size,
                   file.isDirectory);
-
         // TODO: use a proper conversion to UTF-16.
         for (std::size_t j{}; j < FILENAME_LENGTH; ++j) {
             entry.filename[j] = filename[j];
             if (!filename[j])
                 break;
         }
-
         FileUtil::SplitFilename83(filename, entry.short_name, entry.extension);
-
         entry.is_directory = file.isDirectory;
         entry.is_hidden = (filename[0] == '.');
         entry.is_read_only = 0;
         entry.file_size = file.size;
-
         // We emulate a SD card where the archive bit has never been cleared, as it would be on
         // most user SD cards.
         // Some homebrews (blargSNES for instance) are known to mistakenly use the archive bit as a
         // file bit.
         entry.is_archive = !file.isDirectory;
-
         ++entries_read;
         ++children_iterator;
     }
