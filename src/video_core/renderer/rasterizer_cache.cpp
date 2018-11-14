@@ -55,7 +55,7 @@ static constexpr std::array<FormatTuple, 4> depth_format_tuples{{
 static constexpr FormatTuple tex_tuple{GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE};
 
 static const FormatTuple& GetFormatTuple(PixelFormat pixel_format) {
-    const SurfaceType type{SurfaceParams::GetFormatType(pixel_format)};
+    const auto type{SurfaceParams::GetFormatType(pixel_format)};
     if (type == SurfaceType::Color) {
         ASSERT(static_cast<std::size_t>(pixel_format) < fb_format_tuples.size());
         return fb_format_tuples[static_cast<unsigned int>(pixel_format)];
