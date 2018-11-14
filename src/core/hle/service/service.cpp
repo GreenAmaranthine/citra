@@ -120,8 +120,8 @@ const std::array<ServiceModuleInfo, 38> service_module_map{
  * Creates a function string for logging, complete with the name (or header code, depending
  * on what's passed in) the port name, and all the cmd_buff arguments.
  */
-static std::string MakeFunctionString(const char* name, const char* port_name,
-                                      const u32* cmd_buff) {
+[[maybe_unused]] static std::string MakeFunctionString(const char* name, const char* port_name,
+                                                       const u32* cmd_buff) {
     // Number of params == bits 0-5 + bits 6-11
     int num_params{static_cast<int>((cmd_buff[0] & 0x3F) + ((cmd_buff[0] >> 6) & 0x3F))};
     std::string function_string{fmt::format("function '{}': port={}", name, port_name)};
