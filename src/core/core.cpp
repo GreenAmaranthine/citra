@@ -187,7 +187,6 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     // Reset counters and set time origin to current frame
     GetAndResetPerfStats();
     perf_stats.BeginSystemFrame();
-    SetRunning(true);
     return ResultStatus::Success;
 }
 

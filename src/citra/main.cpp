@@ -164,7 +164,7 @@ void GMainWindow::InitializeWidgets() {
     // Create status bar
     message_label = new QLabel();
     // Configured separately for left alignment
-    message_label->setVisible(false);
+    message_label->hide();
     message_label->setFrameStyle(QFrame::NoFrame);
     message_label->setContentsMargins(4, 0, 4, 0);
     message_label->setAlignment(Qt::AlignLeft);
@@ -1065,7 +1065,7 @@ void GMainWindow::OnStopApplication() {
 
 void GMainWindow::OnTouchChanged(unsigned x, unsigned y) {
     touch_label->setText(QString("Touch: %1, %2").arg(QString::number(x), QString::number(y)));
-    touch_label->setVisible(true);
+    touch_label->show();
 }
 
 void GMainWindow::ToggleFullscreen() {
