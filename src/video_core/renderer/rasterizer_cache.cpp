@@ -972,13 +972,13 @@ SurfaceRect_Tuple RasterizerCache::GetSurfaceSubRect(const SurfaceParams& params
                                                                        ScaleMatch::Ignore);
         if (surface) {
             ASSERT(surface->res_scale < params.res_scale);
-            SurfaceParams new_params{*surface};
+            auto new_params{*surface};
             new_params.res_scale = params.res_scale;
             surface = CreateSurface(new_params);
             RegisterSurface(surface);
         }
     }
-    SurfaceParams aligned_params{params};
+    auto aligned_params{params};
     if (params.is_tiled) {
         aligned_params.height = Common::AlignUp(params.height, 8);
         aligned_params.width = Common::AlignUp(params.width, 8);
@@ -992,7 +992,7 @@ SurfaceRect_Tuple RasterizerCache::GetSurfaceSubRect(const SurfaceParams& params
         if (surface) {
             aligned_params.width = aligned_params.stride;
             aligned_params.UpdateParams();
-            SurfaceParams new_params{*surface};
+            auto new_params{*surface};
             new_params.addr = std::min(aligned_params.addr, surface->addr);
             new_params.end = std::max(aligned_params.end, surface->end);
             new_params.size = new_params.end - new_params.addr;
@@ -1010,7 +1010,7 @@ SurfaceRect_Tuple RasterizerCache::GetSurfaceSubRect(const SurfaceParams& params
     }
     // No subrect found - create and return a new surface
     if (!surface) {
-        SurfaceParams new_params{aligned_params};
+        auto new_params{aligned_params};
         // Can't have gaps in a surface
         new_params.width = aligned_params.stride;
         new_params.UpdateParams();
@@ -1022,8 +1022,7 @@ SurfaceRect_Tuple RasterizerCache::GetSurfaceSubRect(const SurfaceParams& params
 }
 
 Surface RasterizerCache::GetTextureSurface(const Pica::TexturingRegs::FullTextureConfig& config) {
-    Pica::Texture::TextureInfo info{
-        Pica::Texture::TextureInfo::FromPicaRegister(config.config, config.format)};
+    auto info{Pica::Texture::TextureInfo::FromPicaRegister(config.config, config.format)};
     return GetTextureSurface(info);
 }
 
