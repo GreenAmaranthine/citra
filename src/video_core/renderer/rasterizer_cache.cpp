@@ -999,7 +999,7 @@ SurfaceRect_Tuple RasterizerCache::GetSurfaceSubRect(const SurfaceParams& params
             new_params.height =
                 new_params.size / aligned_params.BytesInPixels(aligned_params.stride);
             ASSERT(new_params.size % aligned_params.BytesInPixels(aligned_params.stride) == 0);
-            Surface new_surface{CreateSurface(new_params)};
+            auto new_surface{CreateSurface(new_params)};
             DuplicateSurface(surface, new_surface);
             // Delete the expanded surface, this can't be done safely yet
             // because it may still be in use
@@ -1038,7 +1038,7 @@ Surface RasterizerCache::GetTextureSurface(const Pica::Texture::TextureInfo& inf
     if (info.width % 8 != 0 || info.height % 8 != 0) {
         auto [src_surface, rect]{GetSurfaceSubRect(params, ScaleMatch::Ignore, true)};
         params.res_scale = src_surface->res_scale;
-        Surface tmp_surface{CreateSurface(params)};
+        auto tmp_surface{CreateSurface(params)};
         BlitTextures(src_surface->texture.handle, rect, tmp_surface->texture.handle,
                      tmp_surface->GetScaledRect(),
                      SurfaceParams::GetFormatType(params.pixel_format), read_framebuffer.handle,
@@ -1058,7 +1058,7 @@ const CachedTextureCube& RasterizerCache::GetTextureCube(const TextureCubeConfig
         PAddr address;
         GLenum gl_face;
     };
-    static const std::array<Face, 6> faces{{
+    const std::array<Face, 6> faces{{
         {cube.px, config.px, GL_TEXTURE_CUBE_MAP_POSITIVE_X},
         {cube.nx, config.nx, GL_TEXTURE_CUBE_MAP_NEGATIVE_X},
         {cube.py, config.py, GL_TEXTURE_CUBE_MAP_POSITIVE_Y},
