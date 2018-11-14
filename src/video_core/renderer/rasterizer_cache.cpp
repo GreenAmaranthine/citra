@@ -420,11 +420,10 @@ bool SurfaceParams::CanExpand(const SurfaceParams& expanded_surface) const {
 
 bool SurfaceParams::CanTexCopy(const SurfaceParams& texcopy_params) const {
     if (pixel_format == PixelFormat::Invalid || addr > texcopy_params.addr ||
-        end < texcopy_params.end) {
+        end < texcopy_params.end)
         return false;
-    }
     if (texcopy_params.width != texcopy_params.stride) {
-        const u32 tile_stride = BytesInPixels(stride * (is_tiled ? 8 : 1));
+        const u32 tile_stride{BytesInPixels(stride * (is_tiled ? 8 : 1))};
         return (texcopy_params.addr - addr) % BytesInPixels(is_tiled ? 64 : 1) == 0 &&
                texcopy_params.width % BytesInPixels(is_tiled ? 64 : 1) == 0 &&
                (texcopy_params.height == 1 || texcopy_params.stride == tile_stride) &&
@@ -460,7 +459,7 @@ bool CachedSurface::CanFill(const SurfaceParams& dest_surface,
 
 bool CachedSurface::CanCopy(const SurfaceParams& dest_surface,
                             SurfaceInterval copy_interval) const {
-    SurfaceParams subrect_params{dest_surface.FromInterval(copy_interval)};
+    auto subrect_params{dest_surface.FromInterval(copy_interval)};
     ASSERT(subrect_params.GetInterval() == copy_interval);
     if (CanSubRect(subrect_params))
         return true;
@@ -508,7 +507,7 @@ SurfaceInterval SurfaceParams::GetCopyableInterval(const Surface& src_surface) c
 
 void RasterizerCache::CopySurface(const Surface& src_surface, const Surface& dst_surface,
                                   SurfaceInterval copy_interval) {
-    SurfaceParams subrect_params{dst_surface->FromInterval(copy_interval)};
+    auto subrect_params{dst_surface->FromInterval(copy_interval)};
     ASSERT(subrect_params.GetInterval() == copy_interval);
     ASSERT(src_surface != dst_surface);
     // This is only called when CanCopy is true, no need to run checks here
@@ -741,7 +740,7 @@ Surface FindMatch(const SurfaceCache& surface_cache, const SurfaceParams& params
     Surface match_surface{};
     bool match_valid{};
     u32 match_scale{};
-    SurfaceInterval match_interval{};
+    SurfaceInterval match_interval;
     for (auto& pair : RangeFromInterval(surface_cache, params.GetInterval())) {
         for (auto& surface : pair.second) {
             bool res_scale_matched{match_scale_type == ScaleMatch::Exact
@@ -972,7 +971,7 @@ SurfaceRect_Tuple RasterizerCache::GetSurfaceSubRect(const SurfaceParams& params
                                                                        ScaleMatch::Ignore);
         if (surface) {
             ASSERT(surface->res_scale < params.res_scale);
-            auto new_params{*surface};
+            SurfaceParams new_params{*surface};
             new_params.res_scale = params.res_scale;
             surface = CreateSurface(new_params);
             RegisterSurface(surface);
@@ -992,7 +991,7 @@ SurfaceRect_Tuple RasterizerCache::GetSurfaceSubRect(const SurfaceParams& params
         if (surface) {
             aligned_params.width = aligned_params.stride;
             aligned_params.UpdateParams();
-            auto new_params{*surface};
+            SurfaceParams new_params{*surface};
             new_params.addr = std::min(aligned_params.addr, surface->addr);
             new_params.end = std::max(aligned_params.end, surface->end);
             new_params.size = new_params.end - new_params.addr;
