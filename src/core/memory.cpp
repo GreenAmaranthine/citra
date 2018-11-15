@@ -382,7 +382,7 @@ void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
         VAddr overlap_start{std::max(start, region_start)};
         VAddr overlap_end{std::min(end, region_end)};
         PAddr physical_start{paddr_region_start + (overlap_start - region_start)};
-        u32 overlap_size = overlap_end - overlap_start;
+        u32 overlap_size{overlap_end - overlap_start};
         auto rasterizer{VideoCore::g_renderer->GetRasterizer()};
         switch (mode) {
         case FlushMode::Flush:
@@ -398,7 +398,7 @@ void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
     }};
     CheckRegion(LINEAR_HEAP_VADDR, LINEAR_HEAP_VADDR_END, FCRAM_PADDR);
     CheckRegion(NEW_LINEAR_HEAP_VADDR, NEW_LINEAR_HEAP_VADDR_END, FCRAM_PADDR);
-    CheckRegion(VRAM_VADDR, VRAM_N3DS_PADDR_END, VRAM_PADDR);
+    CheckRegion(VRAM_VADDR, VRAM_N3DS_VADDR_END, VRAM_PADDR);
 }
 
 u8 Read8(const VAddr addr) {

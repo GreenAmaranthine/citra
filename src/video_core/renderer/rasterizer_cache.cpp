@@ -740,7 +740,7 @@ Surface FindMatch(const SurfaceCache& surface_cache, const SurfaceParams& params
     Surface match_surface{};
     bool match_valid{};
     u32 match_scale{};
-    SurfaceInterval match_interval;
+    SurfaceInterval match_interval{};
     for (auto& pair : RangeFromInterval(surface_cache, params.GetInterval())) {
         for (auto& surface : pair.second) {
             bool res_scale_matched{match_scale_type == ScaleMatch::Exact
