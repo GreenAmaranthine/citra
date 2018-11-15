@@ -259,11 +259,10 @@ static void TextureCopy(const Regs::DisplayTransferConfig& config) {
     u8* src_pointer{Memory::GetPhysicalPointer(src_addr)};
     u8* dst_pointer{Memory::GetPhysicalPointer(dst_addr)};
     u32 remaining_size{Common::AlignDown(config.texture_copy.size, 16)};
-    if (remaining_size == 0) {
+    if (remaining_size == 0)
         // Real hardware freezes in this case. we do the same
         for (;;)
             ;
-    }
     u32 input_gap{config.texture_copy.input_gap * 16};
     u32 output_gap{config.texture_copy.output_gap * 16};
     // Zero gap means contiguous input/output even if width = 0. To avoid infinite loop below,
@@ -440,7 +439,7 @@ void Init() {
     framebuffer_sub.color_format.Assign(Regs::PixelFormat::RGB8);
     framebuffer_sub.active_fb = 0;
     // Register and schedule event
-    Core::Timing& timing{Core::System::GetInstance().CoreTiming()};
+    auto& timing{Core::System::GetInstance().CoreTiming()};
     vblank_event = timing.RegisterEvent("GPU VBlank Event", VBlankCallback);
     timing.ScheduleEvent(
         static_cast<u64>(BASE_CLOCK_RATE_ARM11 / Settings::values.screen_refresh_rate),

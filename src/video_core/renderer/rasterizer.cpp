@@ -47,10 +47,9 @@ Rasterizer::Rasterizer(Core::Timing& timing)
     if (!allow_shadow)
         LOG_WARNING(Render,
                     "Shadow might not be able to render because of unsupported OpenGL extensions.");
-    if (!GLAD_GL_ARB_texture_barrier) {
+    if (!GLAD_GL_ARB_texture_barrier)
         LOG_WARNING(Render,
                     "ARB_texture_barrier not supported. Some games might produce artifacts.");
-    }
     // Clipping plane 0 is always enabled for PICA fixed clip plane z <= 0
     state.clip_distance[0] = true;
     // Create sampler objects
@@ -206,7 +205,6 @@ void Rasterizer::SyncEntireState() {
 static bool AreQuaternionsOpposite(Math::Vec4<Pica::float24> qa, Math::Vec4<Pica::float24> qb) {
     Math::Vec4f a{qa.x.ToFloat32(), qa.y.ToFloat32(), qa.z.ToFloat32(), qa.w.ToFloat32()};
     Math::Vec4f b{qb.x.ToFloat32(), qb.y.ToFloat32(), qb.z.ToFloat32(), qb.w.ToFloat32()};
-
     return (Math::Dot(a, b) < 0.f);
 }
 
