@@ -130,7 +130,7 @@
    <item row="0" column="0">
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Battery</string>
+      <string>Power</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_8">
       <item>
