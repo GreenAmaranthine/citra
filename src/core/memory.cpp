@@ -259,23 +259,19 @@ u8* GetPhysicalPointer(PAddr address) {
     u8* target_pointer{};
     switch (area->paddr_base) {
     case VRAM_PADDR:
-        target_base = vram.data();
-        target_pointer = target_base + offset_into_region;
+        target_pointer = vram.data() + offset_into_region;
         break;
     case DSP_RAM_PADDR:
-        target_base = Core::DSP().GetDspMemory().data();
-        target_pointer = target_base + offset_into_region;
+        target_pointer = Core::DSP().GetDspMemory().data() + offset_into_region;
         break;
     case FCRAM_PADDR:
         target_pointer = fcram.data() + offset_into_region;
         break;
     case N3DS_EXTRA_RAM_PADDR:
-        target_base = n3ds_extra_ram.data();
-        target_pointer = target_base + offset_into_region;
+        target_pointer = n3ds_extra_ram.data() + offset_into_region;
         break;
     case L2C_PADDR:
-        target_base = l2cache.data();
-        target_pointer = target_base + offset_into_region;
+        target_pointer = l2cache.data() + offset_into_region;
         break;
     default:
         UNREACHABLE();
