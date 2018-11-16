@@ -43,7 +43,7 @@ matrix:
     dist: trusty
     services: docker
     cache: ccache
-    script: "./.travis/linuxif: branch IS unofficial-frozen/build.sh"
+    script: "./.travis/linux-frozen/build.sh"
   - os: linux
     env: NAME="MinGW build"
     sudo: required
