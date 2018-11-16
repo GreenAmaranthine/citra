@@ -326,6 +326,7 @@ void SoftwareKeyboard::Finalize() {
     message.sender_id = id;
     SendParameter(message);
     is_running = false;
+    text_memory = nullptr;
 }
 
 } // namespace HLE::Applets
