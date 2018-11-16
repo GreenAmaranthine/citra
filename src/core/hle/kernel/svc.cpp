@@ -92,7 +92,7 @@ enum class SystemInfoType {
 enum class SystemInfoMemUsageRegion {
     All = 0,
     Application = 1,
-    Systen = 2,
+    System = 2,
     Base = 3,
 };
 
