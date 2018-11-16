@@ -241,27 +241,21 @@ u8* GetPhysicalPointer(PAddr address) {
         u32 size;
     };
     constexpr MemoryArea memory_areas[]{
-        {VRAM_PADDR, VRAM_N3DS_SIZE},
-        {IO_AREA_PADDR, IO_AREA_SIZE},
-        {DSP_RAM_PADDR, DSP_RAM_SIZE},
-        {FCRAM_PADDR, FCRAM_N3DS_SIZE},
-        {N3DS_EXTRA_RAM_PADDR, N3DS_EXTRA_RAM_SIZE},
+        {VRAM_PADDR, VRAM_N3DS_SIZE},   {DSP_RAM_PADDR, DSP_RAM_SIZE},
+        {FCRAM_PADDR, FCRAM_N3DS_SIZE}, {N3DS_EXTRA_RAM_PADDR, N3DS_EXTRA_RAM_SIZE},
         {L2C_PADDR, L2C_SIZE},
     };
     const auto area{
         std::find_if(std::begin(memory_areas), std::end(memory_areas), [&](const auto& area) {
-            return address >= area.paddr_base && address < area.paddr_base + area.size;
+            // Note: the region end check is inclusive because the user can pass in an address that
+            // represents an open right bound
+            return address >= area.paddr_base && address <= area.paddr_base + area.size;
         })};
     if (area == std::end(memory_areas)) {
         LOG_ERROR(HW_Memory, "unknown GetPhysicalPointer @ 0x{:08X}", address);
         return nullptr;
     }
-    if (area->paddr_base == IO_AREA_PADDR) {
-        LOG_ERROR(HW_Memory, "MMIO mappings aren't supported yet. phys_addr=0x{:08X}", address);
-        return nullptr;
-    }
     u32 offset_into_region{address - area->paddr_base};
-    u8* target_base{};
     u8* target_pointer{};
     switch (area->paddr_base) {
     case VRAM_PADDR:
