@@ -1,4 +1,4 @@
-// Co 'tdoesn' tdoesn 'tdoesn' tator Project
+// Copyright 2014 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -1235,8 +1235,11 @@ void GMainWindow::OnNANDDefault() {
 
 void GMainWindow::OnNANDCustom() {
     auto dir{QFileDialog::getExistingDirectory(this, "Set NAND Directory", ".")};
-    if (dir.isEmpty())
+    if (dir.isEmpty()) {
+        ui.action_NAND_Default->setChecked(true);
+        OnNANDDefault();
         return;
+    }
     Settings::values.nand_dir = dir.toStdString();
     app_list->PopulateAsync(UISettings::values.app_dirs);
 }
@@ -1248,8 +1251,11 @@ void GMainWindow::OnSDMCDefault() {
 
 void GMainWindow::OnSDMCCustom() {
     auto dir{QFileDialog::getExistingDirectory(this, "Set SD Card Directory", ".")};
-    if (dir.isEmpty())
+    if (dir.isEmpty()) {
+        ui.action_SDMC_Default->setChecked(true);
+        OnSDMCDefault();
         return;
+    }
     Settings::values.sdmc_dir = dir.toStdString();
     app_list->PopulateAsync(UISettings::values.app_dirs);
 }
