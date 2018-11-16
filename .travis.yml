@@ -1,4 +1,5 @@
 language: cpp
+if: tag IS blank
 matrix:
   include:
   - os: linux
@@ -66,4 +67,3 @@ deploy:
   skip_cleanup: true
   on:
     branch: master
-    tags: false
