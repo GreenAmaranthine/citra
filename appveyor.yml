@@ -27,7 +27,7 @@ platform:
 
 branches:
   only:
-    - valentin
+    - master
 
 configuration:
   - Release
