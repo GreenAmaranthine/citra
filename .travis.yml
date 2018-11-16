@@ -1,5 +1,4 @@
 language: cpp
-if: tag IS blank
 branches:
   only:
   - valentin
