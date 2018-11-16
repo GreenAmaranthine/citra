@@ -6,5 +6,5 @@ When submitting an issue, please check the following:
   - For crashes, a backtrace.
   - For graphical issues, comparison screenshots with real hardware.
   - For emulation inaccuracies, a test-case (if able).
-Don't use #. It will create references.
+- Don't use #. It will create references.
 --->
