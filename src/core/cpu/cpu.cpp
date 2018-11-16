@@ -125,7 +125,7 @@ private:
     u64 custom_ticks{};
     bool use_custom_ticks{};
     Core::System& system;
-    Kernel::SVC svc_context;
+    Kernel::SVCContext svc_context;
 };
 
 ThreadContext::ThreadContext() {
