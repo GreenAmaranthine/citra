@@ -517,11 +517,11 @@ bool GMainWindow::LoadROM(const std::string& filename) {
                 this, "Invalid ROM Format",
                 "Your ROM format isn't supported.<br/>Please follow the guides to redump your "
                 "<a "
-                "href='https://github.com/citra-valentin/citra/wiki/"
+                "href='https://github.com/valentinvanelslande/citra/wiki/"
                 "Dumping-Game-Cartridges/'>game "
                 "cartridges</a> or "
                 "<a "
-                "href='https://github.com/citra-valentin/citra/wiki/"
+                "href='https://github.com/valentinvanelslande/citra/wiki/"
                 "Dumping-Installed-Titles/'>installed "
                 "titles</a>.");
             break;
@@ -531,11 +531,11 @@ bool GMainWindow::LoadROM(const std::string& filename) {
                 this, "ROM Corrupted",
                 "Your ROM is corrupted. <br/>Please follow the guides to redump your "
                 "<a "
-                "href='https://github.com/citra-valentin/citra/wiki/"
+                "href='https://github.com/valentinvanelslande/citra/wiki/"
                 "Dumping-Game-Cartridges/'>game "
                 "cartridges</a> or "
                 "<a "
-                "href='https://github.com/citra-valentin/citra/wiki/"
+                "href='https://github.com/valentinvanelslande/citra/wiki/"
                 "Dumping-Installed-Titles/'>installed "
                 "titles</a>.");
             break;
@@ -544,11 +544,11 @@ bool GMainWindow::LoadROM(const std::string& filename) {
                 this, "ROM Encrypted",
                 "Your ROM is encrypted. <br/>Please follow the guides to redump your "
                 "<a "
-                "href='https://github.com/citra-valentin/citra/wiki/"
+                "href='https://github.com/valentinvanelslande/citra/wiki/"
                 "Dumping-Game-Cartridges/'>game "
                 "cartridges</a> or "
                 "<a "
-                "href='https://github.com/citra-valentin/citra/wiki/"
+                "href='https://github.com/valentinvanelslande/citra/wiki/"
                 "Dumping-Installed-Titles/'>installed "
                 "titles</a>.");
             break;
@@ -557,11 +557,11 @@ bool GMainWindow::LoadROM(const std::string& filename) {
                 this, "Invalid ROM Format",
                 "Your ROM format isn't supported.<br/>Please follow the guides to redump your "
                 "<a "
-                "href='https://github.com/citra-valentin/citra/wiki/"
+                "href='https://github.com/valentinvanelslande/citra/wiki/"
                 "Dumping-Game-Cartridges/'>game "
                 "cartridges</a> or "
                 "<a "
-                "href='https://github.com/citra-valentin/citra/wiki/"
+                "href='https://github.com/valentinvanelslande/citra/wiki/"
                 "Dumping-Installed-Titles/'>installed "
                 "titles</a>.");
             break;
@@ -1499,7 +1499,7 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, const std::stri
     case Core::System::ResultStatus::ErrorSystemFiles: {
         const QString common_message{
             "%1 is missing. Please <a "
-            "href='https://github.com/citra-valentin/citra/wiki/"
+            "href='https://github.com/valentinvanelslande/citra/wiki/"
             "Dumping-System-Archives-from-a-Console/'>dump your system "
             "archives</a>.<br/>Continuing emulation may result in crashes and bugs."};
         if (!details.empty())
@@ -1682,7 +1682,7 @@ void GMainWindow::InitializeDiscordRPC() {
     DiscordEventHandlers handlers{};
     handlers.disconnected = HandleDiscordDisconnected;
     handlers.errored = HandleDiscordError;
-    Discord_Initialize("472104565165260826", &handlers, 0, NULL);
+    Discord_Initialize("512801235930447874", &handlers, 0, NULL);
     discord_rpc_start_time = std::chrono::duration_cast<std::chrono::seconds>(
                                  std::chrono::system_clock::now().time_since_epoch())
                                  .count();
