@@ -2,7 +2,7 @@ language: cpp
 if: tag IS blank
 branches:
   only:
-  - unofficial
+  - valentin
 matrix:
   include:
   - os: linux
@@ -70,4 +70,4 @@ deploy:
   skip_cleanup: true
   on:
     repo: valentinvanelslande/citra
-    branch: unofficial
+    branch: valentin
