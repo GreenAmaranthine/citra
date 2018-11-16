@@ -1040,7 +1040,7 @@ ResultCode SVC::CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 my
     auto region{MemoryRegion::Base};
     if (addr == 0 && current_process->flags.shared_device_mem)
         region = current_process->flags.memory_region;
-    CASCADE_RESULT(shared_memory,
+    CASCADE_RESULT(auto shared_memory,
                    kernel.CreateSharedMemory(
                        current_process.get(), size, static_cast<MemoryPermission>(my_permission),
                        static_cast<MemoryPermission>(other_permission), addr, region));
