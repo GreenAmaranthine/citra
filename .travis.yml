@@ -65,4 +65,4 @@ deploy:
   file: "artifacts/*"
   skip_cleanup: true
   on:
-    tags: true
+    tags: false
