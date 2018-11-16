@@ -113,37 +113,29 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
             if (reply) {
                 // Scan the target's command buffer for the matching mapped buffer.
                 // The real kernel panics if you try to reply with an unsolicited MappedBuffer.
-                auto found = std::find_if(
+                auto found{std::find_if(
                     mapped_buffer_context.begin(), mapped_buffer_context.end(),
                     [permissions, size, source_address](const MappedBufferContext& context) {
                         // Note: reply's source_address is request's target_address
                         return context.permissions == permissions && context.size == size &&
                                context.target_address == source_address;
-                    });
-
+                    })};
                 ASSERT(found != mapped_buffer_context.end());
-
-                if (permissions != IPC::MappedBufferPermissions::R) {
+                if (permissions != IPC::MappedBufferPermissions::R)
                     // Copy the modified buffer back into the target process
                     Memory::CopyBlock(*src_process, *dst_process, found->target_address,
                                       found->source_address, size);
-                }
-
-                VAddr prev_reserve = page_start - Memory::PAGE_SIZE;
-                VAddr next_reserve = page_start + num_pages * Memory::PAGE_SIZE;
-
-                auto& prev_vma = src_process->vm_manager.FindVMA(prev_reserve)->second;
-                std::size_t auto& next_vma = src_process->vm_manager.FindVMA(next_reserve)->second;
+                VAddr prev_reserve{page_start - Memory::PAGE_SIZE};
+                VAddr next_reserve{page_start + num_pages * Memory::PAGE_SIZE};
+                auto& prev_vma{src_process->vm_manager.FindVMA(prev_reserve)->second};
+                auto& next_vma{src_process->vm_manager.FindVMA(next_reserve)->second};
                 ASSERT(prev_vma.meminfo_state == MemoryState::Reserved &&
                        next_vma.meminfo_state == MemoryState::Reserved);
-
                 // Unmap the buffer and guard pages from the source process
-                ResultCode result = src_process->vm_manager.UnmapRange(
-                    page_start - Memory::PAGE_SIZE, (num_pages + 2) * Memory::PAGE_SIZE);
+                auto result{src_process->vm_manager.UnmapRange(
+                    page_start - Memory::PAGE_SIZE, (num_pages + 2) * Memory::PAGE_SIZE)};
                 ASSERT(result == RESULT_SUCCESS);
-
                 mapped_buffer_context.erase(found);
-
                 i += 1;
                 break;
             }
@@ -155,13 +147,13 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
                 Memory::PAGE_SIZE, Kernel::MemoryState::Reserved);
             auto buffer{std::make_unique<u8[]>(num_pages * Memory::PAGE_SIZE)};
             Memory::ReadBlock(*src_process, source_address, buffer.get() + page_offset, size);
-            // Map the page(s) into the target process' address space.
-            target_address =
-                dst_process->vm_manager
-                    .MapBackingMemoryToBase(Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE,
-                                            buffer.get(), num_pages * Memory::PAGE_SIZE,
-                                            Kernel::MemoryState::Shared)
-                    .Unwrap();
+            // Map the page(s) into the target process's address space.
+            VAddr target_address{dst_process->vm_manager
+                                     .MapBackingMemoryToBase(Memory::IPC_MAPPING_VADDR,
+                                                             Memory::IPC_MAPPING_SIZE, buffer.get(),
+                                                             num_pages * Memory::PAGE_SIZE,
+                                                             Kernel::MemoryState::Shared)
+                                     .Unwrap()};
             cmd_buf[i++] = target_address + page_offset;
             // Reserve a page of memory after the mapped buffer
             dst_process->vm_manager.MapBackingMemoryToBase(

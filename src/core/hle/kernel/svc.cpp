@@ -86,14 +86,14 @@ enum class SystemInfoType {
 };
 
 /**
- * Accepted by svcGetSystemInfo param with REGION_MEMORY_USAGE type. Selects a region to query
+ * Accepted by svcGetSystemInfo param with MemoryUsage type. Selects a region to query
  * memory usage of.
  */
 enum class SystemInfoMemUsageRegion {
-    ALL = 0,
-    APPLICATION = 1,
-    SYSTEM = 2,
-    BASE = 3,
+    All = 0,
+    Application = 1,
+    Systen = 2,
+    Base = 3,
 };
 
 class SVC : public SVCWrapper<SVC> {
