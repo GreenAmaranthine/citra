@@ -27,7 +27,7 @@ platform:
 
 branches:
   only:
-    - master
+    - unofficial
 
 configuration:
   - Release
