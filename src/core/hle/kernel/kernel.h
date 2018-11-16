@@ -179,7 +179,7 @@ public:
                                                           MemoryPermission permissions,
                                                           MemoryPermission other_permissions,
                                                           VAddr address = 0,
-                                                          MemoryRegion region = MemoryRegion::BASE,
+                                                          MemoryRegion region = MemoryRegion::Base,
                                                           std::string name = "Unknown");
 
     /**
