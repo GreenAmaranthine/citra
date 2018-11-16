@@ -555,21 +555,11 @@ ResultCode SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_co
             *index = -1;
             return ERR_SESSION_CLOSED_BY_REMOTE;
         }
-<<<<<<< HEAD
         auto source_address{thread->GetCommandBufferAddress()};
         auto target_address{request_thread->GetCommandBufferAddress()};
-        auto translation_result{
-            TranslateCommandBuffer(thread, request_thread, source_address, target_address, true)};
-=======
-
-        VAddr source_address = thread->GetCommandBufferAddress();
-        VAddr target_address = request_thread->GetCommandBufferAddress();
-
-        ResultCode translation_result =
-            TranslateCommandBuffer(thread, request_thread, source_address, target_address,
-                                   session->mapped_buffer_context, true);
-
->>>>>>> 0b8d2ecab... IPC: store mapped buffer info in session context
+        auto translation_result{TranslateCommandBuffer(thread, request_thread, source_address,
+                                                       target_address,
+                                                       session->mapped_buffer_context, true)};
         // Note: The real kernel seems to always panic if the Server->Client buffer translation
         // fails for whatever reason.
         ASSERT(translation_result.IsSuccess());
