@@ -1,6 +1,8 @@
 language: cpp
 if: tag IS blank
-if: branch IS unofficial
+branches:
+  only:
+  - unofficial
 matrix:
   include:
   - os: linux
@@ -41,7 +43,7 @@ matrix:
     dist: trusty
     services: docker
     cache: ccache
-    script: "./.travis/linux-frozen/build.sh"
+    script: "./.travis/linuxif: branch IS unofficial-frozen/build.sh"
   - os: linux
     env: NAME="MinGW build"
     sudo: required
