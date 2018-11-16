@@ -54,6 +54,7 @@ struct Values {
     QByteArray state;
     QByteArray screens_geometry;
     QByteArray applist_header_state;
+    QByteArray configuration_geometry;
 
     bool single_window_mode;
     bool fullscreen;

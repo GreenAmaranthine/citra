@@ -290,6 +290,8 @@ void Config::Load() {
     UISettings::values.state = qt_config->value("state").toByteArray();
     UISettings::values.screens_geometry = qt_config->value("geometryScreens").toByteArray();
     UISettings::values.applist_header_state = qt_config->value("appListHeaderState").toByteArray();
+    UISettings::values.configuration_geometry =
+        qt_config->value("configurationGeometry").toByteArray();
     qt_config->endGroup();
     qt_config->beginGroup("AppList");
     int icon_size{qt_config->value("iconSize", 2).toInt()};
@@ -511,6 +513,7 @@ void Config::Save() {
     qt_config->setValue("state", UISettings::values.state);
     qt_config->setValue("geometryScreens", UISettings::values.screens_geometry);
     qt_config->setValue("appListHeaderState", UISettings::values.applist_header_state);
+    qt_config->setValue("configurationGeometry", UISettings::values.configuration_geometry);
     qt_config->endGroup();
     qt_config->beginGroup("AppList");
     qt_config->setValue("iconSize", static_cast<int>(UISettings::values.app_list_icon_size));

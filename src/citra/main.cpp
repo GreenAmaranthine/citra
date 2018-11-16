@@ -1161,6 +1161,7 @@ void GMainWindow::ToggleSleepMode() {
 
 void GMainWindow::OnOpenConfiguration() {
     ConfigurationDialog configuration_dialog{this, hotkey_registry, system};
+    configuration_dialog.restoreGeometry(UISettings::values.configuration_geometry);
     auto old_theme{UISettings::values.theme};
     auto old_profile{Settings::values.profile};
     auto old_profiles{Settings::values.profiles};
@@ -1185,6 +1186,7 @@ void GMainWindow::OnOpenConfiguration() {
             SyncMenuUISettings();
             app_list->Refresh();
             config->Save();
+            UISettings::values.configuration_geometry = configuration_dialog.saveGeometry();
         }
 #ifdef ENABLE_DISCORD_RPC
         if (old_enable_discord_rpc != UISettings::values.enable_discord_rpc)
