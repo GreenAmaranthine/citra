@@ -1,5 +1,5 @@
 language: cpp
-if: tag IS blank
+# if: tag IS blank
 matrix:
   include:
   - os: linux
