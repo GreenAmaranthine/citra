@@ -203,6 +203,8 @@ private:
 
     Network::RoomMember::CallbackHandle<Network::RoomInformation> callback_handle;
 
+    Core::System& system{Core::System::GetInstance()};
+
     MultiplayerState* multiplayer_state;
     std::unique_ptr<Config> config;
 
@@ -224,8 +226,6 @@ private:
     QStringList default_theme_paths;
 
     HotkeyRegistry hotkey_registry;
-
-    Core::System& system{Core::System::GetInstance()};
 
 protected:
     void dropEvent(QDropEvent* event) override;
