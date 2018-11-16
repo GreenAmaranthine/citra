@@ -1,5 +1,4 @@
 language: cpp
-if: tag IS blank
 matrix:
   include:
   - os: linux
@@ -66,5 +65,4 @@ deploy:
   file: "artifacts/*"
   skip_cleanup: true
   on:
-    repo: valentinvanelslande/citra
-    branch: valentin
+    tags: true
