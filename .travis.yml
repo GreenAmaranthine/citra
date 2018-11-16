@@ -62,7 +62,9 @@ deploy:
   provider: releases
   api_key:
     secure: uUzVCJOueDnBwsP8xMcvGHiJ0ajTRbxectYvKcahEntpmcwEZGDfQIznTFAMS67uTR6WdV2SuD25bR+ZuT+fZr+P6nFNMah4nRkkrnqDDv71aT8Xftam+l9Y3Mvj0dzkdC+RZT3UdsVQkyF+7bcMcHZ0M6wL1773IU4P+w6bwbhpiWMYPWWavyQd3QeQfQyEm0kVmlFNfGiftoUjERvMd4vvMIvJzxnKU77TprJ4wHtwunwLehh+/b7UQufyuGMmlqeGqHG7Jhn+enRgLUXRvu+mz8WIVlLtRLLVzPu5vq0apnkOYHBiIdxSTdPNqIfe6zIr5sHFg1afmkl0zMI3jOICLF0KmJTEGSXTD4BiIc/3m+nh62vY/G0DX84lu0eFDjmsbp05mFUBfrkO3FVaZ1Cd0SRUTXdLGKWhpaU4BmcYPupCYnn1XEFW+4zJUUReNEVQgzfHNErkqS7lQsPMpbUpRxtZsoZGex6YixoV7T4PdHpWKwADOOlz48SsTr23wQ+CUfDMSln3oZlX1ck7ePTNgHeInuCiBmjkk1EHDCrD2iyK26jBnhKNAXZgqwrqYpUuUJMNczMj1wSOt36s5/6czpV5D58d8Rvu/zNVmwMVh2Ym/CkvM7Cujy2yjfvSloYox6noSaCk3ka/t5dWIPDwXsGKHw5oLeR/a/Z+axc=
-  file: artifacts/*
+  file_glob: true
+  file: "artifacts/*"
+  skip_cleanup: true
   on:
     repo: valentinvanelslande/citra
     branch: unofficial
