@@ -1,5 +1,6 @@
 language: cpp
 if: tag IS blank
+if: branch IS unofficial
 matrix:
   include:
   - os: linux
