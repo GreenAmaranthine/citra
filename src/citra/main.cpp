@@ -1712,25 +1712,18 @@ void GMainWindow::ShutdownDiscordRPC() {
 void GMainWindow::UpdateDiscordRPC(const Network::RoomInformation& info) {
 #ifdef ENABLE_DISCORD_RPC
     if (UISettings::values.enable_discord_rpc) {
-        DiscordEventHandlers handlers{};
-        handlers.disconnected = HandleDiscordDisconnected;
-        handlers.errored = HandleDiscordError;
         DiscordRichPresence presence{};
         auto& member{system.RoomMember()};
         if (member.IsConnected()) {
             const auto& member_info{member.GetMemberInformation()};
             presence.partySize = member_info.size();
             presence.partyMax = info.member_slots;
-            static std::string room_name;
-            room_name = info.name;
-            presence.state = room_name.c_str();
+            presence.state = info.name.c_str();
         }
-        static std::string details;
-        if (!short_title.empty())
-            details =
-                fmt::format("{} | {}-{}", short_title, Common::g_scm_branch, Common::g_scm_desc);
-        else
-            details = fmt::format("{}-{}", Common::g_scm_branch, Common::g_scm_desc);
+        std::string details{
+            !short_title.empty()
+                ? fmt::format("{} | {}-{}", short_title, Common::g_scm_branch, Common::g_scm_desc)
+                : fmt::format("{}-{}", Common::g_scm_branch, Common::g_scm_desc)};
         presence.details = details.c_str();
         presence.startTimestamp = discord_rpc_start_time;
         presence.largeImageKey = "icon";
