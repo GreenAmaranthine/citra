@@ -68,11 +68,11 @@ ResultCode CROHelper::ApplyRelocation(VAddr target_address, RelocationType reloc
     case RelocationType::AbsoluteAddress:
     case RelocationType::AbsoluteAddress2:
         Memory::Write32(target_address, symbol_address + addend);
-        system.CPU().InvalidateCacheRange(target_address, sizeof(u32));
+        process.system.CPU().InvalidateCacheRange(target_address, sizeof(u32));
         break;
     case RelocationType::RelativeAddress:
         Memory::Write32(target_address, symbol_address + addend - target_future_address);
-        system.CPU().InvalidateCacheRange(target_address, sizeof(u32));
+        process.system.CPU().InvalidateCacheRange(target_address, sizeof(u32));
         break;
     case RelocationType::ThumbBranch:
     case RelocationType::ArmBranch:
@@ -95,7 +95,7 @@ ResultCode CROHelper::ClearRelocation(VAddr target_address, RelocationType reloc
     case RelocationType::AbsoluteAddress2:
     case RelocationType::RelativeAddress:
         Memory::Write32(target_address, 0);
-        system.CPU().InvalidateCacheRange(target_address, sizeof(u32));
+        process.system.CPU().InvalidateCacheRange(target_address, sizeof(u32));
         break;
     case RelocationType::ThumbBranch:
     case RelocationType::ArmBranch:
