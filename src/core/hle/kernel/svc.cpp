@@ -663,7 +663,7 @@ void SVC::OutputDebugString(VAddr address, s32 len) {
     if (len <= 0)
         return;
     std::string string(len, ' ');
-    Memory::ReadBlock(address, string.data(), len);
+    Memory::ReadBlock(*kernel.GetCurrentProcess(), address, string.data(), len);
     LOG_DEBUG(Debug_Emulated, "{}", string);
 }
 
