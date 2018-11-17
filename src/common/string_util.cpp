@@ -34,24 +34,6 @@ std::string ToUpper(std::string str) {
     return str;
 }
 
-// For Debugging. Read out an u8 array.
-std::string ArrayToString(const u8* data, std::size_t size, int line_len, bool spaces) {
-    std::ostringstream oss;
-    oss << std::setfill('0') << std::hex;
-
-    for (int line{}; size; ++data, --size) {
-        oss << std::setw(2) << (int)*data;
-
-        if (line_len == ++line) {
-            oss << '\n';
-            line = 0;
-        } else if (spaces)
-            oss << ' ';
-    }
-
-    return oss.str();
-}
-
 bool SplitPath(const std::string& full_path, std::string* _pPath, std::string* _pFilename,
                std::string* _pExtension) {
     if (full_path.empty())

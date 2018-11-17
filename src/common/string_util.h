@@ -22,9 +22,6 @@ std::string ToLower(std::string str);
 /// Make a string uppercase
 std::string ToUpper(std::string str);
 
-// Good
-std::string ArrayToString(const u8* data, std::size_t size, int line_len = 20, bool spaces = true);
-
 void SplitString(const std::string& str, char delim, std::vector<std::string>& output);
 
 // "C:/Windows/winhelp.exe" to "C:/Windows/", "winhelp", ".exe"
