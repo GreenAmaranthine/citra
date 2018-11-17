@@ -91,7 +91,6 @@ private:
         auto port_message{Request::Create(port_info, client_id)};
         std::memcpy(&send_buffer1, &port_message, PORT_INFO_SIZE);
         std::size_t len{socket.send_to(boost::asio::buffer(send_buffer1), send_endpoint)};
-
         // Send a request for getting pad data for the pad
         Request::PadData pad_data{Request::PadData::Flags::Id, pad_index, EMPTY_MAC_ADDRESS};
         auto pad_message{Request::Create(pad_data, client_id)};
@@ -162,8 +161,8 @@ void Client::OnPadData(Response::PadData data) {
     // Due to differences between the console and cemuhookudp motion directions, we need to invert
     // accel.x and accel.z and also invert pitch and yaw. See
     // https://github.com/citra-emu/citra/pull/4049 for more details on gyro/accel
-    Math::Vec3f accel{Math::MakeVec<float>(-data.accel.x, data.accel.y, -data.accel.z)};
-    Math::Vec3f gyro{Math::MakeVec<float>(-data.gyro.pitch, -data.gyro.yaw, data.gyro.roll)};
+    auto accel{Math::MakeVec<float>(-data.accel.x, data.accel.y, -data.accel.z)};
+    auto gyro{Math::MakeVec<float>(-data.gyro.pitch, -data.gyro.yaw, data.gyro.roll)};
     {
         std::lock_guard lock{status->update_mutex};
         status->motion_status = {accel, gyro};
@@ -199,7 +198,7 @@ void TestCommunication(const std::string& host, u16 port, u8 pad_index, u32 clie
                        std::function<void()> success_callback,
                        std::function<void()> failure_callback) {
     std::thread([=] {
-        Common::Event success_event{};
+        Common::Event success_event;
         SocketCallback callback{[](Response::Version version) {}, [](Response::PortInfo info) {},
                                 [&](Response::PadData data) { success_event.Set(); }};
         Socket socket{host, port, pad_index, client_id, callback};
@@ -219,14 +218,11 @@ CalibrationConfigurationJob::CalibrationConfigurationJob(
     const std::string& host, u16 port, u8 pad_index, u32 client_id,
     std::function<void(Status)> status_callback,
     std::function<void(u16, u16, u16, u16)> data_callback) {
-
     std::thread([=] {
         constexpr u16 CALIBRATION_THRESHOLD{100};
-
         u16 min_x{UINT16_MAX}, min_y{UINT16_MAX};
         u16 max_x{}, max_y{};
-
-        Status current_status{Status::Initialized};
+        auto current_status{Status::Initialized};
         SocketCallback callback{[](Response::Version version) {}, [](Response::PortInfo info) {},
                                 [&](Response::PadData data) {
                                     if (current_status == Status::Initialized) {
