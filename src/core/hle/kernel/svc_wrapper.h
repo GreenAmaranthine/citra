@@ -135,7 +135,7 @@ private:
                 mod_abi.in[k] = armabi_reg[k];
             else {
                 // Otherwise, assign it with the next available stack input
-                // If all stack inputs have been allocated, this would don'thing
+                // If all stack inputs have been allocated, this would do nothing
                 // and leaves the slot unused.
                 // Loop until an input stack param is found
                 while (stack_pos < armabi_stack.size() &&
