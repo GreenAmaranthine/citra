@@ -297,10 +297,6 @@ private:
     std::condition_variable running_cv;
 };
 
-inline Cpu& CPU() {
-    return System::GetInstance().CPU();
-}
-
 inline AudioCore::DspHle& DSP() {
     return System::GetInstance().DSP();
 }
