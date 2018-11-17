@@ -5,6 +5,7 @@
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/cpu/cpu.h"
+#include "core/hle/kernel/process.h"
 #include "core/hle/service/hid/hid.h"
 #include "core/memory.h"
 #include "core/rpc/packet.h"
