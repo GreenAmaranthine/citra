@@ -148,7 +148,7 @@ void NWM_UDS::HandleBeaconFrame(const Network::WifiPacket& packet) {
 void NWM_UDS::HandleAssociationResponseFrame(const Network::WifiPacket& packet) {
     auto assoc_result{GetAssociationResult(packet.data)};
     ASSERT_MSG(std::get<AssocStatus>(assoc_result) == AssocStatus::Successful,
-               "Could not join network");
+               "Couldn't join network");
     {
         std::lock_guard lock{connection_status_mutex};
         if (connection_status.status != static_cast<u32>(NetworkStatus::Connecting)) {

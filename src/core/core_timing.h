@@ -144,7 +144,7 @@ public:
     u64 GetIdleTicks() const;
     void AddTicks(u64 ticks);
 
-    /// Returns the event_type identifier. if name is not unique, it will assert.
+    /// Returns the event_type identifier. if name isn't unique, it will assert.
     TimingEventType* RegisterEvent(const std::string& name, TimedCallback callback);
 
     /**

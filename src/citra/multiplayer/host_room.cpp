@@ -102,7 +102,7 @@ void HostRoomWindow::Host() {
                                       ui->max_members->value(), app_name.toStdString(), app_id)};
     if (!created) {
         NetworkMessage::ShowError(NetworkMessage::COULD_NOT_CREATE_ROOM);
-        LOG_ERROR(Network, "Could not create room!");
+        LOG_ERROR(Network, "Couldn't create room!");
         ui->host->setEnabled(true);
         return;
     }

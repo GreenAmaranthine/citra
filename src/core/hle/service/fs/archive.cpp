@@ -313,7 +313,7 @@ void ArchiveManager::RegisterSelfNCCH(Loader::AppLoader& app_loader) {
     auto itr{id_code_map.find(ArchiveIdCode::SelfNCCH)};
     if (itr == id_code_map.end()) {
         LOG_ERROR(Service_FS,
-                  "Could not register a new NCCH because the SelfNCCH archive hasn't been created");
+                  "Couldn't register a new NCCH because the SelfNCCH archive hasn't been created");
         return;
     }
     auto factory{static_cast<FileSys::ArchiveFactory_SelfNCCH*>(itr->second.get())};

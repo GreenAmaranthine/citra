@@ -149,10 +149,10 @@ bool MultiplayerState::OnCloseRoom() {
         return false;
     auto& room{system.Room()};
     auto& member{system.RoomMember()};
-    // If we are in a room, leave it
+    // If we're in a room, leave it
     member.Leave();
     LOG_DEBUG(Frontend, "Left the room (as a client)");
-    // If we are hosting a room, also stop hosting
+    // If we're hosting a room, also stop hosting
     if (!room.IsOpen())
         return true;
     room.Destroy();

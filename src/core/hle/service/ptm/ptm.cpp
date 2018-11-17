@@ -119,7 +119,7 @@ Module::Module(Core::System& system) : system{system} {
         // Open it again to get a valid archive now that the folder exists
         auto new_archive_result{extdata_archive_factory.Open(archive_path)};
         ASSERT_MSG(new_archive_result.Succeeded(),
-                   "Could not open the PTM SharedExtSaveData archive!");
+                   "Couldn't open the PTM SharedExtSaveData archive!");
         FileSys::Path gamecoin_path{"/gamecoin.dat"};
         auto archive{std::move(new_archive_result).Unwrap()};
         archive->CreateFile(gamecoin_path, sizeof(GameCoin));
@@ -141,7 +141,7 @@ void SetPlayCoins(u16 play_coins) {
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory{nand_directory, true};
     FileSys::Path archive_path{ptm_shared_extdata_id};
     auto archive_result{extdata_archive_factory.Open(archive_path)};
-    ASSERT_MSG(archive_result.Succeeded(), "Could not open the PTM SharedExtSaveData archive!");
+    ASSERT_MSG(archive_result.Succeeded(), "Couldn't open the PTM SharedExtSaveData archive!");
     auto archive{std::move(archive_result).Unwrap()};
     FileSys::Path gamecoin_path{"/gamecoin.dat"};
     FileSys::Mode open_mode{};

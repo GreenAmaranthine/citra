@@ -124,7 +124,7 @@ const std::array<ServiceModuleInfo, 38> service_module_map{
                                                        const u32* cmd_buff) {
     // Number of params == bits 0-5 + bits 6-11
     int num_params{static_cast<int>((cmd_buff[0] & 0x3F) + ((cmd_buff[0] >> 6) & 0x3F))};
-    std::string function_string{fmt::format("function '{}': port={}", name, port_name)};
+    auto function_string{fmt::format("function '{}': port={}", name, port_name)};
     for (int i{1}; i <= num_params; ++i)
         function_string += fmt::format(", cmd_buff[{}]=0x{:X}", i, cmd_buff[i]);
     return function_string;
@@ -195,7 +195,7 @@ static bool AttemptLLE(Core::System& system, const ServiceModuleInfo& service_mo
         system, AM::GetTitleContentPath(FS::MediaType::NAND, service_module.title_id))};
     if (!loader) {
         LOG_ERROR(Service,
-                  "Service module \"{}\" could not be loaded; Defaulting to HLE implementation.",
+                  "Service module \"{}\" couldn't be loaded; Defaulting to HLE implementation.",
                   service_module.name);
         return false;
     }

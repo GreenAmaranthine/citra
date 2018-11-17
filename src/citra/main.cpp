@@ -980,7 +980,7 @@ void GMainWindow::OnCIAInstallReport(Service::AM::InstallStatus status, const QS
         break;
     case Service::AM::InstallStatus::ErrorFailedToOpenFile:
         QMessageBox::critical(this, "Unable to open file",
-                              QString("Could not open %1").arg(filename));
+                              QString("Couldn't open %1").arg(filename));
         break;
     case Service::AM::InstallStatus::ErrorAborted:
         QMessageBox::critical(

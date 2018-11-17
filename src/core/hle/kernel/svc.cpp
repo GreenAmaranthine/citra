@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+//  'tisn' tisn't14 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -303,7 +303,7 @@ ResultCode SVC::MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 oth
 
 ResultCode SVC::UnmapMemoryBlock(Handle handle, u32 addr) {
     LOG_TRACE(Kernel_SVC, "memblock=0x{:08X}, addr=0x{:08X}", handle, addr);
-    // TODO: Return E0A01BF5 if the address is not in the application's heap
+    // TODO: Return E0A01BF5 if the address isn't in the application's heap
     auto current_process{kernel.GetCurrentProcess()};
     auto shared_memory{current_process->handle_table.Get<SharedMemory>(handle)};
     if (!shared_memory)
@@ -417,7 +417,7 @@ ResultCode SVC::WaitSynchronizationN(s32* out, VAddr handles_address, s32 handle
             // We can acquire all objects right now, do so.
             for (auto& object : objects)
                 object->Acquire(thread);
-            // Note: In this case, the `out` parameter is not set,
+            // Note: In this case, the `out` parameter isn't set,
             // and retains whatever value it had before.
             return RESULT_SUCCESS;
         }
@@ -446,7 +446,7 @@ ResultCode SVC::WaitSynchronizationN(s32* out, VAddr handles_address, s32 handle
             // The wait_all case does not update the output index.
         };
         system.PrepareReschedule();
-        // This value gets set to -1 by default in this case, it is not modified after this.
+        // This value gets set to -1 by default in this case, it isn't modified after this.
         *out = -1;
         // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to
         // a signal in one of its wait objects.
@@ -537,8 +537,8 @@ ResultCode SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_co
             return ERR_INVALID_HANDLE;
         objects[i] = object;
     }
-    // We are also sending a command reply.
-    // Do not send a reply if the command id in the command buffer is 0xFFFF.
+    // We're also sending a command reply.
+    // Don't send a reply if the command id in the command buffer is 0xFFFF.
     auto thread{kernel.GetThreadManager().GetCurrentThread()};
     u32 cmd_buff_header{Memory::Read32(thread->GetCommandBufferAddress())};
     IPC::Header header{cmd_buff_header};
@@ -569,7 +569,7 @@ ResultCode SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_co
     if (handle_count == 0) {
         *index = 0;
         // The kernel uses this value as a placeholder for the real error, and returns it when we
-        // pass no handles and do not perform any reply.
+        // pass no handles and don't perform any reply.
         if (reply_target == 0 || header.command_id == 0xFFFF)
             return ResultCode(0xE7E3FFFF);
         return RESULT_SUCCESS;

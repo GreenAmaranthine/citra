@@ -221,7 +221,7 @@ void ConfigureMotionTouch::ShowUDPTestResult(bool result) {
                                  "Successfully received data from the server.");
     } else {
         QMessageBox::warning(this, "Test Failed",
-                             "Could not receive valid data from the server.<br>Please verify "
+                             "Couldn't receive valid data from the server.<br>Please verify "
                              "that the server is set up correctly and "
                              "the address and port are correct.");
     }

@@ -123,7 +123,7 @@ void ChatRoom::AppendStatusMessage(const QString& msg) {
 }
 
 bool ChatRoom::Send(QString msg) {
-    // Check if we are in a room
+    // Check if we're in a room
     auto& member{system.RoomMember()};
     if (member.GetState() != Network::RoomMember::State::Joined)
         return false;

@@ -18,7 +18,7 @@ Kernel::SharedPtr<Kernel::Process> LaunchTitleImpl(Core::System& system, FS::Med
     std::string path{AM::GetTitleContentPath(media_type, title_id)};
     auto loader{Loader::GetLoader(system, path)};
     if (!loader) {
-        LOG_WARNING(Service_NS, "Could not find .app for title 0x{:016X}", title_id);
+        LOG_WARNING(Service_NS, "Couldn't find .app for title 0x{:016X}", title_id);
         return nullptr;
     }
     Kernel::SharedPtr<Kernel::Process> process;

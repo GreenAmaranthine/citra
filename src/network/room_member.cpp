@@ -384,7 +384,7 @@ void RoomMember::Join(const std::string& nick, const char* server_addr, u16 serv
         room_member_impl->loop_thread.reset();
     if (!room_member_impl->client) {
         room_member_impl->client = enet_host_create(nullptr, 1, NumChannels, 0, 0);
-        ASSERT_MSG(room_member_impl->client, "Could not create client");
+        ASSERT_MSG(room_member_impl->client, "Couldn't create client");
     }
     room_member_impl->SetState(State::Joining);
     ENetAddress address;

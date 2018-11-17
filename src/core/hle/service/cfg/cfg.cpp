@@ -463,7 +463,7 @@ ResultCode Module::UpdateConfigNANDSavegame() {
     mode.create_flag.Assign(1);
     FileSys::Path path{"/config"};
     auto config_result{cfg_system_save_data_archive->OpenFile(path, mode)};
-    ASSERT_MSG(config_result.Succeeded(), "could not open file");
+    ASSERT_MSG(config_result.Succeeded(), "couldn't open file");
     auto config{std::move(config_result).Unwrap()};
     config->Write(0, CONFIG_SAVEFILE_SIZE, 1, cfg_config_file_buffer.data());
     return RESULT_SUCCESS;
@@ -587,7 +587,7 @@ ResultCode Module::LoadConfigNANDSaveFile() {
         systemsavedata_factory.Format(archive_path, FileSys::ArchiveFormatInfo());
         cfg_system_save_data_archive = systemsavedata_factory.Open(archive_path).Unwrap();
     } else {
-        ASSERT_MSG(archive_result.Succeeded(), "Could not open the CFG SystemSaveData archive!");
+        ASSERT_MSG(archive_result.Succeeded(), "Couldn't open the CFG SystemSaveData archive!");
         cfg_system_save_data_archive = std::move(archive_result).Unwrap();
     }
     FileSys::Path config_path{"/config"};

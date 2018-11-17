@@ -72,7 +72,7 @@ void DelimitedCompleter::onActivated(const QString& text) {
 }
 
 void DelimitedCompleter::onCursorPositionChanged(int old_pos, int new_pos) {
-    // If old_pos == cursor_pos then we are cycling through autocomplete list
+    // If old_pos == cursor_pos then we're cycling through autocomplete list
     // If not cycling through autocomplete list, then make sure cursor_pos is reset to -1
     if (old_pos != cursor_pos)
         cursor_pos = -1;

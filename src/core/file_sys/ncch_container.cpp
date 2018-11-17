@@ -363,7 +363,7 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
             buffer.resize(logo_size);
             file.Seek(ncch_offset + logo_offset, SEEK_SET);
             if (file.ReadBytes(buffer.data(), logo_size) != logo_size) {
-                LOG_ERROR(Service_FS, "Could not read NCCH logo");
+                LOG_ERROR(Service_FS, "Couldn't read NCCH logo");
                 return Loader::ResultStatus::Error;
             }
             return Loader::ResultStatus::Success;

@@ -1416,7 +1416,7 @@ void HTTP_C::LoadDefaultCerts(Core::System& system) {
     std::string str(code_buffer.begin(), code_buffer.end());
     std::size_t pos{str.find("Nintendo") - 79};
     if (pos == std::string::npos) {
-        LOG_ERROR(Service_HTTP, "Could not locate start position for certificates in SSL module");
+        LOG_ERROR(Service_HTTP, "Couldn't locate start position for certificates in SSL module");
         return;
     }
     for (auto& c : default_root_certs) {

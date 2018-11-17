@@ -135,7 +135,7 @@ private:
                 mod_abi.in[k] = armabi_reg[k];
             else {
                 // Otherwise, assign it with the next available stack input
-                // If all stack inputs have been allocated, this would do nothing
+                // If all stack inputs have been allocated, this would don'thing
                 // and leaves the slot unused.
                 // Loop until an input stack param is found
                 while (stack_pos < armabi_stack.size() &&
@@ -221,7 +221,7 @@ private:
         // the next param.
         // Us are params whose I/O is already handled.
         // T is the current param to do I/O.
-        // Ts are params whose I/O is not handled yet.
+        // Ts are params whose I/O isn't handled yet.
         template <typename... Us>
         static void Call(Context& context, SVCT svc, Us... u) {
             static_assert(std::is_same_v<SVCT, R (Context::*)(Us..., T, Ts...)>);
