@@ -186,7 +186,7 @@ void Module::Interface::GenHashConsoleUnique(Kernel::HLERequestContext& ctx) {
     const u32 app_id_salt{rp.Pop<u32>() & 0x000FFFFF};
     IPC::ResponseBuilder rb{rp.MakeBuilder(3, 0)};
     std::array<u8, 12> buffer;
-    const ResultCode result{cfg->GetConfigInfoBlock(ConsoleUniqueID2BlockID, 8, 2, buffer.data())};
+    const auto result{cfg->GetConfigInfoBlock(ConsoleUniqueID2BlockID, 8, 2, buffer.data())};
     rb.Push(result);
     if (result.IsSuccess()) {
         std::memcpy(&buffer[8], &app_id_salt, sizeof(u32));

@@ -415,7 +415,7 @@ ResultCode AppletManager::CloseLibraryApplet(Kernel::SharedPtr<Kernel::Object> o
     param.object = std::move(object);
     param.signal = library_applet_closing_command;
     param.buffer = std::move(buffer);
-    ResultCode result{SendParameter(param)};
+    auto result{SendParameter(param)};
     if (library_applet_closing_command != SignalType::WakeupByPause)
         // TODO: Terminate the running applet title
         slot.Reset();

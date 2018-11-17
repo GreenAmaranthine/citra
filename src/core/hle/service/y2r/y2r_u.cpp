@@ -422,7 +422,7 @@ void Y2R_U::SetPackageParameter(Kernel::HLERequestContext& ctx) {
     conversion.output_format = params.output_format;
     conversion.rotation = params.rotation;
     conversion.block_alignment = params.block_alignment;
-    ResultCode result{conversion.SetInputLineWidth(params.input_line_width)};
+    auto result{conversion.SetInputLineWidth(params.input_line_width)};
     if (result.IsError())
         goto cleanup;
     result = conversion.SetInputLines(params.input_lines);

@@ -505,7 +505,7 @@ void HTTP_C::OpenClientCertContext(Kernel::HLERequestContext& ctx) {
     auto& key_buffer{rp.PopMappedBuffer()};
     auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
-    ResultCode result{RESULT_SUCCESS};
+    auto result{RESULT_SUCCESS};
     if (!session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Command called with uninitialized session");
         result = ERROR_STATE_ERROR;

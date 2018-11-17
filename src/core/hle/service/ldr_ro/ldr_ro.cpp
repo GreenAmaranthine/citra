@@ -111,7 +111,7 @@ void RO::Initialize(Kernel::HLERequestContext& ctx) {
         rb.Push(result);
         return;
     }
-    CROHelper crs{system, crs_address};
+    CROHelper crs{crs_address, *process};
     crs.InitCRS();
     result = crs.Rebase(0, crs_size, 0, 0, 0, 0, true);
     if (result.IsError()) {
@@ -225,7 +225,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
         rb.Push<u32>(0);
         return;
     }
-    CROHelper cro{system, cro_address};
+    CROHelper cro{cro_address, *process};
     result = cro.VerifyHash(cro_size, crr_address);
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error verifying CRO in CRR {:08X}", result.raw);
@@ -295,7 +295,7 @@ void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
     auto process{rp.PopObject<Kernel::Process>()};
     LOG_DEBUG(Service_LDR, "cro_address=0x{:08X}, zero={}, cro_buffer_ptr=0x{:08X}", cro_address,
               zero, cro_buffer_ptr);
-    CROHelper cro{system, cro_address};
+    CROHelper cro{cro_address, *process};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     auto slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs == 0) {
@@ -346,7 +346,7 @@ void RO::LinkCRO(Kernel::HLERequestContext& ctx) {
     VAddr cro_address{rp.Pop<u32>()};
     auto process{rp.PopObject<Kernel::Process>()};
     LOG_DEBUG(Service_LDR, "cro_address=0x{:08X}", cro_address);
-    CROHelper cro{system, cro_address};
+    CROHelper cro{cro_address, *process};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     auto slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs == 0) {
@@ -376,7 +376,7 @@ void RO::UnlinkCRO(Kernel::HLERequestContext& ctx) {
     VAddr cro_address{rp.Pop<u32>()};
     auto process{rp.PopObject<Kernel::Process>()};
     LOG_DEBUG(Service_LDR, "cro_address=0x{:08X}", cro_address);
-    CROHelper cro{system, cro_address};
+    CROHelper cro{cro_address, *process};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     auto slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs == 0) {
@@ -413,7 +413,7 @@ void RO::Shutdown(Kernel::HLERequestContext& ctx) {
         rb.Push(ERROR_NOT_INITIALIZED);
         return;
     }
-    CROHelper crs{system, slot->loaded_crs};
+    CROHelper crs(slot->loaded_crs, *process);
     crs.Unrebase(true);
     auto result{process->Unmap(slot->loaded_crs, crs_buffer_ptr, crs.GetFileSize(),
                                Kernel::VMAPermission::ReadWrite, true)};

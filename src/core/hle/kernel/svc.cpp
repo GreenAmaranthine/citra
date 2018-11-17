@@ -208,11 +208,11 @@ ResultCode SVC::ControlMemory(u32* out_addr, u32 addr0, u32 addr1, u32 size, u32
         // TODO: What happens if an application tries to free a block of memory that has a
         // SharedMemory pointing to it?
         if (addr0 >= Memory::HEAP_VADDR && addr0 < Memory::HEAP_VADDR_END) {
-            ResultCode result{process.HeapFree(addr0, size)};
+            auto result{process.HeapFree(addr0, size)};
             if (result.IsError())
                 return result;
         } else if (addr0 >= process.GetLinearHeapBase() && addr0 < process.GetLinearHeapLimit()) {
-            ResultCode result{process.LinearFree(addr0, size)};
+            auto result{process.LinearFree(addr0, size)};
             if (result.IsError())
                 return result;
         } else
@@ -238,7 +238,7 @@ ResultCode SVC::ControlMemory(u32* out_addr, u32 addr0, u32 addr1, u32 size, u32
         break;
     }
     case MEMOP_PROTECT: {
-        ResultCode result{process.vm_manager.ReprotectRange(addr0, size, vma_permissions)};
+        auto result{process.vm_manager.ReprotectRange(addr0, size, vma_permissions)};
         if (result.IsError())
             return result;
         break;
@@ -599,7 +599,7 @@ ResultCode SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_co
                                  SharedPtr<WaitObject> object) {
         ASSERT(thread->status == ThreadStatus::WaitSynchAny);
         ASSERT(reason == ThreadWakeupReason::Signal);
-        ResultCode result{RESULT_SUCCESS};
+        auto result{RESULT_SUCCESS};
         if (object->GetHandleType() == HandleType::ServerSession) {
             auto server_session{DynamicObjectCast<ServerSession>(object)};
             result = ReceiveIPCRequest(server_session, thread);

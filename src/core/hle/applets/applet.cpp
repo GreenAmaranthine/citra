@@ -13,7 +13,7 @@
 namespace HLE::Applets {
 
 ResultCode Applet::Start(const Service::APT::AppletStartupParameter& parameter) {
-    ResultCode result{StartImpl(parameter)};
+    auto result{StartImpl(parameter)};
     if (result.IsError())
         return result;
     // Schedule the update event

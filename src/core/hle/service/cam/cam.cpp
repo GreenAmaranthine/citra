@@ -386,7 +386,7 @@ void Module::Interface::GetMaxLines(Kernel::HLERequestContext& ctx) {
         if (lines > height) {
             lines = height;
         }
-        ResultCode result{RESULT_SUCCESS};
+        auto result{RESULT_SUCCESS};
         while (height % lines != 0 || (lines * width * 2 % MIN_TRANSFER_UNIT != 0)) {
             --lines;
             if (lines == 0) {
@@ -842,7 +842,7 @@ void Module::Interface::SetPackageParameterWithContext(Kernel::HLERequestContext
     PackageParameterWithContext package;
     rp.PopRaw(package);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-    ResultCode result{cam->SetPackageParameter(package)};
+    auto result{cam->SetPackageParameter(package)};
     rb.Push(result);
     LOG_DEBUG(Service_CAM, "called");
 }
@@ -852,7 +852,7 @@ void Module::Interface::SetPackageParameterWithContextDetail(Kernel::HLERequestC
     PackageParameterWithContextDetail package;
     rp.PopRaw(package);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-    ResultCode result{cam->SetPackageParameter(package)};
+    auto result{cam->SetPackageParameter(package)};
     rb.Push(result);
     LOG_DEBUG(Service_CAM, "called");
 }

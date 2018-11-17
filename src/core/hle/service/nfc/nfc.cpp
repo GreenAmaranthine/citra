@@ -375,7 +375,7 @@ void Module::Interface::GetAppDataInitStruct(Kernel::HLERequestContext& ctx) {
 void Module::Interface::OpenAppData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x13, 1, 0};
     u32 app_id{rp.Pop<u32>()};
-    ResultCode result{RESULT_SUCCESS};
+    auto result{RESULT_SUCCESS};
     if (nfc->tag_state != TagState::TagDataLoaded) {
         LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
         result = ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
@@ -430,7 +430,7 @@ void Module::Interface::WriteAppData(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::Unknown0x1A(Kernel::HLERequestContext& ctx) {
-    ResultCode result{RESULT_SUCCESS};
+    auto result{RESULT_SUCCESS};
     if (nfc->tag_state != TagState::TagInRange) {
         LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
         result = ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,

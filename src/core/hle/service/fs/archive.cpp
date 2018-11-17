@@ -201,7 +201,7 @@ ResultCode ArchiveManager::CreateExtSaveData(MediaType media_type, u32 high, u32
     if (archive == id_code_map.end())
         return UnimplementedFunction(ErrorModule::FS); // TODO: Find the right error
     auto ext_savedata{static_cast<FileSys::ArchiveFactory_ExtSaveData*>(archive->second.get())};
-    ResultCode result{ext_savedata->Format(path, format_info)};
+    auto result{ext_savedata->Format(path, format_info)};
     if (result.IsError())
         return result;
     ext_savedata->WriteIcon(path, smdh_icon.data(), smdh_icon.size());

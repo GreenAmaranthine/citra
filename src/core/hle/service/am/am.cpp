@@ -650,7 +650,7 @@ void Module::Interface::GetProgramInfos(Kernel::HLERequestContext& ctx) {
     auto& title_info_out{rp.PopMappedBuffer()};
     std::vector<u64> title_id_list(title_count);
     title_id_list_buffer.Read(title_id_list.data(), 0, title_count * sizeof(u64));
-    ResultCode result{GetTitleInfoFromList(title_id_list, media_type, title_info_out)};
+    auto result{GetTitleInfoFromList(title_id_list, media_type, title_info_out)};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 4)};
     rb.Push(result);
     rb.PushMappedBuffer(title_id_list_buffer);
@@ -718,7 +718,7 @@ void Module::Interface::GetDLCTitleInfos(Kernel::HLERequestContext& ctx) {
     auto& title_info_out{rp.PopMappedBuffer()};
     std::vector<u64> title_id_list(title_count);
     title_id_list_buffer.Read(title_id_list.data(), 0, title_count * sizeof(u64));
-    ResultCode result{RESULT_SUCCESS};
+    auto result{RESULT_SUCCESS};
     // Validate that DLC TIDs were passed in
     for (u32 i{}; i < title_count; i++) {
         u32 tid_high{static_cast<u32>(title_id_list[i] >> 32)};
@@ -744,7 +744,7 @@ void Module::Interface::GetPatchTitleInfos(Kernel::HLERequestContext& ctx) {
     auto& title_info_out{rp.PopMappedBuffer()};
     std::vector<u64> title_id_list(title_count);
     title_id_list_buffer.Read(title_id_list.data(), 0, title_count * sizeof(u64));
-    ResultCode result{RESULT_SUCCESS};
+    auto result{RESULT_SUCCESS};
     // Validate that update TIDs were passed in
     for (u32 i{}; i < title_count; i++) {
         u32 tid_high = static_cast<u32>(title_id_list[i] >> 32);
