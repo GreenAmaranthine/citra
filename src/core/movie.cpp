@@ -330,7 +330,9 @@ Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header, u64 progr
         LOG_ERROR(Movie, "Playback file doesn't have valid header");
         return ValidationResult::Invalid;
     }
-    auto revision{Common::ArrayToString(header.revision.data(), header.revision.size(), 21, false)};
+    std::string revision;
+    for (int i{}; i < header.revision.size(); i++)
+        revision += fmt::format("{:02x}", header.revision[i]);
     revision = Common::ToLower(revision);
     if (!program_id)
         Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id);

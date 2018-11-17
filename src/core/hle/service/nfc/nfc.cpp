@@ -425,8 +425,11 @@ void Module::Interface::WriteAppData(Kernel::HLERequestContext& ctx) {
     std::memset(&nfc->decrypted_data[0xDC], 0, 0xD8);
     std::memcpy(&nfc->decrypted_data[0xDC], buffer.data(), size);
     rb.Push(RESULT_SUCCESS);
-    LOG_DEBUG(Service_NFC, "size={}, write_struct.id={}", size,
-              Common::ArrayToString(write_struct.id.data(), write_struct.id.size()));
+    std::string id;
+    for (int i{}; i < write_struct.id.size(); i++)
+        id += fmt::format("{:02x} ", write_struct.id[i]);
+    id.pop_back();
+    LOG_DEBUG(Service_NFC, "size={}, write_struct.id={}", size, id);
 }
 
 void Module::Interface::Unknown0x1A(Kernel::HLERequestContext& ctx) {

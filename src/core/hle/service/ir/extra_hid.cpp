@@ -162,8 +162,12 @@ void ExtraHID::OnDisconnect() {
 
 void ExtraHID::HandleConfigureHIDPollingRequest(const std::vector<u8>& request) {
     if (request.size() != 3) {
-        LOG_ERROR(Service_IR, "Wrong request size ({}): {}", request.size(),
-                  Common::ArrayToString(request.data(), request.size()));
+        std::string request_string;
+        for (int i{}; i < request.size(); i++)
+            request_string += fmt::format("{:02x} ", request[i]);
+        if (!request_string.empty())
+            request_string.pop_back();
+        LOG_ERROR(Service_IR, "Wrong request size ({}): {}", request.size(), request_string);
         return;
     }
     // Change HID input polling interval
@@ -183,8 +187,13 @@ void ExtraHID::HandleReadCalibrationDataRequest(const std::vector<u8>& request_b
     static_assert(sizeof(ReadCalibrationDataRequest) == 6,
                   "ReadCalibrationDataRequest has wrong size");
     if (request_buf.size() != sizeof(ReadCalibrationDataRequest)) {
+        std::string request_buf_string;
+        for (int i{}; i < request_buf.size(); i++)
+            request_buf_string += fmt::format("{:02x} ", request_buf[i]);
+        if (!request_buf_string.empty())
+            request_buf_string.pop_back();
         LOG_ERROR(Service_IR, "Wrong request size ({}): {}", request_buf.size(),
-                  Common::ArrayToString(request_buf.data(), request_buf.size()));
+                  request_buf_string);
         return;
     }
     ReadCalibrationDataRequest request;
@@ -214,8 +223,12 @@ void ExtraHID::OnReceive(const std::vector<u8>& data) {
         HandleReadCalibrationDataRequest(data);
         break;
     default:
-        LOG_ERROR(Service_IR, "Unknown request: {}",
-                  Common::ArrayToString(data.data(), data.size()));
+        std::string data_string;
+        for (int i{}; i < data.size(); i++)
+            data_string += fmt::format("{:02x} ", data[i]);
+        if (!data_string.empty())
+            data_string.pop_back();
+        LOG_ERROR(Service_IR, "Unknown request: {}", data_string);
         break;
     }
 }
