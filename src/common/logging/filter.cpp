@@ -23,10 +23,9 @@ Level GetLevelByName(const It begin, const It end) {
 template <typename It>
 Class GetClassByName(const It begin, const It end) {
     for (u8 i{}; i < static_cast<u8>(Class::Count); ++i) {
-        const char* class_name = GetLogClassName(static_cast<Class>(i));
-        if (Common::ComparePartialString(begin, end, class_name)) {
+        const char* class_name{GetLogClassName(static_cast<Class>(i))};
+        if (Common::ComparePartialString(begin, end, class_name))
             return static_cast<Class>(i);
-        }
     }
     return Class::Count;
 }

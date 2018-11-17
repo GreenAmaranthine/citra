@@ -147,33 +147,24 @@ struct SurfaceParams {
     }
 
     static bool CheckFormatsBlittable(PixelFormat pixel_format_a, PixelFormat pixel_format_b) {
-        SurfaceType a_type = GetFormatType(pixel_format_a);
-        SurfaceType b_type = GetFormatType(pixel_format_b);
-
-        if ((a_type == SurfaceType::Color || a_type == SurfaceType::Texture) &&
-            (b_type == SurfaceType::Color || b_type == SurfaceType::Texture)) {
+        SurfaceType a_type{GetFormatType(pixel_format_a)};
+        SurfaceType b_type{GetFormatType(pixel_format_b)};
+        if (((a_type == SurfaceType::Color || a_type == SurfaceType::Texture) &&
+             (b_type == SurfaceType::Color || b_type == SurfaceType::Texture)) ||
+            (a_type == SurfaceType::Depth && b_type == SurfaceType::Depth) ||
+            (a_type == SurfaceType::DepthStencil && b_type == SurfaceType::DepthStencil))
             return true;
-        }
-
-        if (a_type == SurfaceType::Depth && b_type == SurfaceType::Depth) {
-            return true;
-        }
-
-        if (a_type == SurfaceType::DepthStencil && b_type == SurfaceType::DepthStencil) {
-            return true;
-        }
-
         return false;
     }
 
     static constexpr SurfaceType GetFormatType(PixelFormat pixel_format) {
         if ((unsigned int)pixel_format < 5)
             return SurfaceType::Color;
-        if ((unsigned int)pixel_format < 14)
+        else if ((unsigned int)pixel_format < 14)
             return SurfaceType::Texture;
-        if (pixel_format == PixelFormat::D16 || pixel_format == PixelFormat::D24)
+        else if (pixel_format == PixelFormat::D16 || pixel_format == PixelFormat::D24)
             return SurfaceType::Depth;
-        if (pixel_format == PixelFormat::D24S8)
+        else if (pixel_format == PixelFormat::D24S8)
             return SurfaceType::DepthStencil;
         return SurfaceType::Invalid;
     }

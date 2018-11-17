@@ -474,10 +474,10 @@ ResultCode CROHelper::ClearExternalRelocations() {
 }
 
 ResultCode CROHelper::ApplyStaticAnonymousSymbolToCRS(VAddr crs_address) {
-    auto static_relocation_table_offset = GetField(StaticRelocationTableOffset);
-    VAddr static_relocation_table_end{static_relocation_table_offset +
-                                      GetField(StaticRelocationNum) *
-                                          sizeof(StaticRelocationEntry)};
+    auto static_relocation_table_offset{GetField(StaticRelocationTableOffset)};
+    VAddr static_relocation_table_end{
+        static_cast<VAddr>(static_relocation_table_offset +
+                           GetField(StaticRelocationNum) * sizeof(StaticRelocationEntry))};
     CROHelper crs{crs_address, process};
     u32 offset_export_num = GetField(StaticAnonymousSymbolNum);
     LOG_INFO(Service_LDR, "CRO \"{}\" exports {} static anonymous symbols", ModuleName(),

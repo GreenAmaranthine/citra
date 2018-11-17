@@ -25,7 +25,7 @@ using nihstro::SourceRegister;
 
 namespace Pica::Shader {
 
-constexpr unsigned MAX_PROGRAM_CODE_LENGTH = 4096;
+constexpr unsigned MAX_PROGRAM_CODE_LENGTH{4096};
 constexpr unsigned MAX_SWIZZLE_DATA_LENGTH{4096};
 
 struct AttributeBuffer {

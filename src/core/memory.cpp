@@ -113,7 +113,7 @@ T Read(const VAddr vaddr) {
     // The memory access might do an MMIO or cached access, so we have to lock the HLE kernel
     // state
     std::lock_guard lock{HLE::g_hle_lock};
-    PageType type{current_page_table->attributes[vaddr >> PAGE_BITS]};
+    auto type{current_page_table->attributes[vaddr >> PAGE_BITS]};
     switch (type) {
     case PageType::Unmapped:
         LOG_ERROR(HW_Memory, "unmapped Read{} @ 0x{:08X}", sizeof(T) * 8, vaddr);
@@ -179,7 +179,7 @@ bool IsValidVirtualAddress(const Kernel::Process& process, const VAddr vaddr) {
         return true;
     if (page_table.attributes[vaddr >> PAGE_BITS] != PageType::Special)
         return false;
-    MMIORegionPointer mmio_region{GetMMIOHandler(page_table, vaddr)};
+    auto mmio_region{GetMMIOHandler(page_table, vaddr)};
     if (mmio_region)
         return mmio_region->IsValidAddress(vaddr);
     return false;

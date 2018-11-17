@@ -19,7 +19,7 @@ Loader::ResultStatus Ticket::Load(const std::vector<u8> file_data, std::size_t o
         return Loader::ResultStatus::Error;
     std::memcpy(&signature_type, &file_data[offset], sizeof(u32_be));
     // Signature lengths are variable, and the body follows the signature
-    u32 signature_size = GetSignatureSize(signature_type);
+    u32 signature_size{GetSignatureSize(signature_type)};
     if (signature_size == 0)
         return Loader::ResultStatus::Error;
     // The ticket body start position is rounded to the nearest 0x40 after the signature

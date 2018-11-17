@@ -50,7 +50,7 @@ ArchiveFactory_SystemSaveData::ArchiveFactory_SystemSaveData(const std::string& 
     : base_path{GetSystemSaveDataContainerPath(nand_path)} {}
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SystemSaveData::Open(const Path& path) {
-    std::string fullpath = GetSystemSaveDataPath(base_path, path);
+    auto fullpath{GetSystemSaveDataPath(base_path, path)};
     if (!FileUtil::Exists(fullpath)) {
         // TODO: Check error code, this one is probably wrong
         return ERR_NOT_FORMATTED;
@@ -61,7 +61,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SystemSaveData::Open(c
 
 ResultCode ArchiveFactory_SystemSaveData::Format(const Path& path,
                                                  const FileSys::ArchiveFormatInfo& format_info) {
-    std::string fullpath{GetSystemSaveDataPath(base_path, path)};
+    auto fullpath{GetSystemSaveDataPath(base_path, path)};
     FileUtil::DeleteDirRecursively(fullpath);
     FileUtil::CreateFullPath(fullpath);
     return RESULT_SUCCESS;
