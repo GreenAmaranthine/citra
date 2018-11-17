@@ -74,33 +74,19 @@ void UnmapRegion(PageTable& page_table, VAddr base, u32 size) {
 }
 
 /**
- * Gets a pointer to the exact memory at the virtual address (i.e. not page aligned)
- * using a VMA from the current process
+ * Gets the pointer for virtual memory where the page is marked as RasterizerCachedMemory.
+ * This is used to access the memory where the page pointer is nullptr due to rasterizer cache.
+ * Since the cache only happens on linear heap or VRAM, we know the exact physical address and
+ * pointer of such virtual address
  */
-static u8* GetPointerFromVMA(const Kernel::Process& process, VAddr vaddr) {
-    u8* direct_pointer;
-    auto& vm_manager{process.vm_manager};
-    auto it{vm_manager.FindVMA(vaddr)};
-    ASSERT(it != vm_manager.vma_map.end());
-    auto& vma{it->second};
-    switch (vma.type) {
-    case Kernel::VMAType::BackingMemory:
-        direct_pointer = vma.backing_memory;
-        break;
-    case Kernel::VMAType::Free:
-        return nullptr;
-    default:
-        UNREACHABLE();
-    }
-    return direct_pointer + (vaddr - vma.base);
-}
-
-/**
- * Gets a pointer to the exact memory at the virtual address (i.e. not page aligned)
- * using a VMA from the current process.
- */
-static u8* GetPointerFromVMA(VAddr vaddr) {
-    return GetPointerFromVMA(*Core::System::GetInstance().Kernel().GetCurrentProcess(), vaddr);
+static u8* GetPointerForRasterizerCache(VAddr addr) {
+    if (addr >= LINEAR_HEAP_VADDR && addr < LINEAR_HEAP_VADDR_END)
+        return fcram.data() + (addr - LINEAR_HEAP_VADDR);
+    else if (addr >= NEW_LINEAR_HEAP_VADDR && addr < NEW_LINEAR_HEAP_VADDR_END)
+        return fcram.data() + (addr - NEW_LINEAR_HEAP_VADDR);
+    else if (addr >= VRAM_VADDR && addr < VRAM_N3DS_VADDR_END)
+        return vram.data() + (addr - VRAM_VADDR);
+    UNREACHABLE();
 }
 
 /// This function should only be called for virtual addreses with attribute `PageType::Special`.
@@ -130,7 +116,8 @@ T Read(const VAddr vaddr) {
         std::memcpy(&value, &page_pointer[vaddr & PAGE_MASK], sizeof(T));
         return value;
     }
-    // The memory access might do an MMIO or cached access, so we have to lock the HLE kernel state
+    // The memory access might do an MMIO or cached access, so we have to lock the HLE kernel
+    // state
     std::lock_guard lock{HLE::g_hle_lock};
     PageType type{current_page_table->attributes[vaddr >> PAGE_BITS]};
     switch (type) {
@@ -143,7 +130,7 @@ T Read(const VAddr vaddr) {
     case PageType::RasterizerCachedMemory: {
         RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Flush);
         T value;
-        std::memcpy(&value, GetPointerFromVMA(vaddr), sizeof(T));
+        std::memcpy(&value, GetPointerForRasterizerCache(vaddr), sizeof(T));
         return value;
     }
     case PageType::Special:
@@ -164,7 +151,8 @@ void Write(const VAddr vaddr, const T data) {
         std::memcpy(&page_pointer[vaddr & PAGE_MASK], &data, sizeof(T));
         return;
     }
-    // The memory access might do an MMIO or cached access, so we have to lock the HLE kernel state
+    // The memory access might do an MMIO or cached access, so we have to lock the HLE kernel
+    // state
     std::lock_guard lock{HLE::g_hle_lock};
     PageType type{current_page_table->attributes[vaddr >> PAGE_BITS]};
     switch (type) {
@@ -177,7 +165,7 @@ void Write(const VAddr vaddr, const T data) {
         break;
     case PageType::RasterizerCachedMemory: {
         RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Invalidate);
-        std::memcpy(GetPointerFromVMA(vaddr), &data, sizeof(T));
+        std::memcpy(GetPointerForRasterizerCache(vaddr), &data, sizeof(T));
         break;
     }
     case PageType::Special:
@@ -216,7 +204,7 @@ u8* GetPointer(const VAddr vaddr) {
     if (page_pointer)
         return page_pointer + (vaddr & PAGE_MASK);
     if (current_page_table->attributes[vaddr >> PAGE_BITS] == PageType::RasterizerCachedMemory)
-        return GetPointerFromVMA(vaddr);
+        return GetPointerForRasterizerCache(vaddr);
     LOG_ERROR(HW_Memory, "unknown GetPointer @ 0x{:08x}", vaddr);
     return nullptr;
 }
@@ -247,8 +235,8 @@ u8* GetPhysicalPointer(PAddr address) {
     };
     const auto area{
         std::find_if(std::begin(memory_areas), std::end(memory_areas), [&](const auto& area) {
-            // Note: the region end check is inclusive because the user can pass in an address that
-            // represents an open right bound
+            // Note: the region end check is inclusive because the user can pass in an address
+            // that represents an open right bound
             return address >= area.paddr_base && address <= area.paddr_base + area.size;
         })};
     if (area == std::end(memory_areas)) {
@@ -256,7 +244,7 @@ u8* GetPhysicalPointer(PAddr address) {
         return nullptr;
     }
     u32 offset_into_region{address - area->paddr_base};
-    u8* target_pointer{};
+    u8* target_pointer;
     switch (area->paddr_base) {
     case VRAM_PADDR:
         target_pointer = vram.data() + offset_into_region;
@@ -283,9 +271,9 @@ u8* GetPhysicalPointer(PAddr address) {
 static std::vector<VAddr> PhysicalToVirtualAddressForRasterizer(PAddr addr) {
     if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END)
         return {addr - VRAM_PADDR + VRAM_VADDR};
-    if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END)
+    else if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END)
         return {addr - FCRAM_PADDR + LINEAR_HEAP_VADDR, addr - FCRAM_PADDR + NEW_LINEAR_HEAP_VADDR};
-    if (addr >= FCRAM_PADDR_END && addr < FCRAM_N3DS_PADDR_END)
+    else if (addr >= FCRAM_PADDR_END && addr < FCRAM_N3DS_PADDR_END)
         return {addr - FCRAM_PADDR + NEW_LINEAR_HEAP_VADDR};
     // While the physical <-> virtual mapping is 1:1 for the regions supported by the cache,
     // some games (like Pokemon Super Mystery Dungeon) will try to use textures that go beyond
@@ -316,19 +304,11 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
             else
                 // Switch page type to uncached if now uncached
                 switch (page_type) {
-                case PageType::RasterizerCachedMemory: {
-                    u8* pointer{GetPointerFromVMA(vaddr & ~PAGE_MASK)};
-                    if (!pointer)
-                        // It's possible that this function has been called while updating the
-                        // pagetable after unmapping a VMA. In that case the underlying VMA will no
-                        // longer exist, and we should just leave the pagetable entry blank.
-                        page_type = PageType::Unmapped;
-                    else {
-                        page_type = PageType::Memory;
-                        current_page_table->pointers[vaddr >> PAGE_BITS] = pointer;
-                    }
+                case PageType::RasterizerCachedMemory:
+                    page_type = PageType::Memory;
+                    current_page_table->pointers[vaddr >> PAGE_BITS] =
+                        GetPointerForRasterizerCache(vaddr & ~PAGE_MASK);
                     break;
-                }
                 default:
                     break;
                 }
@@ -435,7 +415,7 @@ void ReadBlock(const Kernel::Process& process, const VAddr src_addr, void* dest_
         case PageType::RasterizerCachedMemory:
             RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
                                          FlushMode::Flush);
-            std::memcpy(dest_buffer, GetPointerFromVMA(process, current_vaddr), copy_amount);
+            std::memcpy(dest_buffer, GetPointerForRasterizerCache(current_vaddr), copy_amount);
             break;
         default:
             UNREACHABLE();
@@ -498,7 +478,7 @@ void WriteBlock(const Kernel::Process& process, const VAddr dest_addr, const voi
         case PageType::RasterizerCachedMemory:
             RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
                                          FlushMode::Invalidate);
-            std::memcpy(GetPointerFromVMA(process, current_vaddr), src_buffer, copy_amount);
+            std::memcpy(GetPointerForRasterizerCache(current_vaddr), src_buffer, copy_amount);
             break;
         default:
             UNREACHABLE();
@@ -545,7 +525,7 @@ void ZeroBlock(const Kernel::Process& process, const VAddr dest_addr, const std:
         case PageType::RasterizerCachedMemory:
             RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
                                          FlushMode::Invalidate);
-            std::memset(GetPointerFromVMA(process, current_vaddr), 0, copy_amount);
+            std::memset(GetPointerForRasterizerCache(current_vaddr), 0, copy_amount);
             break;
         default:
             UNREACHABLE();
@@ -594,7 +574,8 @@ void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
         case PageType::RasterizerCachedMemory: {
             RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
                                          FlushMode::Flush);
-            WriteBlock(process, dest_addr, GetPointerFromVMA(process, current_vaddr), copy_amount);
+            WriteBlock(process, dest_addr, GetPointerForRasterizerCache(current_vaddr),
+                       copy_amount);
             break;
         }
         default:
@@ -646,7 +627,7 @@ void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_p
         case PageType::RasterizerCachedMemory: {
             RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
                                          FlushMode::Flush);
-            WriteBlock(dest_process, dest_addr, GetPointerFromVMA(src_process, current_vaddr),
+            WriteBlock(dest_process, dest_addr, GetPointerForRasterizerCache(current_vaddr),
                        copy_amount);
             break;
         }
