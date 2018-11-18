@@ -160,7 +160,7 @@ private:
     // signature R(Context::)(Ts...)
     template <std::size_t param_index, std::size_t word_size, typename R, typename... Ts>
     static constexpr std::array<std::size_t, word_size> GetRegIndices() {
-        constexpr SVCABI abi{GetSVCABI<R, Ts...>()};
+        constexpr auto abi{GetSVCABI<R, Ts...>()};
         return GetRegIndicesImpl<param_index, word_size>(abi,
                                                          std::make_index_sequence<word_size>{});
     }
