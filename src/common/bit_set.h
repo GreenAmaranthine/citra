@@ -107,7 +107,7 @@ static inline int LeastSignificantSetBit(u64 val) {
 
 template <typename IntTy>
 class BitSet {
-    static_assert(!std::is_signed_v<IntTy>, "BitSet should not be used with signed types");
+    static_assert(!std::is_signed_v<IntTy>, "BitSet shouldn't be used with signed types");
 
 public:
     // A reference to a particular bit, returned from operator[].

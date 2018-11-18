@@ -232,7 +232,7 @@ void GatewayCheat::Execute(Core::System& system) {
             default:
                 break;
             }
-            // Do not execute any other op code
+            // Don't execute any other op code
             continue;
         }
         switch (line.type) {

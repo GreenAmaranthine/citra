@@ -171,7 +171,7 @@ private:
     // Must hold: Ts[param_index] == T
     template <std::size_t param_index, typename T, typename R, typename... Ts>
     static void GetParam(Context& context, T& value) {
-        static_assert(!std::is_pointer_v<T>, "T should not be a pointer");
+        static_assert(!std::is_pointer_v<T>, "T shouldn't be a pointer");
         constexpr auto regi{GetRegIndices<param_index, WordSize<T>(), R, Ts...>()};
         if constexpr (std::is_class_v<T> || std::is_union_v<T>) {
             std::array<u32, WordSize<T>()> buf;
