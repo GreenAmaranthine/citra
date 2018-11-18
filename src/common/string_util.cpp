@@ -32,60 +32,57 @@ std::string ToUpper(std::string str) {
     return str;
 }
 
+// Turns "  hej " into "hej". Also handles tabs.
+std::string StripSpaces(const std::string& str) {
+    const auto s{str.find_first_not_of(" \t\r\n")};
+    if (str.npos != s)
+        return str.substr(s, str.find_last_not_of(" \t\r\n") - s + 1);
+    else
+        return "";
+}
+
 bool SplitPath(const std::string& full_path, std::string* _pPath, std::string* _pFilename,
                std::string* _pExtension) {
     if (full_path.empty())
         return false;
-
-    std::size_t dir_end{full_path.find_last_of("/"
-// windows needs the : included for something like just "C:" to be considered a directory
+    auto dir_end{full_path.find_last_of("/"
+// Windows needs the : included for something like just "C:" to be considered a directory
 #ifdef _WIN32
-                                               ":"
+                                        ":"
 #endif
-                                               )};
+                                        )};
     if (std::string::npos == dir_end)
         dir_end = 0;
     else
         dir_end += 1;
-
-    std::size_t fname_end{full_path.rfind('.')};
+    auto fname_end{full_path.rfind('.')};
     if (fname_end < dir_end || std::string::npos == fname_end)
         fname_end = full_path.size();
-
     if (_pPath)
         *_pPath = full_path.substr(0, dir_end);
-
     if (_pFilename)
         *_pFilename = full_path.substr(dir_end, fname_end - dir_end);
-
     if (_pExtension)
         *_pExtension = full_path.substr(fname_end);
-
     return true;
 }
 
 void SplitString(const std::string& str, const char delim, std::vector<std::string>& output) {
     std::istringstream iss{str};
     output.resize(1);
-
-    while (std::getline(iss, *output.rbegin(), delim)) {
+    while (std::getline(iss, *output.rbegin(), delim))
         output.emplace_back();
-    }
-
     output.pop_back();
 }
 
 std::string ReplaceAll(std::string result, const std::string& src, const std::string& dest) {
     std::size_t pos{};
-
     if (src == dest)
         return result;
-
     while ((pos = result.find(src, pos)) != std::string::npos) {
         result.replace(pos, src.size(), dest);
         pos += dest.length();
     }
-
     return result;
 }
 
@@ -115,38 +112,26 @@ std::u16string UTF8ToUTF16(const std::string& input) {
 
 #ifdef _WIN32
 static std::wstring CPToUTF16(u32 code_page, const std::string& input) {
-    const auto size =
-        MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), nullptr, 0);
-
-    if (size == 0) {
+    const auto size{MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()),
+                                        nullptr, 0)};
+    if (size == 0)
         return L"";
-    }
-
     std::wstring output(size, L'\0');
-
     if (size != MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()),
-                                    &output[0], static_cast<int>(output.size()))) {
+                                    &output[0], static_cast<int>(output.size())))
         output.clear();
-    }
-
     return output;
 }
 
 std::string UTF16ToUTF8(const std::wstring& input) {
-    const auto size = WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()),
-                                          nullptr, 0, nullptr, nullptr);
-    if (size == 0) {
+    const auto size{WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()),
+                                        nullptr, 0, nullptr, nullptr)};
+    if (size == 0)
         return "";
-    }
-
     std::string output(size, '\0');
-
     if (size != WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()),
-                                    &output[0], static_cast<int>(output.size()), nullptr,
-                                    nullptr)) {
+                                    &output[0], static_cast<int>(output.size()), nullptr, nullptr))
         output.clear();
-    }
-
     return output;
 }
 
@@ -160,67 +145,23 @@ std::string StringFromFixedZeroTerminatedBuffer(const char* buffer, std::size_t 
     std::size_t len{};
     while (len < max_len && buffer[len] != '\0')
         ++len;
-
     return std::string(buffer, len);
 }
 
 const char* TrimSourcePath(const char* path, const char* root) {
     const char* p{path};
-
     while (*p != '\0') {
         const char* next_slash{p};
-        while (*next_slash != '\0' && *next_slash != '/' && *next_slash != '\\') {
+        while (*next_slash != '\0' && *next_slash != '/' && *next_slash != '\\')
             ++next_slash;
-        }
-
         bool is_src{Common::ComparePartialString(p, next_slash, root)};
         p = next_slash;
-
-        if (*p != '\0') {
+        if (*p != '\0')
             ++p;
-        }
-        if (is_src) {
+        if (is_src)
             path = p;
-        }
     }
     return path;
 }
 
-std::string TrimLeft(const std::string& str, const std::string& delimiters = " \f\n\r\t\v") {
-    const auto pos{str.find_first_not_of(delimiters)};
-    if (pos == std::string::npos)
-        return "";
-
-    return str.substr(pos);
-}
-
-std::string TrimRight(const std::string& str, const std::string delimiters = " \f\n\r\t\v") {
-    const auto pos{str.find_last_not_of(delimiters)};
-    if (pos == std::string::npos)
-        return "";
-
-    return str.substr(0, pos + 1);
-}
-
-std::string Trim(const std::string& str, const std::string delimiters) {
-    return TrimLeft(TrimRight(str, delimiters), delimiters);
-}
-
-std::string Join(const std::vector<std::string>& elements, const char* const separator) {
-    switch (elements.size()) {
-    case 0:
-        return "";
-    case 1:
-        return elements[0];
-    default:
-        std::ostringstream os;
-        std::copy(elements.begin(), elements.end(),
-                  std::ostream_iterator<std::string>(os, separator));
-
-        // Drop the trailing delimiter.
-        std::string result{os.str()};
-        result.pop_back();
-        return result;
-    }
-}
 } // namespace Common

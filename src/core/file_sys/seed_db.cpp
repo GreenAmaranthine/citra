@@ -11,7 +11,7 @@ namespace FileSys {
 
 bool SeedDB::Load() {
     seeds.clear();
-    const std::string path{
+    const auto path{
         fmt::format("{}seeddb.bin", FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir))};
     if (!FileUtil::Exists(path)) {
         if (!FileUtil::CreateFullPath(path)) {
@@ -47,7 +47,7 @@ bool SeedDB::Load() {
 }
 
 bool SeedDB::Save() {
-    const std::string path{
+    const auto path{
         fmt::format("{}seeddb.bin", FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir))};
     if (!FileUtil::CreateFullPath(path)) {
         LOG_ERROR(Service_FS, "Failed to create seed database");

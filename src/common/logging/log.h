@@ -37,6 +37,7 @@ enum class Class : u8 {
     Core,              ///< LLE emulation core
     Core_ARM11,        ///< ARM11 CPU core
     Core_Timing,       ///< CoreTiming functions
+    Core_Cheats,       ///< Cheat functions
     Config,            ///< Emulator configuration
     Debug,             ///< Debugging tools
     Debug_Emulated,    ///< Debug messages from the emulated programs

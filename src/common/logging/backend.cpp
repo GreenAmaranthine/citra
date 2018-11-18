@@ -134,6 +134,7 @@ void DebuggerBackend::Write(const Entry& entry) {
     CLS(Core)                                                                                      \
     SUB(Core, ARM11)                                                                               \
     SUB(Core, Timing)                                                                              \
+    SUB(Core, Cheats)                                                                              \
     CLS(Config)                                                                                    \
     CLS(Debug)                                                                                     \
     SUB(Debug, Emulated)                                                                           \

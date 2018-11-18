@@ -113,22 +113,18 @@ void LoadBootromKeys() {
          {'N', 0x34, false}, {'N', 0x35, true},  {'N', 0x36, true},  {'N', 0x37, true},
          {'N', 0x38, false}, {'N', 0x39, true},  {'N', 0x3A, true},  {'N', 0x3B, true},
          {'N', 0x3C, true},  {'N', 0x3D, false}, {'N', 0x3E, false}, {'N', 0x3F, false}}};
-
     // Bootrom sets all these keys when executed, but later some of the normal keys get overwritten
     // by other applications e.g. process9. These normal keys thus aren't used by any application
     // and have no value for emulation
-
-    const std::string filepath{FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir) + BOOTROM9};
+    const auto filepath{FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir) + BOOTROM9};
     FileUtil::IOFile file{filepath, "rb"};
     if (!file)
         return;
-
     const std::size_t length{file.GetSize()};
     if (length != 65536) {
         LOG_ERROR(HW_AES, "Bootrom9 size is wrong: {}", length);
         return;
     }
-
     constexpr std::size_t KEY_SECTION_START{55760};
     file.Seek(KEY_SECTION_START, SEEK_SET); // Jump to the key section
 
@@ -141,10 +137,8 @@ void LoadBootromKeys() {
                 return;
             }
         }
-
         LOG_DEBUG(HW_AES, "Loaded Slot{:#02x} Key{}: {}", key.slot_id, key.key_type,
                   KeyToString(new_key));
-
         switch (key.key_type) {
         case 'X':
             key_slots.at(key.slot_id).SetKeyX(new_key);
@@ -163,13 +157,12 @@ void LoadBootromKeys() {
 }
 
 void LoadPresetKeys() {
-    const std::string filepath{FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir) + AES_KEYS};
+    const auto filepath{FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir) + AES_KEYS};
     FileUtil::CreateFullPath(filepath); // Create path if not already created
     std::ifstream file;
     OpenFStream(file, filepath, std::ios_base::in);
     if (!file)
         return;
-
     while (!file.eof()) {
         std::string line;
         std::getline(file, line);
@@ -179,7 +172,6 @@ void LoadPresetKeys() {
             LOG_ERROR(HW_AES, "Failed to parse {}", line);
             continue;
         }
-
         const std::string& name{parts[0]};
         AESKey key;
         try {
@@ -188,7 +180,6 @@ void LoadPresetKeys() {
             LOG_ERROR(HW_AES, "Invalid key {}: {}", parts[1], e.what());
             continue;
         }
-
         std::size_t common_key_index;
         if (std::sscanf(name.c_str(), "common%zd", &common_key_index) == 1) {
             if (common_key_index >= common_key_y_slots.size())
@@ -197,19 +188,16 @@ void LoadPresetKeys() {
                 common_key_y_slots[common_key_index] = key;
             continue;
         }
-
         std::size_t slot_id;
         char key_type;
         if (std::sscanf(name.c_str(), "slot0x%zXKey%c", &slot_id, &key_type) != 2) {
             LOG_ERROR(HW_AES, "Invalid key name {}", name);
             continue;
         }
-
         if (slot_id >= MaxKeySlotID) {
             LOG_ERROR(HW_AES, "Out of range slot ID {:#X}", slot_id);
             continue;
         }
-
         switch (key_type) {
         case 'X':
             key_slots.at(slot_id).SetKeyX(key);

@@ -7,8 +7,12 @@ add_library(core STATIC
     cpu/cpu.h
     cpu/cpu_cp15.cpp
     cpu/cpu_cp15.h
-    cheat_core.cpp
-    cheat_core.h
+    cheats/cheat_base.cpp
+    cheats/cheat_base.h
+    cheats/cheats.cpp
+    cheats/cheats.h
+    cheats/gateway_cheat.cpp
+    cheats/gateway_cheat.h
     core.cpp
     core.h
     core_timing.cpp

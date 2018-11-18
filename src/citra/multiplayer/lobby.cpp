@@ -102,21 +102,19 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
         NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID);
         return;
     }
-
     // Get a password to pass if the room is password protected
     QModelIndex password_index{proxy->index(index.row(), Column::ROOM_NAME)};
     bool has_password{proxy->data(password_index, LobbyItemName::PasswordRole).toBool()};
-    const std::string password{has_password ? PasswordPrompt().toStdString() : ""};
+    const auto password{has_password ? PasswordPrompt().toStdString() : ""};
     if (has_password && password.empty())
         return;
-
     QModelIndex connection_index{proxy->index(index.row(), Column::HOST)};
-    const std::string nickname{ui->nickname->text().toStdString()};
-    const std::string ip{
+    const auto nickname{ui->nickname->text().toStdString()};
+    const auto ip{
         proxy->data(connection_index, LobbyItemHost::HostIPRole).toString().toStdString()};
     int port{proxy->data(connection_index, LobbyItemHost::HostPortRole).toInt()};
     // Attempt to connect in a different thread
-    QFuture<void> f{QtConcurrent::run([this, nickname, ip, port, password] {
+    auto f{QtConcurrent::run([this, nickname, ip, port, password] {
         system.RoomMember().Join(nickname, ip.c_str(), port, BroadcastMac, password);
     })};
     watcher->setFuture(f);

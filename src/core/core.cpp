@@ -7,7 +7,7 @@
 #include <enet/enet.h>
 #include "audio_core/hle/hle.h"
 #include "common/logging/log.h"
-#include "core/cheat_core.h"
+#include "core/cheats/cheats.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/cpu/cpu.h"
@@ -115,14 +115,14 @@ System::ResultStatus System::Load(Frontend& frontend, const std::string& filepat
         }
     }
     ASSERT(system_mode.first);
-    ResultStatus init_result{Init(frontend, *system_mode.first)};
+    auto init_result{Init(frontend, *system_mode.first)};
     if (init_result != ResultStatus::Success) {
         LOG_ERROR(Core, "Failed to initialize system (Error {})!", static_cast<u32>(init_result));
         Shutdown();
         return init_result;
     }
     Kernel::SharedPtr<Kernel::Process> process;
-    const Loader::ResultStatus load_result{app_loader->Load(process)};
+    const auto load_result{app_loader->Load(process)};
     kernel->SetCurrentProcess(process);
     if (Loader::ResultStatus::Success != load_result) {
         LOG_ERROR(Core, "Failed to load ROM (Error {})!", static_cast<u32>(load_result));
@@ -137,6 +137,7 @@ System::ResultStatus System::Load(Frontend& frontend, const std::string& filepat
         }
     }
     Memory::SetCurrentPageTable(&kernel->GetCurrentProcess()->vm_manager.page_table);
+    cheat_engine = std::make_unique<Cheats::CheatEngine>(*this);
     status = ResultStatus::Success;
     m_filepath = filepath;
     return status;
@@ -179,8 +180,7 @@ System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     sleep_mode_enabled = false;
     HW::Init();
     Service::Init(*this);
-    cheat_manager = std::make_unique<CheatCore::CheatManager>(*this);
-    ResultStatus result{VideoCore::Init(*this)};
+    auto result{VideoCore::Init(*this)};
     if (result != ResultStatus::Success)
         return result;
     LOG_DEBUG(Core, "Initialized OK");
@@ -214,12 +214,12 @@ Kernel::KernelSystem& System::Kernel() {
     return *kernel;
 }
 
-const CheatCore::CheatManager& System::CheatManager() const {
-    return *cheat_manager;
+const Cheats::CheatEngine& System::CheatEngine() const {
+    return *cheat_engine;
 }
 
-CheatCore::CheatManager& System::CheatManager() {
-    return *cheat_manager;
+Cheats::CheatEngine& System::CheatEngine() {
+    return *cheat_engine;
 }
 
 const Timing& System::CoreTiming() const {
@@ -256,7 +256,8 @@ Frontend& System::GetFrontend() {
 
 void System::Shutdown() {
     // Shutdown emulation session
-    cheat_manager.reset();
+    cpu_core.reset();
+    cheat_engine.reset();
     VideoCore::Shutdown();
     kernel.reset();
     HW::Shutdown();
@@ -265,7 +266,6 @@ void System::Shutdown() {
 #endif
     service_manager.reset();
     dsp_core.reset();
-    cpu_core.reset();
     timing.reset();
     app_loader.reset();
     room_member->SendAppInfo(Network::AppInfo{});

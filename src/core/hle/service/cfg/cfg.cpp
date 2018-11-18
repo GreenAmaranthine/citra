@@ -343,8 +343,8 @@ void Module::Interface::SetGetLocalFriendCodeSeedData(Kernel::HLERequestContext&
         buffer.Write(&lfcs, 0, sizeof(PS::LocalFriendCodeSeed));
     } else {
         buffer.Read(&lfcs, 0, sizeof(PS::LocalFriendCodeSeed));
-        const std::string path{fmt::format("{}/LocalFriendCodeSeed_B",
-                                           FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir))};
+        const auto path{fmt::format("{}/LocalFriendCodeSeed_B",
+                                    FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir))};
         FileUtil::CreateFullPath(path);
         FileUtil::IOFile file{path, "rb"};
         file.WriteBytes(&lfcs, sizeof(PS::LocalFriendCodeSeed));
@@ -360,8 +360,8 @@ void Module::Interface::SetLocalFriendCodeSeedSignature(Kernel::HLERequestContex
     auto& buffer{rp.PopMappedBuffer()};
     auto [exists, lfcs]{PS::GetLocalFriendCodeSeedTuple()};
     buffer.Read(lfcs.signature.data(), 0, buffer_size);
-    const std::string path{fmt::format("{}/LocalFriendCodeSeed_B",
-                                       FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir))};
+    const auto path{fmt::format("{}/LocalFriendCodeSeed_B",
+                                FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir))};
     FileUtil::CreateFullPath(path);
     FileUtil::IOFile file{path, "rb"};
     file.WriteBytes(&lfcs, sizeof(PS::LocalFriendCodeSeed));
@@ -371,8 +371,8 @@ void Module::Interface::SetLocalFriendCodeSeedSignature(Kernel::HLERequestContex
 
 void Module::Interface::DeleteCreateNANDLocalFriendCodeSeed(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x080D, 1, 0};
-    const std::string path{fmt::format("{}/LocalFriendCodeSeed_B",
-                                       FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir))};
+    const auto path{fmt::format("{}/LocalFriendCodeSeed_B",
+                                FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir))};
     if (FileUtil::Exists(path))
         FileUtil::Delete(path);
     rb.Push(RESULT_SUCCESS);

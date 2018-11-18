@@ -33,26 +33,21 @@ static const u64 UPDATE_MASK{0x0000000e00000000};
 FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
     u32 magic;
     file.Seek(0x100, SEEK_SET);
-    if (1 != file.ReadArray<u32>(&magic, 1))
+    if (file.ReadArray<u32>(&magic, 1) != 1)
         return FileType::Error;
-
     if (MakeMagic('N', 'C', 'S', 'D') == magic)
         return FileType::CCI;
-
     if (MakeMagic('N', 'C', 'C', 'H') == magic)
         return FileType::CXI;
-
     return FileType::Error;
 }
 
 std::pair<std::optional<u32>, ResultStatus> AppLoader_NCCH::LoadKernelSystemMode() {
     if (!is_loaded) {
-        ResultStatus res{base_ncch.Load()};
-        if (res != ResultStatus::Success) {
+        auto res{base_ncch.Load()};
+        if (res != ResultStatus::Success)
             return std::make_pair(std::nullopt, res);
-        }
     }
-
     // Set the system mode as the one from the exheader.
     return std::make_pair(overlay_ncch->exheader_header.arm11_system_local_caps.system_mode.Value(),
                           ResultStatus::Success);
@@ -210,17 +205,12 @@ ResultStatus AppLoader_NCCH::ReadShortTitle(std::string& short_title) {
     std::vector<u8> data;
     Loader::SMDH smdh;
     ReadIcon(data);
-
-    if (!Loader::IsValidSMDH(data)) {
+    if (!Loader::IsValidSMDH(data))
         return ResultStatus::ErrorInvalidFormat;
-    }
-
     std::memcpy(&smdh, data.data(), sizeof(Loader::SMDH));
-
     const auto& short_title_array{smdh.GetShortTitle(SMDH::TitleLanguage::English)};
     auto end{std::find(short_title_array.begin(), short_title_array.end(), u'\0')};
     short_title = Common::UTF16ToUTF8(std::u16string{short_title_array.begin(), end});
-
     return ResultStatus::Success;
 }
 

@@ -499,9 +499,9 @@ std::string GetCurrentDir() {
         return nullptr;
     }
 #ifdef _WIN32
-    std::string str_dir{Common::UTF16ToUTF8(dir)};
+    auto str_dir{Common::UTF16ToUTF8(dir)};
 #else
-    std::string str_dir{dir};
+    auto str_dir{dir};
 #endif
     free(dir);
     return str_dir;
@@ -616,12 +616,10 @@ std::size_t ReadFileToString(bool text_file, const char* filename, std::string& 
 void SplitFilename83(const std::string& filename, std::array<char, 9>& short_name,
                      std::array<char, 4>& extension) {
     const std::string forbidden_characters{".\"/\\[]:;=, "};
-
     // On a FAT32 partition, 8.3 names are stored as a 11 bytes array, filled with spaces.
     short_name = {{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '\0'}};
     extension = {{' ', ' ', ' ', '\0'}};
-
-    std::string::size_type point{filename.rfind('.')};
+    auto point{filename.rfind('.')};
     if (point == filename.size() - 1)
         point = filename.rfind('.', point);
     // Get short name.

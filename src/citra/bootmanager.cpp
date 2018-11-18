@@ -26,7 +26,7 @@ void EmuThread::run() {
     screens->MakeCurrent();
     stop_run = false;
     while (!stop_run) {
-        Core::System::ResultStatus result{system.RunLoop()};
+        auto result{system.RunLoop()};
         if (result == Core::System::ResultStatus::ShutdownRequested) {
             // Notify frontend we shutdown
             emit ErrorThrown(result, "");

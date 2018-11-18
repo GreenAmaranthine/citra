@@ -81,7 +81,7 @@ static const std::unordered_map<u64, QStringList> issues_map{{
     // Animal Crossing: New Leaf - Welcome amiibo (EUR)
     {0x0004000000198F00, {"Needs Microphone", "Needs Nintendo Network support"}},
 
-    // Super Mario Maker for Nintendo 3DS (EUR)
+    // Super Mario Maker (EUR)
     {0x00040000001A0500, {"Needs Nintendo Network support"}},
 
     // Animal Crossing: New Leaf (EUR)
@@ -153,7 +153,7 @@ static const std::unordered_map<u64, QStringList> issues_map{{
     // Picross 3D: Round 2 (EUR)
     {0x0004000000187E00, {}},
 
-    // Super Smash Bros. for Nintendo 3DS (EUR)
+    // Super Smash Bros. (EUR)
     {0x00040000000EE000, {}},
 
     // The Legend of Zelda: Majora's Mask 3D (EUR)
@@ -229,7 +229,7 @@ static const std::unordered_map<u64, QStringList> issues_map{{
     // PICROSS e8 (USA)
     {0x00040000001CF700, {}},
 
-    // Super Mario Maker for Nintendo 3DS (USA)
+    // Super Mario Maker (USA)
     {0x00040000001A0400, {"Needs Nintendo Network support"}},
 
     // Animal Crossing: Happy Home Designer (USA)
@@ -313,6 +313,6 @@ static const std::unordered_map<u64, QStringList> issues_map{{
     // Animal Crossing: New Leaf - Welcome amiibo (KOR)
     {0x0004000000199000, {"Needs Microphone", "Needs Nintendo Network support"}},
 
-    // Super Mario Maker for Nintendo 3DS (KOR)
+    // Super Mario Maker (KOR)
     {0x00040000001BB800, {"Needs Nintendo Network support"}},
 }};

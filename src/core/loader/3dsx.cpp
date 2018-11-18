@@ -226,7 +226,7 @@ static THREEDSX_Error Load3DSXFile(Core::System& system, FileUtil::IOFile& file,
 FileType AppLoader_THREEDSX::IdentifyType(FileUtil::IOFile& file) {
     u32 magic{};
     file.Seek(0, SEEK_SET);
-    if (1 != file.ReadArray<u32>(&magic, 1))
+    if (file.ReadArray<u32>(&magic, 1) != 1)
         return FileType::Error;
     if (MakeMagic('3', 'D', 'S', 'X') == magic)
         return FileType::THREEDSX;

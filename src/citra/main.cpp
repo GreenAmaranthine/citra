@@ -51,6 +51,7 @@
 #include "common/logging/text_formatter.h"
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
+#include "common/string_util.h"
 #include "core/3ds.h"
 #include "core/core.h"
 #include "core/file_sys/archive_extsavedata.h"
@@ -508,7 +509,7 @@ bool GMainWindow::LoadROM(const std::string& filename) {
                               "have the latest graphics driver.");
         return false;
     }
-    const Core::System::ResultStatus result{system.Load(*screens, filename)};
+    const auto result{system.Load(*screens, filename)};
     if (result != Core::System::ResultStatus::Success) {
         switch (result) {
         case Core::System::ResultStatus::ErrorGetLoader:
@@ -592,10 +593,6 @@ bool GMainWindow::LoadROM(const std::string& filename) {
     }
     system.GetAppLoader().ReadShortTitle(short_title);
     UpdateTitle();
-    if (cheats_window)
-        cheats_window->UpdateTitleID();
-    else
-        system.CheatManager().RefreshCheats();
     return true;
 }
 
@@ -1059,8 +1056,6 @@ void GMainWindow::OnPauseApplication() {
 
 void GMainWindow::OnStopApplication() {
     ShutdownApplication();
-    if (cheats_window)
-        cheats_window->close();
 }
 
 void GMainWindow::OnTouchChanged(unsigned x, unsigned y) {
@@ -1202,9 +1197,8 @@ void GMainWindow::OnOpenConfiguration() {
 }
 
 void GMainWindow::OnCheats() {
-    if (!cheats_window)
-        cheats_window = std::make_shared<CheatDialog>(system, this);
-    cheats_window->show();
+    CheatDialog dialog{system, this};
+    dialog.exec();
 }
 
 void GMainWindow::OnControlPanel() {
@@ -1519,8 +1513,6 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, const std::stri
         break;
     }
     case Core::System::ResultStatus::ShutdownRequested:
-        if (cheats_window)
-            cheats_window->close();
         break;
     case Core::System::ResultStatus::FatalError:
         message = "A fatal error occured. Check the log for details.<br/>Continuing emulation may "

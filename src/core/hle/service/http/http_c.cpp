@@ -64,7 +64,7 @@ const ResultCode RESULT_DOWNLOADPENDING{
 
 u32 Context::GetResponseContentLength() const {
     try {
-        const std::string length{response->get_header_value("Content-Length")};
+        const auto length{response->get_header_value("Content-Length")};
         return std::stoi(length);
     } catch (...) {
         return 0;

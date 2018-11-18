@@ -19,7 +19,6 @@
 #include "ui_main.h"
 
 class AboutDialog;
-class CheatDialog;
 class Config;
 class ControlPanel;
 class ClickableLabel;
@@ -218,7 +217,6 @@ private:
     QString movie_record_path;
 
     std::shared_ptr<ControlPanel> control_panel;
-    std::shared_ptr<CheatDialog> cheats_window;
 
     QAction* actions_recent_files[max_recent_files_item];
 

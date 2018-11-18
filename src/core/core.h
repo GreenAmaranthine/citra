@@ -23,6 +23,10 @@ namespace AudioCore {
 class DspHle;
 } // namespace AudioCore
 
+namespace Cheats {
+class CheatEngine;
+} // namespace Cheats
+
 #ifdef ENABLE_SCRIPTING
 namespace RPC {
 class RPCServer;
@@ -40,10 +44,6 @@ class ArchiveManager;
 namespace Kernel {
 class KernelSystem;
 } // namespace Kernel
-
-namespace CheatCore {
-class CheatManager;
-} // namespace CheatCore
 
 namespace Network {
 class Room;
@@ -161,11 +161,11 @@ public:
     /// Gets a reference to the kernel.
     Kernel::KernelSystem& Kernel();
 
-    /// Gets a const reference to the cheat manager.
-    const CheatCore::CheatManager& CheatManager() const;
+    /// Gets a const reference to the cheat engine.
+    const Cheats::CheatEngine& CheatEngine() const;
 
-    /// Gets a reference to the cheat manager.
-    CheatCore::CheatManager& CheatManager();
+    /// Gets a reference to the cheat engine.
+    Cheats::CheatEngine& CheatEngine();
 
     /// Gets a const reference to the frontend.
     const Frontend& GetFrontend() const;
@@ -267,8 +267,8 @@ private:
     std::unique_ptr<RPC::RPCServer> rpc_server;
 #endif
 
-    /// Cheat manager
-    std::unique_ptr<CheatCore::CheatManager> cheat_manager;
+    /// Cheat engine
+    std::unique_ptr<Cheats::CheatEngine> cheat_engine;
 
     /// Archive manager
     std::unique_ptr<Service::FS::ArchiveManager> archive_manager;

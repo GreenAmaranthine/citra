@@ -25,7 +25,7 @@ Layout::FramebufferLayout g_screenshot_framebuffer_layout;
 Core::System::ResultStatus Init(Core::System& system) {
     Pica::Init();
     g_renderer = std::make_unique<Renderer>(system);
-    Core::System::ResultStatus result{g_renderer->Init()};
+    auto result{g_renderer->Init()};
     if (result != Core::System::ResultStatus::Success)
         LOG_ERROR(Render, "initialization failed!");
     else

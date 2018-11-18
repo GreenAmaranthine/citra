@@ -42,7 +42,7 @@ private:
 };
 
 std::unique_ptr<Input::AnalogDevice> AnalogFromButton::Create(const Common::ParamPackage& params) {
-    const std::string null_engine{Common::ParamPackage{{"engine", "null"}}.Serialize()};
+    const auto null_engine{Common::ParamPackage{{"engine", "null"}}.Serialize()};
     auto up{Input::CreateDevice<Input::ButtonDevice>(params.Get("up", null_engine))};
     auto down{Input::CreateDevice<Input::ButtonDevice>(params.Get("down", null_engine))};
     auto left{Input::CreateDevice<Input::ButtonDevice>(params.Get("left", null_engine))};

@@ -22,6 +22,8 @@ std::string ToLower(std::string str);
 /// Make a string uppercase
 std::string ToUpper(std::string str);
 
+std::string StripSpaces(const std::string& s);
+
 void SplitString(const std::string& str, char delim, std::vector<std::string>& output);
 
 // "C:/Windows/winhelp.exe" to "C:/Windows/", "winhelp", ".exe"
@@ -45,11 +47,9 @@ std::wstring UTF8ToUTF16W(const std::string& str);
  */
 template <typename InIt>
 bool ComparePartialString(InIt begin, InIt end, const char* other) {
-    for (; begin != end && *other != '\0'; ++begin, ++other) {
-        if (*begin != *other) {
+    for (; begin != end && *other != '\0'; ++begin, ++other)
+        if (*begin != *other)
             return false;
-        }
-    }
     // Only return true if both strings finished at the same point
     return (begin == end) == (*other == '\0');
 }
@@ -72,7 +72,4 @@ std::string StringFromFixedZeroTerminatedBuffer(const char* buffer, std::size_t 
  */
 const char* TrimSourcePath(const char* path, const char* root = "src");
 
-std::string Trim(const std::string& str, const std::string delimiters = " \f\n\r\t\v");
-
-std::string Join(const std::vector<std::string>& elements, const char* const separator);
 } // namespace Common
