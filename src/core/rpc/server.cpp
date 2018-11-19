@@ -64,7 +64,6 @@ void Server::Impl::WorkerLoop() {
                             std::bind(&Server::Impl::SendReply, this, std::placeholders::_1)};
                         std::unique_ptr<Packet> new_packet{
                             std::make_unique<Packet>(header, data, send_reply_callback)};
-
                         // Send the request to the upper layer for handling
                         new_request_callback(std::move(new_packet));
                     }
@@ -74,9 +73,7 @@ void Server::Impl::WorkerLoop() {
             LOG_WARNING(RPC, "Failed to receive data on ZeroMQ socket");
         }
     }
-
     new_request_callback({});
-
     // Destroying the socket must be done by this thread.
     zmq_socket.reset();
 }
@@ -86,13 +83,10 @@ void Server::Impl::SendReply(Packet& reply_packet) {
         auto reply_buffer{
             std::make_unique<u8[]>(MIN_PACKET_SIZE + reply_packet.GetPacketDataSize())};
         auto reply_header{reply_packet.GetHeader()};
-
         std::memcpy(reply_buffer.get(), &reply_header, sizeof(reply_header));
         std::memcpy(reply_buffer.get() + (4 * sizeof(u32)), reply_packet.GetPacketData().data(),
                     reply_packet.GetPacketDataSize());
-
         zmq_socket->send(reply_buffer.get(), MIN_PACKET_SIZE + reply_packet.GetPacketDataSize());
-
         LOG_INFO(RPC, "Sent reply version({}) id=({}) type=({}) size=({})",
                  reply_packet.GetVersion(), reply_packet.GetId(),
                  static_cast<u32>(reply_packet.GetPacketType()), reply_packet.GetPacketDataSize());
@@ -105,7 +99,6 @@ void Server::Start() {
     const auto callback{[this](std::unique_ptr<RPC::Packet> new_request) {
         NewRequestCallback(std::move(new_request));
     }};
-
     try {
         impl = std::make_unique<Impl>(callback);
     } catch (...) {
@@ -115,16 +108,14 @@ void Server::Start() {
 
 void Server::Stop() {
     impl.reset();
-
     LOG_INFO(RPC, "ZeroMQ stopped");
 }
 
 void Server::NewRequestCallback(std::unique_ptr<RPC::Packet> new_request) {
-    if (new_request) {
+    if (new_request)
         LOG_INFO(RPC, "Received request (version={}, id={}, type={}, size={})",
                  new_request->GetVersion(), new_request->GetId(),
                  static_cast<u32>(new_request->GetPacketType()), new_request->GetPacketDataSize());
-    }
     rpc_server.QueueRequest(std::move(new_request));
 }
 

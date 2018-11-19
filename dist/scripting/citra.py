@@ -285,9 +285,9 @@ class Citra:
         request += request_data
         self.socket.send(request)
         raw_reply = self.socket.recv()
-        pressed = self._read_and_validate_header(
+        data = self._read_and_validate_header(
             raw_reply, request_id, RequestType.IsButtonPressed)
-        return pressed[0] == 1
+        return data[0] == 1
 
     # Sets whether frame advancing is enabled.
     #   enabled: True to enable, False to disable.

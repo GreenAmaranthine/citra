@@ -198,7 +198,6 @@ bool RPCServer::ValidatePacket(const PacketHeader& packet_header) {
 
 void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
     bool success{};
-
     if (ValidatePacket(request_packet->GetHeader())) {
         // Currently, all request types use the address/data_size wire format
         u32 address;
@@ -207,13 +206,12 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
         std::memcpy(&data_size, request_packet->GetPacketData().data() + sizeof(address),
                     sizeof(data_size));
         switch (request_packet->GetPacketType()) {
-        case PacketType::ReadMemory: {
+        case PacketType::ReadMemory:
             if (data_size > 0 && data_size <= MAX_READ_WRITE_SIZE) {
                 HandleReadMemory(*request_packet, address, data_size);
                 success = true;
             }
             break;
-        }
         case PacketType::WriteMemory: {
             if (data_size > 0 && data_size <= MAX_READ_WRITE_SIZE) {
                 const u8* data{request_packet->GetPacketData().data() + (sizeof(u32) * 2)};
@@ -300,21 +298,18 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
             success = true;
             break;
         }
-        case PacketType::Pause: {
+        case PacketType::Pause:
             HandlePause(*request_packet);
             success = true;
             break;
-        }
-        case PacketType::Resume: {
+        case PacketType::Resume:
             HandleResume(*request_packet);
             success = true;
             break;
-        }
-        case PacketType::Restart: {
+        case PacketType::Restart:
             HandleRestart(*request_packet);
             success = true;
             break;
-        }
         case PacketType::SetSpeedLimit: {
             const u8* data{request_packet->GetPacketData().data() + (sizeof(u32) * 2)};
             u16 speed_limit;
@@ -359,11 +354,10 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
             success = true;
             break;
         }
-        case PacketType::AdvanceFrame: {
+        case PacketType::AdvanceFrame:
             HandleAdvanceFrame(*request_packet);
             success = true;
             break;
-        }
         default:
             break;
         }
