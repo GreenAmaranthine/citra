@@ -21,10 +21,23 @@ public:
     std::string GetName() const override {
         return name;
     }
+    void SetName(std::string name) {
+        this->name = name;
+    }
 
     static const HandleType HANDLE_TYPE{HandleType::SharedMemory};
     HandleType GetHandleType() const override {
         return HANDLE_TYPE;
+    }
+
+    /// Gets the size of the underlying memory block in bytes.
+    u64 GetSize() const {
+        return size;
+    }
+
+    /// Gets the linear heap physical offset
+    u64 GetLinearHeapPhysicalOffset() const {
+        return linear_heap_phys_offset;
     }
 
     /**
@@ -58,36 +71,31 @@ public:
      */
     u8* GetPointer(u32 offset = 0);
 
-    /// Process that created this shared memory block.
-    Process* owner_process;
-
-    /// Address of shared memory block in the owner process if specified.
-    VAddr base_address;
-
-    /// Offset in FCRAM of the shared memory block in the linear heap if no address was specified
-    /// during creation.
-    PAddr linear_heap_phys_offset;
-
-    /// Backing memory for this shared memory block.
-    std::vector<std::pair<u8*, u32>> backing_blocks;
-
-    /// Size of the memory block. Page-aligned.
-    u32 size;
-
-    /// Permission restrictions applied to the process which created the block.
-    MemoryPermission permissions;
-
-    /// Permission restrictions applied to other processes mapping the block.
-    MemoryPermission other_permissions;
-
-    /// Name of shared memory object.
-    std::string name;
-
-    MemoryRegionInfo::IntervalSet holding_memory;
-
 private:
     explicit SharedMemory(KernelSystem& kernel);
     ~SharedMemory() override;
+
+    PAddr linear_heap_phys_offset{}; ///< Offset in FCRAM of the shared memory block in the linear
+                                     /// heap if no address was specified during creation.
+
+    std::vector<std::pair<u8*, u32>>
+        backing_blocks; ///< Backing memory for this shared memory block.
+
+    u32 size{}; ///< Size of the memory block. Page-aligned.
+
+    MemoryPermission
+        permissions{}; ///< Permission restrictions applied to the process which created the block.
+
+    MemoryPermission other_permissions{}; ///< Permission restrictions applied to other processes
+                                          /// mapping the block.
+
+    SharedPtr<Process> owner_process; ///< Process that created this shared memory block.
+
+    VAddr base_address{}; ///< Address of shared memory block in the owner process if specified.
+
+    std::string name; ///< Name of shared memory object.
+
+    MemoryRegionInfo::IntervalSet holding_memory;
 
     friend class KernelSystem;
     KernelSystem& kernel;

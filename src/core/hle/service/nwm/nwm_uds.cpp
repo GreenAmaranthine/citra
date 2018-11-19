@@ -560,7 +560,7 @@ void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
     u16 version{rp.Pop<u16>()};
     recv_buffer_memory = rp.PopObject<Kernel::SharedMemory>();
     initialized = true;
-    ASSERT_MSG(recv_buffer_memory->size == sharedmem_size, "Invalid shared memory size.");
+    ASSERT_MSG(recv_buffer_memory->GetSize() == sharedmem_size, "Invalid shared memory size.");
     wifi_packet_received = system.RoomMember().BindOnWifiPacketReceived(
         [this](const Network::WifiPacket& packet) { OnWifiPacketReceived(packet); });
     {

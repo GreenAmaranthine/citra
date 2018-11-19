@@ -33,7 +33,7 @@ enum class SampleRate : u8 {
 struct MIC_U::Impl {
     explicit Impl(Core::System& system) {
         buffer_full_event =
-            system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "MIC_U::buffer_full_event");
+            system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "mic:u Buffer Full Event");
     }
 
     void MapSharedMem(Kernel::HLERequestContext& ctx) {
@@ -41,7 +41,7 @@ struct MIC_U::Impl {
         const u32 size{rp.Pop<u32>()};
         shared_memory = rp.PopObject<Kernel::SharedMemory>();
         if (shared_memory)
-            shared_memory->name = "MIC_U:shared_memory";
+            shared_memory->SetName("mic:u Shared Memory");
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
         LOG_DEBUG(Service_MIC, "size=0x{:X}", size);

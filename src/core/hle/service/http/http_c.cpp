@@ -300,7 +300,7 @@ void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
     rp.PopPID();
     shared_memory = rp.PopObject<Kernel::SharedMemory>();
     if (shared_memory)
-        shared_memory->name = "http:C Shared Memory";
+        shared_memory->SetName("http:C Shared Memory");
     auto session_data{GetSessionData(ctx.Session())};
     ASSERT(session_data);
     if (session_data->initialized) {
