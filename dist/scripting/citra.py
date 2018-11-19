@@ -25,7 +25,8 @@ class RequestType(enum.IntEnum):
     SetScreenRefreshRate = 15,
     IsButtonPressed = 16,
     SetFrameAdvancing = 17,
-    AdvanceFrame = 18
+    AdvanceFrame = 18,
+    GetCurrentFrame = 19
 
 
 CITRA_PORT = "45987"
@@ -307,3 +308,15 @@ class Citra:
         request += request_data
         self.socket.send(request)
         self.socket.recv()
+
+    # Gets the current frame.
+    def get_current_frame(self):
+        request_data = struct.pack("II", 0, 0)
+        request, request_id = self._generate_header(
+            RequestType.GetCurrentFrame, len(request_data))
+        request += request_data
+        self.socket.send(request)
+        raw_reply = self.socket.recv()
+        data = self._read_and_validate_header(
+            raw_reply, request_id, RequestType.GetCurrentFrame)
+        return data

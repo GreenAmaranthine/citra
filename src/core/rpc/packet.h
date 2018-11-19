@@ -30,6 +30,7 @@ enum class PacketType {
     IsButtonPressed,
     SetFrameAdvancing,
     AdvanceFrame,
+    GetCurrentFrame,
 };
 
 struct PacketHeader {

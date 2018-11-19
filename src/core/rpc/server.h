@@ -13,7 +13,8 @@ class RPCServer;
 
 class Server {
 public:
-    Server(RPCServer& rpc_server);
+    explicit Server(RPCServer& rpc_server);
+
     void Start();
     void Stop();
     void NewRequestCallback(std::unique_ptr<RPC::Packet> new_request);

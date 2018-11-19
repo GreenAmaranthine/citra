@@ -5,11 +5,13 @@
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/cpu/cpu.h"
+#include "core/frontend.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/service/hid/hid.h"
 #include "core/memory.h"
 #include "core/rpc/packet.h"
 #include "core/rpc/rpc_server.h"
+#include "video_core/video_core.h"
 
 namespace RPC {
 
@@ -151,17 +153,34 @@ void RPCServer::HandleIsButtonPressed(Packet& packet, int button) {
 
 void RPCServer::HandleSetFrameAdvancing(Packet& packet, bool enable) {
     system.frame_limiter.SetFrameAdvancing(enable);
-    if (cb_update_frame_advancing)
-        cb_update_frame_advancing();
+    cb_update_frame_advancing();
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
 
 void RPCServer::HandleAdvanceFrame(Packet& packet) {
     system.frame_limiter.AdvanceFrame();
-    if (cb_update_frame_advancing)
-        cb_update_frame_advancing();
+    cb_update_frame_advancing();
     packet.SetPacketDataSize(0);
+    packet.SendReply();
+}
+
+void RPCServer::HandleGetCurrentFrame(Packet& packet) {
+    const auto& layout{system.GetFrontend().GetFramebufferLayout()};
+    const auto size{(layout.width * layout.height) * sizeof(u32)};
+    std::vector<u8> data(size);
+    std::condition_variable cv;
+    std::mutex m;
+    std::unique_lock lock{m};
+    VideoCore::RequestScreenshot(data.data(),
+                                 [&] {
+                                     std::unique_lock lock{m};
+                                     cv.notify_one();
+                                 },
+                                 layout);
+    cv.wait(lock);
+    packet.SetPacketDataSize(size);
+    packet.GetPacketData() = std::move(data);
     packet.SendReply();
 }
 
@@ -186,6 +205,7 @@ bool RPCServer::ValidatePacket(const PacketHeader& packet_header) {
         case PacketType::IsButtonPressed:
         case PacketType::SetFrameAdvancing:
         case PacketType::AdvanceFrame:
+        case PacketType::GetCurrentFrame:
             if (packet_header.packet_size >= (sizeof(u32) * 2))
                 return true;
             break;
@@ -356,6 +376,10 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
         }
         case PacketType::AdvanceFrame:
             HandleAdvanceFrame(*request_packet);
+            success = true;
+            break;
+        case PacketType::GetCurrentFrame:
+            HandleGetCurrentFrame(*request_packet);
             success = true;
             break;
         default:

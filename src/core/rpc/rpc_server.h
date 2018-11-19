@@ -48,6 +48,7 @@ private:
     void HandleIsButtonPressed(Packet& packet, int button);
     void HandleSetFrameAdvancing(Packet& packet, bool enable);
     void HandleAdvanceFrame(Packet& packet);
+    void HandleGetCurrentFrame(Packet& packet);
     bool ValidatePacket(const PacketHeader& packet_header);
     void HandleSingleRequest(std::unique_ptr<Packet> request);
     void HandleRequestsLoop();
