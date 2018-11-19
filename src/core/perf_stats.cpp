@@ -19,17 +19,14 @@ namespace Core {
 
 void PerfStats::BeginSystemFrame() {
     std::lock_guard lock{object_mutex};
-
     frame_begin = Clock::now();
 }
 
 void PerfStats::EndSystemFrame() {
     std::lock_guard lock{object_mutex};
-
     auto frame_end{Clock::now()};
     accumulated_frametime += frame_end - frame_begin;
     system_frames += 1;
-
     previous_frame_length = frame_end - previous_frame_end;
     previous_frame_end = frame_end;
 }
@@ -41,34 +38,27 @@ void PerfStats::EndAppFrame() {
 
 PerfStats::Results PerfStats::GetAndResetStats(microseconds current_system_time_us) {
     std::lock_guard lock{object_mutex};
-
     const auto now{Clock::now()};
-
     // Walltime elapsed since stats were reset
-    const auto interval = duration_cast<DoubleSecs>(now - reset_point).count();
-
+    const auto interval{duration_cast<DoubleSecs>(now - reset_point).count()};
     const auto system_us_per_second{(current_system_time_us - reset_point_system_us) / interval};
-
-    Results results{};
+    Results results;
     results.system_fps = static_cast<double>(system_frames) / interval;
     results.app_fps = static_cast<double>(app_frames) / interval;
     results.frametime = duration_cast<DoubleSecs>(accumulated_frametime).count() /
                         static_cast<double>(system_frames);
     results.emulation_speed = system_us_per_second.count() / 1'000'000.0;
-
     // Reset counters
     reset_point = now;
     reset_point_system_us = current_system_time_us;
     accumulated_frametime = Clock::duration::zero();
     system_frames = 0;
     app_frames = 0;
-
     return results;
 }
 
 double PerfStats::GetLastFrameTimeScale() {
     std::lock_guard lock{object_mutex};
-
     return duration_cast<DoubleSecs>(previous_frame_length).count() /
            (1.0 / Settings::values.screen_refresh_rate);
 }
@@ -80,14 +70,10 @@ void FrameLimiter::DoFrameLimiting(microseconds current_system_time_us) {
         frame_advance_event.Reset();
         return;
     }
-
-    if (!Settings::values.use_frame_limit) {
+    if (!Settings::values.use_frame_limit)
         return;
-    }
-
     auto now{Clock::now()};
     double sleep_scale{Settings::values.frame_limit / 100.0};
-
     // Max lag caused by slow frames. Shouldn't be more than the length of a frame at the current
     // speed percent or it will clamp too much and prevent this from properly limiting to that
     // percent. High values means it'll take longer after a slow frame to recover and start limiting
@@ -99,24 +85,21 @@ void FrameLimiter::DoFrameLimiting(microseconds current_system_time_us) {
     frame_limiting_delta_err -= duration_cast<microseconds>(now - previous_walltime);
     frame_limiting_delta_err =
         std::clamp(frame_limiting_delta_err, -max_lag_time_us, max_lag_time_us);
-
     if (frame_limiting_delta_err > microseconds::zero()) {
         std::this_thread::sleep_for(frame_limiting_delta_err);
         auto now_after_sleep{Clock::now()};
         frame_limiting_delta_err -= duration_cast<microseconds>(now_after_sleep - now);
         now = now_after_sleep;
     }
-
     previous_system_time_us = current_system_time_us;
     previous_walltime = now;
 }
 
 void FrameLimiter::SetFrameAdvancing(bool value) {
     const bool was_enabled{frame_advancing_enabled.exchange(value)};
-    if (was_enabled && !value) {
+    if (was_enabled && !value)
         // Set the event to let emulation continue
         frame_advance_event.Set();
-    }
 }
 
 bool FrameLimiter::GetFrameAdvancing() {
@@ -124,10 +107,9 @@ bool FrameLimiter::GetFrameAdvancing() {
 }
 
 void FrameLimiter::AdvanceFrame() {
-    if (!frame_advancing_enabled) {
+    if (!frame_advancing_enabled)
         // Start frame advancing
         frame_advancing_enabled = true;
-    }
     frame_advance_event.Set();
 }
 
