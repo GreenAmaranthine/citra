@@ -249,7 +249,7 @@ static const std::unordered_map<u64, QStringList> issues_map{{
 
     // Tomodachi Life (USA)
     {0x000400000008C300,
-     {GitHubIssue("valentinvanelslande/citra", 277), GitHubIssue("citra-emu/citra", 4320),
+     {"Lip sincing glitchy when singing", GitHubIssue("citra-emu/citra", 4320),
       "Exchange Miis or Other Items - The name of the island flashes",
       "Scan QR Code - Preparing camera never ends"}},
 
