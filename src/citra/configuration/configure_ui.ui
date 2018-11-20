@@ -174,7 +174,7 @@
         <item>
          <widget class="QCheckBox" name="toggle_hide_no_icon">
           <property name="text">
-           <string>Hide Titles Without Icon</string>
+           <string>Hide Applications Without Icon</string>
           </property>
          </widget>
         </item>
