@@ -16,7 +16,7 @@ static inline QString GitHubIssue(const QString& repo, int number) {
 
 static const std::unordered_map<u64, QStringList> issues_map{{
     // FBI
-    {0x000400000F800100, {GitHubIssue("valentinvanelslande/citra", 451)}},
+    {0x000400000F800100, {}},
 
     // DSiMenuPlusPlus
     {0x0004000004395500, {"Citra crashes with Unknown result status"}},
@@ -101,7 +101,7 @@ static const std::unordered_map<u64, QStringList> issues_map{{
 
     // Tomodachi Life (EUR)
     {0x000400000008C400,
-     {GitHubIssue("valentinvanelslande/citra", 277), GitHubIssue("citra-emu/citra", 4320),
+     {"Lip syncing glitchy when singing", GitHubIssue("citra-emu/citra", 4320),
       "Exchange Miis or Other Items - The name of the island flashes",
       "Scan QR Code - Preparing camera never ends"}},
 
@@ -249,7 +249,7 @@ static const std::unordered_map<u64, QStringList> issues_map{{
 
     // Tomodachi Life (USA)
     {0x000400000008C300,
-     {"Lip sincing glitchy when singing", GitHubIssue("citra-emu/citra", 4320),
+     {"Lip syncing glitchy when singing", GitHubIssue("citra-emu/citra", 4320),
       "Exchange Miis or Other Items - The name of the island flashes",
       "Scan QR Code - Preparing camera never ends"}},
 
