@@ -212,6 +212,14 @@ public:
      */
     void SignalInterrupt(InterruptId interrupt_id);
 
+    u32 GetUnusedThreadId() const;
+
+    /// Maximum number of threads that can be registered at the same time in the GSP module.
+    static constexpr u32 MaxGSPThreads{4};
+
+    /// Thread IDs currently in use by the sessions connected to the gsp::Gpu service.
+    std::array<bool, MaxGSPThreads> used_thread_ids{};
+
 private:
     /**
      * Retrieves the framebuffer info stored in the GSP shared memory for the
