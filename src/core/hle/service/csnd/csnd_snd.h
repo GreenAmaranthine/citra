@@ -48,7 +48,7 @@ private:
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
 
     static constexpr u32 MaxCaptureUnits{2};
-    std::array<bool, MaxCaptureUnits> capture_units{false, false};
+    std::array<bool, MaxCaptureUnits> capture_units{};
 };
 
 /// Initializes the CSND_SND Service

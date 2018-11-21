@@ -35,7 +35,7 @@ DirectionState GetStickDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
     constexpr float TAN60{1 / TAN30};
     // A circle pad radius greater than 40 will trigger circle pad direction
     constexpr int CIRCLE_PAD_THRESHOLD_SQUARE{40 * 40};
-    DirectionState state{false, false, false, false};
+    DirectionState state{};
     if (circle_pad_x * circle_pad_x + circle_pad_y * circle_pad_y > CIRCLE_PAD_THRESHOLD_SQUARE) {
         float t{std::abs(static_cast<float>(circle_pad_y) / circle_pad_x)};
         if (circle_pad_x != 0 && t < TAN60)
