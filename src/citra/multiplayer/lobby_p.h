@@ -14,12 +14,12 @@ namespace Column {
 enum List {
     EXPAND,
     ROOM_NAME,
-    APP_NAME,
+    PROGRAM_NAME,
     HOST,
     MEMBER,
     TOTAL,
 };
-}
+} // namespace Column
 
 class LobbyItem : public QStandardItem {
 public:
@@ -59,9 +59,9 @@ class LobbyItemApp : public LobbyItem {
 public:
     LobbyItemApp() = default;
 
-    explicit LobbyItemApp(u64 title_id, QString app_name, QPixmap smdh_icon) {
-        setData(static_cast<unsigned long long>(title_id), TitleIDRole);
-        setData(app_name, AppNameRole);
+    explicit LobbyItemApp(u64 program_id, QString program_name, QPixmap smdh_icon) {
+        setData(static_cast<unsigned long long>(program_id), ProgramIDRole);
+        setData(program_name, AppNameRole);
         if (!smdh_icon.isNull())
             setData(smdh_icon, IconRole);
     }
@@ -82,7 +82,7 @@ public:
                0;
     }
 
-    static const int TitleIDRole{Qt::UserRole + 1};
+    static const int ProgramIDRole{Qt::UserRole + 1};
     static const int AppNameRole{Qt::UserRole + 2};
     static const int IconRole{Qt::UserRole + 3};
 };
@@ -119,13 +119,14 @@ public:
     LobbyMember() = default;
     LobbyMember(const LobbyMember& other) = default;
 
-    explicit LobbyMember(QString username, u64 title_id, QString app_name)
-        : username{std::move(username)}, title_id{title_id}, app_name{std::move(app_name)} {}
+    explicit LobbyMember(QString username, u64 program_id, QString program_name)
+        : username{std::move(username)}, program_id{program_id}, program_name{
+                                                                     std::move(program_name)} {}
 
     ~LobbyMember() = default;
 
-    u64 GetTitleId() const {
-        return title_id;
+    u64 GetProgramID() const {
+        return program_id;
     }
 
     QString GetUsername() const {
@@ -133,13 +134,13 @@ public:
     }
 
     QString GetAppName() const {
-        return app_name;
+        return program_name;
     }
 
 private:
     QString username;
-    u64 title_id;
-    QString app_name;
+    u64 program_id;
+    QString program_name;
 };
 
 Q_DECLARE_METATYPE(LobbyMember);
@@ -192,7 +193,7 @@ public:
                 out += '\n';
             const auto& m{member.value<LobbyMember>()};
             if (m.GetAppName().isEmpty())
-                out += QString("%1 isn't runnning a application").arg(m.GetUsername());
+                out += QString("%1 isn't runnning a program").arg(m.GetUsername());
             else
                 out += QString("%1 is running %2").arg(m.GetUsername(), m.GetAppName());
             first = false;

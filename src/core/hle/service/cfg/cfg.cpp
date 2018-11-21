@@ -183,13 +183,13 @@ void Module::Interface::SecureInfoGetRegion(Kernel::HLERequestContext& ctx, u16 
 
 void Module::Interface::GenHashConsoleUnique(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x03, 1, 0};
-    const u32 app_id_salt{rp.Pop<u32>() & 0x000FFFFF};
+    const u32 program_id_salt{rp.Pop<u32>() & 0x000FFFFF};
     IPC::ResponseBuilder rb{rp.MakeBuilder(3, 0)};
     std::array<u8, 12> buffer;
     const auto result{cfg->GetConfigInfoBlock(ConsoleUniqueID2BlockID, 8, 2, buffer.data())};
     rb.Push(result);
     if (result.IsSuccess()) {
-        std::memcpy(&buffer[8], &app_id_salt, sizeof(u32));
+        std::memcpy(&buffer[8], &program_id_salt, sizeof(u32));
         std::array<u8, CryptoPP::SHA256::DIGESTSIZE> hash;
         CryptoPP::SHA256().CalculateDigest(hash.data(), buffer.data(), sizeof(buffer));
         u32 low, high;
@@ -201,7 +201,7 @@ void Module::Interface::GenHashConsoleUnique(Kernel::HLERequestContext& ctx) {
         rb.Push<u32>(0);
         rb.Push<u32>(0);
     }
-    LOG_DEBUG(Service_CFG, "app_id_salt=0x{:X}", app_id_salt);
+    LOG_DEBUG(Service_CFG, "program_id_salt=0x{:X}", program_id_salt);
 }
 
 void Module::Interface::GetRegionCanadaUSA(Kernel::HLERequestContext& ctx) {

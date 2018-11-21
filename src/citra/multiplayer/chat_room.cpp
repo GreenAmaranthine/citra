@@ -15,12 +15,12 @@
 #include <QTime>
 #include <QVBoxLayout>
 #include <QtConcurrent/QtConcurrentRun>
-#include "citra/app_list_p.h"
 #include "citra/multiplayer/chat_room.h"
 #include "citra/multiplayer/client_room.h"
 #include "citra/multiplayer/emojis.h"
 #include "citra/multiplayer/message.h"
 #include "citra/multiplayer/state.h"
+#include "citra/program_list_p.h"
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
 #include "core/core.h"
@@ -86,7 +86,7 @@ ChatRoom::ChatRoom(QWidget* parent)
     ui->member_view->setContextMenuPolicy(Qt::CustomContextMenu);
     member_list->insertColumns(0, COLUMN_COUNT);
     member_list->setHeaderData(COLUMN_NAME, Qt::Horizontal, "Name");
-    member_list->setHeaderData(COLUMN_APP, Qt::Horizontal, "Application");
+    member_list->setHeaderData(COLUMN_APP, Qt::Horizontal, "Program");
     constexpr int MaxChatLines{1000};
     ui->chat_history->document()->setMaximumBlockCount(MaxChatLines);
     // Register the network structs to use in slots and signals
@@ -216,7 +216,7 @@ void ChatRoom::SetMemberList(const Network::RoomMember::MemberList& member_list)
         if (member.nickname.empty())
             continue;
         QList<QStandardItem*> l;
-        std::vector<std::string> elements{member.nickname, member.app_info.name};
+        std::vector<std::string> elements{member.nickname, member.program_info.name};
         for (const auto& item : elements) {
             QStandardItem* child{new QStandardItem(QString::fromStdString(item))};
             child->setEditable(false);

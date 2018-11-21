@@ -20,10 +20,10 @@
 #include <QThreadPool>
 #include <QToolButton>
 #include <QTreeView>
-#include "citra/app_list.h"
-#include "citra/app_list_p.h"
-#include "citra/app_list_worker.h"
 #include "citra/main.h"
+#include "citra/program_list.h"
+#include "citra/program_list_p.h"
+#include "citra/program_list_worker.h"
 #include "citra/ui_settings.h"
 #include "common/common_paths.h"
 #include "common/logging/log.h"
@@ -33,15 +33,16 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/settings.h"
 
-AppListSearchField::KeyReleaseEater::KeyReleaseEater(AppList* applist) : applist{applist} {}
+ProgramListSearchField::KeyReleaseEater::KeyReleaseEater(ProgramList* programlist)
+    : programlist{programlist} {}
 
 // EventFilter in order to process systemkeys while editing the searchfield
-bool AppListSearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* event) {
+bool ProgramListSearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* event) {
     // If it isn't a KeyRelease event then continue with standard event processing
     if (event->type() != QEvent::KeyRelease)
         return QObject::eventFilter(obj, event);
     auto keyEvent{static_cast<QKeyEvent*>(event)};
-    auto edit_filter_text{applist->search_field->edit_filter->text().toLower()};
+    auto edit_filter_text{programlist->search_field->edit_filter->text().toLower()};
     // If the searchfield's text hasn't changed special function keys get checked
     // If no function key changes the searchfield's text the filter doesn't need to get reloaded
     if (edit_filter_text == edit_filter_text_old) {
@@ -51,23 +52,23 @@ bool AppListSearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* even
             if (edit_filter_text_old.isEmpty())
                 return QObject::eventFilter(obj, event);
             else {
-                applist->search_field->edit_filter->clear();
+                programlist->search_field->edit_filter->clear();
                 edit_filter_text.clear();
             }
             break;
         }
         // Return and Enter
         // If the enter key gets pressed first checks how many and which entry is visible
-        // If there is only one result launch this application
+        // If there is only one result launch this program
         case Qt::Key_Return:
         case Qt::Key_Enter: {
-            if (applist->search_field->visible == 1) {
-                auto file_path{applist->getLastFilterResultItem()};
+            if (programlist->search_field->visible == 1) {
+                auto file_path{programlist->getLastFilterResultItem()};
                 // To avoid loading error dialog loops while confirming them using enter
-                // Also users usually want to run a different application after closing one
-                applist->search_field->edit_filter->clear();
+                // Also users usually want to run a different program after closing one
+                programlist->search_field->edit_filter->clear();
                 edit_filter_text.clear();
-                emit applist->ApplicationChosen(file_path);
+                emit programlist->ProgramChosen(file_path);
             } else
                 return QObject::eventFilter(obj, event);
             break;
@@ -80,14 +81,14 @@ bool AppListSearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* even
     return QObject::eventFilter(obj, event);
 }
 
-void AppListSearchField::setFilterResult(int visible, int total) {
+void ProgramListSearchField::setFilterResult(int visible, int total) {
     this->visible = visible;
     this->total = total;
     label_filter_result->setText(
         QString("%1 of %3 %4").arg(visible).arg(total).arg(total == 1 ? "result" : "results"));
 }
 
-QString AppList::getLastFilterResultItem() {
+QString ProgramList::getLastFilterResultItem() {
     QStandardItem* folder;
     QStandardItem* child;
     QString file_path;
@@ -99,22 +100,22 @@ QString AppList::getLastFilterResultItem() {
         for (int j{}; j < childrenCount; ++j)
             if (!tree_view->isRowHidden(j, folder_index)) {
                 child = folder->child(j, 0);
-                file_path = child->data(AppListItemPath::FullPathRole).toString();
+                file_path = child->data(ProgramListItemPath::FullPathRole).toString();
             }
     }
     return file_path;
 }
 
-void AppListSearchField::clear() {
+void ProgramListSearchField::clear() {
     edit_filter->clear();
 }
 
-void AppListSearchField::setFocus() {
+void ProgramListSearchField::setFocus() {
     if (edit_filter->isVisible())
         edit_filter->setFocus();
 }
 
-AppListSearchField::AppListSearchField(AppList* parent) : QWidget{parent} {
+ProgramListSearchField::ProgramListSearchField(ProgramList* parent) : QWidget{parent} {
     auto keyReleaseEater{new KeyReleaseEater(parent)};
     layout_filter = new QHBoxLayout;
     layout_filter->setMargin(8);
@@ -125,7 +126,7 @@ AppListSearchField::AppListSearchField(AppList* parent) : QWidget{parent} {
     edit_filter->setPlaceholderText("Enter pattern to filter");
     edit_filter->installEventFilter(keyReleaseEater);
     edit_filter->setClearButtonEnabled(true);
-    connect(edit_filter, &QLineEdit::textChanged, parent, &AppList::onTextChanged);
+    connect(edit_filter, &QLineEdit::textChanged, parent, &ProgramList::onTextChanged);
     label_filter_result = new QLabel;
     button_filter_close = new QToolButton(this);
     button_filter_close->setText("X");
@@ -134,7 +135,7 @@ AppListSearchField::AppListSearchField(AppList* parent) : QWidget{parent} {
                                        "#000000; font-weight: bold; background: #F0F0F0; }"
                                        "QToolButton:hover{ border: none; padding: 0px; color: "
                                        "#EEEEEE; font-weight: bold; background: #E81123}");
-    connect(button_filter_close, &QToolButton::clicked, parent, &AppList::onFilterCloseClicked);
+    connect(button_filter_close, &QToolButton::clicked, parent, &ProgramList::onFilterCloseClicked);
     layout_filter->setSpacing(10);
     layout_filter->addWidget(label_filter);
     layout_filter->addWidget(edit_filter);
@@ -157,21 +158,21 @@ static bool ContainsAllWords(const QString& haystack, const QString& userinput) 
                        [&haystack](const QString& s) { return haystack.contains(s); });
 }
 
-// Syncs the expanded state of Application Directories with settings to persist across sessions
-void AppList::OnItemExpanded(const QModelIndex& item) {
-    // The click should still register in the AppListItemPath item no matter which column was
+// Syncs the expanded state of Program Directories with settings to persist across sessions
+void ProgramList::OnItemExpanded(const QModelIndex& item) {
+    // The click should still register in the ProgramListItemPath item no matter which column was
     // clicked
     int row{item_model->itemFromIndex(item)->row()};
     QStandardItem* child{item_model->invisibleRootItem()->child(row, COLUMN_NAME)};
-    AppListItemType type{static_cast<AppListItemType>(child->type())};
-    if (type == AppListItemType::CustomDir || type == AppListItemType::InstalledDir ||
-        type == AppListItemType::SystemDir)
-        child->data(AppListDir::AppDirRole).value<UISettings::AppDir*>()->expanded =
+    ProgramListItemType type{static_cast<ProgramListItemType>(child->type())};
+    if (type == ProgramListItemType::CustomDir || type == ProgramListItemType::InstalledDir ||
+        type == ProgramListItemType::SystemDir)
+        child->data(ProgramListDir::AppDirRole).value<UISettings::AppDir*>()->expanded =
             tree_view->isExpanded(child->index());
 }
 
-// Event in order to filter the applist after editing the searchfield
-void AppList::onTextChanged(const QString& newText) {
+// Event in order to filter the ProgramList after editing the searchfield
+void ProgramList::onTextChanged(const QString& newText) {
     int folderCount{tree_view->model()->rowCount()};
     auto edit_filter_text{newText.toLower()};
     QStandardItem* folder;
@@ -199,16 +200,16 @@ void AppList::onTextChanged(const QString& newText) {
                 ++childrenTotal;
                 const auto child{folder->child(j, 0)};
                 const auto file_path{
-                    child->data(AppListItemPath::FullPathRole).toString().toLower()};
+                    child->data(ProgramListItemPath::FullPathRole).toString().toLower()};
                 auto file_name{file_path.mid(file_path.lastIndexOf("/") + 1)};
-                auto file_title{child->data(AppListItemPath::TitleRole).toString().toLower()};
+                auto file_title{child->data(ProgramListItemPath::TitleRole).toString().toLower()};
                 auto file_programid{
-                    child->data(AppListItemPath::ProgramIdRole).toString().toLower()};
+                    child->data(ProgramListItemPath::ProgramIdRole).toString().toLower()};
                 // Only items which filename in combination with its title contains all words
-                // that are in the searchfield will be visible in the applist
+                // that are in the searchfield will be visible in the ProgramList
                 // The search is case insensitive because of toLower()
                 // I decided not to use Qt::CaseInsensitive in ContainsAllWords to prevent
-                // multiple conversions of edit_filter_text for each application in the application
+                // multiple conversions of edit_filter_text for each program in the program
                 // list
                 if (ContainsAllWords(file_name.append(' ').append(file_title), edit_filter_text) ||
                     (file_programid.count() == 16 && edit_filter_text.contains(file_programid))) {
@@ -222,42 +223,43 @@ void AppList::onTextChanged(const QString& newText) {
     }
 }
 
-void AppList::OnUpdateThemedIcons() {
+void ProgramList::OnUpdateThemedIcons() {
     for (int i{}; i < item_model->invisibleRootItem()->rowCount(); i++) {
         QStandardItem* child{item_model->invisibleRootItem()->child(i)};
-        switch (static_cast<AppListItemType>(child->type())) {
-        case AppListItemType::InstalledDir:
+        switch (static_cast<ProgramListItemType>(child->type())) {
+        case ProgramListItemType::InstalledDir:
             child->setData(QIcon::fromTheme("sd_card").pixmap(48), Qt::DecorationRole);
             break;
-        case AppListItemType::SystemDir:
+        case ProgramListItemType::SystemDir:
             child->setData(QIcon::fromTheme("chip").pixmap(48), Qt::DecorationRole);
             break;
-        case AppListItemType::CustomDir: {
-            const UISettings::AppDir* app_dir{
-                child->data(AppListDir::AppDirRole).value<UISettings::AppDir*>()};
-            QString icon_name{QFileInfo::exists(app_dir->path) ? "folder" : "bad_folder"};
+        case ProgramListItemType::CustomDir: {
+            const UISettings::AppDir* program_dir{
+                child->data(ProgramListDir::AppDirRole).value<UISettings::AppDir*>()};
+            QString icon_name{QFileInfo::exists(program_dir->path) ? "folder" : "bad_folder"};
             child->setData(QIcon::fromTheme(icon_name).pixmap(48), Qt::DecorationRole);
             break;
         }
-        case AppListItemType::AddDir:
+        case ProgramListItemType::AddDir:
             child->setData(QIcon::fromTheme("plus").pixmap(48), Qt::DecorationRole);
             break;
         }
     }
 }
 
-void AppList::onFilterCloseClicked() {
+void ProgramList::onFilterCloseClicked() {
     main_window->filterBarSetChecked(false);
 }
 
-AppList::AppList(Core::System& system, GMainWindow* parent) : QWidget{parent}, system{system} {
+ProgramList::ProgramList(Core::System& system, GMainWindow* parent)
+    : QWidget{parent}, system{system} {
     watcher = new QFileSystemWatcher(this);
-    connect(watcher, &QFileSystemWatcher::directoryChanged, this, &AppList::Refresh,
+    connect(watcher, &QFileSystemWatcher::directoryChanged, this, &ProgramList::Refresh,
             Qt::UniqueConnection);
     this->main_window = parent;
     layout = new QVBoxLayout;
     tree_view = new QTreeView;
-    search_field = new AppListSearchField(this);
+    search_field = new ProgramListSearchField(this);
     item_model = new QStandardItemModel(tree_view);
     tree_view->setModel(item_model);
     tree_view->setAlternatingRowColors(true);
@@ -276,12 +278,13 @@ AppList::AppList(Core::System& system, GMainWindow* parent) : QWidget{parent}, s
     item_model->setHeaderData(COLUMN_FILE_TYPE, Qt::Horizontal, "File type");
     item_model->setHeaderData(COLUMN_SIZE, Qt::Horizontal, "Size");
     tree_view->setColumnWidth(COLUMN_NAME, 500);
-    item_model->setSortRole(AppListItemPath::TitleRole);
-    connect(main_window, &GMainWindow::UpdateThemedIcons, this, &AppList::OnUpdateThemedIcons);
-    connect(tree_view, &QTreeView::activated, this, &AppList::ValidateEntry);
-    connect(tree_view, &QTreeView::customContextMenuRequested, this, &AppList::PopupContextMenu);
-    connect(tree_view, &QTreeView::expanded, this, &AppList::OnItemExpanded);
-    connect(tree_view, &QTreeView::collapsed, this, &AppList::OnItemExpanded);
+    item_model->setSortRole(ProgramListItemPath::TitleRole);
+    connect(main_window, &GMainWindow::UpdateThemedIcons, this, &ProgramList::OnUpdateThemedIcons);
+    connect(tree_view, &QTreeView::activated, this, &ProgramList::ValidateEntry);
+    connect(tree_view, &QTreeView::customContextMenuRequested, this,
+            &ProgramList::PopupContextMenu);
+    connect(tree_view, &QTreeView::expanded, this, &ProgramList::OnItemExpanded);
+    connect(tree_view, &QTreeView::collapsed, this, &ProgramList::OnItemExpanded);
     // We must register all custom types with the Qt Automoc system so that we're able to use
     // it with signals/slots. In this case, QList falls under the umbrells of custom types.
     qRegisterMetaType<QList<QStandardItem*>>("QList<QStandardItem*>");
@@ -292,43 +295,43 @@ AppList::AppList(Core::System& system, GMainWindow* parent) : QWidget{parent}, s
     setLayout(layout);
 }
 
-AppList::~AppList() {
+ProgramList::~ProgramList() {
     emit ShouldCancelWorker();
 }
 
-void AppList::setFilterFocus() {
+void ProgramList::setFilterFocus() {
     if (tree_view->model()->rowCount() > 0)
         search_field->setFocus();
 }
 
-void AppList::setFilterVisible(bool visibility) {
+void ProgramList::setFilterVisible(bool visibility) {
     search_field->setVisible(visibility);
 }
 
-void AppList::setDirectoryWatcherEnabled(bool enabled) {
+void ProgramList::setDirectoryWatcherEnabled(bool enabled) {
     if (enabled)
-        connect(watcher, &QFileSystemWatcher::directoryChanged, this, &AppList::Refresh,
+        connect(watcher, &QFileSystemWatcher::directoryChanged, this, &ProgramList::Refresh,
                 Qt::UniqueConnection);
     else
-        disconnect(watcher, &QFileSystemWatcher::directoryChanged, this, &AppList::Refresh);
+        disconnect(watcher, &QFileSystemWatcher::directoryChanged, this, &ProgramList::Refresh);
 }
 
-void AppList::clearFilter() {
+void ProgramList::clearFilter() {
     search_field->clear();
 }
 
-void AppList::AddDirEntry(AppListDir* entry_items) {
+void ProgramList::AddDirEntry(ProgramListDir* entry_items) {
     item_model->invisibleRootItem()->appendRow(entry_items);
     tree_view->setExpanded(
         entry_items->index(),
-        entry_items->data(AppListDir::AppDirRole).value<UISettings::AppDir*>()->expanded);
+        entry_items->data(ProgramListDir::AppDirRole).value<UISettings::AppDir*>()->expanded);
 }
 
-void AppList::AddEntry(const QList<QStandardItem*>& entry_items, AppListDir* parent) {
+void ProgramList::AddEntry(const QList<QStandardItem*>& entry_items, ProgramListDir* parent) {
     parent->appendRow(entry_items);
 }
 
-void AppList::ValidateEntry(const QModelIndex& item) {
+void ProgramList::ValidateEntry(const QModelIndex& item) {
     // The click should still register in the first column no matter which column was
     // clicked
     int row{item_model->itemFromIndex(item)->row()};
@@ -336,31 +339,31 @@ void AppList::ValidateEntry(const QModelIndex& item) {
     if (!parent)
         parent = item_model->invisibleRootItem();
     const auto child{parent->child(row, COLUMN_NAME)};
-    switch (static_cast<AppListItemType>(child->type())) {
-    case AppListItemType::Application: {
-        auto file_path{child->data(AppListItemPath::FullPathRole).toString()};
+    switch (static_cast<ProgramListItemType>(child->type())) {
+    case ProgramListItemType::Program: {
+        auto file_path{child->data(ProgramListItemPath::FullPathRole).toString()};
         if (file_path.isEmpty())
             return;
         QFileInfo file_info{file_path};
         if (!file_info.exists() || file_info.isDir())
             return;
-        // Users usually want to run a different application after closing one
+        // Users usually want to run a different program after closing one
         search_field->clear();
-        emit ApplicationChosen(file_path);
+        emit ProgramChosen(file_path);
         break;
     }
-    case AppListItemType::AddDir:
+    case ProgramListItemType::AddDir:
         emit AddDirectory();
         break;
     }
 }
 
-bool AppList::isEmpty() {
+bool ProgramList::isEmpty() {
     for (int i{}; i < item_model->invisibleRootItem()->rowCount(); i++) {
         const auto child{item_model->invisibleRootItem()->child(i)};
-        auto type{static_cast<AppListItemType>(child->type())};
+        auto type{static_cast<ProgramListItemType>(child->type())};
         if (!child->hasChildren() &&
-            (type == AppListItemType::InstalledDir || type == AppListItemType::SystemDir)) {
+            (type == ProgramListItemType::InstalledDir || type == ProgramListItemType::SystemDir)) {
             item_model->invisibleRootItem()->removeRow(child->row());
             i--;
         };
@@ -368,12 +371,12 @@ bool AppList::isEmpty() {
     return !item_model->invisibleRootItem()->hasChildren();
 }
 
-void AppList::DonePopulating(QStringList watch_list) {
+void ProgramList::DonePopulating(QStringList watch_list) {
     if (isEmpty())
         emit ShowList(false);
     else {
         item_model->sort(COLUMN_NAME);
-        item_model->invisibleRootItem()->appendRow(new AppListAddDir());
+        item_model->invisibleRootItem()->appendRow(new ProgramListAddDir());
         emit ShowList(true);
     }
     // Clear out the old directories to watch for changes and add the new ones
@@ -403,7 +406,7 @@ void AppList::DonePopulating(QStringList watch_list) {
         search_field->setFocus();
 }
 
-void AppList::PopupContextMenu(const QPoint& menu_location) {
+void ProgramList::PopupContextMenu(const QPoint& menu_location) {
     auto item{tree_view->indexAt(menu_location)};
     if (!item.isValid())
         return;
@@ -416,29 +419,29 @@ void AppList::PopupContextMenu(const QPoint& menu_location) {
         parent = item_model->invisibleRootItem();
     auto child{parent->child(row, COLUMN_NAME)};
     QMenu context_menu;
-    switch (static_cast<AppListItemType>(child->type())) {
-    case AppListItemType::Application:
+    switch (static_cast<ProgramListItemType>(child->type())) {
+    case ProgramListItemType::Program:
         AddAppPopup(context_menu, child);
         break;
-    case AppListItemType::CustomDir:
+    case ProgramListItemType::CustomDir:
         AddPermDirPopup(context_menu, child);
         AddCustomDirPopup(context_menu, child);
         break;
-    case AppListItemType::InstalledDir:
-    case AppListItemType::SystemDir:
+    case ProgramListItemType::InstalledDir:
+    case ProgramListItemType::SystemDir:
         AddPermDirPopup(context_menu, child);
         break;
     }
     context_menu.exec(tree_view->viewport()->mapToGlobal(menu_location));
 }
 
-void AppList::AddAppPopup(QMenu& context_menu, QStandardItem* child) {
-    u64 program_id{child->data(AppListItemPath::ProgramIdRole).toULongLong()};
-    u64 extdata_id{child->data(AppListItemPath::ExtdataIdRole).toULongLong()};
-    auto path{child->data(AppListItemPath::FullPathRole).toString()};
+void ProgramList::AddAppPopup(QMenu& context_menu, QStandardItem* child) {
+    u64 program_id{child->data(ProgramListItemPath::ProgramIdRole).toULongLong()};
+    u64 extdata_id{child->data(ProgramListItemPath::ExtdataIdRole).toULongLong()};
+    auto path{child->data(ProgramListItemPath::FullPathRole).toString()};
     auto open_save_location{context_menu.addAction("Open Save Data Location")};
     auto open_extdata_location{context_menu.addAction("Open Extra Data Location")};
-    auto open_application_location{context_menu.addAction("Open Application Location")};
+    auto open_program_location{context_menu.addAction("Open Program Location")};
     auto open_update_location{context_menu.addAction("Open Update Data Location")};
     auto copy_program_id{context_menu.addAction("Copy Program ID")};
     open_save_location->setVisible(0x0004000000000000 <= program_id &&
@@ -453,25 +456,25 @@ void AppList::AddAppPopup(QMenu& context_menu, QStandardItem* child) {
             FileUtil::Exists(FileSys::GetExtDataPathFromId(sdmc_dir, extdata_id)));
     else
         open_extdata_location->setVisible(false);
-    auto media_type{Service::AM::GetTitleMediaType(program_id)};
-    open_application_location->setVisible(path.toStdString() ==
-                                          Service::AM::GetTitleContentPath(media_type, program_id));
+    auto media_type{Service::AM::GetProgramMediaType(program_id)};
+    open_program_location->setVisible(path.toStdString() ==
+                                      Service::AM::GetProgramContentPath(media_type, program_id));
     open_update_location->setVisible(
         0x0004000000000000 <= program_id && program_id <= 0x00040000FFFFFFFF &&
         FileUtil::Exists(
-            Service::AM::GetTitlePath(Service::FS::MediaType::SDMC, program_id + 0xe00000000) +
+            Service::AM::GetProgramPath(Service::FS::MediaType::SDMC, program_id + 0xe00000000) +
             "content/"));
     connect(open_save_location, &QAction::triggered, [&, program_id]() {
-        emit OpenFolderRequested(program_id, AppListOpenTarget::SaveData);
+        emit OpenFolderRequested(program_id, ProgramListOpenTarget::SaveData);
     });
     connect(open_extdata_location, &QAction::triggered, [this, extdata_id] {
-        emit OpenFolderRequested(extdata_id, AppListOpenTarget::ExtData);
+        emit OpenFolderRequested(extdata_id, ProgramListOpenTarget::ExtData);
     });
-    connect(open_application_location, &QAction::triggered, [&, program_id]() {
-        emit OpenFolderRequested(program_id, AppListOpenTarget::Application);
+    connect(open_program_location, &QAction::triggered, [&, program_id]() {
+        emit OpenFolderRequested(program_id, ProgramListOpenTarget::Program);
     });
     connect(open_update_location, &QAction::triggered, [&, program_id]() {
-        emit OpenFolderRequested(program_id, AppListOpenTarget::UpdateData);
+        emit OpenFolderRequested(program_id, ProgramListOpenTarget::UpdateData);
     });
     connect(copy_program_id, &QAction::triggered, [&, program_id]() {
         QApplication::clipboard()->setText(
@@ -486,24 +489,25 @@ void AppList::AddAppPopup(QMenu& context_menu, QStandardItem* child) {
     }
 };
 
-void AppList::AddCustomDirPopup(QMenu& context_menu, QStandardItem* child) {
-    UISettings::AppDir& app_dir{*child->data(AppListDir::AppDirRole).value<UISettings::AppDir*>()};
+void ProgramList::AddCustomDirPopup(QMenu& context_menu, QStandardItem* child) {
+    UISettings::AppDir& program_dir{
+        *child->data(ProgramListDir::AppDirRole).value<UISettings::AppDir*>()};
     auto deep_scan{context_menu.addAction("Scan Subfolders")};
-    auto delete_dir{context_menu.addAction("Remove Application Directory")};
+    auto delete_dir{context_menu.addAction("Remove Program Directory")};
     deep_scan->setCheckable(true);
-    deep_scan->setChecked(app_dir.deep_scan);
+    deep_scan->setChecked(program_dir.deep_scan);
     connect(deep_scan, &QAction::triggered, [&] {
-        app_dir.deep_scan = !app_dir.deep_scan;
-        PopulateAsync(UISettings::values.app_dirs);
+        program_dir.deep_scan = !program_dir.deep_scan;
+        PopulateAsync(UISettings::values.program_dirs);
     });
     connect(delete_dir, &QAction::triggered, [&, child] {
-        UISettings::values.app_dirs.removeOne(app_dir);
+        UISettings::values.program_dirs.removeOne(program_dir);
         item_model->invisibleRootItem()->removeRow(child->row());
     });
 }
 
-void AppList::AddPermDirPopup(QMenu& context_menu, QStandardItem* child) {
-    auto& app_dir{*child->data(AppListDir::AppDirRole).value<UISettings::AppDir*>()};
+void ProgramList::AddPermDirPopup(QMenu& context_menu, QStandardItem* child) {
+    auto& program_dir{*child->data(ProgramListDir::AppDirRole).value<UISettings::AppDir*>()};
     auto move_up{context_menu.addAction("\U000025b2 Move Up")};
     auto move_down{context_menu.addAction("\U000025bc Move Down")};
     auto open_directory_location{context_menu.addAction("Open Directory Location")};
@@ -512,93 +516,94 @@ void AppList::AddPermDirPopup(QMenu& context_menu, QStandardItem* child) {
     move_down->setEnabled(row < item_model->invisibleRootItem()->rowCount() - 2);
     connect(move_up, &QAction::triggered, [&, child, row] {
         // Find the indices of the items in settings and swap them
-        UISettings::values.app_dirs.swap(
-            UISettings::values.app_dirs.indexOf(app_dir),
-            UISettings::values.app_dirs.indexOf(*item_model->invisibleRootItem()
-                                                     ->child(row - 1, COLUMN_NAME)
-                                                     ->data(AppListDir::AppDirRole)
-                                                     .value<UISettings::AppDir*>()));
+        UISettings::values.program_dirs.swap(
+            UISettings::values.program_dirs.indexOf(program_dir),
+            UISettings::values.program_dirs.indexOf(*item_model->invisibleRootItem()
+                                                         ->child(row - 1, COLUMN_NAME)
+                                                         ->data(ProgramListDir::AppDirRole)
+                                                         .value<UISettings::AppDir*>()));
         // Move the treeview items
         auto item{item_model->takeRow(row)};
         item_model->invisibleRootItem()->insertRow(row - 1, item);
-        tree_view->setExpanded(child->index(), app_dir.expanded);
+        tree_view->setExpanded(child->index(), program_dir.expanded);
     });
     connect(move_down, &QAction::triggered, [&, child, row] {
         // Find the indices of the items in settings and swap them
-        UISettings::values.app_dirs.swap(
-            UISettings::values.app_dirs.indexOf(
-                *child->data(AppListDir::AppDirRole).value<UISettings::AppDir*>()),
-            UISettings::values.app_dirs.indexOf(*item_model->invisibleRootItem()
-                                                     ->child(row + 1, COLUMN_NAME)
-                                                     ->data(AppListDir::AppDirRole)
-                                                     .value<UISettings::AppDir*>()));
+        UISettings::values.program_dirs.swap(
+            UISettings::values.program_dirs.indexOf(
+                *child->data(ProgramListDir::AppDirRole).value<UISettings::AppDir*>()),
+            UISettings::values.program_dirs.indexOf(*item_model->invisibleRootItem()
+                                                         ->child(row + 1, COLUMN_NAME)
+                                                         ->data(ProgramListDir::AppDirRole)
+                                                         .value<UISettings::AppDir*>()));
         // Move the treeview items
         auto item{item_model->takeRow(row)};
         item_model->invisibleRootItem()->insertRow(row + 1, item);
-        tree_view->setExpanded(child->index(), app_dir.expanded);
+        tree_view->setExpanded(child->index(), program_dir.expanded);
     });
     connect(open_directory_location, &QAction::triggered,
-            [&] { emit OpenDirectory(app_dir.path); });
+            [&] { emit OpenDirectory(program_dir.path); });
 }
 
-QStandardItemModel* AppList::GetModel() const {
+QStandardItemModel* ProgramList::GetModel() const {
     return item_model;
 }
 
-void AppList::PopulateAsync(QList<UISettings::AppDir>& app_dirs) {
+void ProgramList::PopulateAsync(QList<UISettings::AppDir>& program_dirs) {
     tree_view->setEnabled(false);
     // Delete any rows that might already exist if we're repopulating
     item_model->removeRows(0, item_model->rowCount());
     search_field->clear();
     emit ShouldCancelWorker();
-    auto worker{new AppListWorker(system, app_dirs)};
-    connect(worker, &AppListWorker::EntryReady, this, &AppList::AddEntry, Qt::QueuedConnection);
-    connect(worker, &AppListWorker::DirEntryReady, this, &AppList::AddDirEntry,
+    auto worker{new ProgramListWorker(system, program_dirs)};
+    connect(worker, &ProgramListWorker::EntryReady, this, &ProgramList::AddEntry,
             Qt::QueuedConnection);
-    connect(worker, &AppListWorker::Finished, this, &AppList::DonePopulating, Qt::QueuedConnection);
+    connect(worker, &ProgramListWorker::DirEntryReady, this, &ProgramList::AddDirEntry,
+            Qt::QueuedConnection);
+    connect(worker, &ProgramListWorker::Finished, this, &ProgramList::DonePopulating,
+            Qt::QueuedConnection);
     // Use DirectConnection here because worker->Cancel() is thread-safe and we want it to
     // cancel without delay.
-    connect(this, &AppList::ShouldCancelWorker, worker, &AppListWorker::Cancel,
+    connect(this, &ProgramList::ShouldCancelWorker, worker, &ProgramListWorker::Cancel,
             Qt::DirectConnection);
     QThreadPool::globalInstance()->start(worker);
     current_worker = std::move(worker);
 }
 
-void AppList::SaveInterfaceLayout() {
-    UISettings::values.applist_header_state = tree_view->header()->saveState();
+void ProgramList::SaveInterfaceLayout() {
+    UISettings::values.ProgramList_header_state = tree_view->header()->saveState();
 }
 
-void AppList::LoadInterfaceLayout() {
+void ProgramList::LoadInterfaceLayout() {
     auto header{tree_view->header()};
-    if (!header->restoreState(UISettings::values.applist_header_state))
+    if (!header->restoreState(UISettings::values.ProgramList_header_state))
         // We're using the name column to display icons and titles
         // so make it as large as possible as default.
         header->resizeSection(COLUMN_NAME, header->width());
     item_model->sort(header->sortIndicatorSection(), header->sortIndicatorOrder());
 }
 
-const QStringList AppList::supported_file_extensions{
+const QStringList ProgramList::supported_file_extensions{
     {"3ds", "3dsx", "elf", "axf", "cci", "cxi", "app"}};
 
-void AppList::Refresh() {
-    if (!UISettings::values.app_dirs.isEmpty() && current_worker) {
-        LOG_INFO(Frontend,
-                 "Change detected in the application directories. Reloading application list.");
-        PopulateAsync(UISettings::values.app_dirs);
+void ProgramList::Refresh() {
+    if (!UISettings::values.program_dirs.isEmpty() && current_worker) {
+        LOG_INFO(Frontend, "Change detected in the program directories. Reloading program list.");
+        PopulateAsync(UISettings::values.program_dirs);
     }
 }
 
-QString AppList::FindApplicationByProgramID(u64 program_id) {
-    return FindApplicationByProgramID(item_model->invisibleRootItem(), program_id);
+QString ProgramList::FindProgramByProgramID(u64 program_id) {
+    return FindProgramByProgramID(item_model->invisibleRootItem(), program_id);
 }
 
-QString AppList::FindApplicationByProgramID(QStandardItem* current_item, u64 program_id) {
-    if (current_item->type() == static_cast<int>(AppListItemType::Application) &&
-        current_item->data(AppListItemPath::ProgramIdRole).toULongLong() == program_id)
-        return current_item->data(AppListItemPath::FullPathRole).toString();
+QString ProgramList::FindProgramByProgramID(QStandardItem* current_item, u64 program_id) {
+    if (current_item->type() == static_cast<int>(ProgramListItemType::Program) &&
+        current_item->data(ProgramListItemPath::ProgramIdRole).toULongLong() == program_id)
+        return current_item->data(ProgramListItemPath::FullPathRole).toString();
     else if (current_item->hasChildren()) {
         for (int child_id{}; child_id < current_item->rowCount(); child_id++) {
-            QString path{FindApplicationByProgramID(current_item->child(child_id, 0), program_id)};
+            QString path{FindProgramByProgramID(current_item->child(child_id, 0), program_id)};
             if (!path.isEmpty())
                 return path;
         }
@@ -606,16 +611,17 @@ QString AppList::FindApplicationByProgramID(QStandardItem* current_item, u64 pro
     return "";
 }
 
-AppListPlaceholder::AppListPlaceholder(GMainWindow* parent) : QWidget{parent}, main_window{parent} {
+ProgramListPlaceholder::ProgramListPlaceholder(GMainWindow* parent)
+    : QWidget{parent}, main_window{parent} {
     main_window = parent;
     connect(main_window, &GMainWindow::UpdateThemedIcons, this,
-            &AppListPlaceholder::OnUpdateThemedIcons);
+            &ProgramListPlaceholder::OnUpdateThemedIcons);
     layout = new QVBoxLayout;
     image = new QLabel;
     text = new QLabel;
     layout->setAlignment(Qt::AlignCenter);
     image->setPixmap(QIcon::fromTheme("plus_folder").pixmap(200));
-    text->setText("Double-click to add a new folder to the application list ");
+    text->setText("Double-click to add a new folder to the program list ");
     QFont font = text->font();
     font.setPointSize(20);
     text->setFont(font);
@@ -626,12 +632,12 @@ AppListPlaceholder::AppListPlaceholder(GMainWindow* parent) : QWidget{parent}, m
     setLayout(layout);
 }
 
-AppListPlaceholder::~AppListPlaceholder() = default;
+ProgramListPlaceholder::~ProgramListPlaceholder() = default;
 
-void AppListPlaceholder::OnUpdateThemedIcons() {
+void ProgramListPlaceholder::OnUpdateThemedIcons() {
     image->setPixmap(QIcon::fromTheme("plus_folder").pixmap(200));
 }
 
-void AppListPlaceholder::mouseDoubleClickEvent(QMouseEvent* event) {
-    emit AppListPlaceholder::AddDirectory();
+void ProgramListPlaceholder::mouseDoubleClickEvent(QMouseEvent* event) {
+    emit ProgramListPlaceholder::AddDirectory();
 }

@@ -15,20 +15,20 @@ public:
     virtual ~Applet() = default;
 
     /**
-     * Handles a parameter from the application.
+     * Handles a parameter from the program.
      * @param parameter Parameter data to handle.
      * @returns ResultCode Whether the operation was successful or not.
      */
     virtual ResultCode ReceiveParameter(const Service::APT::MessageParameter& parameter) = 0;
 
     /**
-     * Handles the Applet start event, triggered from the application.
+     * Handles the Applet start event, triggered from the program.
      * @param parameter Parameter data to handle.
      * @returns ResultCode Whether the operation was successful or not.
      */
     ResultCode Start(const Service::APT::AppletStartupParameter& parameter);
 
-    /// Whether the applet is currently executing instead of the host application or not.
+    /// Whether the applet is currently executing instead of the host program or not.
     bool IsRunning() const;
 
     /// Handles an update tick for the Applet, lets it update the screen, send commands, etc.
@@ -42,7 +42,7 @@ protected:
     explicit Applet(AppletId id, Service::APT::AppletManager& manager) : id{id}, manager{manager} {}
 
     /**
-     * Handles the Applet start event, triggered from the application.
+     * Handles the Applet start event, triggered from the program.
      * @param parameter Parameter data to handle.
      * @returns ResultCode Whether the operation was successful or not.
      */
@@ -50,7 +50,7 @@ protected:
 
     AppletId id; ///< ID of this Applet
 
-    /// Whether this applet is currently running instead of the host application or not.
+    /// Whether this applet is currently running instead of the host program or not.
     bool is_running{};
 
     void SendParameter(const Service::APT::MessageParameter& parameter);

@@ -102,8 +102,8 @@ Loader::ResultStatus TitleMetadata::Save(const std::string& file_path) {
     return Loader::ResultStatus::Success;
 }
 
-u64 TitleMetadata::GetTitleID() const {
-    return tmd_body.title_id;
+u64 TitleMetadata::GetProgramID() const {
+    return tmd_body.program_id;
 }
 
 u32 TitleMetadata::GetTitleType() const {
@@ -152,8 +152,8 @@ std::array<u8, 16> TitleMetadata::GetContentCTRByIndex(u16 index) const {
     return ctr;
 }
 
-void TitleMetadata::SetTitleID(u64 title_id) {
-    tmd_body.title_id = title_id;
+void TitleMetadata::SetProgramID(u64 program_id) {
+    tmd_body.program_id = program_id;
 }
 
 void TitleMetadata::SetTitleType(u32 type) {

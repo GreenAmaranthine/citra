@@ -79,8 +79,8 @@ struct SharedPageDef {
     BatteryState battery_state;          // 85
     u8 unknown_value;                    // 86
     INSERT_PADDING_BYTES(0xA0 - 0x87);   // 87
-    u64_le menu_title_id;                // A0
-    u64_le active_menu_title_id;         // A8
+    u64_le menu_program_id_;             // A0
+    u64_le active_menu_program_id_;      // A8
     INSERT_PADDING_BYTES(0x1000 - 0xB0); // B0
 };
 static_assert(sizeof(SharedPageDef) == Memory::SHARED_PAGE_SIZE,

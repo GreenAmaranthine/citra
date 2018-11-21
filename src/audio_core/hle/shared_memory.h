@@ -17,7 +17,7 @@
 
 namespace AudioCore::HLE {
 
-// The application-accessible region of DSP memory consists of two parts. Both are marked as IO and
+// The program-accessible region of DSP memory consists of two parts. Both are marked as IO and
 // have Read/Write permissions.
 //
 // First Region:  0x1FF50000 (Size: 0x8000)
@@ -72,31 +72,31 @@ static_assert(std::is_trivially_copyable<u32_dsp>::value, "u32_dsp isn't trivial
 //       9           0x8410                     DSP Debug Info                        DSP
 //       6           0x8540                     Final Mix Samples                     DSP
 //       2           0x8680                     Source Status [24]                    DSP
-//       8           0x8710                     Compressor Table                      Application
-//       4           0x9430                     DSP Configuration                     Application
+//       8           0x8710                     Compressor Table                      Program
+//       4           0x9430                     DSP Configuration                     Program
 //       7           0x9492                     Intermediate Mix Samples              DSP + App
-//       1           0x9E92                     Source Configuration [24]             Application
-//       3           0xA792                     Source ADPCM Coefficients [24]        Application
+//       1           0x9E92                     Source Configuration [24]             Program
+//       3           0xA792                     Source ADPCM Coefficients [24]        Program
 //       10          0xA912                     Surround Sound Related
 //       11          0xAA12                     Surround Sound Related
 //       12          0xAAD2                     Surround Sound Related
 //       13          0xAC52                     Surround Sound Related
 //       14          0xAC5C                     Surround Sound Related
-//       0           0xBFFF                     Frame Counter                         Application
+//       0           0xBFFF                     Frame Counter                         Program
 //
 // #: This refers to the order in which they appear in the DspPipe::Audio DSP pipe.
 //    See also: HLE::PipeRead.
 //
 // Note that the above addresses do vary slightly between audio firmwares observed; the addresses
 // aren't fixed in stone. The addresses above are only an examplar; they're what this
-// implementation does and provides to applications.
+// implementation does and provides to programs.
 //
-// Application requests the DSP service to convert DSP addresses into ARM11 virtual addresses using
-// the ConvertProcessAddressFromDspDram service call. Applications seem to derive the addresses for
+// Program requests the DSP service to convert DSP addresses into ARM11 virtual addresses using
+// the ConvertProcessAddressFromDspDram service call. Programs seem to derive the addresses for
 // the second region via:
 //     second_region_dsp_addr = first_region_dsp_addr | 0x10000
 //
-// Applications maintain most of its own audio state, the memory region is used mainly for
+// Programs maintain most of its own audio state, the memory region is used mainly for
 // communication and not storage of state.
 //
 // In the documentation below, filter and effect transfer functions are specified in the z domain.
@@ -123,7 +123,7 @@ static_assert(std::is_trivially_copyable<u32_dsp>::value, "u32_dsp isn't trivial
 
 struct SourceConfiguration {
     struct Configuration {
-        /// These dirty flags are set by the application when it updates the fields in this struct.
+        /// These dirty flags are set by the program when it updates the fields in this struct.
         /// The DSP clears these each audio frame.
         union {
             u32_le dirty_raw;
@@ -217,7 +217,7 @@ struct SourceConfiguration {
 
         // Buffer Queue
 
-        /// A buffer of audio data from the application, along with metadata about it.
+        /// A buffer of audio data from the program, along with metadata about it.
         struct Buffer {
             /// Physical memory address of the start of the buffer
             u32_dsp physical_address;
@@ -243,7 +243,7 @@ struct SourceConfiguration {
             u8 is_looping;
 
             /// This value is shown in SourceStatus::previous_buffer_id when this buffer has
-            /// finished. This allows the emulated application to tell what buffer is currently
+            /// finished. This allows the emulated program to tell what buffer is currently
             /// playing.
             u16_le buffer_id;
 
@@ -258,7 +258,7 @@ struct SourceConfiguration {
         u32_dsp loop_related;
         u8 enable;
         INSERT_PADDING_BYTES(1);
-        u16_le sync;           ///< Application-side sync (See also: SourceStatus::sync)
+        u16_le sync;           ///< Program-side sync (See also: SourceStatus::sync)
         u32_dsp play_position; ///< Position. (Units: number of samples)
         INSERT_PADDING_DSPWORDS(2);
 
@@ -331,7 +331,7 @@ struct SourceStatus {
 ASSERT_DSP_STRUCT(SourceStatus::Status, 12);
 
 struct DspConfiguration {
-    /// These dirty flags are set by the application when it updates the fields in this struct.
+    /// These dirty flags are set by the program when it updates the fields in this struct.
     /// The DSP clears these each audio frame.
     union {
         u32_le dirty_raw;
@@ -367,7 +367,7 @@ struct DspConfiguration {
     OutputFormat output_format;
 
     u16_le limiter_enabled;      ///< Not sure of the exact gain equation for the limiter.
-    u16_le headphones_connected; ///< Application updates the DSP on headphone status.
+    u16_le headphones_connected; ///< Program updates the DSP on headphone status.
     INSERT_PADDING_DSPWORDS(4);  ///< TODO: Surround sound related
     INSERT_PADDING_DSPWORDS(2);  ///< TODO: Intermediate mixer 1/2 related
     u16_le mixer1_enabled;
@@ -382,8 +382,9 @@ struct DspConfiguration {
      * g, a and b are fixed point with 7 fractional bits
      */
     struct DelayEffect {
-        /// These dirty flags are set by the application when it updates the fields in this struct.
-        /// The DSP clears these each audio frame.
+        /// These dirty flags are set by the program when it updates the fields in this struct.
+        /// The DSP clears these each audio frame.        /// The program allocates a block of
+        /// memory for the DSP to use as a work buffer.
         union {
             u16_le dirty_raw;
             BitField<0, 1, u16_le> enable_dirty;
@@ -394,10 +395,11 @@ struct DspConfiguration {
         u16_le enable;
         INSERT_PADDING_DSPWORDS(1);
         u16_le outputs;
-        /// The application allocates a block of memory for the DSP to use as a work buffer.
-        u32_dsp work_buffer_address;
-        /// Frames to delay by
-        u16_le frame_count;
+
+        u32_dsp work_buffer_address; ///< The program allocates a block of memory for the DSP to use
+                                     ///< as a work buffer.
+
+        u16_le frame_count; ///< Frames to delay by
 
         // Coefficients
         s16_le g; ///< Fixed point with 7 fractional bits
@@ -434,15 +436,15 @@ struct DspStatus {
 ASSERT_DSP_STRUCT(DspStatus, 32);
 
 /// Final mixed output in PCM16 stereo format, what you hear out of the speakers.
-/// When the application writes to this region it has no effect.
+/// When the program writes to this region it has no effect.
 struct FinalMixSamples {
     s16_le pcm16[samples_per_frame][2];
 };
 ASSERT_DSP_STRUCT(FinalMixSamples, 640);
 
 /// DSP writes output of intermediate mixers 1 and 2 here.
-/// Writes to this region by the application edits the output of the intermediate mixers.
-/// This seems to be intended to allow the application to do custom effects on the ARM11.
+/// Writes to this region by the program edits the output of the intermediate mixers.
+/// This seems to be intended to allow the program to do custom effects on the ARM11.
 /// Values that exceed s16 range will be clipped by the DSP after further processing.
 struct IntermediateMixSamples {
     struct Samples {

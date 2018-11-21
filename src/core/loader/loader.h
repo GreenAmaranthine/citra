@@ -83,12 +83,12 @@ constexpr u32 MakeMagic(char a, char b, char c, char d) {
     return a | b << 8 | c << 16 | d << 24;
 }
 
-/// Interface for loading an application
-class AppLoader : NonCopyable {
+/// Interface for loading an program
+class ProgramLoader : NonCopyable {
 public:
-    explicit AppLoader(Core::System& system, FileUtil::IOFile&& file)
+    explicit ProgramLoader(Core::System& system, FileUtil::IOFile&& file)
         : system{system}, file{std::move(file)} {}
-    virtual ~AppLoader() {}
+    virtual ~ProgramLoader() {}
 
     /**
      * Returns the type of this file
@@ -97,25 +97,25 @@ public:
     virtual FileType GetFileType() = 0;
 
     /**
-     * Load the application and return the created Process instance
+     * Load the program and return the created Process instance
      * @param process The newly created process.
      * @return The status result of the operation.
      */
     virtual ResultStatus Load(Kernel::SharedPtr<Kernel::Process>& process) = 0;
 
     /**
-     * Loads the system mode that this application needs.
-     * This function defaults to 2 (96MB allocated to the application) if it can't read the
+     * Loads the system mode that this program needs.
+     * This function defaults to 2 (96MB allocated to the program) if it can't read the
      * information.
      * @returns A pair with the optional system mode, and and the status.
      */
     virtual std::pair<std::optional<u32>, ResultStatus> LoadKernelSystemMode() {
-        // 96MB allocated to the application.
+        // 96MB allocated to the program.
         return std::make_pair(2, ResultStatus::Success);
     }
 
     /**
-     * Get the code (typically .code section) of the application
+     * Get the code (typically .code section) of the program
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
@@ -124,7 +124,7 @@ public:
     }
 
     /**
-     * Get the icon (typically icon section) of the application
+     * Get the icon (typically icon section) of the program
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
@@ -133,7 +133,7 @@ public:
     }
 
     /**
-     * Get the banner (typically banner section) of the application
+     * Get the banner (typically banner section) of the program
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
@@ -142,7 +142,7 @@ public:
     }
 
     /**
-     * Get the logo (typically logo section) of the application
+     * Get the logo (typically logo section) of the program
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
@@ -151,7 +151,7 @@ public:
     }
 
     /**
-     * Get the program id of the application
+     * Get the program id of the program
      * @param out_program_id Reference to store program id into
      * @return ResultStatus result of function
      */
@@ -160,7 +160,7 @@ public:
     }
 
     /**
-     * Get the extdata id for the application
+     * Get the extdata id for the program
      * @param out_extdata_id Reference to store extdata id into
      * @return ResultStatus result of function
      */
@@ -169,7 +169,7 @@ public:
     }
 
     /**
-     * Get the RomFS of the application
+     * Get the RomFS of the program
      * Since the RomFS can be huge, we return a file reference instead of copying to a buffer
      * @param romfs_file The file containing the RomFS
      * @return ResultStatus result of function
@@ -179,7 +179,7 @@ public:
     }
 
     /**
-     * Get the update RomFS of the application
+     * Get the update RomFS of the program
      * Since the RomFS can be huge, we return a file reference instead of copying to a buffer
      * @param romfs_file The file containing the RomFS
      * @return ResultStatus result of function
@@ -189,8 +189,8 @@ public:
     }
 
     /**
-     * Get the short title of the application
-     * @param short_title Reference to store the application title into
+     * Get the short title of the program
+     * @param short_title Reference to store the program title into
      * @return ResultStatus result of function
      */
     virtual ResultStatus ReadShortTitle(std::string& short_title) {
@@ -214,6 +214,6 @@ extern const std::initializer_list<Kernel::AddressMapping> default_address_mappi
  * @param filename String filename of bootable file
  * @return best loader for this file
  */
-std::unique_ptr<AppLoader> GetLoader(Core::System& system, const std::string& filename);
+std::unique_ptr<ProgramLoader> GetLoader(Core::System& system, const std::string& filename);
 
 } // namespace Loader

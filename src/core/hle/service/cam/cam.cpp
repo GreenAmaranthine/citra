@@ -776,7 +776,7 @@ void Module::Interface::SynchronizeVsyncTiming(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetStereoCameraCalibrationData(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0x2B, 17, 0};
-    // Default values taken from yuriks' 3DS. Valid data is required here or applications using the
+    // Default values taken from yuriks' 3DS. Valid data is required here or programs using the
     // calibration get stuck in an infinite CPU loop.
     StereoCameraCalibrationData data{};
     data.isValidRotationXY = 0;

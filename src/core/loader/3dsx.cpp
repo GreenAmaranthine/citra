@@ -32,7 +32,7 @@ namespace Loader {
  *
  * Memory layout after relocations are applied: well, however the loader sets it up :)
  * The entrypoint is always the start of the code segment.
- * The BSS section must be cleared manually by the application.
+ * The BSS section must be cleared manually by the program.
  */
 
 enum THREEDSX_Error { ERROR_NONE = 0, ERROR_READ = 1, ERROR_FILE = 2, ERROR_ALLOC = 3 };
@@ -223,7 +223,7 @@ static THREEDSX_Error Load3DSXFile(Core::System& system, FileUtil::IOFile& file,
     return ERROR_NONE;
 }
 
-FileType AppLoader_THREEDSX::IdentifyType(FileUtil::IOFile& file) {
+FileType ProgramLoader_THREEDSX::IdentifyType(FileUtil::IOFile& file) {
     u32 magic{};
     file.Seek(0, SEEK_SET);
     if (file.ReadArray<u32>(&magic, 1) != 1)
@@ -233,7 +233,7 @@ FileType AppLoader_THREEDSX::IdentifyType(FileUtil::IOFile& file) {
     return FileType::Error;
 }
 
-ResultStatus AppLoader_THREEDSX::Load(Kernel::SharedPtr<Kernel::Process>& process) {
+ResultStatus ProgramLoader_THREEDSX::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
     if (!file.IsOpen())
@@ -246,16 +246,16 @@ ResultStatus AppLoader_THREEDSX::Load(Kernel::SharedPtr<Kernel::Process>& proces
     process = kernel.CreateProcess(std::move(codeset));
     process->svc_access_mask.set();
     process->address_mappings = default_address_mappings;
-    // Attach the default resource limit (Application) to the process
+    // Attach the default resource limit (Program) to the process
     process->resource_limit =
-        kernel.ResourceLimit().GetForCategory(Kernel::ResourceLimitCategory::Application);
+        kernel.ResourceLimit().GetForCategory(Kernel::ResourceLimitCategory::Program);
     process->Run(48, Kernel::DEFAULT_STACK_SIZE);
     system.ArchiveManager().RegisterSelfNCCH(*this);
     is_loaded = true;
     return ResultStatus::Success;
 }
 
-ResultStatus AppLoader_THREEDSX::ReadRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
+ResultStatus ProgramLoader_THREEDSX::ReadRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
     if (!file.IsOpen())
         return ResultStatus::Error;
     // Reset read pointer in case this file has been read before.
@@ -284,7 +284,7 @@ ResultStatus AppLoader_THREEDSX::ReadRomFS(std::shared_ptr<FileSys::RomFSReader>
     return ResultStatus::ErrorNotUsed;
 }
 
-ResultStatus AppLoader_THREEDSX::ReadIcon(std::vector<u8>& buffer) {
+ResultStatus ProgramLoader_THREEDSX::ReadIcon(std::vector<u8>& buffer) {
     if (!file.IsOpen())
         return ResultStatus::Error;
 

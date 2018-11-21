@@ -195,7 +195,7 @@ void Shutdown();
 
 struct ServiceModuleInfo {
     std::string name;
-    u64 title_id;
+    u64 program_id;
     std::function<void(Core::System& system)> init_function;
 };
 extern const std::array<ServiceModuleInfo, 38> service_module_map;

@@ -30,7 +30,7 @@ namespace Loader {
 
 static const u64 UPDATE_MASK{0x0000000e00000000};
 
-FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
+FileType ProgramLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
     u32 magic;
     file.Seek(0x100, SEEK_SET);
     if (file.ReadArray<u32>(&magic, 1) != 1)
@@ -42,7 +42,7 @@ FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
     return FileType::Error;
 }
 
-std::pair<std::optional<u32>, ResultStatus> AppLoader_NCCH::LoadKernelSystemMode() {
+std::pair<std::optional<u32>, ResultStatus> ProgramLoader_NCCH::LoadKernelSystemMode() {
     if (!is_loaded) {
         auto res{base_ncch.Load()};
         if (res != ResultStatus::Success)
@@ -53,7 +53,7 @@ std::pair<std::optional<u32>, ResultStatus> AppLoader_NCCH::LoadKernelSystemMode
                           ResultStatus::Success);
 }
 
-ResultStatus AppLoader_NCCH::LoadExec(Kernel::SharedPtr<Kernel::Process>& process) {
+ResultStatus ProgramLoader_NCCH::LoadExec(Kernel::SharedPtr<Kernel::Process>& process) {
     using Kernel::CodeSet;
     using Kernel::SharedPtr;
     if (!is_loaded)
@@ -109,7 +109,7 @@ ResultStatus AppLoader_NCCH::LoadExec(Kernel::SharedPtr<Kernel::Process>& proces
     return ResultStatus::Error;
 }
 
-void AppLoader_NCCH::ParseRegionLockoutInfo() {
+void ProgramLoader_NCCH::ParseRegionLockoutInfo() {
     std::vector<u8> smdh_buffer;
     if (ReadIcon(smdh_buffer) == ResultStatus::Success && smdh_buffer.size() >= sizeof(SMDH)) {
         SMDH smdh;
@@ -129,7 +129,7 @@ void AppLoader_NCCH::ParseRegionLockoutInfo() {
     }
 }
 
-ResultStatus AppLoader_NCCH::Load(Kernel::SharedPtr<Kernel::Process>& process) {
+ResultStatus ProgramLoader_NCCH::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
     ResultStatus result{base_ncch.Load()};
@@ -139,15 +139,15 @@ ResultStatus AppLoader_NCCH::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     ReadProgramId(ncch_program_id);
     std::string program_id{fmt::format("{:016X}", ncch_program_id)};
     LOG_INFO(Loader, "Program ID: {}", program_id);
-    update_ncch.OpenFile(Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC,
-                                                          ncch_program_id | UPDATE_MASK));
+    update_ncch.OpenFile(Service::AM::GetProgramContentPath(Service::FS::MediaType::SDMC,
+                                                            ncch_program_id | UPDATE_MASK));
     result = update_ncch.Load();
     if (result == ResultStatus::Success)
         overlay_ncch = &update_ncch;
-    Network::AppInfo app_info;
-    ReadShortTitle(app_info.name);
-    app_info.id = ncch_program_id;
-    system.RoomMember().SendAppInfo(app_info);
+    Network::ProgramInfo program_info;
+    ReadShortTitle(program_info.name);
+    program_info.id = ncch_program_id;
+    system.RoomMember().SendProgramInfo(program_info);
     is_loaded = true;           // Set state to loaded
     result = LoadExec(process); // Load the executable into memory for booting
     if (ResultStatus::Success != result)
@@ -157,23 +157,23 @@ ResultStatus AppLoader_NCCH::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     return ResultStatus::Success;
 }
 
-ResultStatus AppLoader_NCCH::ReadCode(std::vector<u8>& buffer) {
+ResultStatus ProgramLoader_NCCH::ReadCode(std::vector<u8>& buffer) {
     return overlay_ncch->LoadSectionExeFS(".code", buffer);
 }
 
-ResultStatus AppLoader_NCCH::ReadIcon(std::vector<u8>& buffer) {
+ResultStatus ProgramLoader_NCCH::ReadIcon(std::vector<u8>& buffer) {
     return overlay_ncch->LoadSectionExeFS("icon", buffer);
 }
 
-ResultStatus AppLoader_NCCH::ReadBanner(std::vector<u8>& buffer) {
+ResultStatus ProgramLoader_NCCH::ReadBanner(std::vector<u8>& buffer) {
     return overlay_ncch->LoadSectionExeFS("banner", buffer);
 }
 
-ResultStatus AppLoader_NCCH::ReadLogo(std::vector<u8>& buffer) {
+ResultStatus ProgramLoader_NCCH::ReadLogo(std::vector<u8>& buffer) {
     return overlay_ncch->LoadSectionExeFS("logo", buffer);
 }
 
-ResultStatus AppLoader_NCCH::ReadProgramId(u64& out_program_id) {
+ResultStatus ProgramLoader_NCCH::ReadProgramId(u64& out_program_id) {
     ResultStatus result{base_ncch.ReadProgramId(out_program_id)};
     if (result != ResultStatus::Success)
         return result;
@@ -181,18 +181,19 @@ ResultStatus AppLoader_NCCH::ReadProgramId(u64& out_program_id) {
     return ResultStatus::Success;
 }
 
-ResultStatus AppLoader_NCCH::ReadExtdataId(u64& out_extdata_id) {
+ResultStatus ProgramLoader_NCCH::ReadExtdataId(u64& out_extdata_id) {
     ResultStatus result{base_ncch.ReadExtdataId(out_extdata_id)};
     if (result != ResultStatus::Success)
         return result;
     return ResultStatus::Success;
 }
 
-ResultStatus AppLoader_NCCH::ReadRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
+ResultStatus ProgramLoader_NCCH::ReadRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
     return base_ncch.ReadRomFS(romfs_file);
 }
 
-ResultStatus AppLoader_NCCH::ReadUpdateRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
+ResultStatus ProgramLoader_NCCH::ReadUpdateRomFS(
+    std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
     ResultStatus result{update_ncch.ReadRomFS(romfs_file)};
 
     if (result != ResultStatus::Success)
@@ -201,7 +202,7 @@ ResultStatus AppLoader_NCCH::ReadUpdateRomFS(std::shared_ptr<FileSys::RomFSReade
     return ResultStatus::Success;
 }
 
-ResultStatus AppLoader_NCCH::ReadShortTitle(std::string& short_title) {
+ResultStatus ProgramLoader_NCCH::ReadShortTitle(std::string& short_title) {
     std::vector<u8> data;
     Loader::SMDH smdh;
     ReadIcon(data);

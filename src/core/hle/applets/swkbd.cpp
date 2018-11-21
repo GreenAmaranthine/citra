@@ -88,7 +88,7 @@ ValidationError ValidateInput(const SoftwareKeyboardConfig& config, const std::s
         break;
     default:
         // TODO: What does hardware do in this case?
-        UNREACHABLE_MSG("Application requested unknown validation method {}",
+        UNREACHABLE_MSG("Program requested unknown validation method {}",
                         static_cast<u32>(config.valid_input));
     }
     switch (config.type) {
@@ -149,7 +149,7 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
     Service::APT::MessageParameter result;
     result.signal = Service::APT::SignalType::Response;
     result.buffer.clear();
-    result.destination_id = AppletId::Application;
+    result.destination_id = AppletId::Program;
     result.sender_id = id;
     result.object = framebuffer_memory;
     SendParameter(result);
@@ -223,7 +223,7 @@ void SoftwareKeyboard::Update() {
             return error == ValidationError::None;
         }};
         do {
-            std::cout << "Enter the text you will send to the application:" << std::endl;
+            std::cout << "Enter the text you will send to the program:" << std::endl;
             std::getline(std::cin, input);
         } while (!ValidateInputString());
 
@@ -317,12 +317,12 @@ void SoftwareKeyboard::Update() {
 }
 
 void SoftwareKeyboard::Finalize() {
-    // Let the application know that we're closing
+    // Let the program know that we're closing
     Service::APT::MessageParameter message;
     message.buffer.resize(sizeof(SoftwareKeyboardConfig));
     std::memcpy(message.buffer.data(), &config, message.buffer.size());
     message.signal = Service::APT::SignalType::WakeupByExit;
-    message.destination_id = AppletId::Application;
+    message.destination_id = AppletId::Program;
     message.sender_id = id;
     SendParameter(message);
     is_running = false;

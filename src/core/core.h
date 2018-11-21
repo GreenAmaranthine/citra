@@ -69,16 +69,16 @@ public:
 
     /// Enumeration representing the return values of the System Initialize and Load process.
     enum class ResultStatus : u32 {
-        Success,                    ///< Succeeded
-        ErrorNotInitialized,        ///< Error trying to use core prior to initialization
-        ErrorGetLoader,             ///< Error finding the correct application loader
-        ErrorSystemMode,            ///< Error determining the system mode
-        ErrorLoader,                ///< Error loading the specified application
-        ErrorLoader_ErrorEncrypted, ///< Error loading the specified application due to encryption
-        ErrorLoader_ErrorInvalidFormat,     ///< Error loading the specified application due to an
-                                            /// invalid format
-        ErrorSystemFiles,                   ///< Error in finding system files
-        ErrorVideoCore,                     ///< Error in the video core
+        Success,                        ///< Succeeded
+        ErrorNotInitialized,            ///< Error trying to use core prior to initialization
+        ErrorGetLoader,                 ///< Error finding the correct program loader
+        ErrorSystemMode,                ///< Error determining the system mode
+        ErrorLoader,                    ///< Error loading the specified program
+        ErrorLoader_ErrorEncrypted,     ///< Error loading the specified program due to encryption
+        ErrorLoader_ErrorInvalidFormat, ///< Error loading the specified program due to an
+                                        /// invalid format
+        ErrorSystemFiles,               ///< Error in finding system files
+        ErrorVideoCore,                 ///< Error in the video core
         ErrorVideoCore_ErrorGenericDrivers, ///< Error in the video core due to the user having
                                             /// generic drivers installed
         ErrorVideoCore_ErrorBelowGL33,      ///< Error in the video core due to the user not having
@@ -102,26 +102,26 @@ public:
     /// Shutdown the emulated system.
     void Shutdown();
 
-    /// Restart the running application.
+    /// Restart the running program.
     void Restart();
 
-    /// Sets the running application's path. if path is empty, shutdowns the system.
-    void SetApplication(const std::string& path);
+    /// Sets the running program's path. if path is empty, shutdowns the system.
+    void SetProgram(const std::string& path);
 
-    /// Closes the running application.
-    void CloseApplication();
+    /// Closes the running program.
+    void CloseProgram();
 
     /**
-     * Load an executable application.
+     * Load an executable program.
      * @param frontend Reference to the host-system window used for video output and keyboard input.
-     * @param filepath String path to the executable application to load on the host file system.
+     * @param filepath String path to the executable program to load on the host file system.
      * @returns ResultStatus code, indicating if the operation succeeded.
      */
     ResultStatus Load(Frontend& frontend, const std::string& filepath);
 
     /**
      * Indicates if the emulated system is powered on (all subsystems initialized and able to run an
-     * application).
+     * program).
      * @returns True if the emulated system is powered on, otherwise false.
      */
     bool IsPoweredOn() const {
@@ -204,8 +204,8 @@ public:
         return status_details;
     }
 
-    Loader::AppLoader& GetAppLoader() const {
-        return *app_loader;
+    Loader::ProgramLoader& GetProgramLoader() const {
+        return *program_loader;
     }
 
     bool IsSleepModeEnabled() const {
@@ -230,7 +230,7 @@ public:
         return m_filepath;
     }
 
-    std::string set_application_file_path;
+    std::string set_program_file_path;
     std::vector<u8> argument;
     std::vector<u8> hmac;
     u64 argument_source;
@@ -247,8 +247,8 @@ private:
     /// Reschedule the core emulation
     void Reschedule();
 
-    /// AppLoader used to load the current executing application
-    std::unique_ptr<Loader::AppLoader> app_loader;
+    /// ProgramLoader used to load the current executing program
+    std::unique_ptr<Loader::ProgramLoader> program_loader;
 
     /// ARM11 CPU core
     std::unique_ptr<Cpu> cpu_core;

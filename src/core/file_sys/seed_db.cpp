@@ -83,13 +83,13 @@ std::size_t SeedDB::GetCount() const {
     return seeds.size();
 }
 
-auto SeedDB::FindSeedByTitleID(u64 title_id) const {
+auto SeedDB::FindSeedByProgramID(u64 program_id) const {
     return std::find_if(seeds.begin(), seeds.end(),
-                        [title_id](const auto& seed) { return seed.title_id == title_id; });
+                        [program_id](const auto& seed) { return seed.program_id == program_id; });
 }
 
 bool AddSeed(const Seed& seed) {
-    // TODO: does this skip/replace if the SeedDB contains a seed for seed.title_id?
+    // TODO: does this skip/replace if the SeedDB contains a seed for seed.program_id?
     SeedDB db;
     if (!db.Load()) {
         LOG_ERROR(Service_FS, "Failed to load seed database");
@@ -103,12 +103,12 @@ bool AddSeed(const Seed& seed) {
     return true;
 }
 
-std::optional<Seed::Data> GetSeed(u64 title_id) {
+std::optional<Seed::Data> GetSeed(u64 program_id) {
     SeedDB db;
     if (!db.Load()) {
         return {};
     }
-    const auto found_seed_iter{db.FindSeedByTitleID(title_id)};
+    const auto found_seed_iter{db.FindSeedByProgramID(program_id)};
     if (found_seed_iter != db.seeds.end()) {
         return found_seed_iter->data;
     }

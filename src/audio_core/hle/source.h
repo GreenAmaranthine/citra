@@ -37,10 +37,10 @@ public:
 
     /**
      * This is called once every audio frame. This performs per-source processing every frame.
-     * @param config The new configuration we've got for this Source from the application.
+     * @param config The new configuration we've got for this Source from the program.
      * @param adpcm_coeffs ADPCM coefficients to use if config tells us to use them (may contain
      * invalid values otherwise).
-     * @return The current status of this Source. This is given back to the emulated application via
+     * @return The current status of this Source. This is given back to the emulated program via
      * SharedMemory.
      */
     SourceStatus::Status Tick(SourceConfiguration::Configuration& config,

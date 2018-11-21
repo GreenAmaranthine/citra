@@ -67,7 +67,7 @@ enum class MemoryPermission : u32 {
 };
 
 enum class MemoryRegion : u16 {
-    Application = 1,
+    Program = 1,
     System = 2,
     Base = 3,
 };

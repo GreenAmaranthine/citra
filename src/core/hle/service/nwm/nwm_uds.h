@@ -25,7 +25,7 @@ struct TimingEventType;
 
 namespace Service::NWM {
 
-const std::size_t ApplicationDataSize{0xC8};
+const std::size_t ProgramDataSize{0xC8};
 const u8 DefaultNetworkChannel{11};
 
 // Number of milliseconds in a TU.
@@ -84,7 +84,7 @@ struct NetworkInfo {
     INSERT_PADDING_BYTES(3);
     std::array<u8, 3> oui_value;
     u8 oui_type;
-    u32_be wlan_comm_id; ///< This field is received as BigEndian from the application.
+    u32_be wlan_comm_id; ///< This field is received as BigEndian from the program.
     u8 id;
     INSERT_PADDING_BYTES(1);
     u16_be attributes;
@@ -93,8 +93,8 @@ struct NetworkInfo {
     u8 max_nodes;
     INSERT_PADDING_BYTES(2);
     INSERT_PADDING_BYTES(0x1F);
-    u8 application_data_size;
-    std::array<u8, ApplicationDataSize> application_data;
+    u8 program_data_size;
+    std::array<u8, ProgramDataSize> program_data;
 };
 
 static_assert(offsetof(NetworkInfo, oui_value) == 0xC, "oui_value is at the wrong offset.");
@@ -160,7 +160,7 @@ private:
     // Event that is signaled every time the connection status changes.
     Kernel::SharedPtr<Kernel::Event> connection_status_event;
 
-    // Shared memory provided by the application to store the receive buffer.
+    // Shared memory provided by the program to store the receive buffer.
     // This isn't currently used.
     Kernel::SharedPtr<Kernel::SharedMemory> recv_buffer_memory;
 

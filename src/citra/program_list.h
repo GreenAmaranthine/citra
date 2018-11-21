@@ -13,9 +13,9 @@ namespace Core {
 class System;
 } // namespace Core
 
-class AppListWorker;
-class AppListDir;
-class AppListSearchField;
+class ProgramListWorker;
+class ProgramListDir;
+class ProgramListSearchField;
 class GMainWindow;
 class QFileSystemWatcher;
 class QHBoxLayout;
@@ -31,9 +31,9 @@ class QToolButton;
 class QVBoxLayout;
 class QMenu;
 
-enum class AppListOpenTarget { SaveData = 0, ExtData = 1, Application = 2, UpdateData = 3 };
+enum class ProgramListOpenTarget { SaveData = 0, ExtData = 1, Program = 2, UpdateData = 3 };
 
-class AppList : public QWidget {
+class ProgramList : public QWidget {
     Q_OBJECT
 
 public:
@@ -46,8 +46,8 @@ public:
         COLUMN_COUNT, // Number of columns
     };
 
-    explicit AppList(Core::System& system, GMainWindow* parent = nullptr);
-    ~AppList() override;
+    explicit ProgramList(Core::System& system, GMainWindow* parent = nullptr);
+    ~ProgramList() override;
 
     QString getLastFilterResultItem();
     void clearFilter();
@@ -56,23 +56,23 @@ public:
     void setDirectoryWatcherEnabled(bool enabled);
     bool isEmpty();
 
-    void PopulateAsync(QList<UISettings::AppDir>& app_dirs);
+    void PopulateAsync(QList<UISettings::AppDir>& program_dirs);
 
     void SaveInterfaceLayout();
     void LoadInterfaceLayout();
 
     QStandardItemModel* GetModel() const;
 
-    QString FindApplicationByProgramID(u64 program_id);
+    QString FindProgramByProgramID(u64 program_id);
 
     void Refresh();
 
     static const QStringList supported_file_extensions;
 
 signals:
-    void ApplicationChosen(QString app_path);
+    void ProgramChosen(QString program_path);
     void ShouldCancelWorker();
-    void OpenFolderRequested(u64 program_id, AppListOpenTarget target);
+    void OpenFolderRequested(u64 program_id, ProgramListOpenTarget target);
     void OpenDirectory(QString directory);
     void AddDirectory();
     void ShowList(bool show);
@@ -84,8 +84,8 @@ private slots:
     void OnUpdateThemedIcons();
 
 private:
-    void AddDirEntry(AppListDir* entry_items);
-    void AddEntry(const QList<QStandardItem*>& entry_items, AppListDir* parent);
+    void AddDirEntry(ProgramListDir* entry_items);
+    void AddEntry(const QList<QStandardItem*>& entry_items, ProgramListDir* parent);
     void ValidateEntry(const QModelIndex& item);
     void DonePopulating(QStringList watch_list);
 
@@ -94,27 +94,27 @@ private:
     void AddCustomDirPopup(QMenu& context_menu, QStandardItem* child);
     void AddPermDirPopup(QMenu& context_menu, QStandardItem* child);
 
-    QString FindApplicationByProgramID(QStandardItem* current_item, u64 program_id);
+    QString FindProgramByProgramID(QStandardItem* current_item, u64 program_id);
 
-    AppListSearchField* search_field;
+    ProgramListSearchField* search_field;
     GMainWindow* main_window;
     QVBoxLayout* layout;
     QTreeView* tree_view;
     QStandardItemModel* item_model;
-    AppListWorker* current_worker;
+    ProgramListWorker* current_worker;
     QFileSystemWatcher* watcher;
     Core::System& system;
 
-    friend class AppListSearchField;
+    friend class ProgramListSearchField;
 };
 
-Q_DECLARE_METATYPE(AppListOpenTarget);
+Q_DECLARE_METATYPE(ProgramListOpenTarget);
 
-class AppListPlaceholder : public QWidget {
+class ProgramListPlaceholder : public QWidget {
     Q_OBJECT
 public:
-    explicit AppListPlaceholder(GMainWindow* parent = nullptr);
-    ~AppListPlaceholder();
+    explicit ProgramListPlaceholder(GMainWindow* parent = nullptr);
+    ~ProgramListPlaceholder();
 
 signals:
     void AddDirectory();

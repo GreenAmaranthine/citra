@@ -192,7 +192,7 @@ static bool AttemptLLE(Core::System& system, const ServiceModuleInfo& service_mo
     if (!Settings::values.lle_modules.at(service_module.name))
         return false;
     auto loader{Loader::GetLoader(
-        system, AM::GetTitleContentPath(FS::MediaType::NAND, service_module.title_id))};
+        system, AM::GetProgramContentPath(FS::MediaType::NAND, service_module.program_id))};
     if (!loader) {
         LOG_ERROR(Service,
                   "Service module \"{}\" couldn't be loaded; Defaulting to HLE implementation.",

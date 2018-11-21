@@ -4,9 +4,9 @@
 
 #include <memory>
 #include <QFileInfo>
-#include "citra/app_list.h"
-#include "citra/app_list_p.h"
-#include "citra/app_list_worker.h"
+#include "citra/program_list.h"
+#include "citra/program_list_p.h"
+#include "citra/program_list_worker.h"
 #include "citra/ui_settings.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/fs/archive.h"
@@ -16,13 +16,14 @@ namespace {
 
 static bool HasSupportedFileExtension(const std::string& file_name) {
     QFileInfo file{QString::fromStdString(file_name)};
-    return AppList::supported_file_extensions.contains(file.suffix(), Qt::CaseInsensitive);
+    return ProgramList::supported_file_extensions.contains(file.suffix(), Qt::CaseInsensitive);
 }
 
 } // Anonymous namespace
 
-void AppListWorker::AddFstEntriesToAppList(const std::string& dir_path, unsigned int recursion,
-                                           AppListDir* parent_dir) {
+void ProgramListWorker::AddFstEntriesToProgramList(const std::string& dir_path,
+                                                   unsigned int recursion,
+                                                   ProgramListDir* parent_dir) {
     const auto callback{[this, recursion, parent_dir](u64* num_entries_out,
                                                       const std::string& directory,
                                                       const std::string& virtual_name) -> bool {
@@ -43,8 +44,8 @@ void AppListWorker::AddFstEntriesToAppList(const std::string& dir_path, unsigned
                 loader->ReadIcon(original_smdh);
                 if (program_id < 0x0004000000000000 || program_id > 0x00040000FFFFFFFF)
                     return original_smdh;
-                auto update_path{Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC,
-                                                                  program_id + 0x0000000E00000000)};
+                auto update_path{Service::AM::GetProgramContentPath(
+                    Service::FS::MediaType::SDMC, program_id + 0x0000000E00000000)};
                 if (!FileUtil::Exists(update_path))
                     return original_smdh;
                 auto update_loader{Loader::GetLoader(system, update_path)};
@@ -54,34 +55,34 @@ void AppListWorker::AddFstEntriesToAppList(const std::string& dir_path, unsigned
                 update_loader->ReadIcon(update_smdh);
                 return update_smdh;
             }()};
-            if (!Loader::IsValidSMDH(smdh) && UISettings::values.app_list_hide_no_icon)
+            if (!Loader::IsValidSMDH(smdh) && UISettings::values.program_list_hide_no_icon)
                 // Skip this invalid entry
                 return true;
             emit EntryReady(
                 {
-                    new AppListItemPath(QString::fromStdString(physical_name), smdh, program_id,
-                                        extdata_id),
-                    new AppListItemIssues(program_id),
-                    new AppListItemRegion(smdh),
-                    new AppListItem(
+                    new ProgramListItemPath(QString::fromStdString(physical_name), smdh, program_id,
+                                            extdata_id),
+                    new ProgramListItemIssues(program_id),
+                    new ProgramListItemRegion(smdh),
+                    new ProgramListItem(
                         QString::fromStdString(Loader::GetFileTypeString(loader->GetFileType()))),
-                    new AppListItemSize(FileUtil::GetSize(physical_name)),
+                    new ProgramListItemSize(FileUtil::GetSize(physical_name)),
                 },
                 parent_dir);
         } else if (is_dir && recursion > 0) {
             watch_list.append(QString::fromStdString(physical_name));
-            AddFstEntriesToAppList(physical_name, recursion - 1, parent_dir);
+            AddFstEntriesToProgramList(physical_name, recursion - 1, parent_dir);
         }
         return true;
     }};
     FileUtil::ForeachDirectoryEntry(nullptr, dir_path, callback);
 }
 
-void AppListWorker::run() {
+void ProgramListWorker::run() {
     stop_processing = false;
-    for (auto& app_dir : app_dirs) {
-        if (app_dir.path == "INSTALLED") {
-            // Add normal titles
+    for (auto& program_dir : program_dirs) {
+        if (program_dir.path == "INSTALLED") {
+            // Add normal programs
             {
                 auto path{
                     QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir,
@@ -90,9 +91,10 @@ void AppListWorker::run() {
                                            "3DS/00000000000000000000000000000000/"
                                            "00000000000000000000000000000000/title/00040000")};
                 watch_list.append(path);
-                auto app_list_dir{new AppListDir(app_dir, AppListItemType::InstalledDir)};
-                emit DirEntryReady({app_list_dir});
-                AddFstEntriesToAppList(path.toStdString(), 2, app_list_dir);
+                auto program_list_dir{
+                    new ProgramListDir(program_dir, ProgramListItemType::InstalledDir)};
+                emit DirEntryReady({program_list_dir});
+                AddFstEntriesToProgramList(path.toStdString(), 2, program_list_dir);
             }
             // Add demos
             {
@@ -103,30 +105,31 @@ void AppListWorker::run() {
                                            "3DS/00000000000000000000000000000000/"
                                            "00000000000000000000000000000000/title/00040002")};
                 watch_list.append(path);
-                auto app_list_dir{new AppListDir(app_dir, AppListItemType::InstalledDir)};
-                emit DirEntryReady({app_list_dir});
-                AddFstEntriesToAppList(path.toStdString(), 2, app_list_dir);
+                auto program_list_dir{
+                    new ProgramListDir(program_dir, ProgramListItemType::InstalledDir)};
+                emit DirEntryReady({program_list_dir});
+                AddFstEntriesToProgramList(path.toStdString(), 2, program_list_dir);
             }
-        } else if (app_dir.path == "SYSTEM") {
+        } else if (program_dir.path == "SYSTEM") {
             auto path{QString::fromStdString(FileUtil::GetUserPath(
                           FileUtil::UserPath::NANDDir, Settings::values.nand_dir + "/")) +
                       "00000000000000000000000000000000/title/00040010"};
             watch_list.append(path);
-            auto app_list_dir{new AppListDir(app_dir, AppListItemType::SystemDir)};
-            emit DirEntryReady({app_list_dir});
-            AddFstEntriesToAppList(path.toStdString(), 2, app_list_dir);
+            auto program_list_dir{new ProgramListDir(program_dir, ProgramListItemType::SystemDir)};
+            emit DirEntryReady({program_list_dir});
+            AddFstEntriesToProgramList(path.toStdString(), 2, program_list_dir);
         } else {
-            watch_list.append(app_dir.path);
-            auto app_list_dir{new AppListDir(app_dir)};
-            emit DirEntryReady({app_list_dir});
-            AddFstEntriesToAppList(app_dir.path.toStdString(), app_dir.deep_scan ? 256 : 0,
-                                   app_list_dir);
+            watch_list.append(program_dir.path);
+            auto program_list_dir{new ProgramListDir(program_dir)};
+            emit DirEntryReady({program_list_dir});
+            AddFstEntriesToProgramList(program_dir.path.toStdString(), program_dir.deep_scan ? 256 : 0,
+                                       program_list_dir);
         }
     }
     emit Finished(watch_list);
 }
 
-void AppListWorker::Cancel() {
+void ProgramListWorker::Cancel() {
     disconnect();
     stop_processing = true;
 }

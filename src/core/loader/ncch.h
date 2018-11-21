@@ -13,11 +13,11 @@
 namespace Loader {
 
 /// Loads an NCCH file (e.g. from a CCI, or the first NCCH in a CXI)
-class AppLoader_NCCH final : public AppLoader {
+class ProgramLoader_NCCH final : public ProgramLoader {
 public:
-    explicit AppLoader_NCCH(Core::System& system, FileUtil::IOFile&& file,
-                            const std::string& filepath)
-        : AppLoader{system, std::move(file)}, base_ncch{filepath},
+    explicit ProgramLoader_NCCH(Core::System& system, FileUtil::IOFile&& file,
+                                const std::string& filepath)
+        : ProgramLoader{system, std::move(file)}, base_ncch{filepath},
           overlay_ncch{&base_ncch}, filepath{filepath} {}
 
     /**
@@ -34,7 +34,7 @@ public:
     ResultStatus Load(Kernel::SharedPtr<Kernel::Process>& process) override;
 
     /**
-     * Loads the Exheader and returns the system mode for this application.
+     * Loads the Exheader and returns the system mode for this program.
      * @returns A pair with the optional system mode, and and the status.
      */
     std::pair<std::optional<u32>, ResultStatus> LoadKernelSystemMode() override;

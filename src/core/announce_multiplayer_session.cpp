@@ -76,11 +76,11 @@ void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
         backend->SetRoomInformation(
             room_information.uid, room_information.name, room_information.port,
             room_information.member_slots, Network::network_version, room.HasPassword(),
-            room_information.preferred_app, room_information.preferred_app_id);
+            room_information.preferred_program, room_information.preferred_program_id);
         backend->ClearMembers();
         for (const auto& member : member_list)
-            backend->AddMember(member.nickname, member.mac_address, member.app_info.id,
-                               member.app_info.name);
+            backend->AddMember(member.nickname, member.mac_address, member.program_info.id,
+                               member.program_info.name);
         auto result{backend->Announce()};
         if (result.result_code != Common::WebResult::Code::Success) {
             std::lock_guard lock{callback_mutex};

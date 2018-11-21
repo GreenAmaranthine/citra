@@ -73,7 +73,7 @@ public:
 
 private:
     /// This SharedMemory will be created when we receive the LibAppJustStarted message.
-    /// It holds the framebuffer info retrieved by the application with
+    /// It holds the framebuffer info retrieved by the program with
     /// gsp::Gpu:ImportDisplayCaptureInfo
     Kernel::SharedPtr<Kernel::SharedMemory> framebuffer_memory;
 

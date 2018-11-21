@@ -33,7 +33,7 @@ void PerfStats::EndSystemFrame() {
 
 void PerfStats::EndAppFrame() {
     std::lock_guard lock{object_mutex};
-    app_frames += 1;
+    program_frames += 1;
 }
 
 PerfStats::Results PerfStats::GetAndResetStats(microseconds current_system_time_us) {
@@ -44,7 +44,7 @@ PerfStats::Results PerfStats::GetAndResetStats(microseconds current_system_time_
     const auto system_us_per_second{(current_system_time_us - reset_point_system_us) / interval};
     Results results;
     results.system_fps = static_cast<double>(system_frames) / interval;
-    results.app_fps = static_cast<double>(app_frames) / interval;
+    results.program_fps = static_cast<double>(program_frames) / interval;
     results.frametime = duration_cast<DoubleSecs>(accumulated_frametime).count() /
                         static_cast<double>(system_frames);
     results.emulation_speed = system_us_per_second.count() / 1'000'000.0;
@@ -53,7 +53,7 @@ PerfStats::Results PerfStats::GetAndResetStats(microseconds current_system_time_
     reset_point_system_us = current_system_time_us;
     accumulated_frametime = Clock::duration::zero();
     system_frames = 0;
-    app_frames = 0;
+    program_frames = 0;
     return results;
 }
 

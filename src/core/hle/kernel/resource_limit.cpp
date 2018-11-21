@@ -20,7 +20,7 @@ SharedPtr<ResourceLimit> ResourceLimit::Create(KernelSystem& kernel, std::string
 
 SharedPtr<ResourceLimit> ResourceLimitList::GetForCategory(ResourceLimitCategory category) {
     switch (category) {
-    case ResourceLimitCategory::Application:
+    case ResourceLimitCategory::Program:
     case ResourceLimitCategory::SystemApplet:
     case ResourceLimitCategory::LibraryApplet:
     case ResourceLimitCategory::Other:
@@ -88,8 +88,8 @@ u32 ResourceLimit::GetMaxResourceValue(u32 resource) const {
 
 ResourceLimitList::ResourceLimitList(KernelSystem& kernel) {
     // Create the four resource limits that the system uses
-    // Create the Applications resource limit
-    SharedPtr<ResourceLimit> resource_limit{ResourceLimit::Create(kernel, "Applications")};
+    // Create the Programs resource limit
+    SharedPtr<ResourceLimit> resource_limit{ResourceLimit::Create(kernel, "Programs")};
     resource_limit->max_priority = 0x18;
     resource_limit->max_commit = 0x4000000;
     resource_limit->max_threads = 0x20;
@@ -100,7 +100,7 @@ ResourceLimitList::ResourceLimitList(KernelSystem& kernel) {
     resource_limit->max_shared_mems = 0x10;
     resource_limit->max_address_arbiters = 0x2;
     resource_limit->max_cpu_time = 0x1E;
-    resource_limits[static_cast<u8>(ResourceLimitCategory::Application)] = resource_limit;
+    resource_limits[static_cast<u8>(ResourceLimitCategory::Program)] = resource_limit;
     // Create the System Applets resource limit
     resource_limit = ResourceLimit::Create(kernel, "System Applets");
     resource_limit->max_priority = 0x4;

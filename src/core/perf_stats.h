@@ -25,7 +25,7 @@ public:
         double system_fps;
 
         /// App FPS (GSP frame submissions) in Hz
-        double app_fps;
+        double program_fps;
 
         /// Walltime per system frame, in seconds, excluding any waits
         double frametime;
@@ -61,8 +61,8 @@ private:
     /// Cumulative number of system frames (LCD VBlanks) presented since last reset
     u32 system_frames{};
 
-    /// Cumulative number of application frames (GSP frame submissions) since last reset
-    u32 app_frames{};
+    /// Cumulative number of program frames (GSP frame submissions) since last reset
+    u32 program_frames{};
 
     /// Point when the previous system frame ended
     Clock::time_point previous_frame_end{reset_point};

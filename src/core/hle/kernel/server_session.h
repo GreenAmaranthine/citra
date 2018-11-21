@@ -61,7 +61,7 @@ public:
     }
 
     /**
-     * Handle a sync request from the emulated application.
+     * Handle a sync request from the emulated program.
      * @param thread Thread that initiated the request.
      * @returns ResultCode from the operation.
      */

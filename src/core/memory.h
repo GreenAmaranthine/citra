@@ -98,7 +98,7 @@ enum : PAddr {
     VRAM_N3DS_PADDR_END = VRAM_PADDR + VRAM_N3DS_SIZE,
 
     /// New 3DS additional memory. Supposedly faster than regular FCRAM. Part of it can be used by
-    /// applications and system modules if mapped via the ExHeader.
+    /// programs and system modules if mapped via the ExHeader.
     N3DS_EXTRA_RAM_PADDR = 0x1F000000,
     N3DS_EXTRA_RAM_SIZE = 0x00400000, ///< New 3DS additional memory size (4MB)
     N3DS_EXTRA_RAM_PADDR_END = N3DS_EXTRA_RAM_PADDR + N3DS_EXTRA_RAM_SIZE,
@@ -123,7 +123,7 @@ enum : PAddr {
 
 /// Virtual user-space memory regions
 enum : VAddr {
-    /// Where the application text, data and bss reside.
+    /// Where the program text, data and bss reside.
     PROCESS_IMAGE_VADDR = 0x00100000,
     PROCESS_IMAGE_MAX_SIZE = 0x03F00000,
     PROCESS_IMAGE_VADDR_END = PROCESS_IMAGE_VADDR + PROCESS_IMAGE_MAX_SIZE,
@@ -133,7 +133,7 @@ enum : VAddr {
     IPC_MAPPING_SIZE = 0x04000000,
     IPC_MAPPING_VADDR_END = IPC_MAPPING_VADDR + IPC_MAPPING_SIZE,
 
-    /// Application heap (includes stack).
+    /// Program heap (includes stack).
     HEAP_VADDR = 0x08000000,
     HEAP_SIZE = 0x08000000,
     HEAP_VADDR_END = HEAP_VADDR + HEAP_SIZE,

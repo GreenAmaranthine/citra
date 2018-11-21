@@ -41,8 +41,8 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveSource_SDSaveData::Open(u64 pr
     std::string concrete_mount_point{GetSaveDataPath(mount_point, program_id)};
     if (!FileUtil::Exists(concrete_mount_point))
         // When a SaveData archive is created for the first time, it isn't yet formatted and the
-        // save file/directory structure expected by the application has not yet been initialized.
-        // Returning the NotFormatted error code will signal the application to provision the
+        // save file/directory structure expected by the program has not yet been initialized.
+        // Returning the NotFormatted error code will signal the program to provision the
         // SaveData archive with the files and folders that it expects.
         return ERR_NOT_FORMATTED;
     auto archive{std::make_unique<SaveDataArchive>(std::move(concrete_mount_point))};

@@ -10,10 +10,10 @@
 #include <QMetaType>
 #include <QTime>
 #include <QtConcurrent/QtConcurrentRun>
-#include "citra/app_list_p.h"
 #include "citra/multiplayer/client_room.h"
 #include "citra/multiplayer/message.h"
 #include "citra/multiplayer/state.h"
+#include "citra/program_list_p.h"
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
 #include "core/core.h"

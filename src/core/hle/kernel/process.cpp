@@ -33,7 +33,7 @@ SharedPtr<Process> KernelSystem::CreateProcess(SharedPtr<CodeSet> code_set) {
     SharedPtr<Process> process{new Process(*this)};
     process->codeset = std::move(code_set);
     process->flags.raw = 0;
-    process->flags.memory_region.Assign(MemoryRegion::Application);
+    process->flags.memory_region.Assign(MemoryRegion::Program);
     process->status = ProcessStatus::Created;
     process->process_id = ++next_process_id;
     process_list.push_back(process);

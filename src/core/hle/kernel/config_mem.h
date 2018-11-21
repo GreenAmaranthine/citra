@@ -22,7 +22,7 @@ struct ConfigMemDef {
     u8 kernel_version_min;               // 2
     u8 kernel_version_maj;               // 3
     u32_le update_flag;                  // 4
-    u64_le ns_tid;                       // 8
+    u64_le ns_program_id;                // 8
     u32_le sys_core_ver;                 // 10
     u8 unit_info;                        // 14
     u8 boot_firm;                        // 15
@@ -30,9 +30,9 @@ struct ConfigMemDef {
     INSERT_PADDING_BYTES(0x1);           // 17
     u32_le ctr_sdk_ver;                  // 18
     INSERT_PADDING_BYTES(0x30 - 0x1C);   // 1C
-    u32_le app_mem_type;                 // 30
+    u32_le program_mem_type;             // 30
     INSERT_PADDING_BYTES(0x40 - 0x34);   // 34
-    u32_le app_mem_alloc;                // 40
+    u32_le program_mem_alloc;            // 40
     u32_le sys_mem_alloc;                // 44
     u32_le base_mem_alloc;               // 48
     INSERT_PADDING_BYTES(0x60 - 0x4C);   // 4C

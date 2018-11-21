@@ -173,10 +173,10 @@ void Module::Interface::ReadMessage(Kernel::HLERequestContext& ctx) {
         std::memcpy(&msg_header, buffer.data(), sizeof(CecMessageHeader));
         LOG_DEBUG(Service_CECD,
                   "magic={:#06x}, message_size={:#010x}, header_size={:#010x}, "
-                  "body_size={:#010x}, title_id={:#010x}, title_id_2={:#010x}, "
+                  "body_size={:#010x}, program_id={:#010x}, program_id_2={:#010x}, "
                   "batch_id={:#010x}",
                   msg_header.magic, msg_header.message_size, msg_header.header_size,
-                  msg_header.body_size, msg_header.title_id, msg_header.title_id2,
+                  msg_header.body_size, msg_header.program_id, msg_header.program_id_2,
                   msg_header.batch_id);
         LOG_DEBUG(Service_CECD,
                   "unknown_id={:#010x}, version={:#010x}, flag={:#04x}, "
@@ -232,10 +232,10 @@ void Module::Interface::ReadMessageWithHMAC(Kernel::HLERequestContext& ctx) {
         std::memcpy(&msg_header, buffer.data(), sizeof(CecMessageHeader));
         LOG_DEBUG(Service_CECD,
                   "magic={:#06x}, message_size={:#010x}, header_size={:#010x}, "
-                  "body_size={:#010x}, title_id={:#010x}, title_id_2={:#010x}, "
+                  "body_size={:#010x}, program_id={:#010x}, program_id_2={:#010x}, "
                   "batch_id={:#010x}",
                   msg_header.magic, msg_header.message_size, msg_header.header_size,
-                  msg_header.body_size, msg_header.title_id, msg_header.title_id2,
+                  msg_header.body_size, msg_header.program_id, msg_header.program_id_2,
                   msg_header.batch_id);
         LOG_DEBUG(Service_CECD,
                   "unknown_id={:#010x}, version={:#010x}, flag={:#04x}, "
@@ -343,10 +343,10 @@ void Module::Interface::WriteMessage(Kernel::HLERequestContext& ctx) {
         std::memcpy(&msg_header, buffer.data(), sizeof(CecMessageHeader));
         LOG_DEBUG(Service_CECD,
                   "magic={:#06x}, message_size={:#010x}, header_size={:#010x}, "
-                  "body_size={:#010x}, title_id={:#010x}, title_id_2={:#010x}, "
+                  "body_size={:#010x}, program_id={:#010x}, program_id_2={:#010x}, "
                   "batch_id={:#010x}",
                   msg_header.magic, msg_header.message_size, msg_header.header_size,
-                  msg_header.body_size, msg_header.title_id, msg_header.title_id2,
+                  msg_header.body_size, msg_header.program_id, msg_header.program_id_2,
                   msg_header.batch_id);
         LOG_DEBUG(Service_CECD,
                   "unknown_id={:#010x}, version={:#010x}, flag={:#04x}, "
@@ -399,10 +399,10 @@ void Module::Interface::WriteMessageWithHMAC(Kernel::HLERequestContext& ctx) {
         std::memcpy(&msg_header, buffer.data(), sizeof(CecMessageHeader));
         LOG_DEBUG(Service_CECD,
                   "magic={:#06x}, message_size={:#010x}, header_size={:#010x}, "
-                  "body_size={:#010x}, title_id={:#010x}, title_id_2={:#010x}, "
+                  "body_size={:#010x}, program_id={:#010x}, program_id_2={:#010x}, "
                   "batch_id={:#010x}",
                   msg_header.magic, msg_header.message_size, msg_header.header_size,
-                  msg_header.body_size, msg_header.title_id, msg_header.title_id2,
+                  msg_header.body_size, msg_header.program_id, msg_header.program_id_2,
                   msg_header.batch_id);
         LOG_DEBUG(Service_CECD,
                   "unknown_id={:#010x}, version={:#010x}, flag={:#04x}, "
@@ -852,8 +852,8 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
                         mbox_list_header.num_boxes++;
                     }
             } else { // ncch_program_id == 0, remove/update activated boxes
-                /// We need to read the /CEC directory to find out which titles, if any,
-                /// are activated. The num_of_titles = (total_read_count) - 1, to adjust for
+                /// We need to read the /CEC directory to find out which programs, if any,
+                /// are activated. The num_of_programs = (total_read_count) - 1, to adjust for
                 /// the MBoxList____ file that is present in the directory as well.
                 FileSys::Path root_path{
                     GetCecDataPathTypeAsString(CecDataPathType::RootDir, 0).data()};

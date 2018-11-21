@@ -36,7 +36,7 @@ struct NCCH_Header {
     u8 secondary_key_slot;
     u8 platform;
     enum class ContentType : u8 {
-        Application = 0,
+        Program = 0,
         SystemUpdate = 1,
         Manual = 2,
         Child = 3,
@@ -178,7 +178,7 @@ namespace FileSys {
 
 /**
  * Helper which implements an interface to deal with NCCH containers which can
- * contain ExeFS archives or RomFS archives for games or other applications.
+ * contain ExeFS archives or RomFS archives for games or other programs.
  */
 class NCCHContainer {
 public:
@@ -201,7 +201,7 @@ public:
     Loader::ResultStatus LoadOverrides();
 
     /**
-     * Reads an application ExeFS section of an NCCH file (e.g. .code, .logo, etc.)
+     * Reads an program ExeFS section of an NCCH file (e.g. .code, .logo, etc.)
      * @param name Name of section to read out of NCCH file
      * @param buffer Vector to read data into
      * @return ResultStatus result of function
@@ -209,7 +209,7 @@ public:
     Loader::ResultStatus LoadSectionExeFS(const char* name, std::vector<u8>& buffer);
 
     /**
-     * Reads an application ExeFS section from external files instead of an NCCH file,
+     * Reads an program ExeFS section from external files instead of an NCCH file,
      * (e.g. code.bin, logo.bcma.lz, icon.icn, banner.bnr)
      * @param name Name of section to read from external files
      * @param buffer Vector to read data into

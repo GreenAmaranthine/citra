@@ -309,7 +309,7 @@ void ArchiveManager::RegisterArchiveTypes() {
     RegisterArchiveType(std::move(selfncch_factory), ArchiveIdCode::SelfNCCH);
 }
 
-void ArchiveManager::RegisterSelfNCCH(Loader::AppLoader& app_loader) {
+void ArchiveManager::RegisterSelfNCCH(Loader::ProgramLoader& program_loader) {
     auto itr{id_code_map.find(ArchiveIdCode::SelfNCCH)};
     if (itr == id_code_map.end()) {
         LOG_ERROR(Service_FS,
@@ -317,7 +317,7 @@ void ArchiveManager::RegisterSelfNCCH(Loader::AppLoader& app_loader) {
         return;
     }
     auto factory{static_cast<FileSys::ArchiveFactory_SelfNCCH*>(itr->second.get())};
-    factory->Register(app_loader);
+    factory->Register(program_loader);
 }
 
 ArchiveManager::ArchiveManager(Core::System& system) : system(system) {

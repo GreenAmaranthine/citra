@@ -38,7 +38,7 @@ public:
     virtual ~SessionRequestHandler() = default;
 
     /**
-     * Handles a sync request from the emulated application.
+     * Handles a sync request from the emulated program.
      * @param server_session The ServerSession that was triggered for this sync request,
      * it should be used to differentiate which client (As in ClientSession) we're answering to.
      * TODO: Use a wrapper structure to hold all the information relevant to

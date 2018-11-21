@@ -243,7 +243,7 @@ public:
     void Update() override;
 
     /**
-     * Sends the LibAppletClosing signal to the application,
+     * Sends the LibAppletClosing signal to the program,
      * along with the relevant data buffers.
      */
     void Finalize();
@@ -253,14 +253,14 @@ public:
 
 private:
     /// This SharedMemory will be created when we receive the LibAppJustStarted message.
-    /// It holds the framebuffer info retrieved by the application with
+    /// It holds the framebuffer info retrieved by the program with
     /// gsp::Gpu:ImportDisplayCaptureInfo
     Kernel::SharedPtr<Kernel::SharedMemory> framebuffer_memory;
 
     /// SharedMemory where the output text will be stored
     Kernel::SharedPtr<Kernel::SharedMemory> text_memory;
 
-    /// Configuration of this instance of the SoftwareKeyboard, as received from the application
+    /// Configuration of this instance of the SoftwareKeyboard, as received from the program
     SoftwareKeyboardConfig config;
 };
 } // namespace HLE::Applets

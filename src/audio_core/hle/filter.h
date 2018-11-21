@@ -61,7 +61,7 @@ private:
         void Reset();
 
         /**
-         * Configures this filter with application settings.
+         * Configures this filter with program settings.
          * @param config Configuration from DSP shared memory.
          */
         void Configure(SourceConfiguration::Configuration::SimpleFilter config);
@@ -89,7 +89,7 @@ private:
         void Reset();
 
         /**
-         * Configures this filter with application settings.
+         * Configures this filter with program settings.
          * @param config Configuration from DSP shared memory.
          */
         void Configure(SourceConfiguration::Configuration::BiquadFilter config);

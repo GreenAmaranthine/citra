@@ -23,9 +23,9 @@ class Config;
 class ControlPanel;
 class ClickableLabel;
 class EmuThread;
-class AppList;
-enum class AppListOpenTarget;
-class AppListPlaceholder;
+class ProgramList;
+enum class ProgramListOpenTarget;
+class ProgramListPlaceholder;
 class GImageInfo;
 class Screens;
 class MultiplayerState;
@@ -71,18 +71,18 @@ signals:
     void UpdateThemedIcons();
 
 private slots:
-    void OnStartApplication();
-    void OnPauseApplication();
-    void OnStopApplication();
+    void OnStartProgram();
+    void OnPauseProgram();
+    void OnStopProgram();
     void OnTouchChanged(unsigned, unsigned);
 
-    /// Called when user selects an application in the application list widget.
-    void OnAppListLoadFile(const QString& path);
+    /// Called when user selects an program in the program list widget.
+    void OnProgramListLoadFile(const QString& path);
 
-    void OnAppListOpenFolder(u64 program_id, AppListOpenTarget target);
-    void OnAppListOpenDirectory(const QString& path);
-    void OnAppListAddDirectory();
-    void OnAppListShowList(bool show);
+    void OnProgramListOpenFolder(u64 program_id, ProgramListOpenTarget target);
+    void OnProgramListOpenDirectory(const QString& path);
+    void OnProgramListAddDirectory();
+    void OnProgramListShowList(bool show);
     void OnMenuLoadFile();
     void OnMenuInstallCIA();
     void OnMenuAddSeed();
@@ -135,8 +135,8 @@ private:
     void ConnectMenuEvents();
 
     bool LoadROM(const std::string& filename);
-    void BootApplication(const std::string& filename);
-    void ShutdownApplication();
+    void BootProgram(const std::string& filename);
+    void ShutdownProgram();
 
     /**
      * Stores the filename in the recently loaded files list.
@@ -165,7 +165,7 @@ private:
      * @return true if the user confirmed
      */
     bool ConfirmClose();
-    bool ConfirmChangeApplication();
+    bool ConfirmChangeProgram();
     void closeEvent(QCloseEvent* event) override;
 
     bool ValidateMovie(const QString& path, u64 program_id = 0);
@@ -186,8 +186,8 @@ private:
 
     Screens* screens;
 
-    AppList* app_list;
-    AppListPlaceholder* app_list_placeholder;
+    ProgramList* program_list;
+    ProgramListPlaceholder* program_list_placeholder;
 
     // Status bar elements
     QProgressBar* progress_bar;
@@ -209,7 +209,7 @@ private:
 
     std::unique_ptr<EmuThread> emu_thread;
 
-    // The short title of the application currently running
+    // The short title of the program currently running
     std::string short_title;
 
     // Movie

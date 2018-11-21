@@ -16,7 +16,7 @@ namespace Kernel {
 ClientSession::ClientSession(KernelSystem& kernel) : Object{kernel} {}
 ClientSession::~ClientSession() {
     // This destructor will be called automatically when the last ClientSession handle is closed by
-    // the emulated application.
+    // the emulated program.
     // Local references to ServerSession and SessionRequestHandler are necessary to guarantee they
     // will be kept alive until after ClientDisconnected() returns.
     SharedPtr<ServerSession> server{parent->server};

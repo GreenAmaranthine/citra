@@ -85,8 +85,8 @@ void RPCServer::HandleSetResolution(Packet& packet, u16 resolution) {
     packet.SendReply();
 }
 
-void RPCServer::HandleSetApplication(Packet& packet, const std::string& path) {
-    system.SetApplication(path);
+void RPCServer::HandleSetProgram(Packet& packet, const std::string& path) {
+    system.SetProgram(path);
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
@@ -194,7 +194,7 @@ bool RPCServer::ValidatePacket(const PacketHeader& packet_header) {
         case PacketType::MotionState:
         case PacketType::CircleState:
         case PacketType::SetResolution:
-        case PacketType::SetApplication:
+        case PacketType::SetProgram:
         case PacketType::SetOverrideControls:
         case PacketType::Pause:
         case PacketType::Resume:
@@ -295,12 +295,12 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
             success = true;
             break;
         }
-        case PacketType::SetApplication: {
+        case PacketType::SetProgram: {
             const u8* data{request_packet->GetPacketData().data() + (sizeof(u32) * 2)};
             std::string path;
             path.resize(request_packet->GetPacketDataSize() - (sizeof(u32) * 2));
             std::memcpy(&path[0], data, request_packet->GetPacketDataSize() - (sizeof(u32) * 2));
-            HandleSetApplication(*request_packet, path);
+            HandleSetProgram(*request_packet, path);
             success = true;
             break;
         }

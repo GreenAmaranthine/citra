@@ -106,15 +106,14 @@ std::vector<u8> GenerateNintendoDummyTag() {
 /**
  * Generates a buffer with the Network Info Nintendo tag.
  * This tag contains the network information of the network that is being broadcast.
- * It also contains the application data provided by the application that opened the network.
+ * It also contains the program data provided by the program that opened the network.
  * @returns A buffer with the Nintendo network info parameter of the beacon frame.
  */
 std::vector<u8> GenerateNintendoNetworkInfoTag(const NetworkInfo& network_info) {
     NetworkInfoTag tag;
     tag.header.tag_id = static_cast<u8>(TagId::VendorSpecific);
-    tag.header.length =
-        sizeof(NetworkInfoTag) - sizeof(TagHeader) + network_info.application_data_size;
-    tag.appdata_size = network_info.application_data_size;
+    tag.header.length = sizeof(NetworkInfoTag) - sizeof(TagHeader) + network_info.program_data_size;
+    tag.appdata_size = network_info.program_data_size;
     // Set the hash to zero initially, it will be updated once we calculate it.
     tag.sha_hash = {};
     // Ensure the network structure has the correct OUI and OUI type.
@@ -123,10 +122,10 @@ std::vector<u8> GenerateNintendoNetworkInfoTag(const NetworkInfo& network_info) 
     // This tag contains the network info structure starting at the OUI.
     std::memcpy(tag.network_info.data(), &network_info.oui_value, tag.network_info.size());
     // Copy the tag and the data so we can calculate the SHA1 over it.
-    std::vector<u8> buffer(sizeof(tag) + network_info.application_data_size);
+    std::vector<u8> buffer(sizeof(tag) + network_info.program_data_size);
     std::memcpy(buffer.data(), &tag, sizeof(tag));
-    std::memcpy(buffer.data() + sizeof(tag), network_info.application_data.data(),
-                network_info.application_data_size);
+    std::memcpy(buffer.data() + sizeof(tag), network_info.program_data.data(),
+                network_info.program_data_size);
     // Calculate the SHA1 of the contents of the tag.
     std::array<u8, CryptoPP::SHA1::DIGESTSIZE> hash;
     CryptoPP::SHA1().CalculateDigest(hash.data(),

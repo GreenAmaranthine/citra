@@ -341,7 +341,7 @@ SectionID ElfReader::GetSectionByName(const char* name, int firstSection) const 
 
 namespace Loader {
 
-FileType AppLoader_ELF::IdentifyType(FileUtil::IOFile& file) {
+FileType ProgramLoader_ELF::IdentifyType(FileUtil::IOFile& file) {
     u32 magic;
     file.Seek(0, SEEK_SET);
     if (file.ReadArray<u32>(&magic, 1) != 1)
@@ -351,7 +351,7 @@ FileType AppLoader_ELF::IdentifyType(FileUtil::IOFile& file) {
     return FileType::Error;
 }
 
-ResultStatus AppLoader_ELF::Load(Kernel::SharedPtr<Kernel::Process>& process) {
+ResultStatus ProgramLoader_ELF::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
     if (!file.IsOpen())
@@ -369,9 +369,9 @@ ResultStatus AppLoader_ELF::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     process = kernel.CreateProcess(std::move(codeset));
     process->svc_access_mask.set();
     process->address_mappings = default_address_mappings;
-    // Attach the default resource limit (Application) to the process
+    // Attach the default resource limit (Program) to the process
     process->resource_limit =
-        kernel.ResourceLimit().GetForCategory(Kernel::ResourceLimitCategory::Application);
+        kernel.ResourceLimit().GetForCategory(Kernel::ResourceLimitCategory::Program);
     process->Run(48, Kernel::DEFAULT_STACK_SIZE);
     is_loaded = true;
     return ResultStatus::Success;

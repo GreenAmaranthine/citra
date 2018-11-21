@@ -174,7 +174,7 @@ struct CommandBuffer {
 
         // Total commands to process, must not be value 0 when GSP module handles commands. This
         // must be <=15 when writing a command to shared memory. This is incremented by the
-        // application when writing a command to shared memory, after increasing this value
+        // program when writing a command to shared memory, after increasing this value
         // TriggerCmdReqQueue is only used if this field is value 1.
         BitField<8, 8, u32> number_commands;
     };

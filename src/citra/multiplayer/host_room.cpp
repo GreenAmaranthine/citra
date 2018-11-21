@@ -12,12 +12,12 @@
 #include <QMetaType>
 #include <QTime>
 #include <QtConcurrent/QtConcurrentRun>
-#include "citra/app_list_p.h"
 #include "citra/main.h"
 #include "citra/multiplayer/host_room.h"
 #include "citra/multiplayer/message.h"
 #include "citra/multiplayer/state.h"
 #include "citra/multiplayer/validation.h"
+#include "citra/program_list_p.h"
 #include "citra/ui_settings.h"
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
@@ -35,17 +35,17 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
     ui->username->setValidator(validation.GetNickname());
     ui->port->setValidator(validation.GetPort());
     ui->port->setPlaceholderText(QString::number(Network::DefaultRoomPort));
-    // Create a proxy to the application list to display the list of preferred applications
-    app_list = new QStandardItemModel;
+    // Create a proxy to the program list to display the list of preferred program
+    program_list = new QStandardItemModel;
     for (int i{}; i < list->rowCount(); i++) {
         auto parent{list->item(i, 0)};
         for (int j{}; j < parent->rowCount(); j++)
-            app_list->appendRow(parent->child(j)->clone());
+            program_list->appendRow(parent->child(j)->clone());
     }
     proxy = new ComboBoxProxyModel;
-    proxy->setSourceModel(app_list);
+    proxy->setSourceModel(program_list);
     proxy->sort(0, Qt::AscendingOrder);
-    ui->app_list->setModel(proxy);
+    ui->program_list->setModel(proxy);
     // Disable editing replies text
     ui->tableReplies->setEditTriggers(QAbstractItemView::NoEditTriggers);
     // Connect all the widgets to the appropriate events
@@ -63,9 +63,10 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
     int index{static_cast<int>(UISettings::values.host_type)};
     if (index < ui->host_type->count())
         ui->host_type->setCurrentIndex(index);
-    index = ui->app_list->findData(UISettings::values.app_id, AppListItemPath::ProgramIdRole);
+    index =
+        ui->program_list->findData(UISettings::values.program_id, ProgramListItemPath::ProgramIdRole);
     if (index != -1)
-        ui->app_list->setCurrentIndex(index);
+        ui->program_list->setCurrentIndex(index);
 }
 
 HostRoomWindow::~HostRoomWindow() = default;
@@ -94,12 +95,12 @@ void HostRoomWindow::Host() {
         }
     }
     ui->host->setDisabled(true);
-    auto app_name{ui->app_list->currentData(Qt::DisplayRole).toString()};
-    auto app_id{ui->app_list->currentData(AppListItemPath::ProgramIdRole).toLongLong()};
+    auto program_name{ui->program_list->currentData(Qt::DisplayRole).toString()};
+    auto program_id{ui->program_list->currentData(ProgramListItemPath::ProgramIdRole).toLongLong()};
     auto port{ui->port->isModified() ? ui->port->text().toInt() : Network::DefaultRoomPort};
     auto password{ui->password->text().toStdString()};
     bool created{system.Room().Create(ui->room_name->text().toStdString(), "", port, password,
-                                      ui->max_members->value(), app_name.toStdString(), app_id)};
+                                      ui->max_members->value(), program_name.toStdString(), program_id)};
     if (!created) {
         NetworkMessage::ShowError(NetworkMessage::COULD_NOT_CREATE_ROOM);
         LOG_ERROR(Network, "Couldn't create room!");
@@ -110,8 +111,8 @@ void HostRoomWindow::Host() {
     // Store settings
     UISettings::values.room_nickname = ui->username->text();
     UISettings::values.room_name = ui->room_name->text();
-    UISettings::values.app_id =
-        ui->app_list->currentData(AppListItemPath::ProgramIdRole).toLongLong();
+    UISettings::values.program_id =
+        ui->program_list->currentData(ProgramListItemPath::ProgramIdRole).toLongLong();
     UISettings::values.max_members = ui->max_members->value();
     UISettings::values.host_type = ui->host_type->currentIndex();
     UISettings::values.room_port = (ui->port->isModified() && !ui->port->text().isEmpty())
@@ -184,15 +185,16 @@ QVariant ComboBoxProxyModel::data(const QModelIndex& idx, int role) const {
         return val;
     }
     std::string filename;
-    Common::SplitPath(
-        QSortFilterProxyModel::data(idx, AppListItemPath::FullPathRole).toString().toStdString(),
-        nullptr, &filename, nullptr);
-    QString title{QSortFilterProxyModel::data(idx, AppListItemPath::TitleRole).toString()};
+    Common::SplitPath(QSortFilterProxyModel::data(idx, ProgramListItemPath::FullPathRole)
+                          .toString()
+                          .toStdString(),
+                      nullptr, &filename, nullptr);
+    QString title{QSortFilterProxyModel::data(idx, ProgramListItemPath::TitleRole).toString()};
     return title.isEmpty() ? QString::fromStdString(filename) : title;
 }
 
 bool ComboBoxProxyModel::lessThan(const QModelIndex& left, const QModelIndex& right) const {
-    auto leftData = left.data(AppListItemPath::TitleRole).toString();
-    auto rightData = right.data(AppListItemPath::TitleRole).toString();
+    auto leftData = left.data(ProgramListItemPath::TitleRole).toString();
+    auto rightData = right.data(ProgramListItemPath::TitleRole).toString();
     return leftData.compare(rightData) < 0;
 }

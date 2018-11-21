@@ -15,7 +15,7 @@ constexpr std::size_t SEEDDB_PADDING_BYTES{12};
 struct Seed {
     using Data = std::array<u8, 16>;
 
-    u64_le title_id;
+    u64_le program_id;
     Data data;
     std::array<u8, 8> reserved;
 };
@@ -28,11 +28,11 @@ struct SeedDB {
     void Add(const Seed& seed);
 
     std::size_t GetCount() const;
-    auto FindSeedByTitleID(u64 title_id) const;
+    auto FindSeedByProgramID(u64 program_id) const;
 };
 
 bool AddSeed(const Seed& seed);
-std::optional<Seed::Data> GetSeed(u64 title_id);
+std::optional<Seed::Data> GetSeed(u64 program_id);
 u32 GetSeedCount();
 
 } // namespace FileSys

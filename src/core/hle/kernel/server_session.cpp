@@ -16,7 +16,7 @@ namespace Kernel {
 ServerSession::ServerSession(KernelSystem& kernel) : WaitObject{kernel} {}
 ServerSession::~ServerSession() {
     // This destructor will be called automatically when the last ServerSession handle is closed by
-    // the emulated application.
+    // the emulated program.
     // Decrease the port's connection count.
     if (parent->port)
         parent->port->ConnectionClosed();
@@ -43,7 +43,7 @@ bool ServerSession::ShouldWait(Thread* thread) const {
 void ServerSession::Acquire(Thread* thread) {
     ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
     // If the client endpoint was closed, don't do anything. This ServerSession is now useless and
-    // will linger until its last handle is closed by the running application.
+    // will linger until its last handle is closed by the running program.
     if (!parent->client)
         return;
     // we're now handling a request, pop it from the stack.
@@ -70,7 +70,7 @@ ResultCode ServerSession::HandleSyncRequest(SharedPtr<Thread> thread) {
             // starvation when a thread only does sync requests to HLE services while a
             // lower-priority thread is waiting to run.
 
-            // This delay was approximated in a homebrew application by measuring the average time
+            // This delay was approximated in a homebrew program by measuring the average time
             // it takes for svcSendSyncRequest to return when performing the SetLcdForceBlack IPC
             // request to the GSP:GPU service in a n3DS with firmware 11.6. The measured values have
             // a high variance and vary between models.

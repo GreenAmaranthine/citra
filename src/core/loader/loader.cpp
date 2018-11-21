@@ -23,7 +23,7 @@ FileType IdentifyFile(FileUtil::IOFile& file) {
     FileType type{};
 
 #define CHECK_TYPE(loader)                                                                         \
-    type = AppLoader_##loader::IdentifyType(file);                                                 \
+    type = ProgramLoader_##loader::IdentifyType(file);                                             \
     if (FileType::Error != type)                                                                   \
         return type;
     CHECK_TYPE(THREEDSX)
@@ -82,28 +82,30 @@ const char* GetFileTypeString(FileType type) {
  * @param type The type of the file
  * @param filename the file name (without path)
  * @param filepath the file full path (with name)
- * @return std::unique_ptr<AppLoader> a pointer to a loader object;  nullptr for unsupported type
+ * @return std::unique_ptr<ProgramLoader> a pointer to a loader object;  nullptr for unsupported
+ * type
  */
-static std::unique_ptr<AppLoader> GetFileLoader(Core::System& system, FileUtil::IOFile&& file,
-                                                FileType type, const std::string& filename,
-                                                const std::string& filepath) {
+static std::unique_ptr<ProgramLoader> GetFileLoader(Core::System& system, FileUtil::IOFile&& file,
+                                                    FileType type, const std::string& filename,
+                                                    const std::string& filepath) {
     switch (type) {
     // 3DSX file format.
     case FileType::THREEDSX:
-        return std::make_unique<AppLoader_THREEDSX>(system, std::move(file), filename, filepath);
+        return std::make_unique<ProgramLoader_THREEDSX>(system, std::move(file), filename,
+                                                        filepath);
     // Standard ELF file format.
     case FileType::ELF:
-        return std::make_unique<AppLoader_ELF>(system, std::move(file), filename);
+        return std::make_unique<ProgramLoader_ELF>(system, std::move(file), filename);
     // NCCH/NCSD container formats.
     case FileType::CXI:
     case FileType::CCI:
-        return std::make_unique<AppLoader_NCCH>(system, std::move(file), filepath);
+        return std::make_unique<ProgramLoader_NCCH>(system, std::move(file), filepath);
     default:
         return nullptr;
     }
 }
 
-std::unique_ptr<AppLoader> GetLoader(Core::System& system, const std::string& filename) {
+std::unique_ptr<ProgramLoader> GetLoader(Core::System& system, const std::string& filename) {
     FileUtil::IOFile file{filename, "rb"};
     if (!file.IsOpen()) {
         LOG_ERROR(Loader, "Failed to load file {}", filename);

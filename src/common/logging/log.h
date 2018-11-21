@@ -19,7 +19,7 @@ enum class Level : u8 {
     Error,    ///< Major problems found during execution of a task that prevent it from being
               ///  completed.
     Critical, ///< Major problems during execution that threathen the stability of the entire
-              ///  application.
+              ///  program.
 
     Count ///< Total number of logging levels
 };
@@ -60,7 +60,7 @@ enum class Class : u8 {
     Service_BOSS,       ///< The BOSS (SpotPass) service
     Service_GSP,        ///< The GSP (GPU control) service
     Service_AC,         ///< The AC (WiFi status) service
-    Service_AM,         ///< The AM (Application manager) service
+    Service_AM,         ///< The AM (Program manager) service
     Service_PTM,        ///< The PTM (Power status & misc.) service
     Service_LDR,        ///< The LDR (3DS DLL loader) service
     Service_MCU,        ///< The MCU (Auxiliary Microcontroller) service

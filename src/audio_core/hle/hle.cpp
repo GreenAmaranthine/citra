@@ -25,7 +25,7 @@ namespace AudioCore {
 
 static constexpr u64 audio_frame_ticks{1310252ull}; ///< Units: ARM11 cycles
 
-static const std::unordered_set<u64> titles_output_allowed_shell_closed{{
+static const std::unordered_set<u64> ids_output_allowed_shell_closed{{
     // Nintendo 3DS Sound
     0x0004001000020500,
     0x0004001000021500,
@@ -115,10 +115,8 @@ std::vector<u8> DspHle::Impl::PipeRead(DspPipe pipe_number, u32 length) {
     }
     std::vector<u8>& data{pipe_data[pipe_index]};
     if (length > data.size()) {
-        LOG_WARNING(
-            Audio_DSP,
-            "pipe_number = {} is out of data, application requested read of {} but {} remain",
-            pipe_index, length, data.size());
+        LOG_WARNING(Audio_DSP, "pipe {} is out of data, program requested read of {} but {} remain",
+                    pipe_index, length, data.size());
         length = static_cast<u32>(data.size());
     }
     if (length == 0)
@@ -154,33 +152,33 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer)
         // The difference between Initialize and Wakeup is that Input state is maintained
         // when sleeping but isn't when turning it off and on again. (TODO: Implement this.)
         // Waking up from sleep garbles some of the structs in the memory region. (TODO:
-        // Implement this.) Applications store away the state of these structs before
+        // Implement this.) Programs store away the state of these structs before
         // sleeping and reset it back after wakeup on behalf of the DSP.
         switch (static_cast<StateChange>(buffer[0])) {
         case StateChange::Initialize:
-            LOG_INFO(Audio_DSP, "Application has requested initialization of DSP hardware");
+            LOG_INFO(Audio_DSP, "Program has requested initialization of DSP hardware");
             ResetPipes();
             AudioPipeWriteStructAddresses();
             dsp_state = DspState::On;
             break;
         case StateChange::Shutdown:
-            LOG_INFO(Audio_DSP, "Application has requested shutdown of DSP hardware");
+            LOG_INFO(Audio_DSP, "Program has requested shutdown of DSP hardware");
             dsp_state = DspState::Off;
             break;
         case StateChange::Wakeup:
-            LOG_INFO(Audio_DSP, "Application has requested wakeup of DSP hardware");
+            LOG_INFO(Audio_DSP, "Program has requested wakeup of DSP hardware");
             ResetPipes();
             AudioPipeWriteStructAddresses();
             dsp_state = DspState::On;
             break;
         case StateChange::Sleep:
-            LOG_INFO(Audio_DSP, "Application has requested sleep of DSP hardware");
+            LOG_INFO(Audio_DSP, "Program has requested sleep of DSP hardware");
             UNIMPLEMENTED();
             dsp_state = DspState::Sleeping;
             break;
         default:
             LOG_ERROR(Audio_DSP,
-                      "Application has requested unknown state transition of DSP hardware {}",
+                      "Program has requested unknown state transition of DSP hardware {}",
                       buffer[0]);
             dsp_state = DspState::Off;
             break;
@@ -298,7 +296,7 @@ StereoFrame16 DspHle::Impl::GenerateCurrentFrame() {
 bool DspHle::Impl::Tick() {
     if (!IsOutputAllowed())
         return false;
-    // TODO: Check dsp::DSP semaphore (which indicates emulated application has finished writing to
+    // TODO: Check dsp::DSP semaphore (which indicates emulated program has finished writing to
     // shared memory region)
     parent.OutputFrame(GenerateCurrentFrame());
     return true;
@@ -308,7 +306,7 @@ bool DspHle::Impl::IsOutputAllowed() {
     if (!system.IsSleepModeEnabled())
         return true;
     else
-        return titles_output_allowed_shell_closed.count(
+        return ids_output_allowed_shell_closed.count(
                    system.Kernel().GetCurrentProcess()->codeset->program_id) == 1 &&
                Settings::values.headphones_connected;
 }

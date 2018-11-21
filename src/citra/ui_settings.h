@@ -34,18 +34,18 @@ struct AppDir {
     }
 };
 
-enum class AppListIconSize {
+enum class ProgramListIconSize {
     NoIcon,    ///< Don't display icons
     SmallIcon, ///< Display a small (24x24) icon
     LargeIcon, ///< Display a large (48x48) icon
 };
 
-enum class AppListText {
+enum class ProgramListText {
     NoText = -1, ///< No text
     FileName,    ///< Display the file name of the entry
     FullPath,    ///< Display the full path of the entry
-    TitleName,   ///< Display the name of the title
-    TitleID,     ///< Display the title ID
+    ProgramName, ///< Display the name of the program
+    ProgramID,   ///< Display the program ID
     Publisher,   ///< Display the publisher
 };
 
@@ -53,7 +53,7 @@ struct Values {
     QByteArray geometry;
     QByteArray state;
     QByteArray screens_geometry;
-    QByteArray applist_header_state;
+    QByteArray ProgramList_header_state;
     QByteArray configuration_geometry;
 
     bool single_window_mode;
@@ -68,15 +68,15 @@ struct Values {
     QString screenshots_dir;
     QString seeds_dir;
 
-    // Application List
-    AppListIconSize app_list_icon_size;
-    AppListText app_list_row_1;
-    AppListText app_list_row_2;
-    bool app_list_hide_no_icon;
+    // Program list
+    ProgramListIconSize program_list_icon_size;
+    ProgramListText program_list_row_1;
+    ProgramListText program_list_row_2;
+    bool program_list_hide_no_icon;
 
     u16 screenshot_resolution_factor;
 
-    QList<UISettings::AppDir> app_dirs;
+    QList<UISettings::AppDir> program_dirs;
     QStringList recent_files;
 
     bool confirm_close;
@@ -96,7 +96,7 @@ struct Values {
     quint32 max_members;
     QString room_port;
     uint host_type;
-    qulonglong app_id;
+    qulonglong program_id;
 
     // Logging
     bool show_console;

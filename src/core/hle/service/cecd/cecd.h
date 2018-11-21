@@ -169,8 +169,8 @@ public:
         u32_le header_size;
         u32_le body_size;
 
-        u32_le title_id;
-        u32_le title_id2;
+        u32_le program_id;
+        u32_le program_id_2;
         u32_le batch_id;
         u32_le unknown_id;
 

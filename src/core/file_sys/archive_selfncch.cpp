@@ -71,7 +71,7 @@ private:
     std::shared_ptr<std::vector<u8>> data;
 };
 
-// SelfNCCHArchive represents the running application itself. From this archive the application can
+// SelfNCCHArchive represents the running program itself. From this archive the program can
 // open RomFS and ExeFS, excluding the .code section.
 class SelfNCCHArchive final : public ArchiveBackend {
 public:
@@ -219,9 +219,9 @@ private:
     NCCHData ncch_data;
 };
 
-void ArchiveFactory_SelfNCCH::Register(Loader::AppLoader& app_loader) {
+void ArchiveFactory_SelfNCCH::Register(Loader::ProgramLoader& program_loader) {
     u64 program_id{};
-    if (app_loader.ReadProgramId(program_id) != Loader::ResultStatus::Success)
+    if (program_loader.ReadProgramId(program_id) != Loader::ResultStatus::Success)
         LOG_WARNING(
             Service_FS,
             "Couldn't read program id when registering with SelfNCCH, this might be a 3dsx file");
@@ -233,17 +233,17 @@ void ArchiveFactory_SelfNCCH::Register(Loader::AppLoader& app_loader) {
                     program_id);
     NCCHData& data{ncch_data[program_id]};
     std::shared_ptr<RomFSReader> romfs_file;
-    if (app_loader.ReadRomFS(romfs_file) == Loader::ResultStatus::Success)
+    if (program_loader.ReadRomFS(romfs_file) == Loader::ResultStatus::Success)
         data.romfs_file = std::move(romfs_file);
     std::shared_ptr<RomFSReader> update_romfs_file;
-    if (app_loader.ReadUpdateRomFS(update_romfs_file) == Loader::ResultStatus::Success)
+    if (program_loader.ReadUpdateRomFS(update_romfs_file) == Loader::ResultStatus::Success)
         data.update_romfs_file = std::move(update_romfs_file);
     std::vector<u8> buffer;
-    if (app_loader.ReadIcon(buffer) == Loader::ResultStatus::Success)
+    if (program_loader.ReadIcon(buffer) == Loader::ResultStatus::Success)
         data.icon = std::make_shared<std::vector<u8>>(std::move(buffer));
-    if (app_loader.ReadLogo(buffer) == Loader::ResultStatus::Success)
+    if (program_loader.ReadLogo(buffer) == Loader::ResultStatus::Success)
         data.logo = std::make_shared<std::vector<u8>>(std::move(buffer));
-    if (app_loader.ReadBanner(buffer) == Loader::ResultStatus::Success)
+    if (program_loader.ReadBanner(buffer) == Loader::ResultStatus::Success)
         data.banner = std::make_shared<std::vector<u8>>(std::move(buffer));
 }
 

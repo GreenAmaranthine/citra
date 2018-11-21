@@ -11,10 +11,10 @@
 namespace Loader {
 
 /// Loads an ELF/AXF file
-class AppLoader_ELF final : public AppLoader {
+class ProgramLoader_ELF final : public ProgramLoader {
 public:
-    explicit AppLoader_ELF(Core::System& system, FileUtil::IOFile&& file, std::string filename)
-        : AppLoader{system, std::move(file)}, filename{std::move(filename)} {}
+    explicit ProgramLoader_ELF(Core::System& system, FileUtil::IOFile&& file, std::string filename)
+        : ProgramLoader{system, std::move(file)}, filename{std::move(filename)} {}
 
     /**
      * Returns the type of the file

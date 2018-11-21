@@ -22,7 +22,7 @@ constexpr char SYSTEM_CID[]{"00000000000000000000000000000000"};
 constexpr char SDCARD_CID[]{"00000000000000000000000000000000"};
 
 namespace Loader {
-class AppLoader;
+class ProgramLoader;
 } // namespace Loader
 
 namespace Core {
@@ -226,7 +226,7 @@ public:
     ResultCode CreateSystemSaveData(u32 high, u32 low);
 
     /// Registers a new NCCH file with the SelfNCCH archive factory
-    void RegisterSelfNCCH(Loader::AppLoader& app_loader);
+    void RegisterSelfNCCH(Loader::ProgramLoader& program_loader);
 
 private:
     Core::System& system;

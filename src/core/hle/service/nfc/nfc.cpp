@@ -315,7 +315,7 @@ void Module::Interface::CommunicationGetStatus(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::InitializeWriteAppData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x14, 14, 4};
-    u32 app_id{rp.Pop<u32>()};
+    u32 program_id{rp.Pop<u32>()};
     u32 size{rp.Pop<u32>()};
     auto unknown_0x30_byte_structure{rp.PopRaw<std::array<u8, 0x30>>()};
     rp.PopPID();
@@ -337,7 +337,7 @@ void Module::Interface::InitializeWriteAppData(Kernel::HLERequestContext& ctx) {
     }
     nfc->UpdateAmiiboData();
     rb.Push(RESULT_SUCCESS);
-    LOG_DEBUG(Service_NFC, "app_id={}, size={}", app_id, size);
+    LOG_DEBUG(Service_NFC, "program_id={}, size={}", program_id, size);
 }
 
 void Module::Interface::UpdateStoredAmiiboData(Kernel::HLERequestContext& ctx) {
@@ -374,13 +374,13 @@ void Module::Interface::GetAppDataInitStruct(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::OpenAppData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x13, 1, 0};
-    u32 app_id{rp.Pop<u32>()};
+    u32 program_id{rp.Pop<u32>()};
     auto result{RESULT_SUCCESS};
     if (nfc->tag_state != TagState::TagDataLoaded) {
         LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
         result = ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
                             ErrorSummary::InvalidState, ErrorLevel::Status);
-    } else if (std::memcmp(&app_id, &nfc->decrypted_data[0xB6], sizeof(app_id)))
+    } else if (std::memcmp(&program_id, &nfc->decrypted_data[0xB6], sizeof(program_id)))
         result = ResultCode(0xC8A17638); // App ID mismatch
     else if (!(nfc->decrypted_data[0x2C] & 0x20))
         result = ResultCode(0xC8A17628); // Uninitialised
@@ -388,7 +388,7 @@ void Module::Interface::OpenAppData(Kernel::HLERequestContext& ctx) {
         nfc->appdata_initialized = true;
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(result);
-    LOG_DEBUG(Service_NFC, "app_id=0x{:09X}", app_id);
+    LOG_DEBUG(Service_NFC, "program_id=0x{:09X}", program_id);
 }
 
 void Module::Interface::ReadAppData(Kernel::HLERequestContext& ctx) {

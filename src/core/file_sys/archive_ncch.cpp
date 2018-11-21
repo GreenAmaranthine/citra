@@ -27,7 +27,7 @@
 namespace FileSys {
 
 struct NCCHArchivePath {
-    u64_le tid;
+    u64_le pid;
     u32_le media_type;
     u32_le unknown;
 };
@@ -41,9 +41,9 @@ struct NCCHFilePath {
 };
 static_assert(sizeof(NCCHFilePath) == 0x14, "NCCHFilePath has wrong size!");
 
-Path MakeNCCHArchivePath(u64 tid, Service::FS::MediaType media_type) {
+Path MakeNCCHArchivePath(u64 pid, Service::FS::MediaType media_type) {
     NCCHArchivePath path{};
-    path.tid = static_cast<u64_le>(tid);
+    path.pid = static_cast<u64_le>(pid);
     path.media_type = static_cast<u32_le>(media_type);
     path.unknown = 0;
     std::vector<u8> archive(sizeof(path));
@@ -77,7 +77,7 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
     NCCHFilePath openfile_path;
     std::memcpy(&openfile_path, binary.data(), sizeof(NCCHFilePath));
     std::string file_path{
-        Service::AM::GetTitleContentPath(media_type, title_id, openfile_path.content_index)};
+        Service::AM::GetProgramContentPath(media_type, program_id, openfile_path.content_index)};
     NCCHContainer ncch_container{file_path};
     Loader::ResultStatus result;
     std::unique_ptr<FileBackend> file;
@@ -100,16 +100,16 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         result = Loader::ResultStatus::Error;
     }
     if (result != Loader::ResultStatus::Success) {
-        // High Title ID of the archive: The category (https://3dbrew.org/wiki/Title_list).
+        // High Program ID of the archive: The category (https://3dbrew.org/wiki/Title_list).
         constexpr u32 shared_data_archive{0x0004009B};
         constexpr u32 system_data_archive{0x000400DB};
-        // Low Title IDs.
+        // Low Program IDs.
         constexpr u32 mii_data{0x00010202};
         constexpr u32 region_manifest{0x00010402};
         constexpr u32 ng_word_list{0x00010302};
         constexpr u32 shared_font{0x00014002};
-        u32 high{static_cast<u32>(title_id >> 32)};
-        u32 low{static_cast<u32>(title_id & 0xFFFFFFFF)};
+        u32 high{static_cast<u32>(program_id >> 32)};
+        u32 low{static_cast<u32>(program_id & 0xFFFFFFFF)};
         LOG_DEBUG(Service_FS, "Full Path: {}. Category: 0x{:X}. Path: 0x{:X}.", path.DebugStr(),
                   high, low);
         std::vector<u8> archive_data;
@@ -257,7 +257,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_NCCH::Open(const Path&
     NCCHArchivePath open_path;
     std::memcpy(&open_path, binary.data(), sizeof(NCCHArchivePath));
     auto archive{std::make_unique<NCCHArchive>(
-        system, open_path.tid, static_cast<Service::FS::MediaType>(open_path.media_type & 0xFF))};
+        system, open_path.pid, static_cast<Service::FS::MediaType>(open_path.media_type & 0xFF))};
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 

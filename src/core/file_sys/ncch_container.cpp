@@ -341,7 +341,7 @@ Loader::ResultStatus NCCHContainer::LoadOverrides() {
         is_tainted = true;
     if (is_tainted)
         LOG_WARNING(Service_FS,
-                    "Loaded NCCH {} is tainted, application behavior may not be as expected!",
+                    "Loaded NCCH {} is tainted, program behavior may not be as expected!",
                     filepath);
     return Loader::ResultStatus::Success;
 }

@@ -253,7 +253,7 @@ public:
     VAddr entry_point;
     VAddr stack_top;
 
-    u32 nominal_priority; ///< Nominal thread priority, as set by the emulated application
+    u32 nominal_priority; ///< Nominal thread priority, as set by the emulated program
     u32 current_priority; ///< Current thread priority, can be temporarily changed
 
     u64 last_running_ticks; ///< CPU tick when thread was last running
@@ -296,7 +296,7 @@ private:
 };
 
 /**
- * Sets up the primary application thread
+ * Sets up the primary program thread
  * @param kernel The kernel instance on which the thread is created
  * @param entry_point The address at which the thread should start execution
  * @param priority The priority to give the main thread

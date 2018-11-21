@@ -341,7 +341,7 @@ void FS_USER::FormatSaveData(Kernel::HLERequestContext& ctx) {
         return;
     }
     if (archive_path.GetType() != FileSys::LowPathType::Empty) {
-        // TODO: Implement formatting the SaveData of other application
+        // TODO: Implement formatting the SaveData of other program
         LOG_ERROR(Service_FS, "archive LowPath type other than empty is currently unsupported");
         rb.Push(UnimplementedFunction(ErrorModule::FS));
         return;
@@ -575,7 +575,7 @@ void FS_USER::GetProgramLaunchInfo(Kernel::HLERequestContext& ctx) {
         return;
     }
     u64 program_id{process->codeset->program_id};
-    auto media_type{Service::AM::GetTitleMediaType(program_id)};
+    auto media_type{Service::AM::GetProgramMediaType(program_id)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(program_id);
     rb.Push(static_cast<u8>(media_type));
@@ -627,21 +627,21 @@ void FS_USER::GetNumSeeds(Kernel::HLERequestContext& ctx) {
 void FS_USER::CheckUpdatedDat(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x886, 3, 0};
     MediaType media_type{static_cast<MediaType>(rp.Pop<u8>())};
-    u64 title_id{rp.Pop<u64>()};
+    u64 program_id{rp.Pop<u64>()};
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(FileUtil::Exists(fmt::format(
         "{}updated.dat",
         FileSys::ArchiveSource_SDSaveData::GetSaveDataPathFor(
             FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir, Settings::values.sdmc_dir + "/"),
-            title_id))));
+            program_id))));
 }
 
 void FS_USER::AddSeed(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x87A, 6, 0};
-    u64 title_id{rp.Pop<u64>()};
+    u64 program_id{rp.Pop<u64>()};
     FileSys::Seed::Data seed{rp.PopRaw<FileSys::Seed::Data>()};
-    FileSys::AddSeed({title_id, seed, {}});
+    FileSys::AddSeed({program_id, seed, {}});
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
@@ -711,11 +711,11 @@ void FS_USER::EnumerateExtSaveData(Kernel::HLERequestContext& ctx) {
     for (const FileUtil::FSTEntry& high : parent_entry.children) {
         for (const FileUtil::FSTEntry& low : high.children) {
             if (count < buffer_size / sizeof(u64)) {
-                std::string tid_string{id_entry_size == 4 ? low.virtualName
-                                                          : high.virtualName + low.virtualName};
-                if (tid_string.length() == (id_entry_size * 2)) {
-                    u64 tid{std::stoull(tid_string.c_str(), nullptr, 16)};
-                    buffer.Write(&tid, offset, sizeof(u64));
+                std::string program_id_string{
+                    id_entry_size == 4 ? low.virtualName : high.virtualName + low.virtualName};
+                if (program_id_string.length() == (id_entry_size * 2)) {
+                    u64 pid{std::stoull(program_id_string.c_str(), nullptr, 16)};
+                    buffer.Write(&pid, offset, sizeof(u64));
                     offset += sizeof(u64);
                     ++count;
                 }
@@ -740,11 +740,11 @@ void FS_USER::EnumerateSystemSaveData(Kernel::HLERequestContext& ctx) {
                                 parent_entry, 1);
     for (const FileUtil::FSTEntry& high : parent_entry.children) {
         for (const FileUtil::FSTEntry& low : high.children) {
-            std::string tid_string{high.virtualName + low.virtualName};
-            if (tid_string.length() == AM::TITLE_ID_VALID_LENGTH) {
+            std::string program_id_string{high.virtualName + low.virtualName};
+            if (program_id_string.length() == AM::program_id_VALID_LENGTH) {
                 if (count < buffer_size / sizeof(u64)) {
-                    u64 tid{std::stoull(tid_string.c_str(), nullptr, 16)};
-                    buffer.Write(&tid, offset, sizeof(u64));
+                    u64 pid{std::stoull(program_id_string.c_str(), nullptr, 16)};
+                    buffer.Write(&pid, offset, sizeof(u64));
                     offset += sizeof(u64);
                     ++count;
                 }

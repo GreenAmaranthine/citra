@@ -38,7 +38,7 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
     Service::APT::MessageParameter result;
     result.signal = Service::APT::SignalType::Response;
     result.buffer.clear();
-    result.destination_id = AppletId::Application;
+    result.destination_id = AppletId::Program;
     result.sender_id = id;
     result.object = framebuffer_memory;
     SendParameter(result);
@@ -63,12 +63,12 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
             result.selected_mii_data.data(),
             result.selected_mii_data.size() + sizeof(result.pad52));
     }
-    // Let the application know that we're closing
+    // Let the program know that we're closing
     Service::APT::MessageParameter message;
     message.buffer.resize(sizeof(MiiResult));
     std::memcpy(message.buffer.data(), &result, message.buffer.size());
     message.signal = Service::APT::SignalType::WakeupByExit;
-    message.destination_id = AppletId::Application;
+    message.destination_id = AppletId::Program;
     message.sender_id = id;
     SendParameter(message);
     is_running = false;

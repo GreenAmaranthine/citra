@@ -62,11 +62,11 @@ public:
     };
 
     struct MemberInformation {
-        std::string nickname; ///< Nickname of the member.
-        AppInfo app_info;     ///< Information of the application they're currently running, name is
-                              ///< empty if they're
-                              /// not running anything.
-        MacAddress mac_address; ///< MAC address associated with this member.
+        std::string nickname;     ///< Nickname of the member.
+        ProgramInfo program_info; ///< Information of the program they're currently running, name is
+                                  ///< empty if they're
+                                  /// not running anything.
+        MacAddress mac_address;   ///< MAC address associated with this member.
     };
 
     using MemberList = std::vector<MemberInformation>;
@@ -136,10 +136,10 @@ public:
     void SendChatMessage(const std::string& message);
 
     /**
-     * Sends the current application info to the room.
-     * @param app_info The application information.
+     * Sends the current program info to the room.
+     * @param program_info The program information.
      */
-    void SendAppInfo(const AppInfo& app_info);
+    void SendProgramInfo(const ProgramInfo& program_info);
 
     /**
      * Binds a function to an event that will be triggered every time the State of the member

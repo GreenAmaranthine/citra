@@ -180,11 +180,11 @@ struct PipelineRegs {
     struct {
         // There are two channels that can be used to configure the next command buffer, which can
         // be then executed by writing to the "trigger" registers. There are two reasons why a
-        // application might use this feature:
+        // program might use this feature:
         //  1) With this, an arbitrary number of additional command buffers may be executed in
         //     sequence without requiring any intervention of the CPU after the initial one is
         //     kicked off.
-        //  2) Applications can configure these registers to provide a command list subroutine
+        //  2) Programs can configure these registers to provide a command list subroutine
         //  mechanism.
         // TODO: verify the bit length of these two fields
         // According to 3dbrew, the bit length of them are 21 and 29, respectively

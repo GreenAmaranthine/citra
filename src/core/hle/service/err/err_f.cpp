@@ -59,16 +59,16 @@ static_assert(sizeof(ExceptionData) == 0x60, "ExceptionData struct has incorrect
 
 struct ErrInfo {
     struct ErrInfoCommon {
-        u8 specifier;          // 0x0
-        u8 rev_high;           // 0x1
-        u16 rev_low;           // 0x2
-        u32 result_code;       // 0x4
-        u32 pc_address;        // 0x8
-        u32 pid;               // 0xC
-        u32 title_id_low;      // 0x10
-        u32 title_id_high;     // 0x14
-        u32 app_title_id_low;  // 0x18
-        u32 app_title_id_high; // 0x1C
+        u8 specifier;                // 0x0
+        u8 rev_high;                 // 0x1
+        u16 rev_low;                 // 0x2
+        u32 result_code;             // 0x4
+        u32 pc_address;              // 0x8
+        u32 pid;                     // 0xC
+        u32 program_id_low;          // 0x10
+        u32 program_id_high;         // 0x14
+        u32 program_program_id_low;  // 0x18
+        u32 program_program_id_high; // 0x1C
     } errinfo_common;
     static_assert(sizeof(ErrInfoCommon) == 0x20, "ErrInfoCommon struct has incorrect size");
 
@@ -133,10 +133,10 @@ static void LogGenericInfo(const ErrInfo::ErrInfoCommon& errinfo_common) {
     LOG_CRITICAL(Service_ERR, "PID: 0x{:08X}", errinfo_common.pid);
     LOG_CRITICAL(Service_ERR, "REV: 0x{:08X}_0x{:08X}", errinfo_common.rev_high,
                  errinfo_common.rev_low);
-    LOG_CRITICAL(Service_ERR, "TID: 0x{:08X}_0x{:08X}", errinfo_common.title_id_high,
-                 errinfo_common.title_id_low);
-    LOG_CRITICAL(Service_ERR, "AID: 0x{:08X}_0x{:08X}", errinfo_common.app_title_id_high,
-                 errinfo_common.app_title_id_low);
+    LOG_CRITICAL(Service_ERR, "Program ID: 0x{:08X}_0x{:08X}", errinfo_common.program_id_high,
+                 errinfo_common.program_id_low);
+    LOG_CRITICAL(Service_ERR, "AID: 0x{:08X}_0x{:08X}", errinfo_common.program_program_id_high,
+                 errinfo_common.program_program_id_low);
     LOG_CRITICAL(Service_ERR, "ADR: 0x{:08X}", errinfo_common.pc_address);
     ResultCode result_code{errinfo_common.result_code};
     LOG_CRITICAL(Service_ERR, "RSL: 0x{:08X}", result_code.raw);

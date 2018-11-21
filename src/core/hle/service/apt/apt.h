@@ -28,7 +28,7 @@ class AppletManager;
 /// Each APT service can only have up to 2 sessions connected at the same time.
 static const u32 MaxAPTSessions{2};
 
-/// Used by the application to pass information about the current framebuffer to applets.
+/// Used by the program to pass information about the current framebuffer to applets.
 struct CaptureBufferInfo {
     u32_le size;
     u8 is_3d;
@@ -134,7 +134,7 @@ private:
 
     Kernel::SharedPtr<Kernel::Mutex> lock;
 
-    u32 cpu_percent{}; ///< CPU time available to the running application
+    u32 cpu_percent{}; ///< CPU time available to the running program
 
     // APT::CheckNew3DSApp will check this unknown_ns_state_field to determine processing mode
     u8 unknown_ns_state_field{};
@@ -146,8 +146,8 @@ private:
 
     std::shared_ptr<AppletManager> applet_manager;
 
-    bool application_restart{};
-    u64 jump_tid;
+    bool program_restart{};
+    u64 jump_program_id;
     FS::MediaType jump_media;
 
     Core::System& system;

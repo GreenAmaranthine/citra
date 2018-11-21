@@ -238,7 +238,7 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
             connection_status.nodes[index] = logoff.nodes[index].network_node_id;
             node_info.emplace_back(DeserializeNodeInfo(logoff.nodes[index]));
         }
-        // We're now connected, signal the application
+        // We're now connected, signal the program
         connection_status.status = static_cast<u32>(NetworkStatus::ConnectedAsClient);
         // Some games require ConnectToNetwork to block, for now it doesn't
         // If blocking is implemented this lock needs to be changed,
@@ -555,7 +555,7 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
 void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x1B, 12, 2};
     u32 sharedmem_size{rp.Pop<u32>()};
-    // Update the node information with the data the application gave us.
+    // Update the node information with the data the program gave us.
     rp.PopRaw(current_node);
     u16 version{rp.Pop<u16>()};
     recv_buffer_memory = rp.PopObject<Kernel::SharedMemory>();
@@ -586,7 +586,7 @@ void NWM_UDS::GetConnectionStatus(Kernel::HLERequestContext& ctx) {
         std::lock_guard lock{connection_status_mutex};
         rb.PushRaw(connection_status);
         // Reset the bitmask of changed nodes after each call to this
-        // function to prevent falsely informing applications of outstanding
+        // function to prevent falsely informing programs of outstanding
         // changes in subsequent calls.
         // TODO: Find exactly where the NWM module resets this value.
         connection_status.changed_nodes = 0;
@@ -722,7 +722,7 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
         connection_status.nodes[0] = connection_status.network_node_id;
         // Set the bit 0 in the nodes bitmask to indicate that node 1 is already taken.
         connection_status.node_bitmask |= 1;
-        // Notify the application that the first node was set.
+        // Notify the program that the first node was set.
         connection_status.changed_nodes |= 1;
         auto& member{system.RoomMember()};
         if (member.IsConnected())
@@ -730,7 +730,7 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
         else
             network_info.host_mac_address = {{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
         node_info[0] = current_node;
-        // If the application has a preferred channel, use that instead.
+        // If the program has a preferred channel, use that instead.
         if (network_info.channel != 0)
             network_channel = network_info.channel;
         else
@@ -969,16 +969,16 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
 void NWM_UDS::SetApplicationData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x10, 1, 2};
     u32 size{rp.Pop<u32>()};
-    const std::vector<u8> application_data{rp.PopStaticBuffer()};
-    ASSERT(application_data.size() == size);
+    const std::vector<u8> program_data{rp.PopStaticBuffer()};
+    ASSERT(program_data.size() == size);
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-    if (size > ApplicationDataSize) {
+    if (size > ProgramDataSize) {
         rb.Push(ResultCode(ErrorDescription::TooLarge, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
         return;
     }
-    network_info.application_data_size = static_cast<u8>(size);
-    std::memcpy(network_info.application_data.data(), application_data.data(), size);
+    network_info.program_data_size = static_cast<u8>(size);
+    std::memcpy(network_info.program_data.data(), program_data.data(), size);
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_NWM, "called");
 }

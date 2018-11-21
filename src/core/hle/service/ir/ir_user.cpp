@@ -58,7 +58,7 @@ static_assert(sizeof(SharedMemoryHeader) == 16, "SharedMemoryHeader has wrong si
  * entry in thePacketInfo circular queue is removed, and as a result the corresponding memory in the
  * data circular buffer is also released. BufferInfo is updated as well.
  *
- * The client application usually has a similar manager constructed over the same shared memory
+ * The client program usually has a similar manager constructed over the same shared memory
  * region, performing the same put/get/release operation. This way the client and the service
  * communicate via a pair of manager of the same buffer.
  *

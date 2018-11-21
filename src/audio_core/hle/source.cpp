@@ -290,7 +290,7 @@ bool Source::DequeueBuffer() {
 
 SourceStatus::Status Source::GetCurrentStatus() {
     SourceStatus::Status ret{};
-    // Applications depend on the correct emulation of
+    // Programs depend on the correct emulation of
     // current_buffer_id_dirty and current_buffer_id to synchronise
     // audio with video.
     ret.is_enabled = state.enabled;

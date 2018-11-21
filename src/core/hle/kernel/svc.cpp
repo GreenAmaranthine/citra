@@ -91,7 +91,7 @@ enum class SystemInfoType {
  */
 enum class SystemInfoMemUsageRegion {
     All = 0,
-    Application = 1,
+    Program = 1,
     System = 2,
     Base = 3,
 };
@@ -183,7 +183,7 @@ private:
     static const FunctionDef* GetSVCInfo(u32 func_num);
 };
 
-/// Map application or GSP heap memory
+/// Map program or GSP heap memory
 ResultCode SVC::ControlMemory(u32* out_addr, u32 addr0, u32 addr1, u32 size, u32 operation,
                               u32 permissions) {
     LOG_DEBUG(Kernel_SVC,
@@ -205,7 +205,7 @@ ResultCode SVC::ControlMemory(u32* out_addr, u32 addr0, u32 addr1, u32 size, u32
     auto& process{*kernel.GetCurrentProcess()};
     switch (operation & MEMOP_OPERATION_MASK) {
     case MEMOP_FREE: {
-        // TODO: What happens if an application tries to free a block of memory that has a
+        // TODO: What happens if an program tries to free a block of memory that has a
         // SharedMemory pointing to it?
         if (addr0 >= Memory::HEAP_VADDR && addr0 < Memory::HEAP_VADDR_END) {
             auto result{process.HeapFree(addr0, size)};
@@ -303,7 +303,7 @@ ResultCode SVC::MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 oth
 
 ResultCode SVC::UnmapMemoryBlock(Handle handle, u32 addr) {
     LOG_TRACE(Kernel_SVC, "memblock=0x{:08X}, addr=0x{:08X}", handle, addr);
-    // TODO: Return E0A01BF5 if the address isn't in the application's heap
+    // TODO: Return E0A01BF5 if the address isn't in the program's heap
     auto current_process{kernel.GetCurrentProcess()};
     auto shared_memory{current_process->handle_table.Get<SharedMemory>(handle)};
     if (!shared_memory)
@@ -395,7 +395,7 @@ ResultCode SVC::WaitSynchronizationN(s32* out, VAddr handles_address, s32 handle
     if (!Memory::IsValidVirtualAddress(*kernel.GetCurrentProcess(), handles_address))
         return ERR_INVALID_POINTER;
     // NOTE: On real hardware, there is no nullptr check for 'out' (tested with firmware 4.4). If
-    // this happens, the running application will crash.
+    // this happens, the running program will crash.
     ASSERT_MSG(out, "invalid output pointer specified!");
     // Check if 'handle_count' is invalid
     if (handle_count < 0)
@@ -1026,7 +1026,7 @@ ResultCode SVC::CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 my
     if (!VerifyPermissions(static_cast<MemoryPermission>(my_permission)) ||
         !VerifyPermissions(static_cast<MemoryPermission>(other_permission)))
         return ERR_INVALID_COMBINATION;
-    // TODO: Processes with memory type Application are not allowed
+    // TODO: Processes with memory type Program are not allowed
     // to create memory blocks with addr 0, any attempts to do so
     // should return error 0xD92007EA.
     if ((addr < Memory::PROCESS_IMAGE_VADDR || addr + size > Memory::SHARED_MEMORY_VADDR_END) &&
@@ -1100,12 +1100,12 @@ ResultCode SVC::GetSystemInfo(s64* out, u32 type, s32 param) {
     case SystemInfoType::MemoryUsage:
         switch ((SystemInfoMemUsageRegion)param) {
         case SystemInfoMemUsageRegion::All:
-            *out = kernel.GetMemoryRegion(MemoryRegion::Application)->used +
+            *out = kernel.GetMemoryRegion(MemoryRegion::Program)->used +
                    kernel.GetMemoryRegion(MemoryRegion::System)->used +
                    kernel.GetMemoryRegion(MemoryRegion::Base)->used;
             break;
-        case SystemInfoMemUsageRegion::Application:
-            *out = kernel.GetMemoryRegion(MemoryRegion::Application)->used;
+        case SystemInfoMemUsageRegion::Program:
+            *out = kernel.GetMemoryRegion(MemoryRegion::Program)->used;
             break;
         case SystemInfoMemUsageRegion::System:
             *out = kernel.GetMemoryRegion(MemoryRegion::System)->used;

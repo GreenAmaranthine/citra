@@ -13,18 +13,18 @@
 
 namespace Service::NS {
 
-Kernel::SharedPtr<Kernel::Process> LaunchTitleImpl(Core::System& system, FS::MediaType media_type,
-                                                   u64 title_id) {
-    std::string path{AM::GetTitleContentPath(media_type, title_id)};
+Kernel::SharedPtr<Kernel::Process> Launch(Core::System& system, FS::MediaType media_type,
+                                          u64 program_id) {
+    auto path{AM::GetProgramContentPath(media_type, program_id)};
     auto loader{Loader::GetLoader(system, path)};
     if (!loader) {
-        LOG_WARNING(Service_NS, "Couldn't find .app for title 0x{:016X}", title_id);
+        LOG_WARNING(Service_NS, "Couldn't find .app for program 0x{:016X}", program_id);
         return nullptr;
     }
     Kernel::SharedPtr<Kernel::Process> process;
     auto result{loader->Load(process)};
     if (result != Loader::ResultStatus::Success) {
-        LOG_WARNING(Service_NS, "Error loading .app for title 0x{:016X}", title_id);
+        LOG_WARNING(Service_NS, "Error loading .app for program 0x{:016X}", program_id);
         return nullptr;
     }
     return process;
@@ -32,26 +32,26 @@ Kernel::SharedPtr<Kernel::Process> LaunchTitleImpl(Core::System& system, FS::Med
 
 void NS_S::LaunchTitle(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x2, 3, 0};
-    u64 title_id{rp.Pop<u64>()};
+    u64 program_id{rp.Pop<u64>()};
     u32 flags{rp.Pop<u32>()};
-    FS::MediaType media_type{(title_id == 0) ? FS::MediaType::GameCard
-                                             : AM::GetTitleMediaType(title_id)};
+    FS::MediaType media_type{(program_id == 0) ? FS::MediaType::GameCard
+                                               : AM::GetProgramMediaType(program_id)};
     if (!Settings::values.enable_ns_launch) {
         IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
         rb.Push(RESULT_SUCCESS);
         rb.Push<u32>(0);
     } else {
-        auto process{LaunchTitleImpl(system, media_type, title_id)};
+        auto process{Launch(system, media_type, program_id)};
         IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
         rb.Push(RESULT_SUCCESS);
         rb.Push<u32>(process ? process->process_id : 0);
     }
-    LOG_DEBUG(Service_NS, "title_id={}, media_type={}, flags={}", title_id,
+    LOG_DEBUG(Service_NS, "program_id={}, media_type={}, flags={}", program_id,
               static_cast<u32>(media_type), flags);
 }
 
 void NS_S::ShutdownAsync(Kernel::HLERequestContext& ctx) {
-    system.CloseApplication();
+    system.CloseProgram();
     IPC::ResponseBuilder rb{ctx, 0xE, 1, 0};
     rb.Push(RESULT_SUCCESS);
 }

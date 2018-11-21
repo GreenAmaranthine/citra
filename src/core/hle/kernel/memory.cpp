@@ -24,7 +24,7 @@
 
 namespace Kernel {
 
-/// Size of the Application, System and Base memory regions (respectively) for each system
+/// Size of the Program, System and Base memory regions (respectively) for each system
 /// memory configuration type.
 static const u32 memory_region_sizes[8][3]{
     // Old 3DS layouts
@@ -50,7 +50,7 @@ void KernelSystem::MemoryInit(u32 mem_type) {
         else if (mem_type <= 5)
             mem_type = 6;
     ASSERT(mem_type != 1);
-    // The kernel allocation regions (Application, System and Base) are laid out in sequence, with
+    // The kernel allocation regions (Program, System and Base) are laid out in sequence, with
     // the sizes specified in the memory_region_sizes table.
     VAddr base{};
     for (int i{}; i < 3; ++i) {
@@ -65,11 +65,11 @@ void KernelSystem::MemoryInit(u32 mem_type) {
     // Create config mem
     config_mem_handler = std::make_unique<ConfigMem::Handler>();
     auto& config_mem{config_mem_handler->GetConfigMem()};
-    config_mem.app_mem_type = mem_type;
-    // app_mem_alloc does not always match the configured size for memory_region[0]: in case the
-    // n3DS type override is in effect it reports the size the application expects, not the real
+    config_mem.program_mem_type = mem_type;
+    // program_mem_alloc does not always match the configured size for memory_region[0]: in case the
+    // n3DS type override is in effect it reports the size the program expects, not the real
     // one.
-    config_mem.app_mem_alloc = memory_region_sizes[mem_type][0];
+    config_mem.program_mem_alloc = memory_region_sizes[mem_type][0];
     config_mem.sys_mem_alloc = memory_regions[1].size;
     config_mem.base_mem_alloc = memory_regions[2].size;
     // Create shared page
@@ -78,7 +78,7 @@ void KernelSystem::MemoryInit(u32 mem_type) {
 
 MemoryRegionInfo* KernelSystem::GetMemoryRegion(MemoryRegion region) {
     switch (region) {
-    case MemoryRegion::Application:
+    case MemoryRegion::Program:
         return &memory_regions[0];
     case MemoryRegion::System:
         return &memory_regions[1];

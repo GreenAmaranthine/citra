@@ -111,7 +111,7 @@ constexpr std::array<u8, 4> header_magic_bytes{{'C', 'T', 'M', 0x1B}};
 #pragma pack(push, 1)
 struct CTMHeader {
     std::array<u8, 4> filetype;   /// Unique Identifier to check the file type (always "CTM"0x1B)
-    u64_le program_id;            /// ID of the ROM being executed. Also called title_id
+    u64_le program_id;            /// ID of the ROM being executed. Also called program_id
     std::array<u8, 20> revision;  /// Git hash of the revision this movie was created with
     u64_le clock_init_time;       /// The init time of the system clock
     std::array<u8, 216> reserved; /// Make heading 256 bytes so it has consistent size
@@ -335,7 +335,7 @@ Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header, u64 progr
         revision += fmt::format("{:02x}", header.revision[i]);
     revision = Common::ToLower(revision);
     if (!program_id)
-        Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id);
+        Core::System::GetInstance().GetProgramLoader().ReadProgramId(program_id);
     if (program_id != header.program_id) {
         LOG_WARNING(Movie, "This movie was recorded using a ROM with a different program id");
         return ValidationResult::AppDismatch;
@@ -358,7 +358,7 @@ void Movie::SaveMovie() {
     CTMHeader header{};
     header.filetype = header_magic_bytes;
     header.clock_init_time = init_time;
-    Core::System::GetInstance().GetAppLoader().ReadProgramId(header.program_id);
+    Core::System::GetInstance().GetProgramLoader().ReadProgramId(header.program_id);
     std::string rev_bytes;
     CryptoPP::StringSource(Common::g_scm_rev, true,
                            new CryptoPP::HexDecoder(new CryptoPP::StringSink(rev_bytes)));

@@ -30,7 +30,7 @@ public:
         INSERT_PADDING_BYTES(1);
         u64_be ticket_id;
         u32_be console_id;
-        u64_be title_id;
+        u64_be program_id;
         INSERT_PADDING_BYTES(2);
         u16_be ticket_title_version;
         INSERT_PADDING_BYTES(8);

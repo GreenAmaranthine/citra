@@ -6,13 +6,13 @@
 #include <QIcon>
 #include <QMessageBox>
 #include <QStandardItemModel>
-#include "citra/app_list.h"
 #include "citra/multiplayer/client_room.h"
 #include "citra/multiplayer/direct_connect.h"
 #include "citra/multiplayer/host_room.h"
 #include "citra/multiplayer/lobby.h"
 #include "citra/multiplayer/message.h"
 #include "citra/multiplayer/state.h"
+#include "citra/program_list.h"
 #include "citra/util/clickable_label.h"
 #include "common/announce_multiplayer_room.h"
 #include "common/logging/log.h"
@@ -22,9 +22,9 @@
 #include "network/room.h"
 #include "network/room_member.h"
 
-MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* app_list_model,
+MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* program_list_model,
                                    QAction* leave_room, QAction* show_room, Core::System& system)
-    : QWidget{parent}, app_list_model{app_list_model},
+    : QWidget{parent}, program_list_model{program_list_model},
       leave_room{leave_room}, show_room{show_room}, system{system} {
     // Register the network structs to use in slots and signals
     state_callback_handle = system.RoomMember().BindOnStateChanged(
@@ -134,13 +134,14 @@ static void BringWidgetToFront(QWidget* widget) {
 
 void MultiplayerState::OnViewLobby() {
     if (!lobby)
-        lobby = new Lobby(this, app_list_model, announce_multiplayer_session, system);
+        lobby = new Lobby(this, program_list_model, announce_multiplayer_session, system);
     BringWidgetToFront(lobby);
 }
 
 void MultiplayerState::OnCreateRoom() {
     if (!host_room)
-        host_room = new HostRoomWindow(this, app_list_model, announce_multiplayer_session, system);
+        host_room =
+            new HostRoomWindow(this, program_list_model, announce_multiplayer_session, system);
     BringWidgetToFront(host_room);
 }
 

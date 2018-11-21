@@ -14,9 +14,9 @@ class System;
 
 namespace Service::NS {
 
-/// Loads and launches the title identified by title_id in the specified media type.
-Kernel::SharedPtr<Kernel::Process> LaunchTitleImpl(Core::System& system, FS::MediaType media_type,
-                                                   u64 title_id);
+/// Loads and launches the program identified by program_id in the specified media type.
+Kernel::SharedPtr<Kernel::Process> Launch(Core::System& system, FS::MediaType media_type,
+                                          u64 program_id);
 
 /// Registers all NS services with the specified service manager.
 void InstallInterfaces(Core::System& system);

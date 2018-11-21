@@ -55,8 +55,8 @@ enum class InstallStatus : u32 {
     ErrorEncrypted,
 };
 
-// Title ID valid length
-constexpr std::size_t TITLE_ID_VALID_LENGTH{16};
+// Program ID valid length
+constexpr std::size_t program_id_VALID_LENGTH{16};
 
 // Progress callback for InstallCIA, receives bytes written and total bytes
 using ProgressCallback = void(std::size_t, std::size_t);
@@ -106,46 +106,46 @@ InstallStatus InstallCIA(const std::string& path,
                          std::function<ProgressCallback>&& update_callback = nullptr);
 
 /**
- * Get the mediatype for an installed title
- * @param titleId the installed title ID
- * @returns MediaType which the installed title will reside on
+ * Get the mediatype for an installed program
+ * @param id the installed program ID
+ * @returns MediaType which the installed program will reside on
  */
-Service::FS::MediaType GetTitleMediaType(u64 titleId);
+Service::FS::MediaType GetProgramMediaType(u64 programId);
 
 /**
- * Get the .tmd path for a title
- * @param media_type the media the title exists on
- * @param tid the title ID to get
+ * Get the .tmd path for a program
+ * @param media_type the media the program exists on
+ * @param pid the program ID to get
  * @param update set true if the incoming TMD should be used instead of the current TMD
  * @returns string path to the .tmd file if it exists, otherwise a path to create one is given.
  */
-std::string GetTitleMetadataPath(Service::FS::MediaType media_type, u64 tid, bool update = false);
+std::string GetMetadataPath(Service::FS::MediaType media_type, u64 pid, bool update = false);
 
 /**
- * Get the .app path for a title's installed content index.
- * @param media_type the media the title exists on
- * @param tid the title ID to get
+ * Get the .app path for a program's installed content index.
+ * @param media_type the media the program exists on
+ * @param pid the program ID to get
  * @param index the content index to get
  * @param update set true if the incoming TMD should be used instead of the current TMD
  * @returns string path to the .app file
  */
-std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, u16 index = 0,
-                                bool update = false);
+std::string GetProgramContentPath(Service::FS::MediaType media_type, u64 pid, u16 index = 0,
+                                  bool update = false);
 
 /**
- * Get the folder for a title's installed content.
- * @param media_type the media the title exists on
- * @param tid the title ID to get
- * @returns string path to the title folder
+ * Get the folder for a program's installed content.
+ * @param media_type the media the program exists on
+ * @param pid the program ID to get
+ * @returns string path to the program folder
  */
-std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid);
+std::string GetProgramPath(Service::FS::MediaType media_type, u64 pid);
 
 /**
  * Get the title/ folder for a storage medium.
  * @param media_type the storage medium to get the path for
  * @returns string path to the folder
  */
-std::string GetMediaTitlePath(Service::FS::MediaType media_type);
+std::string GetMediaProgramPath(Service::FS::MediaType media_type);
 
 class Module final {
 public:
@@ -199,17 +199,15 @@ public:
         std::shared_ptr<Module> am;
     };
 
-    /**
-     * Scans all storage mediums for titles for listing.
-     */
-    void ScanForAllTitles();
+    /// Scans all storage mediums for programs for listing.
+    void ScanForAllPrograms();
 
 private:
     /**
-     * Scans the for titles in a storage medium for listing.
+     * Scans for programs in a storage medium for listing.
      * @param media_type the storage medium to scan
      */
-    void ScanForTitles(Service::FS::MediaType media_type);
+    void ScanForPrograms(Service::FS::MediaType media_type);
 
     Core::System& system;
     bool cia_installing{};

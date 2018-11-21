@@ -25,7 +25,7 @@ void DSP_DSP::RecvData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x01, 1, 0};
     const u32 register_number{rp.Pop<u32>()};
     ASSERT_MSG(register_number == 0, "Unknown register_number {}", register_number);
-    // Application reads this after requesting DSP shutdown, to verify the DSP has indeed shutdown
+    // Program reads this after requesting DSP shutdown, to verify the DSP has indeed shutdown
     // or slept.
     IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);

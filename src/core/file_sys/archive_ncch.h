@@ -35,8 +35,8 @@ enum class NCCHFileOpenType : u32 {
 /// Archive backend for NCCH Archives (RomFS, ExeFS)
 class NCCHArchive : public ArchiveBackend {
 public:
-    explicit NCCHArchive(Core::System& system, u64 title_id, Service::FS::MediaType media_type)
-        : system{system}, title_id{title_id}, media_type{media_type} {}
+    explicit NCCHArchive(Core::System& system, u64 program_id, Service::FS::MediaType media_type)
+        : system{system}, program_id{program_id}, media_type{media_type} {}
 
     std::string GetName() const override {
         return "NCCHArchive";
@@ -55,7 +55,7 @@ public:
     u64 GetFreeBytes() const override;
 
 protected:
-    u64 title_id;
+    u64 program_id;
     Service::FS::MediaType media_type;
     Core::System& system;
 };

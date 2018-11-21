@@ -60,7 +60,7 @@ public:
         u8 signer_crl_version;
         u8 reserved;
         u64_be system_version;
-        u64_be title_id;
+        u64_be program_id;
         u32_be title_type;
         u16_be group_id;
         u32_be savedata_size;
@@ -85,7 +85,7 @@ public:
     Loader::ResultStatus Load(const std::vector<u8> file_data, std::size_t offset = 0);
     Loader::ResultStatus Save(const std::string& file_path);
 
-    u64 GetTitleID() const;
+    u64 GetProgramID() const;
     u32 GetTitleType() const;
     u16 GetTitleVersion() const;
     u64 GetSystemVersion() const;
@@ -98,7 +98,7 @@ public:
     u64 GetContentSizeByIndex(u16 index) const;
     std::array<u8, 16> GetContentCTRByIndex(u16 index) const;
 
-    void SetTitleID(u64 title_id);
+    void SetProgramID(u64 program_id);
     void SetTitleType(u32 type);
     void SetTitleVersion(u16 version);
     void SetSystemVersion(u64 version);

@@ -28,8 +28,8 @@ class ArchiveFactory_SelfNCCH final : public ArchiveFactory {
 public:
     explicit ArchiveFactory_SelfNCCH(Core::System& system) : system{system} {};
 
-    /// Registers a loaded application so that we can open its SelfNCCH archive when requested.
-    void Register(Loader::AppLoader& app_loader);
+    /// Registers a loaded program so that we can open its SelfNCCH archive when requested.
+    void Register(Loader::ProgramLoader& program_loader);
 
     std::string GetName() const override {
         return "SelfNCCH";

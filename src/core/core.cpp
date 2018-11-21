@@ -95,13 +95,13 @@ System::ResultStatus System::RunLoop() {
 }
 
 System::ResultStatus System::Load(Frontend& frontend, const std::string& filepath) {
-    app_loader = Loader::GetLoader(*this, filepath);
-    if (!app_loader) {
+    program_loader = Loader::GetLoader(*this, filepath);
+    if (!program_loader) {
         LOG_ERROR(Core, "Failed to obtain loader for {}!", filepath);
         return ResultStatus::ErrorGetLoader;
     }
     std::pair<std::optional<u32>, Loader::ResultStatus> system_mode{
-        app_loader->LoadKernelSystemMode()};
+        program_loader->LoadKernelSystemMode()};
     if (system_mode.second != Loader::ResultStatus::Success) {
         LOG_ERROR(Core, "Failed to determine system mode (Error {})!",
                   static_cast<int>(system_mode.second));
@@ -122,7 +122,7 @@ System::ResultStatus System::Load(Frontend& frontend, const std::string& filepat
         return init_result;
     }
     Kernel::SharedPtr<Kernel::Process> process;
-    const auto load_result{app_loader->Load(process)};
+    const auto load_result{program_loader->Load(process)};
     kernel->SetCurrentProcess(process);
     if (Loader::ResultStatus::Success != load_result) {
         LOG_ERROR(Core, "Failed to load ROM (Error {})!", static_cast<u32>(load_result));
@@ -267,22 +267,22 @@ void System::Shutdown() {
     service_manager.reset();
     dsp_core.reset();
     timing.reset();
-    app_loader.reset();
-    room_member->SendAppInfo(Network::AppInfo{});
+    program_loader.reset();
+    room_member->SendProgramInfo(Network::ProgramInfo{});
     LOG_DEBUG(Core, "Shutdown OK");
 }
 
 void System::Restart() {
-    SetApplication(m_filepath);
+    SetProgram(m_filepath);
 }
 
-void System::SetApplication(const std::string& path) {
+void System::SetProgram(const std::string& path) {
     shutdown_requested = true;
-    set_application_file_path = path;
+    set_program_file_path = path;
 }
 
-void System::CloseApplication() {
-    SetApplication("");
+void System::CloseProgram() {
+    SetProgram("");
 }
 
 bool VerifyLogin(const std::string& host, const std::string& username, const std::string& token) {

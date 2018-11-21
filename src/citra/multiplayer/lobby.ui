@@ -71,9 +71,9 @@
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="applications_i_have">
+          <widget class="QCheckBox" name="in_list">
            <property name="text">
-            <string>Applications I Have</string>
+            <string>In List</string>
            </property>
           </widget>
          </item>

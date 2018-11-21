@@ -114,7 +114,7 @@ void LoadBootromKeys() {
          {'N', 0x38, false}, {'N', 0x39, true},  {'N', 0x3A, true},  {'N', 0x3B, true},
          {'N', 0x3C, true},  {'N', 0x3D, false}, {'N', 0x3E, false}, {'N', 0x3F, false}}};
     // Bootrom sets all these keys when executed, but later some of the normal keys get overwritten
-    // by other applications e.g. process9. These normal keys thus aren't used by any application
+    // by other programs e.g. process9. These normal keys thus aren't used by any program
     // and have no value for emulation
     const auto filepath{FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir) + BOOTROM9};
     FileUtil::IOFile file{filepath, "rb"};

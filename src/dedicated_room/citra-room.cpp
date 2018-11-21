@@ -37,8 +37,8 @@ static void PrintHelp(const char* argv0) {
                  "--port              The port used for the room\n"
                  "--max_members       The maximum number of members for this room\n"
                  "--password          The password for the room\n"
-                 "--preferred-app     The preferred application for this room\n"
-                 "--preferred-app-id  The preferred application's ID for this room\n"
+                 "--preferred-program     The preferred program for this room\n"
+                 "--preferred-program-id  The preferred program ID for this room\n"
                  "--username          The username used for announce\n"
                  "--token             The token used for announce\n"
                  "--web-api-url       Citra Web API url\n"
@@ -51,7 +51,7 @@ static void PrintVersion() {
               << " Libnetwork: " << Network::network_version << std::endl;
 }
 
-/// Application entry point
+/// Program entry point
 int main(int argc, char** argv) {
     Common::DetachedTasks detached_tasks;
     int option_index{};
@@ -60,11 +60,11 @@ int main(int argc, char** argv) {
     gladLoadGL();
     std::string room_name;
     std::string password;
-    std::string preferred_app;
+    std::string preferred_program;
     std::string username;
     std::string token;
     std::string web_api_url;
-    u64 preferred_app_id{};
+    u64 preferred_program_id{};
     u32 port{Network::DefaultRoomPort};
     u32 max_members{16};
     static struct option long_options[]{
@@ -72,8 +72,8 @@ int main(int argc, char** argv) {
         {"port", required_argument, 0, 'p'},
         {"max_members", required_argument, 0, 'm'},
         {"password", required_argument, 0, 'w'},
-        {"preferred-app", required_argument, 0, 'g'},
-        {"preferred-app-id", required_argument, 0, 'i'},
+        {"preferred-program", required_argument, 0, 'g'},
+        {"preferred-program-id", required_argument, 0, 'i'},
         {"username", required_argument, 0, 'u'},
         {"token", required_argument, 0, 't'},
         {"web-api-url", required_argument, 0, 'a'},
@@ -98,10 +98,10 @@ int main(int argc, char** argv) {
                 password.assign(optarg);
                 break;
             case 'g':
-                preferred_app.assign(optarg);
+                preferred_program.assign(optarg);
                 break;
             case 'i':
-                preferred_app_id = strtoull(optarg, &endarg, 16);
+                preferred_program_id = strtoull(optarg, &endarg, 16);
                 break;
             case 'u':
                 username.assign(optarg);
@@ -121,21 +121,20 @@ int main(int argc, char** argv) {
             }
         }
     }
-
     if (room_name.empty()) {
         std::cout << "room name is empty!\n\n";
         PrintHelp(argv[0]);
         return -1;
     }
-    if (preferred_app.empty()) {
-        std::cout << "preferred application is empty!\n\n";
+    if (preferred_program.empty()) {
+        std::cout << "preferred program is empty!\n\n";
         PrintHelp(argv[0]);
         return -1;
     }
-    if (preferred_app_id == 0) {
-        std::cout << "preferred-app-id not set!\nThis should get set to allow users to find your "
-                     "room.\nSet with --preferred-app-id id\n\n";
-    }
+    if (preferred_program_id == 0)
+        std::cout
+            << "preferred-program-id not set!\nThis should get set to allow users to find your "
+               "room.\nSet with --preferred-program-id id\n\n";
     if (max_members >= Network::MaxConcurrentConnections || max_members < 2) {
         std::cout << "max_members needs to be in the range 2 - "
                   << Network::MaxConcurrentConnections << "!\n\n";
@@ -167,7 +166,8 @@ int main(int argc, char** argv) {
         Settings::values.citra_token = token;
     }
     Network::Room room;
-    if (!room.Create(room_name, "", port, password, max_members, preferred_app, preferred_app_id)) {
+    if (!room.Create(room_name, "", port, password, max_members, preferred_program,
+                     preferred_program_id)) {
         std::cout << "Failed to create room!\n\n";
         return -1;
     }

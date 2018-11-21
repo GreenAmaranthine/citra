@@ -34,7 +34,7 @@ ResultCode ErrEula::ReceiveParameter(const Service::APT::MessageParameter& param
     Service::APT::MessageParameter result;
     result.signal = Service::APT::SignalType::Response;
     result.buffer.clear();
-    result.destination_id = AppletId::Application;
+    result.destination_id = AppletId::Program;
     result.sender_id = id;
     result.object = framebuffer_memory;
     SendParameter(result);
@@ -57,12 +57,12 @@ void ErrEula::Update() {
 }
 
 void ErrEula::Finalize() {
-    // Let the application know that we're closing
+    // Let the program know that we're closing
     Service::APT::MessageParameter message;
     message.buffer.resize(sizeof(config));
     std::memcpy(message.buffer.data(), &config, message.buffer.size());
     message.signal = Service::APT::SignalType::WakeupByExit;
-    message.destination_id = AppletId::Application;
+    message.destination_id = AppletId::Program;
     message.sender_id = id;
     SendParameter(message);
     is_running = false;

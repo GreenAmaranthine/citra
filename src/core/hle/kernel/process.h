@@ -42,7 +42,7 @@ union ProcessFlags {
     BitField<7, 1, u16> runnable_on_sleep;
     BitField<8, 4, MemoryRegion>
         memory_region;                ///< Default region for memory allocations for this process
-    BitField<12, 1, u16> loaded_high; ///< Application loaded high (not at 0x00100000).
+    BitField<12, 1, u16> loaded_high; ///< Program loaded high (not at 0x00100000).
 };
 
 enum class ProcessStatus { Created, Running, Exited };
@@ -101,10 +101,8 @@ public:
     std::array<Segment, 3> segments;
     VAddr entrypoint;
 
-    /// Name of the process
-    std::string name;
-    /// Title ID corresponding to the process
-    u64 program_id;
+    std::string name; ///< Name of the process
+    u64 program_id;   ///< Title ID corresponding to the process
 
 private:
     explicit CodeSet(KernelSystem& kernel);

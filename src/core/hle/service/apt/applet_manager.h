@@ -41,7 +41,7 @@ enum class AppletId : u32 {
     Mint = 0x207,
     Extrapad = 0x208,
     Memolib = 0x209,
-    Application = 0x300,
+    Program = 0x300,
     Tiger = 0x301,
     AnyLibraryApplet = 0x400,
     SoftwareKeyboard2 = 0x401,
@@ -92,7 +92,7 @@ enum class SignalType : u32 {
     WakeupByPowerButtonClick = 0xE,
     WakeupToJumpHome = 0xF,
     RequestForSysApplet = 0x10,
-    WakeupToLaunchApplication = 0x11,
+    WakeupToLaunchProgram = 0x11,
 };
 
 /// Holds information about the parameters used in Send/Glance/ReceiveParameter
@@ -132,8 +132,8 @@ public:
     void CancelAndSendParameter(const MessageParameter& parameter);
 
     ResultCode SendParameter(const MessageParameter& parameter);
-    ResultVal<MessageParameter> GlanceParameter(AppletId app_id);
-    ResultVal<MessageParameter> ReceiveParameter(AppletId app_id);
+    ResultVal<MessageParameter> GlanceParameter(AppletId program_id);
+    ResultVal<MessageParameter> ReceiveParameter(AppletId program_id);
     bool CancelParameter(bool check_sender, AppletId sender_appid, bool check_receiver,
                          AppletId receiver_appid);
 
@@ -142,9 +142,9 @@ public:
         Kernel::SharedPtr<Kernel::Event> parameter_event;
     };
 
-    ResultVal<InitializeResult> Initialize(AppletId app_id, AppletAttributes attributes);
+    ResultVal<InitializeResult> Initialize(AppletId program_id, AppletAttributes attributes);
     ResultCode Enable(AppletAttributes attributes);
-    bool IsRegistered(AppletId app_id);
+    bool IsRegistered(AppletId program_id);
     ResultCode PrepareToStartLibraryApplet(AppletId applet_id);
     ResultCode PreloadLibraryApplet(AppletId applet_id);
     ResultCode FinishPreloadingLibraryApplet(AppletId applet_id);
@@ -154,14 +154,14 @@ public:
     ResultCode CloseLibraryApplet(Kernel::SharedPtr<Kernel::Object> object, std::vector<u8> buffer);
 
     struct AppletInfo {
-        u64 title_id;
+        u64 program_id;
         Service::FS::MediaType media_type;
         bool registered;
         bool loaded;
         u32 attributes;
     };
 
-    ResultVal<AppletInfo> GetAppletInfo(AppletId app_id);
+    ResultVal<AppletInfo> GetAppletInfo(AppletId program_id);
 
     void ScheduleEvent(AppletId id);
 
@@ -176,7 +176,7 @@ private:
     static constexpr std::size_t NumAppletSlot{4};
 
     enum class AppletSlot : u8 {
-        Application,
+        Program,
         SystemApplet,
         HomeMenu,
         LibraryApplet,
@@ -205,13 +205,13 @@ private:
     std::array<AppletSlotData, NumAppletSlot> applet_slots{};
 
     void AppletUpdateEvent(u64 applet_id, s64 cycles_late);
-    u64 GetTitleIdForApplet(AppletId id);
+    u64 GetProgramIDForApplet(AppletId id);
 
     // This overload returns nullptr if no applet with the specified id has been started.
     AppletSlotData* GetAppletSlotData(AppletId id);
     AppletSlotData* GetAppletSlotData(AppletAttributes attributes);
 
-    // Command that will be sent to the application when a library applet calls CloseLibraryApplet.
+    // Command that will be sent to the program when a library applet calls CloseLibraryApplet.
     SignalType library_applet_closing_command;
 
     std::unordered_map<AppletId, std::shared_ptr<HLE::Applets::Applet>> hle_applets;

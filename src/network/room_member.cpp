@@ -26,8 +26,8 @@ struct RoomMember::RoomMemberImpl {
     /// Information about the room we're connected to.
     RoomInformation room_information;
 
-    /// The current application name and id
-    AppInfo current_app_info;
+    /// The current program name and ID
+    ProgramInfo current_program_info;
 
     std::atomic<State> state{State::Idle}; ///< Current state of the RoomMember.
 
@@ -223,19 +223,19 @@ void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* ev
     packet >> info.member_slots;
     packet >> info.uid;
     packet >> info.port;
-    packet >> info.preferred_app;
+    packet >> info.preferred_program;
     room_information.name = info.name;
     room_information.member_slots = info.member_slots;
     room_information.port = info.port;
-    room_information.preferred_app = info.preferred_app;
+    room_information.preferred_program = info.preferred_program;
     u32 num_members;
     packet >> num_members;
     member_information.resize(num_members);
     for (auto& member : member_information) {
         packet >> member.nickname;
         packet >> member.mac_address;
-        packet >> member.app_info.name;
-        packet >> member.app_info.id;
+        packet >> member.program_info.name;
+        packet >> member.program_info.id;
     }
     Invoke(room_information);
 }
@@ -402,7 +402,7 @@ void RoomMember::Join(const std::string& nick, const char* server_addr, u16 serv
         room_member_impl->nickname = nick;
         room_member_impl->StartLoop();
         room_member_impl->SendJoinRequest(nick, preferred_mac, password);
-        SendAppInfo(room_member_impl->current_app_info);
+        SendProgramInfo(room_member_impl->current_program_info);
     } else {
         enet_peer_disconnect(room_member_impl->server, 0);
         room_member_impl->SetState(State::CouldNotConnect);
@@ -431,14 +431,14 @@ void RoomMember::SendChatMessage(const std::string& message) {
     room_member_impl->Send(std::move(packet));
 }
 
-void RoomMember::SendAppInfo(const AppInfo& app_info) {
-    room_member_impl->current_app_info = app_info;
+void RoomMember::SendProgramInfo(const ProgramInfo& program_info) {
+    room_member_impl->current_program_info = program_info;
     if (!IsConnected())
         return;
     Packet packet;
-    packet << static_cast<u8>(IdSetAppInfo);
-    packet << app_info.name;
-    packet << app_info.id;
+    packet << static_cast<u8>(IdSetProgramInfo);
+    packet << program_info.name;
+    packet << program_info.id;
     room_member_impl->Send(std::move(packet));
 }
 

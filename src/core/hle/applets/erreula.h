@@ -40,7 +40,7 @@ struct ErrEulaConfig {
     std::array<u16, 1900> error_text;
     bool home_button;
     bool software_reset;
-    bool app_jump;
+    bool program_jump;
     INSERT_PADDING_BYTES(137);
     ErrEulaResult return_code;
     u16 eula_version;
@@ -62,7 +62,7 @@ public:
 
 private:
     /// This SharedMemory will be created when we receive the LibAppJustStarted message.
-    /// It holds the framebuffer info retrieved by the application with
+    /// It holds the framebuffer info retrieved by the program with
     /// gsp::Gpu:ImportDisplayCaptureInfo
     Kernel::SharedPtr<Kernel::SharedMemory> framebuffer_memory;
 

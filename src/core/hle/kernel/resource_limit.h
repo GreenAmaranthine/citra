@@ -11,7 +11,7 @@
 namespace Kernel {
 
 enum class ResourceLimitCategory : u8 {
-    Application = 0,
+    Program = 0,
     SystemApplet = 1,
     LibraryApplet = 2,
     Other = 3
@@ -87,9 +87,9 @@ public:
     s32 max_cpu_time{};
 
     // TODO: Increment these in their respective Kernel::T::Create functions, keeping in mind
-    // that Application resource limits shouldn't be affected by the objects created by service
+    // that Program resource limits shouldn't be affected by the objects created by service
     // modules.
-    // Currently we have no way of distinguishing if a Create was called by the running application,
+    // Currently we have no way of distinguishing if a Create was called by the running program,
     // or by a service module. Approach this once we have separated the service modules into their
     // own processes
 
