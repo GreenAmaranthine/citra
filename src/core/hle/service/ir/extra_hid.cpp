@@ -163,8 +163,8 @@ void ExtraHID::OnDisconnect() {
 void ExtraHID::HandleConfigureHIDPollingRequest(const std::vector<u8>& request) {
     if (request.size() != 3) {
         std::string request_string;
-        for (int i{}; i < request.size(); i++)
-            request_string += fmt::format("{:02x} ", request[i]);
+        for (auto part : request)
+            request_string += fmt::format("{:02x} ", part);
         if (!request_string.empty())
             request_string.pop_back();
         LOG_ERROR(Service_IR, "Wrong request size ({}): {}", request.size(), request_string);
@@ -188,8 +188,8 @@ void ExtraHID::HandleReadCalibrationDataRequest(const std::vector<u8>& request_b
                   "ReadCalibrationDataRequest has wrong size");
     if (request_buf.size() != sizeof(ReadCalibrationDataRequest)) {
         std::string request_buf_string;
-        for (int i{}; i < request_buf.size(); i++)
-            request_buf_string += fmt::format("{:02x} ", request_buf[i]);
+        for (auto part : request_buf)
+            request_buf_string += fmt::format("{:02x} ", part);
         if (!request_buf_string.empty())
             request_buf_string.pop_back();
         LOG_ERROR(Service_IR, "Wrong request size ({}): {}", request_buf.size(),
@@ -224,8 +224,8 @@ void ExtraHID::OnReceive(const std::vector<u8>& data) {
         break;
     default:
         std::string data_string;
-        for (int i{}; i < data.size(); i++)
-            data_string += fmt::format("{:02x} ", data[i]);
+        for (auto part : data)
+            data_string += fmt::format("{:02x} ", part);
         if (!data_string.empty())
             data_string.pop_back();
         LOG_ERROR(Service_IR, "Unknown request: {}", data_string);

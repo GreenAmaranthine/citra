@@ -329,9 +329,8 @@ Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header, u64 progr
         return ValidationResult::Invalid;
     }
     std::string revision;
-    for (int i{}; i < header.revision.size(); i++)
-        revision += fmt::format("{:02x}", header.revision[i]);
-    revision = Common::ToLower(revision);
+    for (auto part : header.revision)
+        revision += fmt::format("{:02x}", part);
     if (!program_id)
         Core::System::GetInstance().GetProgramLoader().ReadProgramId(program_id);
     if (program_id != header.program_id) {
