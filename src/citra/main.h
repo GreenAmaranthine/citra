@@ -36,11 +36,11 @@ class QProgressBar;
 class GMainWindow : public QMainWindow {
     Q_OBJECT
 
-    /// Max number of recently loaded items to keep track of
-    static const int max_recent_files_item{10};
+    /// Max number of recently loaded files to keep track of
+    static constexpr int MaxRecentFiles{10};
 
 public:
-    GMainWindow();
+    explicit GMainWindow(Config& config, Core::System& system);
     ~GMainWindow();
 
     void filterBarSetChecked(bool state);
@@ -134,7 +134,7 @@ private:
     void ConnectWidgetEvents();
     void ConnectMenuEvents();
 
-    bool LoadROM(const std::string& filename);
+    bool LoadProgram(const std::string& filename);
     void BootProgram(const std::string& filename);
     void ShutdownProgram();
 
@@ -202,10 +202,10 @@ private:
 
     Network::RoomMember::CallbackHandle<Network::RoomInformation> callback_handle;
 
-    Core::System& system{Core::System::GetInstance()};
+    Config& config;
+    Core::System& system;
 
     MultiplayerState* multiplayer_state;
-    std::unique_ptr<Config> config;
 
     std::unique_ptr<EmuThread> emu_thread;
 
@@ -218,7 +218,7 @@ private:
 
     std::shared_ptr<ControlPanel> control_panel;
 
-    QAction* actions_recent_files[max_recent_files_item];
+    QAction* actions_recent_files[MaxRecentFiles];
 
     // Stores default icon theme search paths for the platform
     QStringList default_theme_paths;
