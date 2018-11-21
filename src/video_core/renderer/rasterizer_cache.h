@@ -468,4 +468,6 @@ private:
     GLint d24s8_abgr_viewport_u_id;
 
     std::unordered_map<TextureCubeConfig, CachedTextureCube> texture_cube_cache;
+
+    u16 resolution_factor;
 };

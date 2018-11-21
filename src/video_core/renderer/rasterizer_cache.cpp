@@ -281,7 +281,7 @@ static bool FillSurface(const Surface& surface, const u8* fill_data,
                                0);
         Pica::Texture::TextureInfo tex_info{};
         tex_info.format = static_cast<Pica::TexturingRegs::TextureFormat>(surface->pixel_format);
-        Math::Vec4<u8> color{Pica::Texture::LookupTexture(fill_data, 0, 0, tex_info)};
+        auto color{Pica::Texture::LookupTexture(fill_data, 0, 0, tex_info)};
         std::array<GLfloat, 4> color_values{color.x / 255.f, color.y / 255.f, color.z / 255.f,
                                             color.w / 255.f};
         state.color_mask.red_enabled = GL_TRUE;
@@ -809,7 +809,7 @@ Surface FindMatch(const SurfaceCache& surface_cache, const SurfaceParams& params
     return match_surface;
 }
 
-RasterizerCache::RasterizerCache() {
+RasterizerCache::RasterizerCache() : resolution_factor{Settings::values.resolution_factor} {
     read_framebuffer.Create();
     draw_framebuffer.Create();
     attributeless_vao.Create();
@@ -1126,10 +1126,9 @@ SurfaceSurfaceRect_Tuple RasterizerCache::GetFramebufferSurfaces(
     bool using_color_fb, bool using_depth_fb, const MathUtil::Rectangle<s32>& viewport_rect) {
     const auto& regs{Pica::g_state.regs};
     const auto& config{regs.framebuffer.framebuffer};
-    // Update resolution_scale_factor and reset cache if changed
-    static u16 resolution_scale_factor{Settings::values.resolution_factor};
-    if (resolution_scale_factor != Settings::values.resolution_factor) {
-        resolution_scale_factor = Settings::values.resolution_factor;
+    // Update resolution_factor and reset cache if changed
+    if (resolution_factor != Settings::values.resolution_factor) {
+        resolution_factor = Settings::values.resolution_factor;
         Clear();
     }
     MathUtil::Rectangle<u32> viewport_clamped{
@@ -1141,7 +1140,7 @@ SurfaceSurfaceRect_Tuple RasterizerCache::GetFramebufferSurfaces(
     // Get color and depth surfaces
     SurfaceParams color_params;
     color_params.is_tiled = true;
-    color_params.res_scale = resolution_scale_factor;
+    color_params.res_scale = resolution_factor;
     color_params.width = config.GetWidth();
     color_params.height = config.GetHeight();
     SurfaceParams depth_params{color_params};
