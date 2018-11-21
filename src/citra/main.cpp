@@ -89,26 +89,7 @@ static void HandleDiscordError(int error_code, const char* message) {
 }
 #endif
 
-const int GMainWindow::max_recent_files_item;
-
-static void InitializeLogging() {
-    Log::Filter log_filter;
-    log_filter.ParseFilterString(Settings::values.log_filter);
-    Log::SetGlobalFilter(log_filter);
-    Log::AddBackend(std::make_unique<Log::FileBackend>(
-        FileUtil::GetUserPath(FileUtil::UserPath::UserDir) + LOG_FILE));
-}
-
-GMainWindow::GMainWindow() : config{new Config(system)} {
-    InitializeLogging();
-    ToggleConsole();
-    config->LogErrors();
-    Settings::LogSettings();
-    // Register types to use in slots and signals
-    qRegisterMetaType<std::size_t>("std::size_t");
-    qRegisterMetaType<std::string>("std::string");
-    qRegisterMetaType<Core::System::ResultStatus>("Core::System::ResultStatus");
-    qRegisterMetaType<Service::AM::InstallStatus>("Service::AM::InstallStatus");
+GMainWindow::GMainWindow(Config& config, Core::System& system) : config{config}, system{system} {
     setAcceptDrops(true);
     ui.setupUi(this);
     statusBar()->hide();
@@ -191,7 +172,7 @@ void GMainWindow::InitializeWidgets() {
 }
 
 void GMainWindow::InitializeRecentFileMenuActions() {
-    for (int i{}; i < max_recent_files_item; ++i) {
+    for (int i{}; i < MaxRecentFiles; ++i) {
         actions_recent_files[i] = new QAction(this);
         actions_recent_files[i]->setVisible(false);
         connect(actions_recent_files[i], &QAction::triggered, this, &GMainWindow::OnMenuRecentFile);
@@ -489,7 +470,7 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_About, &QAction::triggered, this, &GMainWindow::OnMenuAboutCitra);
 }
 
-bool GMainWindow::LoadROM(const std::string& filename) {
+bool GMainWindow::LoadProgram(const std::string& filename) {
     // Shutdown previous session if the emu thread is still active...
     if (emu_thread)
         ShutdownProgram();
@@ -591,9 +572,10 @@ bool GMainWindow::LoadROM(const std::string& filename) {
 void GMainWindow::BootProgram(const std::string& filename) {
     LOG_INFO(Frontend, "Booting {}", filename);
     StoreRecentFile(QString::fromStdString(filename)); // Put the filename on top of the list
+    auto& movie{system.MovieSystem()};
     if (movie_record_on_start)
-        Core::Movie::GetInstance().PrepareForRecording();
-    if (!LoadROM(filename))
+        movie.PrepareForRecording();
+    if (!LoadProgram(filename))
         return;
     // Create and start the emulation thread
     emu_thread = std::make_unique<EmuThread>(system, screens);
@@ -612,7 +594,7 @@ void GMainWindow::BootProgram(const std::string& filename) {
         ShowFullscreen();
     OnStartProgram();
     if (movie_record_on_start) {
-        Core::Movie::GetInstance().StartRecording(movie_record_path.toStdString());
+        movie.StartRecording(movie_record_path.toStdString());
         movie_record_on_start = false;
         movie_record_path.clear();
     }
@@ -694,7 +676,7 @@ void GMainWindow::ShutdownProgram() {
 void GMainWindow::StoreRecentFile(const QString& filename) {
     UISettings::values.recent_files.prepend(filename);
     UISettings::values.recent_files.removeDuplicates();
-    while (UISettings::values.recent_files.size() > max_recent_files_item)
+    while (UISettings::values.recent_files.size() > MaxRecentFiles)
         UISettings::values.recent_files.removeLast();
     UpdateRecentFiles();
 }
@@ -793,8 +775,7 @@ void GMainWindow::UpdateControlPanelNetwork() {
 }
 
 void GMainWindow::UpdateRecentFiles() {
-    const int num_recent_files{
-        std::min(UISettings::values.recent_files.size(), max_recent_files_item)};
+    const int num_recent_files{std::min(UISettings::values.recent_files.size(), MaxRecentFiles)};
     for (int i{}; i < num_recent_files; i++) {
         const auto text{QString("%1. %2").arg(i + 1).arg(
             QFileInfo(UISettings::values.recent_files[i]).fileName())};
@@ -803,7 +784,7 @@ void GMainWindow::UpdateRecentFiles() {
         actions_recent_files[i]->setToolTip(UISettings::values.recent_files[i]);
         actions_recent_files[i]->setVisible(true);
     }
-    for (int j{num_recent_files}; j < max_recent_files_item; ++j)
+    for (int j{num_recent_files}; j < MaxRecentFiles; ++j)
         actions_recent_files[j]->setVisible(false);
     // Enable the recent files menu if the list isn't empty
     ui.menu_recent_files->setEnabled(num_recent_files != 0);
@@ -1157,7 +1138,7 @@ void GMainWindow::OnOpenConfiguration() {
     auto result{configuration_dialog.exec()};
     if (result == QDialog::Accepted) {
         if (configuration_dialog.restore_defaults_requested) {
-            config->RestoreDefaults();
+            config.RestoreDefaults();
             UpdateUITheme();
             emit UpdateThemedIcons();
             SyncMenuUISettings();
@@ -1172,7 +1153,7 @@ void GMainWindow::OnOpenConfiguration() {
                 control_panel->Update3D();
             SyncMenuUISettings();
             program_list->Refresh();
-            config->Save();
+            config.Save();
             UISettings::values.configuration_geometry = configuration_dialog.saveGeometry();
         }
 #ifdef ENABLE_DISCORD_RPC
@@ -1312,7 +1293,7 @@ void GMainWindow::OnRecordMovie() {
         return;
     UISettings::values.movies_dir = QFileInfo(path).path();
     if (system.IsPoweredOn())
-        Core::Movie::GetInstance().StartRecording(path.toStdString());
+        system.MovieSystem().StartRecording(path.toStdString());
     else {
         movie_record_on_start = true;
         movie_record_path = path;
@@ -1326,8 +1307,7 @@ void GMainWindow::OnRecordMovie() {
 
 bool GMainWindow::ValidateMovie(const QString& path, u64 program_id) {
     using namespace Core;
-    Movie::ValidationResult result{
-        Core::Movie::GetInstance().ValidateMovie(path.toStdString(), program_id)};
+    auto result{system.MovieSystem().ValidateMovie(path.toStdString(), program_id)};
     QMessageBox::StandardButton answer;
     switch (result) {
     case Movie::ValidationResult::RevisionDismatch:
@@ -1341,7 +1321,7 @@ bool GMainWindow::ValidateMovie(const QString& path, u64 program_id) {
         if (answer != QMessageBox::Yes)
             return false;
         break;
-    case Movie::ValidationResult::AppDismatch:
+    case Movie::ValidationResult::ProgramDismatch:
         answer = QMessageBox::question(
             this, "Program Dismatch",
             "The movie file you're trying to load was recorded with a different program."
@@ -1380,15 +1360,25 @@ void GMainWindow::OnPlayMovie() {
     if (path.isEmpty())
         return;
     UISettings::values.movies_dir = QFileInfo(path).path();
+    auto& movie{system.MovieSystem()};
     if (system.IsPoweredOn()) {
         if (!ValidateMovie(path))
             return;
     } else {
-        u64 program_id{Core::Movie::GetInstance().GetMovieProgramID(path.toStdString())};
+        u64 program_id{movie.GetMovieProgramID(path.toStdString())};
+        if (!program_id) {
+            QMessageBox::critical(this, "Invalid Movie File",
+                                  "The movie file you are trying to load is invalid."
+                                  "<br/>Either the file is corrupted, or Citra has had made "
+                                  "some major changes to the "
+                                  "Movie module."
+                                  "<br/>Please choose a different movie file and try again.");
+            return;
+        }
         auto program_path{program_list->FindProgramByProgramID(program_id)};
         if (program_path.isEmpty()) {
             const int num_recent_files{
-                std::min(UISettings::values.recent_files.size(), max_recent_files_item)};
+                std::min(UISettings::values.recent_files.size(), MaxRecentFiles)};
             for (int i{}; i < num_recent_files; i++) {
                 auto action_path{actions_recent_files[i]->data().toString()};
                 if (!action_path.isEmpty()) {
@@ -1414,12 +1404,11 @@ void GMainWindow::OnPlayMovie() {
         }
         if (!ValidateMovie(path, program_id))
             return;
-        Core::Movie::GetInstance().PrepareForPlayback(path.toStdString());
+        movie.PrepareForPlayback(path.toStdString());
         BootProgram(program_path.toStdString());
     }
-    Core::Movie::GetInstance().StartPlayback(path.toStdString(), [this] {
-        QMetaObject::invokeMethod(this, "OnMoviePlaybackCompleted");
-    });
+    movie.StartPlayback(path.toStdString(),
+                        [this] { QMetaObject::invokeMethod(this, "OnMoviePlaybackCompleted"); });
     ui.action_Record_Movie->setEnabled(false);
     ui.action_Play_Movie->setEnabled(false);
     ui.action_Stop_Recording_Playback->setEnabled(true);
@@ -1431,8 +1420,9 @@ void GMainWindow::OnStopRecordingPlayback() {
         movie_record_on_start = false;
         movie_record_path.clear();
     } else {
-        const bool was_recording{Core::Movie::GetInstance().IsRecordingInput()};
-        Core::Movie::GetInstance().Shutdown();
+        auto& movie{system.MovieSystem()};
+        const bool was_recording{movie.IsRecordingInput()};
+        movie.Shutdown();
         if (was_recording)
             QMessageBox::information(this, "Movie Saved", "The movie is successfully saved.");
     }
@@ -1703,7 +1693,7 @@ void GMainWindow::UpdateDiscordRPC(const Network::RoomInformation& info) {
             presence.partyMax = info.member_slots;
             presence.state = info.name.c_str();
         }
-        std::string details{
+        auto details{
             !short_title.empty()
                 ? fmt::format("{} | {}-{}", short_title, Common::g_scm_branch, Common::g_scm_desc)
                 : fmt::format("{}-{}", Common::g_scm_branch, Common::g_scm_desc)};
@@ -1720,31 +1710,46 @@ void GMainWindow::UpdateDiscordRPC(const Network::RoomInformation& info) {
 #endif
 
 int main(int argc, char* argv[]) {
+    auto& system{Core::System::GetInstance()};
+    // Load settings
+    Config config{system};
+    Log::Filter log_filter;
+    log_filter.ParseFilterString(Settings::values.log_filter);
+    Log::SetGlobalFilter(log_filter);
+    Log::AddBackend(std::make_unique<Log::FileBackend>(
+        FileUtil::GetUserPath(FileUtil::UserPath::UserDir) + LOG_FILE));
+    ToggleConsole();
+    config.LogErrors();
+    Settings::LogSettings();
+    // Initialize ENet and movie system
+    system.Init1();
+    // Register types to use in slots and signals
+    qRegisterMetaType<std::size_t>("std::size_t");
+    qRegisterMetaType<std::string>("std::string");
+    qRegisterMetaType<Core::System::ResultStatus>("Core::System::ResultStatus");
+    qRegisterMetaType<Service::AM::InstallStatus>("Service::AM::InstallStatus");
+    // Create detached tasks
     Common::DetachedTasks detached_tasks;
-
-    // Init settings params
-    QCoreApplication::setOrganizationName("Citra Valentin Vanelslande fork team");
+    // Create application
+    QCoreApplication::setOrganizationName("Citra Valentin team");
     QCoreApplication::setApplicationName("Citra");
-
     QApplication app{argc, argv};
-
     // Qt changes the locale and causes issues in float conversion using std::to_string() when
     // generating shaders
     setlocale(LC_ALL, "C");
-
-    GMainWindow main_window;
-
+    // Create the window
+    GMainWindow window{config, system};
     // Register camera factories
     Camera::RegisterFactory("image", std::make_unique<Camera::StillImageCameraFactory>());
     Camera::RegisterFactory("qt", std::make_unique<Camera::QtMultimediaCameraFactory>());
     Camera::QtMultimediaCameraHandler::Init();
-
+    // Log version
     LOG_INFO(Frontend, "Citra version: Valentin {}-{}", Common::g_scm_branch, Common::g_scm_desc);
 #ifdef _WIN32
     WSADATA data;
     WSAStartup(MAKEWORD(2, 2), &data);
 #endif
-    main_window.show();
+    window.show();
     int result{app.exec()};
 #ifdef _WIN32
     WSACleanup();

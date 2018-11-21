@@ -38,13 +38,16 @@
 
 namespace Core {
 
-/*static*/ System System::s_instance;
+System System::s_instance;
 
-System::System() {
-    if (enet_initialize() != 0)
+void System::Init1() {
+    if (enet_initialize() != 0) {
+        LOG_ERROR(Network, "Error when initializing ENet");
         return;
+    }
     room = std::make_unique<Network::Room>();
     room_member = std::make_unique<Network::RoomMember>();
+    movie = std::make_unique<Movie>();
 }
 
 System::~System() {
@@ -59,6 +62,7 @@ System::~System() {
         room.reset();
     }
     enet_deinitialize();
+    movie.reset();
 }
 
 System::ResultStatus System::RunLoop() {
@@ -244,6 +248,14 @@ const Network::RoomMember& System::RoomMember() const {
 
 Network::RoomMember& System::RoomMember() {
     return *room_member;
+}
+
+const Movie& System::MovieSystem() const {
+    return *movie;
+}
+
+Movie& System::MovieSystem() {
+    return *movie;
 }
 
 const Frontend& System::GetFrontend() const {

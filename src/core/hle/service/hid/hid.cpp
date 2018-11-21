@@ -96,7 +96,7 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
         circle_pad_x = static_cast<s16>(circle_pad_x_f * MAX_CIRCLEPAD_POS);
         circle_pad_y = static_cast<s16>(circle_pad_y_f * MAX_CIRCLEPAD_POS);
     }
-    Core::Movie::GetInstance().HandlePadAndCircleStatus(state, circle_pad_x, circle_pad_y);
+    system.MovieSystem().HandlePadAndCircleStatus(state, circle_pad_x, circle_pad_y);
     const DirectionState direction{GetStickDirectionState(circle_pad_x, circle_pad_y)};
     state.circle_up.Assign(direction.up);
     state.circle_down.Assign(direction.down);
@@ -140,7 +140,7 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
         touch_entry.y = static_cast<u16>(y * Core::kScreenBottomHeight);
         touch_entry.valid.Assign(pressed ? 1 : 0);
     }
-    Core::Movie::GetInstance().HandleTouchStatus(touch_entry);
+    system.MovieSystem().HandleTouchStatus(touch_entry);
     // TODO: We're not doing anything with offset 0xA8 + 0x18 of HID SharedMemory, which
     // supposedly is "Touch-screen entry, which contains the raw coordinate data prior to being
     // converted to pixel coordinates." (http://3dbrew.org/wiki/HID_Shared_Memory#Offset_0xA8).
@@ -177,7 +177,7 @@ void Module::UpdateAccelerometerCallback(u64 userdata, s64 cycles_late) {
         accelerometer_entry.y = static_cast<s16>(accel.y);
         accelerometer_entry.z = static_cast<s16>(accel.z);
     }
-    Core::Movie::GetInstance().HandleAccelerometerStatus(accelerometer_entry);
+    system.MovieSystem().HandleAccelerometerStatus(accelerometer_entry);
     // Make up "raw" entry
     // TODO:
     // From hardware testing, the raw_entry values are approximately, but not exactly, as twice as
@@ -216,7 +216,7 @@ void Module::UpdateGyroscopeCallback(u64 userdata, s64 cycles_late) {
         gyroscope_entry.y = static_cast<s16>(gyro.y);
         gyroscope_entry.z = static_cast<s16>(gyro.z);
     }
-    Core::Movie::GetInstance().HandleGyroscopeStatus(gyroscope_entry);
+    system.MovieSystem().HandleGyroscopeStatus(gyroscope_entry);
     // Make up "raw" entry
     mem->gyroscope.raw_entry.x = gyroscope_entry.x;
     mem->gyroscope.raw_entry.z = -gyroscope_entry.y;

@@ -48,8 +48,8 @@ void IR_RST::UnloadInputDevices() {
     c_stick = nullptr;
 }
 
-void IR_RST::UpdateCallback(u64 userdata, s64 cycles_late) {
-    SharedMem* mem{reinterpret_cast<SharedMem*>(shared_memory->GetPointer())};
+void IR_RST::UpdateCallback(u64, s64 cycles_late) {
+    auto mem{reinterpret_cast<SharedMem*>(shared_memory->GetPointer())};
     if (is_device_reload_pending.exchange(false))
         LoadInputDevices();
     PadState state;
@@ -60,9 +60,9 @@ void IR_RST::UpdateCallback(u64 userdata, s64 cycles_late) {
     constexpr int MAX_CSTICK_RADIUS{0x9C}; // Max value for a c-stick radius
     s16 c_stick_x{static_cast<s16>(c_stick_x_f * MAX_CSTICK_RADIUS)};
     s16 c_stick_y{static_cast<s16>(c_stick_y_f * MAX_CSTICK_RADIUS)};
-    Core::Movie::GetInstance().HandleIrRst(state, c_stick_x, c_stick_y);
+    system.MovieSystem().HandleIrRst(state, c_stick_x, c_stick_y);
     if (!raw_c_stick) {
-        const HID::DirectionState direction{HID::GetStickDirectionState(c_stick_x, c_stick_y)};
+        const auto direction{HID::GetStickDirectionState(c_stick_x, c_stick_y)};
         state.c_stick_up.Assign(direction.up);
         state.c_stick_down.Assign(direction.down);
         state.c_stick_left.Assign(direction.left);
@@ -73,7 +73,7 @@ void IR_RST::UpdateCallback(u64 userdata, s64 cycles_late) {
     mem->index = next_pad_index;
     next_pad_index = (next_pad_index + 1) % mem->entries.size();
     // Get the previous Pad state
-    PadState old_state{mem->entries[last_entry_index].current_state};
+    auto old_state{mem->entries[last_entry_index].current_state};
     // Compute bitmask with 1s for bits different from the old state
     PadState changed{state.hex ^ old_state.hex};
     // Get the current Pad entry
@@ -129,9 +129,9 @@ IR_RST::IR_RST(Core::System& system) : ServiceFramework{"ir:rst", 1}, system{sys
     shared_memory = system.Kernel()
                         .CreateSharedMemory(nullptr, 0x1000, Kernel::MemoryPermission::ReadWrite,
                                             Kernel::MemoryPermission::Read, 0,
-                                            Kernel::MemoryRegion::Base, "ir:rst shared memory")
+                                            Kernel::MemoryRegion::Base, "ir:rst Shared Memory")
                         .Unwrap();
-    update_event = kernel.CreateEvent(Kernel::ResetType::OneShot, "ir:rst update_event");
+    update_event = kernel.CreateEvent(Kernel::ResetType::OneShot, "ir:rst Update Event");
     update_callback_id =
         system.CoreTiming().RegisterEvent("IR Update Event", [this](u64 userdata, s64 cycles_late) {
             UpdateCallback(userdata, cycles_late);
