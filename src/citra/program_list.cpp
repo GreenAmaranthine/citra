@@ -571,12 +571,12 @@ void ProgramList::PopulateAsync(QList<UISettings::AppDir>& program_dirs) {
 }
 
 void ProgramList::SaveInterfaceLayout() {
-    UISettings::values.ProgramList_header_state = tree_view->header()->saveState();
+    UISettings::values.programlist_header_state = tree_view->header()->saveState();
 }
 
 void ProgramList::LoadInterfaceLayout() {
     auto header{tree_view->header()};
-    if (!header->restoreState(UISettings::values.ProgramList_header_state))
+    if (!header->restoreState(UISettings::values.programlist_header_state))
         // We're using the name column to display icons and titles
         // so make it as large as possible as default.
         header->resizeSection(COLUMN_NAME, header->width());

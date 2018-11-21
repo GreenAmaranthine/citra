@@ -289,8 +289,8 @@ void Config::Load() {
     UISettings::values.geometry = qt_config->value("geometry").toByteArray();
     UISettings::values.state = qt_config->value("state").toByteArray();
     UISettings::values.screens_geometry = qt_config->value("geometryScreens").toByteArray();
-    UISettings::values.ProgramList_header_state =
-        qt_config->value("ProgramListHeaderState").toByteArray();
+    UISettings::values.programlist_header_state =
+        qt_config->value("programListHeaderState").toByteArray();
     UISettings::values.configuration_geometry =
         qt_config->value("configurationGeometry").toByteArray();
     qt_config->endGroup();
@@ -513,7 +513,7 @@ void Config::Save() {
     qt_config->setValue("geometry", UISettings::values.geometry);
     qt_config->setValue("state", UISettings::values.state);
     qt_config->setValue("geometryScreens", UISettings::values.screens_geometry);
-    qt_config->setValue("ProgramListHeaderState", UISettings::values.ProgramList_header_state);
+    qt_config->setValue("programListHeaderState", UISettings::values.programlist_header_state);
     qt_config->setValue("configurationGeometry", UISettings::values.configuration_geometry);
     qt_config->endGroup();
     qt_config->beginGroup("ProgramList");

@@ -122,8 +122,8 @@ void ProgramListWorker::run() {
             watch_list.append(program_dir.path);
             auto program_list_dir{new ProgramListDir(program_dir)};
             emit DirEntryReady({program_list_dir});
-            AddFstEntriesToProgramList(program_dir.path.toStdString(), program_dir.deep_scan ? 256 : 0,
-                                       program_list_dir);
+            AddFstEntriesToProgramList(program_dir.path.toStdString(),
+                                       program_dir.deep_scan ? 256 : 0, program_list_dir);
         }
     }
     emit Finished(watch_list);

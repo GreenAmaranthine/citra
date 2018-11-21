@@ -63,8 +63,8 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
     int index{static_cast<int>(UISettings::values.host_type)};
     if (index < ui->host_type->count())
         ui->host_type->setCurrentIndex(index);
-    index =
-        ui->program_list->findData(UISettings::values.program_id, ProgramListItemPath::ProgramIdRole);
+    index = ui->program_list->findData(UISettings::values.program_id,
+                                       ProgramListItemPath::ProgramIdRole);
     if (index != -1)
         ui->program_list->setCurrentIndex(index);
 }
@@ -100,7 +100,8 @@ void HostRoomWindow::Host() {
     auto port{ui->port->isModified() ? ui->port->text().toInt() : Network::DefaultRoomPort};
     auto password{ui->password->text().toStdString()};
     bool created{system.Room().Create(ui->room_name->text().toStdString(), "", port, password,
-                                      ui->max_members->value(), program_name.toStdString(), program_id)};
+                                      ui->max_members->value(), program_name.toStdString(),
+                                      program_id)};
     if (!created) {
         NetworkMessage::ShowError(NetworkMessage::COULD_NOT_CREATE_ROOM);
         LOG_ERROR(Network, "Couldn't create room!");

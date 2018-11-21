@@ -53,7 +53,7 @@ struct Values {
     QByteArray geometry;
     QByteArray state;
     QByteArray screens_geometry;
-    QByteArray ProgramList_header_state;
+    QByteArray programlist_header_state;
     QByteArray configuration_geometry;
 
     bool single_window_mode;
