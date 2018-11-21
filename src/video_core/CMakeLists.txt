@@ -36,6 +36,7 @@ add_library(video_core STATIC
     renderer/stream_buffer.cpp
     renderer/stream_buffer.h
     renderer/pica_to_gl.h
+    shader/check_sse4_1.h
     shader/shader.cpp
     shader/shader.h
     shader/engine.cpp

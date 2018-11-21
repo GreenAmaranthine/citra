@@ -15,6 +15,7 @@
 #include "common/x64/xbyak_util.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
+#include "video_core/shader/check_sse4_1.h"
 #include "video_core/shader/compiler.h"
 #include "video_core/shader/shader.h"
 
@@ -222,9 +223,22 @@ void Shader::Compile_DestEnable(Instruction instr, Xmm src) {
         // Not all components are enabled, so mask the result when storing to the destination
         // register...
         movaps(xmm0, xword[r15 + dest_offset_disp]);
-        u8 mask{static_cast<u8>(((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) |
-                                ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1))};
-        blendps(xmm0, src, mask);
+        if (IsSSE41Supported()) {
+            u8 mask{static_cast<u8>(((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) |
+                                    ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1))};
+            blendps(xmm0, src, mask);
+        } else {
+            movaps(xmm4, src);
+            unpckhps(xmm4, xmm0); // Unpack X/Y components of source and destination
+            unpcklps(xmm0, src);  // Unpack Z/W components of source and destination
+                                  // Compute selector to selectively copy source components to
+                                  // destination for SHUFPS instruction
+            u8 sel{static_cast<u8>(((swiz.DestComponentEnabled(0) ? 1 : 0) << 0) |
+                                   ((swiz.DestComponentEnabled(1) ? 3 : 2) << 2) |
+                                   ((swiz.DestComponentEnabled(2) ? 0 : 1) << 4) |
+                                   ((swiz.DestComponentEnabled(3) ? 2 : 3) << 6))};
+            shufps(xmm0, xmm4, sel);
+        }
         // Store dest back to memory
         movaps(xword[r15 + dest_offset_disp], xmm0);
     }
@@ -322,8 +336,15 @@ void Shader::Compile_DPH(Instruction instr) {
         Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
         Compile_SwizzleSrc(instr, 2, instr.common.src2, xmm2);
     }
-    // Set 4th component to 1.0
-    blendps(xmm1, xmm14, 0b1000);
+    if (IsSSE41Supported())
+        // Set 4th component to 1.0
+        blendps(xmm1, xmm14, 0b1000);
+    else {
+        // Set 4th component to 1.0
+        movaps(xmm0, xmm1);
+        unpckhps(xmm0, xmm14); // XYZW, 1111 -> Z1__
+        unpcklpd(xmm1, xmm0);  // XYZW, Z1__ -> XYZ1
+    }
     Compile_SanitizedMul(xmm1, xmm2, xmm0);
     haddps(xmm1, xmm1);
     haddps(xmm1, xmm1);
@@ -377,7 +398,12 @@ void Shader::Compile_SLT(Instruction instr) {
 
 void Shader::Compile_FLR(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, xmm1);
-    roundps(xmm1, xmm1, _MM_FROUND_FLOOR);
+    if (IsSSE41Supported())
+        roundps(xmm1, xmm1, _MM_FROUND_FLOOR);
+    else {
+        cvttps2dq(xmm1, xmm1);
+        cvtdq2ps(xmm1, xmm1);
+    }
     Compile_DestEnable(instr, xmm1);
 }
 

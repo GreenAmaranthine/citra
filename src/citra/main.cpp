@@ -2,9 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#ifdef _MSC_VER
-#include <intrin.h>
-#endif
 #ifdef _WIN32
 #include <winsock2.h>
 #endif
@@ -125,14 +122,6 @@ GMainWindow::GMainWindow() : config{new Config(system)} {
     ConnectMenuEvents();
     ConnectWidgetEvents();
     UpdateTitle();
-#ifdef _MSC_VER
-    int cpu_id[4];
-    __cpuid(cpu_id, 1);
-    if (!((cpu_id[2] >> 19) & 1)) {
-        QMessageBox::critical(this, "Citra", "Your CPU doesn't support SSE4.1");
-        closeEvent(nullptr);
-    }
-#endif
     app_list->PopulateAsync(UISettings::values.app_dirs);
     QStringList args{QApplication::arguments()};
     if (args.length() >= 2)

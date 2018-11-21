@@ -49,7 +49,7 @@ constexpr ResultCode ERR_REGS_INVALID_SIZE(ErrorDescription::InvalidSize, ErrorM
 /// Maximum number of threads that can be registered at the same time in the GSP module.
 constexpr u32 MaxGSPThreads{4};
 
-/// Thread ids currently in use by the sessions connected to the GSPGPU service.
+/// Thread ids currently in use by the sessions connected to the gsp::Gpu service.
 static std::array<bool, MaxGSPThreads> used_thread_ids{false, false, false, false};
 
 static PAddr VirtualToPhysicalAddress(VAddr addr) {
