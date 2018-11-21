@@ -22,8 +22,6 @@
 
 namespace Core {
 
-/*static*/ Movie Movie::s_instance;
-
 enum class PlayMode { None, Recording, Playing };
 
 enum class ControllerStateType : u8 {
@@ -337,8 +335,8 @@ Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header, u64 progr
     if (!program_id)
         Core::System::GetInstance().GetProgramLoader().ReadProgramId(program_id);
     if (program_id != header.program_id) {
-        LOG_WARNING(Movie, "This movie was recorded using a ROM with a different program id");
-        return ValidationResult::AppDismatch;
+        LOG_WARNING(Movie, "This movie was recorded using a file with a different program ID");
+        return ValidationResult::ProgramDismatch;
     }
     if (revision != Common::g_scm_rev) {
         LOG_WARNING(Movie,

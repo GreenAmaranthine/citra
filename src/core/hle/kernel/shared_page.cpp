@@ -12,18 +12,17 @@
 
 namespace SharedPage {
 
-static std::chrono::seconds GetInitTime() {
-    u64 override_init_time{Core::Movie::GetInstance().GetOverrideInitTime()};
-    if (override_init_time) {
+static std::chrono::seconds GetInitTime(Core::Movie& movie) {
+    u64 override_init_time{movie.GetOverrideInitTime()};
+    if (override_init_time)
         // Override the clock init time with the one in the movie
         return std::chrono::seconds{override_init_time};
-    }
     switch (Settings::values.init_clock) {
     case Settings::InitClock::SystemTime: {
         auto now{std::chrono::system_clock::now()};
         // If the system time is in daylight saving, we give an additional hour to console time
-        std::time_t now_time_t{std::chrono::system_clock::to_time_t(now)};
-        std::tm* now_tm{std::localtime(&now_time_t)};
+        auto now_time_t{std::chrono::system_clock::to_time_t(now)};
+        auto now_tm{std::localtime(&now_time_t)};
         if (now_tm && now_tm->tm_isdst > 0)
             now = now + std::chrono::hours(1);
         return std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch());
@@ -35,7 +34,7 @@ static std::chrono::seconds GetInitTime() {
     }
 }
 
-Handler::Handler(Core::Timing& timing) : timing{timing} {
+Handler::Handler(Core::System& system) : timing{system.CoreTiming()} {
     std::memset(&shared_page, 0, sizeof(shared_page));
     shared_page.running_hw = 0x1; // Product
     // Some games wait until this value becomes 0x1, before asking running_hw
@@ -49,9 +48,9 @@ Handler::Handler(Core::Timing& timing) : timing{timing} {
     shared_page.wifi_link_level = Settings::values.n_wifi_link_level;
     shared_page.network_state = static_cast<NetworkState>(Settings::values.n_state);
     Update3DSettings();
-    init_time = GetInitTime();
+    init_time = GetInitTime(system.MovieSystem());
     using namespace std::placeholders;
-    update_time_event = timing.RegisterEvent("SharedPage::UpdateTimeCallback",
+    update_time_event = timing.RegisterEvent("Shared Page Time Update Event",
                                              std::bind(&Handler::UpdateTimeCallback, this, _1, _2));
     timing.ScheduleEvent(0, update_time_event);
 }
@@ -81,8 +80,8 @@ u64 Handler::GetSystemTime() const {
 }
 
 void Handler::UpdateTimeCallback(u64 userdata, int cycles_late) {
-    DateTime& date_time{shared_page.date_time_counter % 2 ? shared_page.date_time_0
-                                                          : shared_page.date_time_1};
+    auto& date_time{shared_page.date_time_counter % 2 ? shared_page.date_time_0
+                                                      : shared_page.date_time_1};
     date_time.date_time = GetSystemTime();
     date_time.update_tick = timing.GetTicks();
     date_time.tick_to_second_coefficient = BASE_CLOCK_RATE_ARM11;

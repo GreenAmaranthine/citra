@@ -250,7 +250,7 @@ void ExtraHID::SendHIDStatus() {
     response.buttons.zr_not_held.Assign(!zr->GetStatus());
     response.buttons.r_not_held.Assign(1);
     response.unknown = 0;
-    Core::Movie::GetInstance().HandleExtraHidResponse(response);
+    system.MovieSystem().HandleExtraHidResponse(response);
     std::vector<u8> response_buffer(sizeof(response));
     std::memcpy(response_buffer.data(), &response, sizeof(response));
     Send(response_buffer);

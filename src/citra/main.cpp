@@ -572,8 +572,9 @@ bool GMainWindow::LoadProgram(const std::string& filename) {
 void GMainWindow::BootProgram(const std::string& filename) {
     LOG_INFO(Frontend, "Booting {}", filename);
     StoreRecentFile(QString::fromStdString(filename)); // Put the filename on top of the list
+    auto& movie{system.MovieSystem()};
     if (movie_record_on_start)
-        Core::Movie::GetInstance().PrepareForRecording();
+        movie.PrepareForRecording();
     if (!LoadProgram(filename))
         return;
     // Create and start the emulation thread
@@ -593,7 +594,7 @@ void GMainWindow::BootProgram(const std::string& filename) {
         ShowFullscreen();
     OnStartProgram();
     if (movie_record_on_start) {
-        Core::Movie::GetInstance().StartRecording(movie_record_path.toStdString());
+        movie.StartRecording(movie_record_path.toStdString());
         movie_record_on_start = false;
         movie_record_path.clear();
     }
@@ -1292,7 +1293,7 @@ void GMainWindow::OnRecordMovie() {
         return;
     UISettings::values.movies_dir = QFileInfo(path).path();
     if (system.IsPoweredOn())
-        Core::Movie::GetInstance().StartRecording(path.toStdString());
+        system.MovieSystem().StartRecording(path.toStdString());
     else {
         movie_record_on_start = true;
         movie_record_path = path;
@@ -1306,8 +1307,7 @@ void GMainWindow::OnRecordMovie() {
 
 bool GMainWindow::ValidateMovie(const QString& path, u64 program_id) {
     using namespace Core;
-    Movie::ValidationResult result{
-        Core::Movie::GetInstance().ValidateMovie(path.toStdString(), program_id)};
+    auto result{system.MovieSystem().ValidateMovie(path.toStdString(), program_id)};
     QMessageBox::StandardButton answer;
     switch (result) {
     case Movie::ValidationResult::RevisionDismatch:
@@ -1321,7 +1321,7 @@ bool GMainWindow::ValidateMovie(const QString& path, u64 program_id) {
         if (answer != QMessageBox::Yes)
             return false;
         break;
-    case Movie::ValidationResult::AppDismatch:
+    case Movie::ValidationResult::ProgramDismatch:
         answer = QMessageBox::question(
             this, "Program Dismatch",
             "The movie file you're trying to load was recorded with a different program."
@@ -1360,11 +1360,21 @@ void GMainWindow::OnPlayMovie() {
     if (path.isEmpty())
         return;
     UISettings::values.movies_dir = QFileInfo(path).path();
+    auto& movie{system.MovieSystem()};
     if (system.IsPoweredOn()) {
         if (!ValidateMovie(path))
             return;
     } else {
-        u64 program_id{Core::Movie::GetInstance().GetMovieProgramID(path.toStdString())};
+        u64 program_id{movie.GetMovieProgramID(path.toStdString())};
+        if (!program_id) {
+            QMessageBox::critical(this, "Invalid Movie File",
+                                  "The movie file you are trying to load is invalid."
+                                  "<br/>Either the file is corrupted, or Citra has had made "
+                                  "some major changes to the "
+                                  "Movie module."
+                                  "<br/>Please choose a different movie file and try again.");
+            return;
+        }
         auto program_path{program_list->FindProgramByProgramID(program_id)};
         if (program_path.isEmpty()) {
             const int num_recent_files{
@@ -1394,12 +1404,11 @@ void GMainWindow::OnPlayMovie() {
         }
         if (!ValidateMovie(path, program_id))
             return;
-        Core::Movie::GetInstance().PrepareForPlayback(path.toStdString());
+        movie.PrepareForPlayback(path.toStdString());
         BootProgram(program_path.toStdString());
     }
-    Core::Movie::GetInstance().StartPlayback(path.toStdString(), [this] {
-        QMetaObject::invokeMethod(this, "OnMoviePlaybackCompleted");
-    });
+    movie.StartPlayback(path.toStdString(),
+                        [this] { QMetaObject::invokeMethod(this, "OnMoviePlaybackCompleted"); });
     ui.action_Record_Movie->setEnabled(false);
     ui.action_Play_Movie->setEnabled(false);
     ui.action_Stop_Recording_Playback->setEnabled(true);
@@ -1411,8 +1420,9 @@ void GMainWindow::OnStopRecordingPlayback() {
         movie_record_on_start = false;
         movie_record_path.clear();
     } else {
-        const bool was_recording{Core::Movie::GetInstance().IsRecordingInput()};
-        Core::Movie::GetInstance().Shutdown();
+        auto& movie{system.MovieSystem()};
+        const bool was_recording{movie.IsRecordingInput()};
+        movie.Shutdown();
         if (was_recording)
             QMessageBox::information(this, "Movie Saved", "The movie is successfully saved.");
     }
@@ -1711,6 +1721,8 @@ int main(int argc, char* argv[]) {
     ToggleConsole();
     config.LogErrors();
     Settings::LogSettings();
+    // Initialize ENet and movie system
+    system.Init1();
     // Register types to use in slots and signals
     qRegisterMetaType<std::size_t>("std::size_t");
     qRegisterMetaType<std::string>("std::string");
@@ -1718,7 +1730,7 @@ int main(int argc, char* argv[]) {
     qRegisterMetaType<Service::AM::InstallStatus>("Service::AM::InstallStatus");
     // Create detached tasks
     Common::DetachedTasks detached_tasks;
-    // Init application
+    // Create application
     QCoreApplication::setOrganizationName("Citra Valentin team");
     QCoreApplication::setApplicationName("Citra");
     QApplication app{argc, argv};

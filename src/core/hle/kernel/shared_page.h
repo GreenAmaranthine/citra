@@ -15,7 +15,7 @@
 #include "core/memory.h"
 
 namespace Core {
-class Timing;
+class System;
 struct TimingEventType;
 } // namespace Core
 
@@ -88,7 +88,7 @@ static_assert(sizeof(SharedPageDef) == Memory::SHARED_PAGE_SIZE,
 
 class Handler {
 public:
-    explicit Handler(Core::Timing& timing);
+    explicit Handler(Core::System& system);
 
     void SetMacAddress(const MacAddress&);
     void SetWifiLinkLevel(WifiLinkLevel);

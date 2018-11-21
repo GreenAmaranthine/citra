@@ -52,12 +52,14 @@ class RoomMember;
 
 namespace Core {
 
+class Movie;
 class Timing;
 
 class System {
 public:
-    System();
     ~System();
+
+    void Init1();
 
     /**
      * Gets the instance of the System singleton class.
@@ -167,12 +169,6 @@ public:
     /// Gets a reference to the cheat engine.
     Cheats::CheatEngine& CheatEngine();
 
-    /// Gets a const reference to the frontend.
-    const Frontend& GetFrontend() const;
-
-    // Gets a reference to the frontend.
-    Frontend& GetFrontend();
-
     /// Gets a const reference to the timing system.
     const Timing& CoreTiming() const;
 
@@ -190,6 +186,18 @@ public:
 
     /// Gets a reference to the room member.
     Network::RoomMember& RoomMember();
+
+    /// Gets a const reference to the movie system.
+    const Movie& MovieSystem() const;
+
+    /// Gets a reference to the movie system.
+    Movie& MovieSystem();
+
+    /// Gets a const reference to the frontend.
+    const Frontend& GetFrontend() const;
+
+    // Gets a reference to the frontend.
+    Frontend& GetFrontend();
 
     PerfStats perf_stats;
     FrameLimiter frame_limiter;
@@ -279,8 +287,14 @@ private:
     /// Room member
     std::unique_ptr<Network::RoomMember> room_member;
 
+    // Kernel
     std::unique_ptr<Kernel::KernelSystem> kernel;
+
+    // Timing system
     std::unique_ptr<Timing> timing;
+
+    // Movie system
+    std::unique_ptr<Movie> movie;
 
     static System s_instance;
 

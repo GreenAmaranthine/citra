@@ -8,19 +8,23 @@
 #include "common/common_types.h"
 
 namespace Service {
+
 namespace HID {
 struct AccelerometerDataEntry;
 struct GyroscopeDataEntry;
 struct PadState;
 struct TouchDataEntry;
 } // namespace HID
+
 namespace IR {
 struct ExtraHIDResponse;
 union PadState;
 } // namespace IR
+
 } // namespace Service
 
 namespace Core {
+
 struct CTMHeader;
 struct ControllerState;
 enum class PlayMode;
@@ -30,16 +34,9 @@ public:
     enum class ValidationResult {
         OK,
         RevisionDismatch,
-        AppDismatch,
+        ProgramDismatch,
         Invalid,
     };
-    /**
-     * Gets the instance of the Movie singleton class.
-     * @returns Reference to the instance of the Movie singleton class.
-     */
-    static Movie& GetInstance() {
-        return s_instance;
-    }
 
     void StartPlayback(const std::string& movie_file,
                        std::function<void()> completion_callback = [] {});
@@ -99,8 +96,6 @@ public:
     bool IsRecordingInput() const;
 
 private:
-    static Movie s_instance;
-
     void CheckInputEnd();
 
     template <typename... Targs>
@@ -133,4 +128,5 @@ private:
     std::function<void()> playback_completion_callback;
     std::size_t current_byte{};
 };
+
 } // namespace Core
