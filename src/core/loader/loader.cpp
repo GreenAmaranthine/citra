@@ -113,8 +113,8 @@ std::unique_ptr<ProgramLoader> GetLoader(Core::System& system, const std::string
     }
     std::string filename_filename, filename_extension;
     Common::SplitPath(filename, nullptr, &filename_filename, &filename_extension);
-    FileType type{IdentifyFile(file)};
-    FileType filename_type{GuessFromExtension(filename_extension)};
+    auto type{IdentifyFile(file)};
+    auto filename_type{GuessFromExtension(filename_extension)};
     if (type != filename_type) {
         LOG_WARNING(Loader, "File {} has a different type than its extension.", filename);
         if (type == FileType::Unknown)

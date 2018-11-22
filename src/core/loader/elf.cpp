@@ -363,7 +363,7 @@ ResultStatus ProgramLoader_ELF::Load(Kernel::SharedPtr<Kernel::Process>& process
     if (file.ReadBytes(&buffer[0], size) != size)
         return ResultStatus::Error;
     ElfReader elf_reader{&buffer[0]};
-    SharedPtr<CodeSet> codeset{elf_reader.LoadInto(system, Memory::PROCESS_IMAGE_VADDR)};
+    auto codeset{elf_reader.LoadInto(system, Memory::PROCESS_IMAGE_VADDR)};
     codeset->name = filename;
     auto& kernel{system.Kernel()};
     process = kernel.CreateProcess(std::move(codeset));

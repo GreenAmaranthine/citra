@@ -28,7 +28,7 @@
 
 namespace Loader {
 
-static const u64 UPDATE_MASK{0x0000000e00000000};
+constexpr u64 UPDATE_MASK{0x0000000e00000000};
 
 FileType ProgramLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
     u32 magic;
@@ -132,12 +132,12 @@ void ProgramLoader_NCCH::ParseRegionLockoutInfo() {
 ResultStatus ProgramLoader_NCCH::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
-    ResultStatus result{base_ncch.Load()};
+    auto result{base_ncch.Load()};
     if (result != ResultStatus::Success)
         return result;
     u64_le ncch_program_id;
     ReadProgramId(ncch_program_id);
-    std::string program_id{fmt::format("{:016X}", ncch_program_id)};
+    auto program_id{fmt::format("{:016X}", ncch_program_id)};
     LOG_INFO(Loader, "Program ID: {}", program_id);
     update_ncch.OpenFile(Service::AM::GetProgramContentPath(Service::FS::MediaType::SDMC,
                                                             ncch_program_id | UPDATE_MASK));
@@ -174,15 +174,14 @@ ResultStatus ProgramLoader_NCCH::ReadLogo(std::vector<u8>& buffer) {
 }
 
 ResultStatus ProgramLoader_NCCH::ReadProgramId(u64& out_program_id) {
-    ResultStatus result{base_ncch.ReadProgramId(out_program_id)};
+    auto result{base_ncch.ReadProgramId(out_program_id)};
     if (result != ResultStatus::Success)
         return result;
-
     return ResultStatus::Success;
 }
 
 ResultStatus ProgramLoader_NCCH::ReadExtdataId(u64& out_extdata_id) {
-    ResultStatus result{base_ncch.ReadExtdataId(out_extdata_id)};
+    auto result{base_ncch.ReadExtdataId(out_extdata_id)};
     if (result != ResultStatus::Success)
         return result;
     return ResultStatus::Success;
@@ -194,11 +193,9 @@ ResultStatus ProgramLoader_NCCH::ReadRomFS(std::shared_ptr<FileSys::RomFSReader>
 
 ResultStatus ProgramLoader_NCCH::ReadUpdateRomFS(
     std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
-    ResultStatus result{update_ncch.ReadRomFS(romfs_file)};
-
+    auto result{update_ncch.ReadRomFS(romfs_file)};
     if (result != ResultStatus::Success)
         return base_ncch.ReadRomFS(romfs_file);
-
     return ResultStatus::Success;
 }
 
