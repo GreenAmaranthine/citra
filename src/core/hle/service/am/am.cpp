@@ -668,17 +668,17 @@ void Module::Interface::DeleteUserProgram(Kernel::HLERequestContext& ctx) {
     u16 category{static_cast<u16>((program_id >> 32) & 0xFFFF)};
     u8 variation{static_cast<u8>(program_id & 0xFF)};
     if (category & CATEGORY_SYSTEM || category & CATEGORY_DLP || variation & VARIATION_SYSTEM) {
-        LOG_ERROR(Service_AM, "Trying to uninstall system app");
-        rb.Push(ResultCode(ErrCodes::TryingToUninstallSystemApp, ErrorModule::AM,
+        LOG_ERROR(Service_AM, "Trying to uninstall system program");
+        rb.Push(ResultCode(ErrCodes::TryingToUninstallSystemProgram, ErrorModule::AM,
                            ErrorSummary::InvalidArgument, ErrorLevel::Usage));
         return;
     }
-    LOG_INFO(Service_AM, "Deleting title 0x{:016x}", program_id);
-    std::string path{GetProgramPath(media_type, program_id)};
+    LOG_INFO(Service_AM, "Deleting program 0x{:016x}", program_id);
+    auto path{GetProgramPath(media_type, program_id)};
     if (!FileUtil::Exists(path)) {
         rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::AM, ErrorSummary::InvalidState,
                            ErrorLevel::Permanent));
-        LOG_ERROR(Service_AM, "Title not found");
+        LOG_ERROR(Service_AM, "Program not found");
         return;
     }
     bool success{FileUtil::DeleteDirRecursively(path)};
@@ -693,20 +693,17 @@ void Module::Interface::GetProductCode(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0005, 3, 0};
     FS::MediaType media_type{rp.PopEnum<FS::MediaType>()};
     u64 program_id{rp.Pop<u64>()};
-    std::string path{GetProgramContentPath(media_type, program_id)};
+    auto path{GetProgramContentPath(media_type, program_id)};
     if (!FileUtil::Exists(path)) {
         IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::AM, ErrorSummary::InvalidState,
                            ErrorLevel::Permanent));
     } else {
-        struct ProductCode {
-            u8 code[0x10];
-        };
-        ProductCode product_code;
         IPC::ResponseBuilder rb{rp.MakeBuilder(6, 0)};
         FileSys::NCCHContainer ncch{path};
         ncch.Load();
-        std::memcpy(&product_code.code, &ncch.ncch_header.product_code,
+        std::array<u8, 0x10> product_code;
+        std::memcpy(product_code.data(), &ncch.ncch_header.product_code,
                     sizeof(ncch.ncch_header.product_code));
         rb.Push(RESULT_SUCCESS);
         rb.PushRaw(product_code);
@@ -1290,19 +1287,19 @@ void Module::Interface::DeleteUserProgramsAtomically(Kernel::HLERequestContext& 
         u16 category{static_cast<u16>((program_id >> 32) & 0xFFFF)};
         u8 variation{static_cast<u8>(program_id & 0xFF)};
         if (category & CATEGORY_SYSTEM || category & CATEGORY_DLP || variation & VARIATION_SYSTEM) {
-            LOG_ERROR(Service_AM, "Trying to uninstall system app");
+            LOG_ERROR(Service_AM, "Trying to uninstall system program");
             IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-            rb.Push(ResultCode(ErrCodes::TryingToUninstallSystemApp, ErrorModule::AM,
+            rb.Push(ResultCode(ErrCodes::TryingToUninstallSystemProgram, ErrorModule::AM,
                                ErrorSummary::InvalidArgument, ErrorLevel::Usage));
             return;
         }
-        LOG_INFO(Service_AM, "Deleting title 0x{:016x}", program_id);
-        std::string path{GetProgramPath(media_type, program_id)};
+        LOG_INFO(Service_AM, "Deleting program 0x{:016x}", program_id);
+        auto path{GetProgramPath(media_type, program_id)};
         if (!FileUtil::Exists(path)) {
             IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
             rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::AM,
                                ErrorSummary::InvalidState, ErrorLevel::Permanent));
-            LOG_ERROR(Service_AM, "Title not found");
+            LOG_ERROR(Service_AM, "Program not found");
             return;
         }
         if (!FileUtil::DeleteDirRecursively(path))

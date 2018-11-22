@@ -31,7 +31,7 @@ enum {
     CIACurrentlyInstalling = 4,
     InvalidTID = 31,
     EmptyCIA = 32,
-    TryingToUninstallSystemApp = 44,
+    TryingToUninstallSystemProgram = 44,
     InvalidTIDInList = 60,
     InvalidCIAHeader = 104,
 };
