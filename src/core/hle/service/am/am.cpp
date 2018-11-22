@@ -1187,13 +1187,13 @@ void Module::Interface::DeleteProgram(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0410, 3, 0};
     auto media_type{rp.PopEnum<FS::MediaType>()};
     u64 program_id{rp.Pop<u64>()};
-    LOG_INFO(Service_AM, "Deleting title 0x{:016x}", program_id);
-    std::string path{GetProgramPath(media_type, program_id)};
+    LOG_INFO(Service_AM, "Deleting program 0x{:016x}", program_id);
+    auto path{GetProgramPath(media_type, program_id)};
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
     if (!FileUtil::Exists(path)) {
         rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::AM, ErrorSummary::InvalidState,
                            ErrorLevel::Permanent));
-        LOG_ERROR(Service_AM, "Title not found");
+        LOG_ERROR(Service_AM, "Program not found");
         return;
     }
     bool success{FileUtil::DeleteDirRecursively(path)};

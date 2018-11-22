@@ -62,7 +62,7 @@ struct Values {
     bool show_status_bar;
 
     QString amiibo_dir;
-    QString apps_dir;
+    QString programs_dir;
     QString movies_dir;
     QString ram_dumps_dir;
     QString screenshots_dir;

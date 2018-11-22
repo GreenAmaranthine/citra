@@ -878,11 +878,11 @@ void GMainWindow::OnProgramListShowList(bool show) {
 void GMainWindow::OnMenuLoadFile() {
     const auto extensions{QString("*.").append(ProgramList::supported_file_extensions.join(" *."))};
     const auto file_filter{QString("3DS Executable (%1);;All Files (*.*)").arg(extensions)};
-    const auto filename{
-        QFileDialog::getOpenFileName(this, "Load File", UISettings::values.apps_dir, file_filter)};
+    const auto filename{QFileDialog::getOpenFileName(this, "Load File",
+                                                     UISettings::values.programs_dir, file_filter)};
     if (filename.isEmpty())
         return;
-    UISettings::values.apps_dir = QFileInfo(filename).path();
+    UISettings::values.programs_dir = QFileInfo(filename).path();
     BootProgram(filename.toStdString());
 }
 

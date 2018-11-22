@@ -444,11 +444,13 @@ void ProgramList::AddAppPopup(QMenu& context_menu, QStandardItem* child) {
     auto open_program_location{context_menu.addAction("Open Program Location")};
     auto open_update_location{context_menu.addAction("Open Update Data Location")};
     auto copy_program_id{context_menu.addAction("Copy Program ID")};
+    auto uninstall{context_menu.addAction("Uninstall")};
     open_save_location->setVisible(0x0004000000000000 <= program_id &&
                                    program_id <= 0x00040000FFFFFFFF);
+    uninstall->setVisible(child->parent()->text() == "Installed");
     auto sdmc_dir{
         FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir, Settings::values.sdmc_dir + "/")};
-    open_save_location->setEnabled(FileUtil::Exists(
+    open_save_location->setVisible(FileUtil::Exists(
         FileSys::ArchiveSource_SDSaveData::GetSaveDataPathFor(sdmc_dir, program_id)));
     if (extdata_id)
         open_extdata_location->setVisible(
@@ -476,9 +478,13 @@ void ProgramList::AddAppPopup(QMenu& context_menu, QStandardItem* child) {
     connect(open_update_location, &QAction::triggered, [&, program_id]() {
         emit OpenFolderRequested(program_id, ProgramListOpenTarget::UpdateData);
     });
-    connect(copy_program_id, &QAction::triggered, [&, program_id]() {
+    connect(copy_program_id, &QAction::triggered, [program_id]() {
         QApplication::clipboard()->setText(
             QString::fromStdString(fmt::format("{:016X}", program_id)));
+    });
+    connect(uninstall, &QAction::triggered, [this, program_id]() {
+        FileUtil::DeleteDirRecursively(
+            Service::AM::GetProgramPath(Service::FS::MediaType::SDMC, program_id));
     });
     auto it{issues_map.find(program_id)};
     if (it != issues_map.end() && it->second.size() != 0) {
@@ -490,8 +496,7 @@ void ProgramList::AddAppPopup(QMenu& context_menu, QStandardItem* child) {
 };
 
 void ProgramList::AddCustomDirPopup(QMenu& context_menu, QStandardItem* child) {
-    UISettings::AppDir& program_dir{
-        *child->data(ProgramListDir::AppDirRole).value<UISettings::AppDir*>()};
+    auto& program_dir{*child->data(ProgramListDir::AppDirRole).value<UISettings::AppDir*>()};
     auto deep_scan{context_menu.addAction("Scan Subfolders")};
     auto delete_dir{context_menu.addAction("Remove Program Directory")};
     deep_scan->setCheckable(true);

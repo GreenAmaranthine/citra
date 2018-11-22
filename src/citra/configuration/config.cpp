@@ -311,7 +311,7 @@ void Config::Load() {
     qt_config->endGroup();
     qt_config->beginGroup("Paths");
     UISettings::values.amiibo_dir = qt_config->value("amiibo_dir", ".").toString();
-    UISettings::values.apps_dir = qt_config->value("apps_dir", ".").toString();
+    UISettings::values.programs_dir = qt_config->value("programs_dir", ".").toString();
     UISettings::values.movies_dir = qt_config->value("movies_dir", ".").toString();
     UISettings::values.ram_dumps_dir = qt_config->value("ram_dumps_dir", ".").toString();
     UISettings::values.screenshots_dir = qt_config->value("screenshots_dir", ".").toString();
@@ -524,7 +524,7 @@ void Config::Save() {
     qt_config->endGroup();
     qt_config->beginGroup("Paths");
     qt_config->setValue("amiibo_dir", UISettings::values.amiibo_dir);
-    qt_config->setValue("apps_dir", UISettings::values.apps_dir);
+    qt_config->setValue("programs_dir", UISettings::values.programs_dir);
     qt_config->setValue("movies_dir", UISettings::values.movies_dir);
     qt_config->setValue("ram_dumps_dir", UISettings::values.ram_dumps_dir);
     qt_config->setValue("screenshots_dir", UISettings::values.screenshots_dir);
