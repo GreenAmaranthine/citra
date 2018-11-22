@@ -129,7 +129,7 @@ System::ResultStatus System::Load(Frontend& frontend, const std::string& filepat
     const auto load_result{program_loader->Load(process)};
     kernel->SetCurrentProcess(process);
     if (Loader::ResultStatus::Success != load_result) {
-        LOG_ERROR(Core, "Failed to load ROM (Error {})!", static_cast<u32>(load_result));
+        LOG_ERROR(Core, "Failed to load file (Error {})!", static_cast<u32>(load_result));
         Shutdown();
         switch (load_result) {
         case Loader::ResultStatus::ErrorEncrypted:

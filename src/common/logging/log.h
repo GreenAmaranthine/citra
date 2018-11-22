@@ -92,7 +92,7 @@ enum class Class : u8 {
     Render,             ///< Emulator video output and hardware acceleration
     Audio,              ///< Audio emulation
     Audio_DSP,          ///< The HLE implementation of the DSP
-    Loader,             ///< ROM loader
+    Loader,             ///< Loader
     Input,              ///< Input emulation
     Network,            ///< Network emulation
     Movie,              ///< Movie (Input Recording) Playback

@@ -109,7 +109,7 @@ constexpr std::array<u8, 4> header_magic_bytes{{'C', 'T', 'M', 0x1B}};
 #pragma pack(push, 1)
 struct CTMHeader {
     std::array<u8, 4> filetype;   /// Unique Identifier to check the file type (always "CTM"0x1B)
-    u64_le program_id;            /// ID of the ROM being executed. Also called program_id
+    u64_le program_id;            /// ID of the program being executed.
     std::array<u8, 20> revision;  /// Git hash of the revision this movie was created with
     u64_le clock_init_time;       /// The init time of the system clock
     std::array<u8, 216> reserved; /// Make heading 256 bytes so it has consistent size

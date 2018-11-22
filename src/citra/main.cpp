@@ -488,8 +488,8 @@ bool GMainWindow::LoadProgram(const std::string& filename) {
         case Core::System::ResultStatus::ErrorGetLoader:
             LOG_ERROR(Frontend, "Failed to obtain loader for {}!", filename);
             QMessageBox::critical(
-                this, "Invalid ROM Format",
-                "Your ROM format isn't supported.<br/>Please follow the guides to redump your "
+                this, "Unsupported Format",
+                "Your file's format isn't supported.<br/>Please follow the guides to redump your "
                 "<a "
                 "href='https://github.com/valentinvanelslande/citra/wiki/"
                 "Dumping-Game-Cartridges/'>game "
@@ -500,10 +500,10 @@ bool GMainWindow::LoadProgram(const std::string& filename) {
                 "titles</a>.");
             break;
         case Core::System::ResultStatus::ErrorSystemMode:
-            LOG_ERROR(Frontend, "Failed to load ROM!");
+            LOG_ERROR(Frontend, "Failed to load file!");
             QMessageBox::critical(
-                this, "ROM Corrupted",
-                "Your ROM is corrupted. <br/>Please follow the guides to redump your "
+                this, "File Corrupted",
+                "Your file is corrupted. <br/>Please follow the guides to redump your "
                 "<a "
                 "href='https://github.com/valentinvanelslande/citra/wiki/"
                 "Dumping-Game-Cartridges/'>game "
@@ -515,8 +515,8 @@ bool GMainWindow::LoadProgram(const std::string& filename) {
             break;
         case Core::System::ResultStatus::ErrorLoader_ErrorEncrypted:
             QMessageBox::critical(
-                this, "ROM Encrypted",
-                "Your ROM is encrypted. <br/>Please follow the guides to redump your "
+                this, "File Encrypted",
+                "Your file is encrypted. <br/>Please follow the guides to redump your "
                 "<a "
                 "href='https://github.com/valentinvanelslande/citra/wiki/"
                 "Dumping-Game-Cartridges/'>game "
@@ -528,8 +528,8 @@ bool GMainWindow::LoadProgram(const std::string& filename) {
             break;
         case Core::System::ResultStatus::ErrorLoader_ErrorInvalidFormat:
             QMessageBox::critical(
-                this, "Invalid ROM Format",
-                "Your ROM format isn't supported.<br/>Please follow the guides to redump your "
+                this, "Unsupported Format",
+                "Your file's format isn't supported.<br/>Please follow the guides to redump your "
                 "<a "
                 "href='https://github.com/valentinvanelslande/citra/wiki/"
                 "Dumping-Game-Cartridges/'>game "
@@ -558,7 +558,7 @@ bool GMainWindow::LoadProgram(const std::string& filename) {
                                   "have the latest graphics driver.");
             break;
         default:
-            QMessageBox::critical(this, "Error while loading ROM!",
+            QMessageBox::critical(this, "Error while loading file!",
                                   "An unknown error occured. Please see the log for more details.");
             break;
         }

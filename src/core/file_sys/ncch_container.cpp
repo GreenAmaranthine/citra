@@ -249,7 +249,7 @@ Loader::ResultStatus NCCHContainer::Load() {
                 sizeof(ExHeader_Header))
                 return Loader::ResultStatus::Error;
             if (is_encrypted) {
-                // This ID check is masked to low 32-bit as a toleration to ill-formed ROM created
+                // This ID check is masked to low 32-bit as a toleration to ill-formed file created
                 // by merging games and its updates.
                 if ((exheader_header.system_info.jump_id & 0xFFFFFFFF) ==
                     (ncch_header.program_id & 0xFFFFFFFF)) {
