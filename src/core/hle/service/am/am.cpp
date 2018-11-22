@@ -932,7 +932,7 @@ void Module::Interface::EndImportProgramWithoutCommit(Kernel::HLERequestContext&
     IPC::RequestParser rp{ctx, 0x0406, 0, 2};
     auto cia{rp.PopObject<Kernel::ClientSession>()};
     // Note: This function is basically a no-op for us since we don't use title.db or ticket.db
-    // files to keep track of installed titles.
+    // files to keep track of installed programs.
     am->cia_installing = false;
     am->ScanForAllPrograms();
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
@@ -946,7 +946,7 @@ void Module::Interface::CommitImportPrograms(Kernel::HLERequestContext& ctx) {
     u8 database{rp.Pop<u8>()};
     auto& buffer{rp.PopMappedBuffer()};
     // Note: This function is basically a no-op for us since we don't use title.db or ticket.db
-    // files to keep track of installed titles.
+    // files to keep track of installed programs.
     am->ScanForAllPrograms();
     IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);

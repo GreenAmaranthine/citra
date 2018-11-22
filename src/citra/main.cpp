@@ -496,8 +496,8 @@ bool GMainWindow::LoadProgram(const std::string& filename) {
                 "cartridges</a> or "
                 "<a "
                 "href='https://github.com/valentinvanelslande/citra/wiki/"
-                "Dumping-Installed-Titles/'>installed "
-                "titles</a>.");
+                "Dumping-Programs-Titles/'>installed "
+                "programs</a>.");
             break;
         case Core::System::ResultStatus::ErrorSystemMode:
             LOG_ERROR(Frontend, "Failed to load file!");
