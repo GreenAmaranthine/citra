@@ -491,8 +491,20 @@ void ProgramList::AddAppPopup(QMenu& context_menu, QStandardItem* child) {
         auto issues{context_menu.addAction("Issues")};
         connect(issues, &QAction::triggered, [&, list = it->second]() {
             QStringList qsl;
-            for (const auto& issue : list)
-                qsl.push_back(QString::fromStdString(issue));
+            for (const auto& issue : list) {
+                switch (issue.type) {
+                case Issue::Type::Normal:
+                    qsl.append(QString::fromStdString(issue.data));
+                    break;
+                case Issue::Type::GitHub:
+                    qsl.append(QString("<a href=\"https://github.com/%1/issues/%2\"><span "
+                                       "style=\"text-decoration: "
+                                       "underline; color:#039be5;\">%1#%2</span></a>")
+                                   .arg(QString::fromStdString(issue.data),
+                                        QString::number(issue.number)));
+                    break;
+                }
+            }
             QMessageBox::information(this, "Issues", qsl.join("<br>"));
         });
     }
