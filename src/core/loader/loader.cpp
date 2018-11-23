@@ -20,8 +20,7 @@ const std::initializer_list<Kernel::AddressMapping> default_address_mappings{
 };
 
 FileType IdentifyFile(FileUtil::IOFile& file) {
-    FileType type{};
-
+    FileType type;
 #define CHECK_TYPE(loader)                                                                         \
     type = ProgramLoader_##loader::IdentifyType(file);                                             \
     if (FileType::Error != type)                                                                   \
@@ -43,7 +42,7 @@ FileType IdentifyFile(const std::string& file_name) {
 }
 
 FileType GuessFromExtension(const std::string& extension_) {
-    std::string extension{Common::ToLower(extension_)};
+    auto extension{Common::ToLower(extension_)};
     if (extension == ".elf" || extension == ".axf")
         return FileType::ELF;
     if (extension == ".cci" || extension == ".3ds")

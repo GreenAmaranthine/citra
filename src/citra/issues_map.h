@@ -4,17 +4,18 @@
 
 #pragma once
 
+#include <string>
 #include <unordered_map>
-#include <QString>
+#include <fmt/format.h>
 #include "common/common_types.h"
 
-static inline QString GitHubIssue(const QString& repo, int number) {
-    return QString("<a href=\"https://github.com/%1/issues/%2\"><span style=\"text-decoration: "
-                   "underline; color:#039be5;\">%1#%2</span></a>")
-        .arg(repo, QString::number(number));
+static inline std::string GitHubIssue(const std::string& repo, int number) {
+    return fmt::format("<a href=\"https://github.com/{}/issues/{}\"><span style=\"text-decoration: "
+                       "underline; color:#039be5;\">{}#{}</span></a>",
+                       repo, number, repo, number);
 }
 
-static const std::unordered_map<u64, QStringList> issues_map{{
+static const std::unordered_map<u64, std::vector<std::string>> issues_map{{
     // DSiMenuPlusPlus
     {0x0004000004395500, {"Citra crashes with Unknown result status"}},
 
@@ -57,23 +58,24 @@ static const std::unordered_map<u64, QStringList> issues_map{{
     // Animal Crossing: Happy Home Designer (EUR)
     {0x000400000014F200, {"Needs Nintendo Network support"}},
 
-    // Animal Crossing: New Leaf - Welcome amiibo (EUR)
-    {0x0004000000198F00, {"Needs Microphone", "Needs Nintendo Network support"}},
-
-    // Super Mario Maker (EUR)
-    {0x00040000001A0500, {"Needs Nintendo Network support"}},
-
     // Animal Crossing: New Leaf (EUR)
     {0x0004000000086400, {"Needs Microphone", "Needs Nintendo Network support"}},
 
+    // Animal Crossing: New Leaf - Welcome amiibo (EUR)
+    {0x0004000000198F00,
+     {"Needs Microphone", "Needs Nintendo Network support", GitHubIssue("citra-emu/citra", 3438)}},
+
     // nintendogs + cats (Golden Retriever & New Friends) (EUR)
     {0x0004000000030C00, {"Needs Microphone", "Needs Pedometer"}},
+
+    // Super Mario Maker (EUR)
+    {0x00040000001A0500, {"Needs Nintendo Network support"}},
 
     // Tomodachi Life (EUR)
     {0x000400000008C400,
      {"Lip syncing glitchy when singing", GitHubIssue("citra-emu/citra", 4320),
       "Exchange Miis or Other Items - The name of the island flashes",
-      "Scan QR Code - Preparing camera never ends"}},
+      GitHubIssue("citra-emu/citra", 4449)}},
 
     // The Legend of Zelda: Tri Force Heroes (EUR)
     {0x0004000000177000, {"Needs DLP", "Needs Nintendo Network support"}},
@@ -119,7 +121,7 @@ static const std::unordered_map<u64, QStringList> issues_map{{
     {0x000400000008C300,
      {"Lip syncing glitchy when singing", GitHubIssue("citra-emu/citra", 4320),
       "Exchange Miis or Other Items - The name of the island flashes",
-      "Scan QR Code - Preparing camera never ends"}},
+      GitHubIssue("citra-emu/citra", 4449)}},
 
     // Mario Kart 7 (USA)
     {0x0004000000030800, {"Needs DLP", "Needs Nintendo Network support"}},
@@ -137,10 +139,11 @@ static const std::unordered_map<u64, QStringList> issues_map{{
     {0x00040000001A2D00, {GitHubIssue("citra-emu/citra", 4388)}},
 
     // とびだせ どうぶつの森 (JPN)
-    {0x0004000000086200, {"Needs Microphone"}},
+    {0x0004000000086200, {"Needs Microphone", "Needs Nintendo Network support"}},
 
     // とびだせ どうぶつの森 amiibo+ (JPN)
-    {0x0004000000198D00, {"Needs Microphone", "Needs Nintendo Network support"}},
+    {0x0004000000198D00,
+     {"Needs Microphone", "Needs Nintendo Network support", GitHubIssue("citra-emu/citra", 3438)}},
 
     // スーパーマリオメーカー for ニンテンドー3DS (JPN)
     {0x00040000001A0300, {"Needs Nintendo Network support"}},
@@ -149,7 +152,8 @@ static const std::unordered_map<u64, QStringList> issues_map{{
     {0x0004000000086500, {"Needs Microphone", "Needs Nintendo Network support"}},
 
     // Animal Crossing: New Leaf - Welcome amiibo (KOR)
-    {0x0004000000199000, {"Needs Microphone", "Needs Nintendo Network support"}},
+    {0x0004000000199000,
+     {"Needs Microphone", "Needs Nintendo Network support", GitHubIssue("citra-emu/citra", 3438)}},
 
     // Super Mario Maker (KOR)
     {0x00040000001BB800, {"Needs Nintendo Network support"}},

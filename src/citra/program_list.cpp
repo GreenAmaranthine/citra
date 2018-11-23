@@ -490,7 +490,10 @@ void ProgramList::AddAppPopup(QMenu& context_menu, QStandardItem* child) {
     if (it != issues_map.end() && it->second.size() != 0) {
         auto issues{context_menu.addAction("Issues")};
         connect(issues, &QAction::triggered, [&, list = it->second]() {
-            QMessageBox::information(this, "Issues", list.join("<br>"));
+            QStringList qsl;
+            for (const auto& issue : list)
+                qsl.push_back(QString::fromStdString(issue));
+            QMessageBox::information(this, "Issues", qsl.join("<br>"));
         });
     }
 };
