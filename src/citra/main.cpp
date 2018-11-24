@@ -597,9 +597,6 @@ void GMainWindow::BootProgram(const std::string& filename) {
         movie_record_path.clear();
     }
     connect(emu_thread.get(), &EmuThread::ErrorThrown, this, &GMainWindow::OnCoreError);
-    HLE::Applets::ErrEula::cb = [this](HLE::Applets::ErrEulaConfig& config, bool& is_running) {
-        ErrEulaCallback(config, is_running);
-    };
     HLE::Applets::MiiSelector::cb = [this](const HLE::Applets::MiiConfig& config,
                                            HLE::Applets::MiiResult& result, bool& is_running) {
         MiiSelectorCallback(config, result, is_running);
@@ -673,43 +670,6 @@ void GMainWindow::StoreRecentFile(const QString& filename) {
     while (UISettings::values.recent_files.size() > MaxRecentFiles)
         UISettings::values.recent_files.removeLast();
     UpdateRecentFiles();
-}
-
-void GMainWindow::ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& is_running) {
-    if (QThread::currentThread() != thread()) {
-        QMetaObject::invokeMethod(this, "ErrEulaCallback", Qt::BlockingQueuedConnection,
-                                  Q_ARG(HLE::Applets::ErrEulaConfig&, config),
-                                  Q_ARG(bool&, is_running));
-        return;
-    }
-    switch (config.error_type) {
-    case HLE::Applets::ErrEulaErrorType::ErrorCode:
-        QMessageBox::critical(nullptr, "ErrEula",
-                              QString::fromStdString(fmt::format("0x{:08X}", config.error_code)));
-        break;
-    case HLE::Applets::ErrEulaErrorType::LocalizedErrorText:
-    case HLE::Applets::ErrEulaErrorType::ErrorText:
-        QMessageBox::critical(
-            nullptr, "ErrEula",
-            QString::fromStdString(
-                fmt::format("0x{:08X}\n{}", config.error_code,
-                            Common::UTF16ToUTF8(std::u16string(
-                                reinterpret_cast<const char16_t*>(config.error_text.data()))))));
-        break;
-    case HLE::Applets::ErrEulaErrorType::Agree:
-    case HLE::Applets::ErrEulaErrorType::Eula:
-    case HLE::Applets::ErrEulaErrorType::EulaDrawOnly:
-    case HLE::Applets::ErrEulaErrorType::EulaFirstBoot:
-        if (QMessageBox::question(nullptr, "ErrEula", "Agree EULA?") ==
-            QMessageBox::StandardButton::Yes)
-            system.ServiceManager()
-                .GetService<Service::CFG::Module::Interface>("cfg:u")
-                ->GetModule()
-                ->AgreeEula();
-        break;
-    }
-    config.return_code = HLE::Applets::ErrEulaResult::Success;
-    is_running = false;
 }
 
 void GMainWindow::MiiSelectorCallback(const HLE::Applets::MiiConfig& config,

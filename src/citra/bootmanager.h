@@ -85,10 +85,15 @@ public:
 
     Q_INVOKABLE void LaunchSoftwareKeyboardImpl(HLE::Applets::SoftwareKeyboardConfig& config,
                                                 std::u16string& text, bool& is_running);
+    Q_INVOKABLE void LaunchErrEulaImpl(HLE::Applets::ErrEulaConfig& config, bool& is_running);
 
     void LaunchSoftwareKeyboard(HLE::Applets::SoftwareKeyboardConfig& config, std::u16string& text,
                                 bool& is_running) override {
         LaunchSoftwareKeyboardImpl(config, text, is_running);
+    }
+
+    void LaunchErrEula(HLE::Applets::ErrEulaConfig& config, bool& is_running) override {
+        LaunchErrEulaImpl(config, is_running);
     }
 
 public slots:

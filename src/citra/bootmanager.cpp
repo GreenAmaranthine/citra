@@ -14,6 +14,7 @@
 #include "common/scm_rev.h"
 #include "core/3ds.h"
 #include "core/core.h"
+#include "core/hle/applets/erreula.h"
 #include "core/input.h"
 #include "core/settings.h"
 #include "input_common/keyboard.h"
@@ -283,6 +284,43 @@ void Screens::LaunchSoftwareKeyboardImpl(HLE::Applets::SoftwareKeyboardConfig& c
     }
     SoftwareKeyboardDialog dialog{this, config, text};
     dialog.exec();
+    is_running = false;
+}
+
+void Screens::ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& is_running) {
+    if (QThread::currentThread() != thread()) {
+        QMetaObject::invokeMethod(this, "LaunchErrEulaImpl", Qt::BlockingQueuedConnection,
+                                  Q_ARG(HLE::Applets::ErrEulaConfig&, config),
+                                  Q_ARG(bool&, is_running));
+        return;
+    }
+    switch (config.error_type) {
+    case HLE::Applets::ErrEulaErrorType::ErrorCode:
+        QMessageBox::critical(nullptr, "ErrEula",
+                              QString::fromStdString(fmt::format("0x{:08X}", config.error_code)));
+        break;
+    case HLE::Applets::ErrEulaErrorType::LocalizedErrorText:
+    case HLE::Applets::ErrEulaErrorType::ErrorText:
+        QMessageBox::critical(
+            nullptr, "ErrEula",
+            QString::fromStdString(
+                fmt::format("0x{:08X}\n{}", config.error_code,
+                            Common::UTF16ToUTF8(std::u16string(
+                                reinterpret_cast<const char16_t*>(config.error_text.data()))))));
+        break;
+    case HLE::Applets::ErrEulaErrorType::Agree:
+    case HLE::Applets::ErrEulaErrorType::Eula:
+    case HLE::Applets::ErrEulaErrorType::EulaDrawOnly:
+    case HLE::Applets::ErrEulaErrorType::EulaFirstBoot:
+        if (QMessageBox::question(nullptr, "ErrEula", "Agree EULA?") ==
+            QMessageBox::StandardButton::Yes)
+            system.ServiceManager()
+                .GetService<Service::CFG::Module::Interface>("cfg:u")
+                ->GetModule()
+                ->AgreeEula();
+        break;
+    }
+    config.return_code = HLE::Applets::ErrEulaResult::Success;
     is_running = false;
 }
 

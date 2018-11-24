@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <functional>
 #include "common/common_types.h"
 #include "core/hle/applets/applet.h"
 #include "core/hle/kernel/shared_memory.h"
@@ -57,8 +56,6 @@ public:
     ResultCode StartImpl(const Service::APT::AppletStartupParameter& parameter) override;
     void Update() override;
     void Finalize();
-
-    static inline std::function<void(HLE::Applets::ErrEulaConfig&, bool&)> cb;
 
 private:
     /// This SharedMemory will be created when we receive the LibAppJustStarted message.

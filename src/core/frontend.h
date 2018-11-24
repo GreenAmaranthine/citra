@@ -31,6 +31,7 @@ public:
 
     virtual void LaunchSoftwareKeyboard(HLE::Applets::SoftwareKeyboardConfig&, std::u16string&,
                                         bool&) = 0;
+    virtual void LaunchErrEula(HLE::Applets::ErrEulaConfig&, bool&) = 0;
 
 private:
     Layout::FramebufferLayout framebuffer_layout; ///< Current framebuffer layout

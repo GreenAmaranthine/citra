@@ -10,7 +10,6 @@
 #include "citra/hotkeys.h"
 #include "common/announce_multiplayer_room.h"
 #include "core/core.h"
-#include "core/hle/applets/erreula.h"
 #include "core/hle/applets/mii_selector.h"
 #include "core/hle/service/am/am.h"
 #include "network/room.h"
@@ -171,7 +170,6 @@ private:
     void UpdatePerformanceStats();
     void UpdateTitle();
 
-    Q_INVOKABLE void ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& is_running);
     Q_INVOKABLE void MiiSelectorCallback(const HLE::Applets::MiiConfig& config,
                                          HLE::Applets::MiiResult& result, bool& is_running);
     Q_INVOKABLE void Update3D();

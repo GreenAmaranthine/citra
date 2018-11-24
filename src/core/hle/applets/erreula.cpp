@@ -6,6 +6,7 @@
 #include <mutex>
 #include "common/string_util.h"
 #include "core/core.h"
+#include "core/frontend.h"
 #include "core/hle/applets/erreula.h"
 #include "core/hle/service/cfg/cfg.h"
 
@@ -48,7 +49,7 @@ ResultCode ErrEula::StartImpl(const Service::APT::AppletStartupParameter& parame
 }
 
 void ErrEula::Update() {
-    cb(config, is_running);
+    manager.System().GetFrontend().LaunchErrEula(config, is_running);
     std::mutex m;
     std::unique_lock lock{m};
     std::condition_variable cv;
