@@ -367,7 +367,7 @@ void Config::Load() {
     UISettings::values.room_description = qt_config->value("room_description", "").toString();
     auto list{qt_config->value("ban_list", QStringList()).toStringList()};
     for (auto s : list)
-        UISettings::values.ban_list.push_back(std::move(s).toStdString());
+        UISettings::values.ban_list.push_back(s.toStdString());
     qt_config->endGroup();
     qt_config->endGroup();
 }
@@ -556,7 +556,7 @@ void Config::Save() {
     QStringList list;
     for (const auto& i : UISettings::values.ban_list)
         list.append(QString::fromStdString(i));
-    qt_config->setValue("ban_list", std::move(list));
+    qt_config->setValue("ban_list", list);
     qt_config->endGroup();
     qt_config->endGroup();
 }

@@ -19,6 +19,7 @@
 #include "citra/multiplayer/client_room.h"
 #include "citra/multiplayer/emojis.h"
 #include "citra/multiplayer/message.h"
+#include "citra/multiplayer/moderation_dialog.h"
 #include "citra/multiplayer/state.h"
 #include "citra/program_list_p.h"
 #include "common/logging/log.h"
@@ -221,7 +222,7 @@ void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
     auto member{std::distance(members.begin(), it)};
     ChatMessage m{chat};
     AppendChatMessage(m.GetMemberChatMessage(member));
-    QString message{QString::fromStdString(chat.message)};
+    auto message{QString::fromStdString(chat.message)};
     HandleNewMessage(message.remove(QChar('\0')));
 }
 
@@ -282,15 +283,25 @@ void ChatRoom::OnChatTextChanged() {
 }
 
 void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
-    QModelIndex item{ui->member_view->indexAt(menu_location)};
+    auto item{ui->member_view->indexAt(menu_location)};
     if (!item.isValid())
         return;
-    std::string nickname{member_list->item(item.row())->text().toStdString()};
-    // You can't block, kick of ban yourself
-    if (nickname == system.RoomMember().GetNickname())
+    auto nickname{member_list->item(item.row())->text().toStdString()};
+    // You can't block, kick or ban yourself
+    if (nickname == system.RoomMember().GetNickname()) {
+        if (has_mod_perms) {
+            QMenu context_menu;
+            auto moderation_action{context_menu.addAction("Moderation...")};
+            connect(moderation_action, &QAction::triggered, [this] {
+                ModerationDialog dialog{system.RoomMember(), this};
+                dialog.exec();
+            });
+            context_menu.exec(ui->member_view->viewport()->mapToGlobal(menu_location));
+        }
         return;
+    }
     QMenu context_menu;
-    QAction* block_action{context_menu.addAction("Block Member")};
+    auto block_action{context_menu.addAction("Block Member")};
     block_action->setCheckable(true);
     block_action->setChecked(block_list.count(nickname) > 0);
     connect(block_action, &QAction::triggered, [this, nickname] {
@@ -310,7 +321,9 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
     if (has_mod_perms) {
         context_menu.addSeparator();
         auto kick_action{context_menu.addAction("Kick")};
-        auto ban_action = context_menu.addAction("Ban");
+        auto ban_action{context_menu.addAction("Ban")};
+        context_menu.addSeparator();
+        auto moderation_action{context_menu.addAction("Moderation...")};
         connect(kick_action, &QAction::triggered, [this, nickname] {
             auto result{
                 QMessageBox::question(this, "Kick Member",
@@ -329,6 +342,10 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
                 QMessageBox::Yes | QMessageBox::No)};
             if (result == QMessageBox::Yes)
                 SendModerationRequest(Network::IdModBan, nickname);
+        });
+        connect(moderation_action, &QAction::triggered, [this] {
+            ModerationDialog dialog{system.RoomMember(), this};
+            dialog.exec();
         });
     }
     context_menu.exec(ui->member_view->viewport()->mapToGlobal(menu_location));

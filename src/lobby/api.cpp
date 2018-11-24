@@ -33,7 +33,6 @@ void to_json(nlohmann::json& json, const Room& room) {
         nlohmann::json member_json = room.members;
         json["members"] = member_json;
     }
-    json["show"] = room.show;
 }
 
 void from_json(const nlohmann::json& json, Room& room) {
@@ -55,7 +54,6 @@ void from_json(const nlohmann::json& json, Room& room) {
     } catch (const nlohmann::detail::out_of_range& e) {
         LOG_DEBUG(Network, "Out of range {}", e.what());
     }
-    room.show = json.at("show").get<bool>();
 }
 
 } // namespace AnnounceMultiplayerRoom
@@ -135,6 +133,7 @@ AnnounceMultiplayerRoom::RoomList LobbyAPI::GetRoomList() {
 }
 
 void LobbyAPI::Delete() {
-    room.show = false;
-    Announce();
+    nlohmann::json json;
+    json["delete"] = room.port;
+    MakeRequest("POST", json.dump());
 }

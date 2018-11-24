@@ -27,7 +27,6 @@ struct Room {
     u32 max_members;
     u32 net_version;
     bool has_password;
-    bool show;
     std::vector<Member> members;
 };
 using RoomList = std::vector<Room>;
