@@ -153,14 +153,14 @@ void RPCServer::HandleIsButtonPressed(Packet& packet, int button) {
 
 void RPCServer::HandleSetFrameAdvancing(Packet& packet, bool enable) {
     system.frame_limiter.SetFrameAdvancing(enable);
-    cb_update_frame_advancing();
+    system.GetFrontend().UpdateFrameAdvancing();
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
 
 void RPCServer::HandleAdvanceFrame(Packet& packet) {
     system.frame_limiter.AdvanceFrame();
-    cb_update_frame_advancing();
+    system.GetFrontend().UpdateFrameAdvancing();
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }

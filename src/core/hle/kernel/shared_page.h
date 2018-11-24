@@ -6,7 +6,6 @@
 
 #include <chrono>
 #include <ctime>
-#include <functional>
 #include <memory>
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
@@ -47,7 +46,7 @@ union BatteryState {
 // Default MAC address in valid range
 constexpr MACAddress DefaultMac{0x40, 0xF4, 0x07, 0x00, 0x00, 0x00};
 
-enum class WifiLinkLevel : u8 {
+enum class WiFiLinkLevel : u8 {
     Off = 0,
     Poor = 1,
     Good = 2,
@@ -90,8 +89,8 @@ class Handler {
 public:
     explicit Handler(Core::System& system);
 
-    void SetMacAddress(const MACAddress&);
-    void SetWifiLinkLevel(WifiLinkLevel);
+    void SetMACAddress(const MACAddress&);
+    void SetWiFiLinkLevel(WiFiLinkLevel);
     void SetNetworkState(NetworkState);
     NetworkState GetNetworkState();
     void SetAdapterConnected(u8);
@@ -99,8 +98,6 @@ public:
     void SetBatteryLevel(u8);
     SharedPageDef& GetSharedPage();
     void Update3DSettings(bool called_by_control_panel = false);
-
-    static inline std::function<void()> update_3d;
 
 private:
     u64 GetSystemTime() const;
@@ -110,6 +107,7 @@ private:
     std::chrono::seconds init_time;
     SharedPageDef shared_page;
     Core::Timing& timing;
+    Frontend& frontend;
 };
 
 } // namespace SharedPage

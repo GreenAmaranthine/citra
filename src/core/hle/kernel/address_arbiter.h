@@ -37,7 +37,6 @@ public:
     }
 
     static const HandleType HANDLE_TYPE{HandleType::AddressArbiter};
-
     HandleType GetHandleType() const override {
         return HANDLE_TYPE;
     }

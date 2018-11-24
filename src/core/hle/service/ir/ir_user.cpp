@@ -176,7 +176,12 @@ private:
 
 /// Wraps the payload into packet and puts it to the receive buffer
 void IR_USER::PutToReceive(const std::vector<u8>& payload) {
-    LOG_TRACE(Service_IR, "data={}", Common::ArrayToString(payload.data(), payload.size()));
+    std::string payload_string;
+    for (auto part : payload)
+        payload_string += fmt::format("{:02x} ", part);
+    if (!payload_string.empty())
+        payload_string.pop_back();
+    LOG_TRACE(Service_IR, "data={}", payload_string);
     std::size_t size{payload.size()};
     std::vector<u8> packet;
     // Builds packet header. For the format info:
@@ -222,8 +227,8 @@ void IR_USER::InitializeIrNopShared(Kernel::HLERequestContext& ctx) {
     const u32 send_buff_packet_count{rp.Pop<u32>()};
     const u8 baud_rate{rp.Pop<u8>()};
     shared_memory = rp.PopObject<Kernel::SharedMemory>();
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
-    shared_memory->name = "IR_USER: shared memory";
+    auto rb{rp.MakeBuilder(1, 0)};
+    shared_memory->SetName("ir:USER Shared Memory");
     receive_buffer = std::make_unique<BufferManager>(shared_memory, 0x10, 0x20,
                                                      recv_buff_packet_count, recv_buff_size);
     SharedMemoryHeader shared_memory_init{};
@@ -256,7 +261,7 @@ void IR_USER::RequireConnection(Kernel::HLERequestContext& ctx) {
         shared_memory_ptr[offsetof(SharedMemoryHeader, connection_status)] = 1;
         shared_memory_ptr[offsetof(SharedMemoryHeader, trying_to_connect_status)] = 2;
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_IR, "device_id={}", device_id);
 }
@@ -309,9 +314,9 @@ void IR_USER::FinalizeIrNop(Kernel::HLERequestContext& ctx) {
 void IR_USER::SendIrNop(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0D, 1, 2};
     const u32 size{rp.Pop<u32>()};
-    std::vector<u8> buffer{rp.PopStaticBuffer()};
+    auto& buffer{rp.PopStaticBuffer()};
     ASSERT(size == buffer.size());
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     if (connected_device) {
         connected_device->OnReceive(buffer);
         send_event->Signal();
@@ -321,13 +326,18 @@ void IR_USER::SendIrNop(Kernel::HLERequestContext& ctx) {
         rb.Push(ResultCode(static_cast<ErrorDescription>(13), ErrorModule::IR,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
     }
-    LOG_TRACE(Service_IR, "data={}", Common::ArrayToString(buffer.data(), size));
+    std::string buffer_string;
+    for (auto part : buffer)
+        buffer_string += fmt::format("{:02x} ", part);
+    if (!buffer_string.empty())
+        buffer_string.pop_back();
+    LOG_TRACE(Service_IR, "buffer={}", buffer_string);
 }
 
 void IR_USER::ReleaseReceivedData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x19, 1, 0};
     u32 count{rp.Pop<u32>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     if (receive_buffer->Release(count))
         rb.Push(RESULT_SUCCESS);
     else {

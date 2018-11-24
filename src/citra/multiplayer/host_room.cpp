@@ -81,9 +81,12 @@ void HostRoomWindow::Host() {
     ui->host->setDisabled(true);
     auto port{ui->port->isModified() ? ui->port->text().toInt() : Network::DefaultRoomPort};
     auto password{ui->password->text().toStdString()};
+    Network::Room::BanList ban_list;
+    if (ui->load_ban_list->isChecked())
+        ban_list = UISettings::values.ban_list;
     bool created{system.Room().Create(
         ui->room_name->text().toStdString(), ui->room_description->toPlainText().toStdString(),
-        ui->username->text().toStdString(), port, password, ui->max_members->value())};
+        ui->username->text().toStdString(), port, password, ui->max_members->value(), ban_list)};
     if (!created) {
         NetworkMessage::ShowError(NetworkMessage::COULD_NOT_CREATE_ROOM);
         LOG_ERROR(Network, "Couldn't create room!");

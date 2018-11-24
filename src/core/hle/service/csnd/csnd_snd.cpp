@@ -24,7 +24,7 @@ void CSND_SND::Initialize(Kernel::HLERequestContext& ctx) {
                                             MemoryPermission::ReadWrite, 0,
                                             Kernel::MemoryRegion::Base, "CSND Shared Memory")
                         .Unwrap();
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 3)};
+    auto rb{rp.MakeBuilder(1, 3)};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(mutex, shared_memory);
     LOG_WARNING(Service_CSND,
@@ -46,7 +46,7 @@ void CSND_SND::Shutdown(Kernel::HLERequestContext& ctx) {
 void CSND_SND::ExecuteCommands(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x03, 1, 0};
     const u32 addr{rp.Pop<u32>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     if (!shared_memory) {
         rb.Push<u32>(1);
         LOG_ERROR(Service_CSND, "shared memory not allocated");
@@ -98,7 +98,7 @@ void CSND_SND::ReleaseCapUnit(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x8, 1, 0};
     const u32 index{rp.Pop<u32>()};
     capture_units[index] = false;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_CSND, "(stubbed) capture_unit_index={}", index);
 }
@@ -108,7 +108,7 @@ void CSND_SND::FlushDataCache(Kernel::HLERequestContext& ctx) {
     const VAddr address{rp.Pop<u32>()};
     const u32 size{rp.Pop<u32>()};
     const auto process{rp.PopObject<Kernel::Process>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_TRACE(Service_CSND, "(stubbed) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
               process->process_id);
@@ -119,7 +119,7 @@ void CSND_SND::StoreDataCache(Kernel::HLERequestContext& ctx) {
     const VAddr address{rp.Pop<u32>()};
     const u32 size{rp.Pop<u32>()};
     const auto process{rp.PopObject<Kernel::Process>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_TRACE(Service_CSND, "(stubbed) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
               process->process_id);
@@ -130,7 +130,7 @@ void CSND_SND::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
     const VAddr address{rp.Pop<u32>()};
     const u32 size{rp.Pop<u32>()};
     const auto process{rp.PopObject<Kernel::Process>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_TRACE(Service_CSND, "(stubbed) address=0x{:08X}, size=0x{:08X}, process={}", address, size,
               process->process_id);

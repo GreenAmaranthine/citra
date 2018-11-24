@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <functional>
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "core/hle/applets/applet.h"
@@ -69,8 +68,6 @@ public:
     ResultCode StartImpl(const Service::APT::AppletStartupParameter& parameter) override;
     void Update() override;
 
-    static inline std::function<void(const MiiConfig&, MiiResult&, bool&)> cb;
-
 private:
     /// This SharedMemory will be created when we receive the LibAppJustStarted message.
     /// It holds the framebuffer info retrieved by the program with
@@ -79,4 +76,5 @@ private:
 
     MiiConfig config;
 };
+
 } // namespace HLE::Applets

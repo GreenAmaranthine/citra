@@ -7,12 +7,19 @@
 #include <QApplication>
 #include <QHBoxLayout>
 #include <QKeyEvent>
+#include <QMessageBox>
 #include <QScreen>
 #include <QWindow>
 #include "citra/bootmanager.h"
+#include "citra/main.h"
+#include "citra/mii_selector.h"
+#include "citra/swkbd.h"
 #include "common/scm_rev.h"
+#include "common/string_util.h"
 #include "core/3ds.h"
 #include "core/core.h"
+#include "core/hle/applets/erreula.h"
+#include "core/hle/service/cfg/cfg.h"
 #include "core/input.h"
 #include "core/settings.h"
 #include "input_common/keyboard.h"
@@ -61,7 +68,8 @@ private:
     Screens* parent;
 };
 
-Screens::Screens(QWidget* parent, EmuThread* emu_thread) : QWidget{parent}, emu_thread{emu_thread} {
+Screens::Screens(GMainWindow* parent, EmuThread* emu_thread, Core::System& system)
+    : QWidget{parent}, emu_thread{emu_thread}, system{system}, window{parent} {
     setAttribute(Qt::WA_AcceptTouchEvents);
     InputCommon::Init();
 }
@@ -249,7 +257,7 @@ void Screens::InitRenderTarget() {
     // Requests a forward-compatible context, which is required to get a 3.2+ context on macOS
     fmt.setOption(QGL::NoDeprecatedFunctions);
     child = new GGLWidgetInternal(fmt, this);
-    QBoxLayout* layout{new QHBoxLayout(this)};
+    auto layout{new QHBoxLayout(this)};
     resize(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
     layout->addWidget(child);
     layout->setMargin(0);
@@ -270,6 +278,82 @@ void Screens::CaptureScreenshot(u16 res_scale, const QString& screenshot_path) {
                                      LOG_INFO(Frontend, "The screenshot is saved.");
                                  },
                                  layout);
+}
+
+void Screens::LaunchSoftwareKeyboardImpl(HLE::Applets::SoftwareKeyboardConfig& config,
+                                         std::u16string& text, bool& is_running) {
+    if (QThread::currentThread() != thread()) {
+        QMetaObject::invokeMethod(this, "LaunchSoftwareKeyboardImpl", Qt::BlockingQueuedConnection,
+                                  Q_ARG(HLE::Applets::SoftwareKeyboardConfig&, config),
+                                  Q_ARG(std::u16string&, text), Q_ARG(bool&, is_running));
+        return;
+    }
+    SoftwareKeyboardDialog dialog{this, config, text};
+    dialog.exec();
+    is_running = false;
+}
+
+void Screens::LaunchErrEulaImpl(HLE::Applets::ErrEulaConfig& config, bool& is_running) {
+    if (QThread::currentThread() != thread()) {
+        QMetaObject::invokeMethod(this, "LaunchErrEulaImpl", Qt::BlockingQueuedConnection,
+                                  Q_ARG(HLE::Applets::ErrEulaConfig&, config),
+                                  Q_ARG(bool&, is_running));
+        return;
+    }
+    switch (config.error_type) {
+    case HLE::Applets::ErrEulaErrorType::ErrorCode:
+        QMessageBox::critical(nullptr, "ErrEula",
+                              QString::fromStdString(fmt::format("0x{:08X}", config.error_code)));
+        break;
+    case HLE::Applets::ErrEulaErrorType::LocalizedErrorText:
+    case HLE::Applets::ErrEulaErrorType::ErrorText:
+        QMessageBox::critical(
+            nullptr, "ErrEula",
+            QString::fromStdString(
+                fmt::format("0x{:08X}\n{}", config.error_code,
+                            Common::UTF16ToUTF8(std::u16string(
+                                reinterpret_cast<const char16_t*>(config.error_text.data()))))));
+        break;
+    case HLE::Applets::ErrEulaErrorType::Agree:
+    case HLE::Applets::ErrEulaErrorType::Eula:
+    case HLE::Applets::ErrEulaErrorType::EulaDrawOnly:
+    case HLE::Applets::ErrEulaErrorType::EulaFirstBoot:
+        if (QMessageBox::question(nullptr, "ErrEula", "Agree EULA?") ==
+            QMessageBox::StandardButton::Yes)
+            system.ServiceManager()
+                .GetService<Service::CFG::Module::Interface>("cfg:u")
+                ->GetModule()
+                ->AgreeEula();
+        break;
+    }
+    config.return_code = HLE::Applets::ErrEulaResult::Success;
+    is_running = false;
+}
+
+void Screens::LaunchMiiSelectorImpl(const HLE::Applets::MiiConfig& config,
+                                    HLE::Applets::MiiResult& result, bool& is_running) {
+    if (QThread::currentThread() != thread()) {
+        QMetaObject::invokeMethod(this, "LaunchMiiSelectorImpl", Qt::BlockingQueuedConnection,
+                                  Q_ARG(const HLE::Applets::MiiConfig&, config),
+                                  Q_ARG(HLE::Applets::MiiResult&, result),
+                                  Q_ARG(bool&, is_running));
+        return;
+    }
+    MiiSelectorDialog dialog{this, config, result};
+    dialog.exec();
+    is_running = false;
+}
+
+void Screens::Update3D() {
+    qobject_cast<GMainWindow*>(parentWidget())->Update3D();
+}
+
+void Screens::UpdateNetwork() {
+    window->UpdateNetwork();
+}
+
+void Screens::UpdateFrameAdvancing() {
+    window->UpdateFrameAdvancing();
 }
 
 void Screens::OnEmulationStarting(EmuThread* emu_thread) {

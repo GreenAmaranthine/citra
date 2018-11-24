@@ -109,7 +109,7 @@ void IR_RST::Initialize(Kernel::HLERequestContext& ctx) {
     next_pad_index = 0;
     is_device_reload_pending.store(true);
     system.CoreTiming().ScheduleEvent(msToCycles(update_period), update_callback_id);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_IR, "called. update_period={}, raw_c_stick={}", update_period, raw_c_stick);
 }

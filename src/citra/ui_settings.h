@@ -5,6 +5,8 @@
 #pragma once
 
 #include <array>
+#include <string>
+#include <utility>
 #include <vector>
 #include <QByteArray>
 #include <QMetaType>
@@ -97,6 +99,7 @@ struct Values {
     QString room_port;
     uint host_type;
     QString room_description;
+    std::vector<std::string> ban_list;
 
     // Logging
     bool show_console;

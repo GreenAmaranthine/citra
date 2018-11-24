@@ -12,7 +12,7 @@ void NDM_U::EnterExclusiveState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x01, 1, 2};
     exclusive_state = rp.PopEnum<ExclusiveState>();
     rp.PopPID();
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NDM, "(stubbed) exclusive_state=0x{:08X}",
                 static_cast<u32>(exclusive_state));
@@ -21,7 +21,7 @@ void NDM_U::EnterExclusiveState(Kernel::HLERequestContext& ctx) {
 void NDM_U::LeaveExclusiveState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x02, 0, 2};
     rp.PopPID();
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NDM, "stubbed");
 }
@@ -37,7 +37,7 @@ void NDM_U::LockState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x04, 0, 2};
     rp.PopPID();
     daemon_lock_enabled = true;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NDM, "stubbed");
 }
@@ -46,7 +46,7 @@ void NDM_U::UnlockState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x05, 0, 2};
     rp.PopPID();
     daemon_lock_enabled = false;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NDM, "stubbed");
 }
@@ -59,7 +59,7 @@ void NDM_U::SuspendDaemons(Kernel::HLERequestContext& ctx) {
     for (std::size_t index{}; index < daemon_status.size(); ++index)
         if (bit_mask & (1 << index))
             daemon_status[index] = DaemonStatus::Suspended;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NDM, "(stubbed) bit_mask=0x{:08X}", bit_mask);
 }
@@ -71,7 +71,7 @@ void NDM_U::ResumeDaemons(Kernel::HLERequestContext& ctx) {
     for (std::size_t index{}; index < daemon_status.size(); ++index)
         if (bit_mask & (1 << index))
             daemon_status[index] = DaemonStatus::Idle;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NDM, "(stubbed) bit_mask=0x{:08X}", bit_mask);
 }
@@ -79,7 +79,7 @@ void NDM_U::ResumeDaemons(Kernel::HLERequestContext& ctx) {
 void NDM_U::SuspendScheduler(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x08, 1, 0};
     bool perform_in_background{rp.Pop<bool>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NDM, "(stubbed) perform_in_background={}", perform_in_background);
 }
@@ -99,7 +99,7 @@ void NDM_U::QueryStatus(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0D, 1, 0};
     u8 daemon{rp.Pop<u8>()};
 
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.PushEnum(daemon_status.at(daemon));
     LOG_WARNING(Service_NDM, "(stubbed) daemon=0x{:02X}", daemon);
@@ -108,7 +108,7 @@ void NDM_U::QueryStatus(Kernel::HLERequestContext& ctx) {
 void NDM_U::GetDaemonDisableCount(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0E, 1, 0};
     u8 daemon{rp.Pop<u8>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(3, 0)};
+    auto rb{rp.MakeBuilder(3, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0); // Current process disable count
     rb.Push<u32>(0); // Total disable count
@@ -126,7 +126,7 @@ void NDM_U::GetSchedulerDisableCount(Kernel::HLERequestContext& ctx) {
 void NDM_U::SetScanInterval(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x10, 1, 0};
     scan_interval = rp.Pop<u32>();
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NDM, "(stubbed) scan_interval=0x{:08X}", scan_interval);
 }
@@ -141,7 +141,7 @@ void NDM_U::GetScanInterval(Kernel::HLERequestContext& ctx) {
 void NDM_U::SetRetryInterval(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x12, 1, 0};
     retry_interval = rp.Pop<u32>();
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NDM, "(stubbed) retry_interval=0x{:08X}", retry_interval);
 }
@@ -161,7 +161,7 @@ void NDM_U::OverrideDefaultDaemons(Kernel::HLERequestContext& ctx) {
     for (std::size_t index{}; index < daemon_status.size(); ++index)
         if (bit_mask & (1 << index))
             daemon_status[index] = DaemonStatus::Idle;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NDM, "(stubbed) bit_mask=0x{:08X}", bit_mask);
 }

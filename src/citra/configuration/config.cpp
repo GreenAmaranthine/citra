@@ -365,6 +365,9 @@ void Config::Load() {
         UISettings::values.host_type = 0;
     UISettings::values.max_members = qt_config->value("max_members", 8).toUInt();
     UISettings::values.room_description = qt_config->value("room_description", "").toString();
+    auto list{qt_config->value("ban_list", QStringList()).toStringList()};
+    for (auto s : list)
+        UISettings::values.ban_list.push_back(s.toStdString());
     qt_config->endGroup();
     qt_config->endGroup();
 }
@@ -550,6 +553,10 @@ void Config::Save() {
     qt_config->setValue("host_type", UISettings::values.host_type);
     qt_config->setValue("max_members", UISettings::values.max_members);
     qt_config->setValue("room_description", UISettings::values.room_description);
+    QStringList list;
+    for (const auto& i : UISettings::values.ban_list)
+        list.append(QString::fromStdString(i));
+    qt_config->setValue("ban_list", list);
     qt_config->endGroup();
     qt_config->endGroup();
 }

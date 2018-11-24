@@ -19,6 +19,7 @@
 #include "citra/multiplayer/client_room.h"
 #include "citra/multiplayer/emojis.h"
 #include "citra/multiplayer/message.h"
+#include "citra/multiplayer/moderation_dialog.h"
 #include "citra/multiplayer/state.h"
 #include "citra/program_list_p.h"
 #include "common/logging/log.h"
@@ -119,6 +120,10 @@ ChatRoom::ChatRoom(QWidget* parent)
 
 ChatRoom::~ChatRoom() = default;
 
+void ChatRoom::SetModPerms(bool is_mod) {
+    has_mod_perms = is_mod;
+}
+
 void ChatRoom::Clear() {
     ui->chat_history->clear();
     block_list.clear();
@@ -168,6 +173,20 @@ void ChatRoom::AppendChatMessage(const QString& msg) {
     ui->chat_history->append(msg);
 }
 
+void ChatRoom::SendModerationRequest(Network::RoomMessageTypes type, const std::string& nickname) {
+    auto& member{system.RoomMember()};
+    auto members{member.GetMemberInformation()};
+    auto it{std::find_if(members.begin(), members.end(),
+                         [&nickname](const Network::RoomMember::MemberInformation& member) {
+                             return member.nickname == nickname;
+                         })};
+    if (it == members.end()) {
+        NetworkMessage::ShowError(NetworkMessage::NO_SUCH_USER);
+        return;
+    }
+    member.SendModerationRequest(type, nickname);
+}
+
 bool ChatRoom::ValidateMessage(const std::string& msg) {
     return !msg.empty();
 }
@@ -203,7 +222,7 @@ void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
     auto member{std::distance(members.begin(), it)};
     ChatMessage m{chat};
     AppendChatMessage(m.GetMemberChatMessage(member));
-    QString message{QString::fromStdString(chat.message)};
+    auto message{QString::fromStdString(chat.message)};
     HandleNewMessage(message.remove(QChar('\0')));
 }
 
@@ -216,6 +235,18 @@ void ChatRoom::OnStatusMessageReceive(const Network::StatusMessageEntry& status_
     case Network::IdMemberLeave:
         AppendStatusMessage(
             QString("%1 has left").arg(QString::fromStdString(status_message.nickname)));
+        break;
+    case Network::IdMemberKicked:
+        AppendStatusMessage(
+            QString("%1 has been kicked").arg(QString::fromStdString(status_message.nickname)));
+        break;
+    case Network::IdMemberBanned:
+        AppendStatusMessage(
+            QString("%1 has been banned").arg(QString::fromStdString(status_message.nickname)));
+        break;
+    case Network::IdAddressUnbanned:
+        AppendStatusMessage(
+            QString("%1 has been unbanned").arg(QString::fromStdString(status_message.nickname)));
         break;
     }
 }
@@ -252,22 +283,32 @@ void ChatRoom::OnChatTextChanged() {
 }
 
 void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
-    QModelIndex item{ui->member_view->indexAt(menu_location)};
+    auto item{ui->member_view->indexAt(menu_location)};
     if (!item.isValid())
         return;
-    std::string nickname{member_list->item(item.row())->text().toStdString()};
-    // You can't block yourself
-    if (nickname == system.RoomMember().GetNickname())
+    auto nickname{member_list->item(item.row())->text().toStdString()};
+    // You can't block, kick or ban yourself
+    if (nickname == system.RoomMember().GetNickname()) {
+        if (has_mod_perms) {
+            QMenu context_menu;
+            auto moderation_action{context_menu.addAction("Moderation...")};
+            connect(moderation_action, &QAction::triggered, [this] {
+                ModerationDialog dialog{system.RoomMember(), this};
+                dialog.exec();
+            });
+            context_menu.exec(ui->member_view->viewport()->mapToGlobal(menu_location));
+        }
         return;
+    }
     QMenu context_menu;
-    QAction* block_action{context_menu.addAction("Block Member")};
+    auto block_action{context_menu.addAction("Block Member")};
     block_action->setCheckable(true);
     block_action->setChecked(block_list.count(nickname) > 0);
     connect(block_action, &QAction::triggered, [this, nickname] {
         if (block_list.count(nickname))
             block_list.erase(nickname);
         else {
-            QMessageBox::StandardButton result{QMessageBox::question(
+            auto result{QMessageBox::question(
                 this, "Block Member",
                 QString("When you block a member, you will no longer receive chat messages from "
                         "them.<br><br>Are you sure you would like to block %1?")
@@ -277,5 +318,35 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
                 block_list.emplace(nickname);
         }
     });
+    if (has_mod_perms) {
+        context_menu.addSeparator();
+        auto kick_action{context_menu.addAction("Kick")};
+        auto ban_action{context_menu.addAction("Ban")};
+        context_menu.addSeparator();
+        auto moderation_action{context_menu.addAction("Moderation...")};
+        connect(kick_action, &QAction::triggered, [this, nickname] {
+            auto result{
+                QMessageBox::question(this, "Kick Member",
+                                      QString("Are you sure you would like to <b>kick</b> %1?")
+                                          .arg(QString::fromStdString(nickname)),
+                                      QMessageBox::Yes | QMessageBox::No)};
+            if (result == QMessageBox::Yes)
+                SendModerationRequest(Network::IdModKick, nickname);
+        });
+        connect(ban_action, &QAction::triggered, [this, nickname] {
+            auto result{QMessageBox::question(
+                this, "Ban Member",
+                QString("Are you sure you would like to <b>kick and ban</b> %1?\n\nThis would "
+                        "ban both their IP address.")
+                    .arg(QString::fromStdString(nickname)),
+                QMessageBox::Yes | QMessageBox::No)};
+            if (result == QMessageBox::Yes)
+                SendModerationRequest(Network::IdModBan, nickname);
+        });
+        connect(moderation_action, &QAction::triggered, [this] {
+            ModerationDialog dialog{system.RoomMember(), this};
+            dialog.exec();
+        });
+    }
     context_menu.exec(ui->member_view->viewport()->mapToGlobal(menu_location));
 }

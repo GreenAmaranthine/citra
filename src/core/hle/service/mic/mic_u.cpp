@@ -33,7 +33,7 @@ enum class SampleRate : u8 {
 struct MIC_U::Impl {
     explicit Impl(Core::System& system) {
         buffer_full_event =
-            system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "MIC_U::buffer_full_event");
+            system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "mic:u Buffer Full Event");
     }
 
     void MapSharedMem(Kernel::HLERequestContext& ctx) {
@@ -41,8 +41,8 @@ struct MIC_U::Impl {
         const u32 size{rp.Pop<u32>()};
         shared_memory = rp.PopObject<Kernel::SharedMemory>();
         if (shared_memory)
-            shared_memory->name = "MIC_U:shared_memory";
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+            shared_memory->SetName("mic:u Shared Memory");
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
         LOG_DEBUG(Service_MIC, "size=0x{:X}", size);
     }
@@ -61,7 +61,7 @@ struct MIC_U::Impl {
         audio_buffer_offset = rp.Pop<u32>();
         audio_buffer_size = rp.Pop<u32>();
         audio_buffer_loop = rp.Pop<bool>();
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
         UNIMPLEMENTED();
         LOG_DEBUG(Service_MIC,
@@ -74,7 +74,7 @@ struct MIC_U::Impl {
     void AdjustSampling(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp{ctx, 0x04, 1, 0};
         sample_rate = rp.PopEnum<SampleRate>();
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
         UNIMPLEMENTED();
         LOG_DEBUG(Service_MIC, "sample_rate={}", static_cast<u32>(sample_rate));
@@ -103,7 +103,7 @@ struct MIC_U::Impl {
     void SetGain(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp{ctx, 0x08, 1, 0};
         mic_gain = rp.Pop<u8>();
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
         LOG_DEBUG(Service_MIC, "mic_gain={}", mic_gain);
     }
@@ -118,7 +118,7 @@ struct MIC_U::Impl {
     void SetPower(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp{ctx, 0x0A, 1, 0};
         mic_power = rp.Pop<bool>();
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
         LOG_DEBUG(Service_MIC, "mic_power={}", mic_power);
     }
@@ -134,7 +134,7 @@ struct MIC_U::Impl {
         IPC::RequestParser rp{ctx, 0x0C, 1, 2};
         const u32 size{rp.Pop<u32>()};
         const Kernel::MappedBuffer& buffer{rp.PopMappedBuffer()};
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+        auto rb{rp.MakeBuilder(1, 2)};
         rb.Push(RESULT_SUCCESS);
         rb.PushMappedBuffer(buffer);
         LOG_DEBUG(Service_MIC, "size=0x{:X}, buffer=0x{:08X}", size, buffer.GetId());
@@ -143,7 +143,7 @@ struct MIC_U::Impl {
     void SetClamp(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp{ctx, 0x0D, 1, 0};
         clamp = rp.Pop<bool>();
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
         LOG_DEBUG(Service_MIC, "clamp={}", clamp);
     }
@@ -158,7 +158,7 @@ struct MIC_U::Impl {
     void SetAllowShellClosed(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp{ctx, 0x0F, 1, 0};
         allow_shell_closed = rp.Pop<bool>();
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
         LOG_DEBUG(Service_MIC, "allow_shell_closed={}", allow_shell_closed);
     }
@@ -167,7 +167,7 @@ struct MIC_U::Impl {
         IPC::RequestParser rp{ctx, 0x10, 1, 0};
         const u32 version{rp.Pop<u32>()};
         client_version = version;
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
         LOG_DEBUG(Service_MIC, "version=0x{:08X}", version);
     }

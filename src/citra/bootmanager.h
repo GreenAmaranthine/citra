@@ -52,7 +52,7 @@ class Screens : public QWidget, public Frontend {
     Q_OBJECT
 
 public:
-    explicit Screens(QWidget* parent, EmuThread* emu_thread);
+    explicit Screens(GMainWindow* parent, EmuThread* emu_thread, Core::System& system);
     ~Screens();
 
     void SwapBuffers() override;
@@ -83,6 +83,30 @@ public:
 
     void CaptureScreenshot(u16 res_scale, const QString& screenshot_path);
 
+    Q_INVOKABLE void LaunchSoftwareKeyboardImpl(HLE::Applets::SoftwareKeyboardConfig& config,
+                                                std::u16string& text, bool& is_running);
+    Q_INVOKABLE void LaunchErrEulaImpl(HLE::Applets::ErrEulaConfig& config, bool& is_running);
+    Q_INVOKABLE void LaunchMiiSelectorImpl(const HLE::Applets::MiiConfig& config,
+                                           HLE::Applets::MiiResult& result, bool& is_running);
+
+    void LaunchSoftwareKeyboard(HLE::Applets::SoftwareKeyboardConfig& config, std::u16string& text,
+                                bool& is_running) override {
+        LaunchSoftwareKeyboardImpl(config, text, is_running);
+    }
+
+    void LaunchErrEula(HLE::Applets::ErrEulaConfig& config, bool& is_running) override {
+        LaunchErrEulaImpl(config, is_running);
+    }
+
+    void LaunchMiiSelector(const HLE::Applets::MiiConfig& config, HLE::Applets::MiiResult& result,
+                           bool& is_running) override {
+        LaunchMiiSelectorImpl(config, result, is_running);
+    }
+
+    void Update3D() override;
+    void UpdateNetwork() override;
+    void UpdateFrameAdvancing() override;
+
 public slots:
     void moveContext(); // overridden
 
@@ -110,6 +134,9 @@ private:
 
     /// Temporary storage of the screenshot taken
     QImage screenshot_image;
+
+    Core::System& system;
+    GMainWindow* window;
 
 protected:
     void showEvent(QShowEvent* event) override;

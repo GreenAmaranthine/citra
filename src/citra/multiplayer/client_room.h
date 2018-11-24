@@ -19,6 +19,8 @@ public:
 
     Core::System& system;
 
+    void SetModPerms(bool is_mod);
+
 public slots:
     void OnRoomUpdate(const Network::RoomInformation&);
     void OnStateChange(const Network::RoomMember::State&);

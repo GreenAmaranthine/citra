@@ -19,7 +19,7 @@ void NEWS_S::SetInfoLEDPattern(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0xE, 1, 0};
     u32 array_index{rp.Pop<u32>()};
 
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
     LOG_WARNING(Service_NEWS, "LEDs aren't implemented!");

@@ -42,12 +42,12 @@ constexpr u16 BroadcastNetworkNodeId{0xFFFF};
 constexpr u16 HostDestNodeId{1};
 
 /// Returns a list of received 802.11 beacon frames from the specified sender since the last call.
-std::list<Network::WifiPacket> NWM_UDS::GetReceivedBeacons(const MACAddress& sender) {
+std::list<Network::WiFiPacket> NWM_UDS::GetReceivedBeacons(const MACAddress& sender) {
     std::lock_guard lock{beacon_mutex};
     if (sender != BroadcastMac) {
-        std::list<Network::WifiPacket> filtered_list;
+        std::list<Network::WiFiPacket> filtered_list;
         const auto beacon{std::find_if(received_beacons.begin(), received_beacons.end(),
-                                       [&sender](const Network::WifiPacket& packet) {
+                                       [&sender](const Network::WiFiPacket& packet) {
                                            return packet.transmitter_address == sender;
                                        })};
         if (beacon != received_beacons.end()) {
@@ -60,12 +60,12 @@ std::list<Network::WifiPacket> NWM_UDS::GetReceivedBeacons(const MACAddress& sen
     return std::move(received_beacons);
 }
 
-/// Sends a WifiPacket to the room we're currently connected to.
-void NWM_UDS::SendPacket(Network::WifiPacket& packet) {
+/// Sends a WiFiPacket to the room we're currently connected to.
+void NWM_UDS::SendPacket(Network::WiFiPacket& packet) {
     auto& member{system.RoomMember()};
     if (member.GetState() == Network::RoomMember::State::Joined) {
-        packet.transmitter_address = member.GetMacAddress();
-        member.SendWifiPacket(packet);
+        packet.transmitter_address = member.GetMACAddress();
+        member.SendWiFiPacket(packet);
     }
 }
 
@@ -84,9 +84,9 @@ u16 NWM_UDS::GetNextAvailableNodeId() {
 void NWM_UDS::BroadcastNodeMap() {
     // Note: This isn't how UDS on a console does it but it shouldn't be
     // necessary for citra
-    Network::WifiPacket packet;
+    Network::WiFiPacket packet;
     packet.channel = network_channel;
-    packet.type = Network::WifiPacket::PacketType::NodeMap;
+    packet.type = Network::WiFiPacket::PacketType::NodeMap;
     packet.destination_address = BroadcastMac;
     std::size_t num_entries{static_cast<std::size_t>(std::count_if(
         node_map.begin(), node_map.end(), [](const auto& node) { return node.second.connected; }))};
@@ -106,7 +106,7 @@ void NWM_UDS::BroadcastNodeMap() {
     SendPacket(packet);
 }
 
-void NWM_UDS::HandleNodeMapPacket(const Network::WifiPacket& packet) {
+void NWM_UDS::HandleNodeMapPacket(const Network::WiFiPacket& packet) {
     std::lock_guard lock{connection_status_mutex};
     if (connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
         LOG_DEBUG(Service_NWM, "Ignored NodeMapPacket since connection_status is host");
@@ -129,10 +129,10 @@ void NWM_UDS::HandleNodeMapPacket(const Network::WifiPacket& packet) {
 
 // Inserts the received beacon frame in the beacon queue and removes any older beacons if the size
 // limit is exceeded.
-void NWM_UDS::HandleBeaconFrame(const Network::WifiPacket& packet) {
+void NWM_UDS::HandleBeaconFrame(const Network::WiFiPacket& packet) {
     std::lock_guard lock{beacon_mutex};
     const auto unique_beacon{std::find_if(received_beacons.begin(), received_beacons.end(),
-                                          [&packet](const Network::WifiPacket& new_packet) {
+                                          [&packet](const Network::WiFiPacket& new_packet) {
                                               return new_packet.transmitter_address ==
                                                      packet.transmitter_address;
                                           })};
@@ -145,7 +145,7 @@ void NWM_UDS::HandleBeaconFrame(const Network::WifiPacket& packet) {
         received_beacons.pop_front();
 }
 
-void NWM_UDS::HandleAssociationResponseFrame(const Network::WifiPacket& packet) {
+void NWM_UDS::HandleAssociationResponseFrame(const Network::WiFiPacket& packet) {
     auto assoc_result{GetAssociationResult(packet.data)};
     ASSERT_MSG(std::get<AssocStatus>(assoc_result) == AssocStatus::Successful,
                "Couldn't join network");
@@ -159,17 +159,17 @@ void NWM_UDS::HandleAssociationResponseFrame(const Network::WifiPacket& packet) 
         }
     }
     // Send the EAPoL-Start packet to the server.
-    using Network::WifiPacket;
-    WifiPacket eapol_start;
+    using Network::WiFiPacket;
+    WiFiPacket eapol_start;
     eapol_start.channel = network_channel;
     eapol_start.data = GenerateEAPoLStartFrame(std::get<u16>(assoc_result), current_node);
     // TODO: Encrypt the packet.
     eapol_start.destination_address = packet.transmitter_address;
-    eapol_start.type = WifiPacket::PacketType::Data;
+    eapol_start.type = WiFiPacket::PacketType::Data;
     SendPacket(eapol_start);
 }
 
-void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
+void NWM_UDS::HandleEAPoLPacket(const Network::WiFiPacket& packet) {
     std::unique_lock hle_lock{HLE::g_hle_lock, std::defer_lock};
     std::unique_lock lock{connection_status_mutex, std::defer_lock};
     std::lock(hle_lock, lock);
@@ -206,8 +206,8 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
         node_map[packet.transmitter_address].connected = true;
         BroadcastNodeMap();
         // Send the EAPoL-Logoff packet.
-        using Network::WifiPacket;
-        WifiPacket eapol_logoff;
+        using Network::WiFiPacket;
+        WiFiPacket eapol_logoff;
         eapol_logoff.channel = network_channel;
         eapol_logoff.data =
             GenerateEAPoLLogoffFrame(packet.transmitter_address, node.network_node_id, node_info,
@@ -219,7 +219,7 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
         // while a packet containing the node information is broadcasted
         // For now we will broadcast the eapol packet instead
         eapol_logoff.destination_address = BroadcastMac;
-        eapol_logoff.type = WifiPacket::PacketType::Data;
+        eapol_logoff.type = WiFiPacket::PacketType::Data;
         SendPacket(eapol_logoff);
         connection_status_event->Signal();
     } else if (connection_status.status == static_cast<u32>(NetworkStatus::Connecting)) {
@@ -266,7 +266,7 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
     }
 }
 
-void NWM_UDS::HandleSecureDataPacket(const Network::WifiPacket& packet) {
+void NWM_UDS::HandleSecureDataPacket(const Network::WiFiPacket& packet) {
     auto secure_data{ParseSecureDataHeader(packet.data)};
     std::unique_lock hle_lock{HLE::g_hle_lock, std::defer_lock};
     std::unique_lock lock{connection_status_mutex, std::defer_lock};
@@ -294,7 +294,7 @@ void NWM_UDS::HandleSecureDataPacket(const Network::WifiPacket& packet) {
             // Broadcast the packet so the right receiver can get it.
             // TODO: Is there a flag that makes this kind of routing be unicast instead of
             // multicast? Perhaps this is a way to allow spectators to see some of the packets.
-            Network::WifiPacket out_packet{packet};
+            Network::WiFiPacket out_packet{packet};
             out_packet.destination_address = BroadcastMac;
             SendPacket(out_packet);
         }
@@ -322,8 +322,8 @@ void NWM_UDS::HandleSecureDataPacket(const Network::WifiPacket& packet) {
  * authentication frame with SEQ1.
  */
 void NWM_UDS::StartConnectionSequence(const MACAddress& server) {
-    using Network::WifiPacket;
-    WifiPacket auth_request;
+    using Network::WiFiPacket;
+    WiFiPacket auth_request;
     {
         std::lock_guard lock{connection_status_mutex};
         connection_status.status = static_cast<u32>(NetworkStatus::Connecting);
@@ -332,15 +332,15 @@ void NWM_UDS::StartConnectionSequence(const MACAddress& server) {
         auth_request.channel = network_channel;
         auth_request.data = GenerateAuthenticationFrame(AuthenticationSeq::SEQ1);
         auth_request.destination_address = server;
-        auth_request.type = WifiPacket::PacketType::Authentication;
+        auth_request.type = WiFiPacket::PacketType::Authentication;
     }
     SendPacket(auth_request);
 }
 
 /// Sends an Association Response frame to the specified MAC address
 void NWM_UDS::SendAssociationResponseFrame(const MACAddress& address) {
-    using Network::WifiPacket;
-    WifiPacket assoc_response;
+    using Network::WiFiPacket;
+    WiFiPacket assoc_response;
     {
         std::lock_guard lock{connection_status_mutex};
         if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
@@ -355,7 +355,7 @@ void NWM_UDS::SendAssociationResponseFrame(const MACAddress& address) {
         assoc_response.data = GenerateAssocResponseFrame(AssocStatus::Successful, association_id,
                                                          network_info.network_id);
         assoc_response.destination_address = address;
-        assoc_response.type = WifiPacket::PacketType::AssociationResponse;
+        assoc_response.type = WiFiPacket::PacketType::AssociationResponse;
     }
     SendPacket(assoc_response);
 }
@@ -366,11 +366,11 @@ void NWM_UDS::SendAssociationResponseFrame(const MACAddress& address) {
  * with an Authentication frame containing SEQ2, and immediately sends an Association response frame
  * containing the details of the access point and the assigned association id for the new client.
  */
-void NWM_UDS::HandleAuthenticationFrame(const Network::WifiPacket& packet) {
+void NWM_UDS::HandleAuthenticationFrame(const Network::WiFiPacket& packet) {
     // Only the SEQ1 auth frame is handled here, the SEQ2 frame doesn't need any special behavior
     if (GetAuthenticationSeqNumber(packet.data) == AuthenticationSeq::SEQ1) {
-        using Network::WifiPacket;
-        WifiPacket auth_request;
+        using Network::WiFiPacket;
+        WiFiPacket auth_request;
         {
             std::lock_guard lock{connection_status_mutex};
             if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
@@ -394,7 +394,7 @@ void NWM_UDS::HandleAuthenticationFrame(const Network::WifiPacket& packet) {
             auth_request.channel = network_channel;
             auth_request.data = GenerateAuthenticationFrame(AuthenticationSeq::SEQ2);
             auth_request.destination_address = packet.transmitter_address;
-            auth_request.type = WifiPacket::PacketType::Authentication;
+            auth_request.type = WiFiPacket::PacketType::Authentication;
             node_map[packet.transmitter_address].connected = false;
         }
         SendPacket(auth_request);
@@ -403,7 +403,7 @@ void NWM_UDS::HandleAuthenticationFrame(const Network::WifiPacket& packet) {
 }
 
 /// Handles the deauthentication frames sent from clients to hosts, when they leave a session
-void NWM_UDS::HandleDeauthenticationFrame(const Network::WifiPacket& packet) {
+void NWM_UDS::HandleDeauthenticationFrame(const Network::WiFiPacket& packet) {
     std::unique_lock hle_lock{HLE::g_hle_lock, std::defer_lock};
     std::unique_lock lock{connection_status_mutex, std::defer_lock};
     std::lock(hle_lock, lock);
@@ -436,7 +436,7 @@ void NWM_UDS::HandleDeauthenticationFrame(const Network::WifiPacket& packet) {
     LOG_DEBUG(Service_NWM, "called");
 }
 
-void NWM_UDS::HandleDataFrame(const Network::WifiPacket& packet) {
+void NWM_UDS::HandleDataFrame(const Network::WiFiPacket& packet) {
     switch (GetFrameEtherType(packet.data)) {
     case EtherType::EAPoL:
         HandleEAPoLPacket(packet);
@@ -448,30 +448,30 @@ void NWM_UDS::HandleDataFrame(const Network::WifiPacket& packet) {
 }
 
 /// Callback to parse and handle a received WiFi packet.
-void NWM_UDS::OnWifiPacketReceived(const Network::WifiPacket& packet) {
+void NWM_UDS::OnWiFiPacketReceived(const Network::WiFiPacket& packet) {
     switch (packet.type) {
-    case Network::WifiPacket::PacketType::Beacon:
+    case Network::WiFiPacket::PacketType::Beacon:
         HandleBeaconFrame(packet);
         break;
-    case Network::WifiPacket::PacketType::Authentication:
+    case Network::WiFiPacket::PacketType::Authentication:
         HandleAuthenticationFrame(packet);
         break;
-    case Network::WifiPacket::PacketType::AssociationResponse:
+    case Network::WiFiPacket::PacketType::AssociationResponse:
         HandleAssociationResponseFrame(packet);
         break;
-    case Network::WifiPacket::PacketType::Data:
+    case Network::WiFiPacket::PacketType::Data:
         HandleDataFrame(packet);
         break;
-    case Network::WifiPacket::PacketType::Deauthentication:
+    case Network::WiFiPacket::PacketType::Deauthentication:
         HandleDeauthenticationFrame(packet);
         break;
-    case Network::WifiPacket::PacketType::NodeMap:
+    case Network::WiFiPacket::PacketType::NodeMap:
         HandleNodeMapPacket(packet);
         break;
     }
 }
 
-std::optional<MACAddress> NWM_UDS::GetNodeMacAddress(u16 dest_node_id, u8 flags) {
+std::optional<MACAddress> NWM_UDS::GetNodeMACAddress(u16 dest_node_id, u8 flags) {
     constexpr u8 BroadcastFlag{0x2};
     if ((flags & BroadcastFlag) || dest_node_id == BroadcastNetworkNodeId)
         // Broadcast
@@ -543,7 +543,7 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     // Update the total size in the structure and write it to the buffer again.
     data_reply_header.total_size = static_cast<u32>(cur_buffer_size);
     out_buffer.Write(&data_reply_header, 0, sizeof(BeaconDataReplyHeader));
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(out_buffer);
     LOG_DEBUG(Service_NWM,
@@ -560,9 +560,9 @@ void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
     u16 version{rp.Pop<u16>()};
     recv_buffer_memory = rp.PopObject<Kernel::SharedMemory>();
     initialized = true;
-    ASSERT_MSG(recv_buffer_memory->size == sharedmem_size, "Invalid shared memory size.");
-    wifi_packet_received = system.RoomMember().BindOnWifiPacketReceived(
-        [this](const Network::WifiPacket& packet) { OnWifiPacketReceived(packet); });
+    ASSERT_MSG(recv_buffer_memory->GetSize() == sharedmem_size, "Invalid shared memory size.");
+    wifi_packet_received = system.RoomMember().BindOnWiFiPacketReceived(
+        [this](const Network::WiFiPacket& packet) { OnWiFiPacketReceived(packet); });
     {
         std::lock_guard lock{connection_status_mutex};
         // Reset the connection status, it contains all zeros after initialization,
@@ -573,7 +573,7 @@ void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
         node_info.push_back(current_node);
         channel_data.clear();
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(connection_status_event);
     LOG_DEBUG(Service_NWM, "sharedmem_size=0x{:08X}, version=0x{:08X}", sharedmem_size, version);
@@ -598,7 +598,7 @@ void NWM_UDS::GetNodeInformation(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0xD, 1, 0};
     u16 network_node_id{rp.Pop<u16>()};
     if (!initialized) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::NotInitialized, ErrorModule::UDS,
                            ErrorSummary::StatusChanged, ErrorLevel::Status));
         return;
@@ -610,12 +610,12 @@ void NWM_UDS::GetNodeInformation(Kernel::HLERequestContext& ctx) {
                                   return node.network_node_id == network_node_id;
                               })};
         if (itr == node_info.end()) {
-            IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+            auto rb{rp.MakeBuilder(1, 0)};
             rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::UDS,
                                ErrorSummary::WrongArgument, ErrorLevel::Status));
             return;
         }
-        IPC::ResponseBuilder rb{rp.MakeBuilder(11, 0)};
+        auto rb{rp.MakeBuilder(11, 0)};
         rb.Push(RESULT_SUCCESS);
         rb.PushRaw<NodeInfo>(*itr);
     }
@@ -629,7 +629,7 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
     u8 data_channel{rp.Pop<u8>()};
     u16 network_node_id{rp.Pop<u16>()};
     if (data_channel == 0 || bind_node_id == 0) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
         LOG_WARNING(Service_NWM, "data_channel={}, bind_node_id={}", data_channel, bind_node_id);
@@ -637,7 +637,7 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
     }
     constexpr std::size_t MaxBindNodes{16};
     if (channel_data.size() >= MaxBindNodes) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::OutOfMemory, ErrorModule::UDS,
                            ErrorSummary::OutOfResource, ErrorLevel::Status));
         LOG_WARNING(Service_NWM, "max bind nodes");
@@ -645,7 +645,7 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
     }
     constexpr u32 MinRecvBufferSize{0x5F4};
     if (recv_buffer_size < MinRecvBufferSize) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::TooLarge, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
         LOG_WARNING(Service_NWM, "MinRecvBufferSize");
@@ -658,7 +658,7 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
     ASSERT(channel_data.find(data_channel) == channel_data.end());
     // TODO: Support more than one bind node per channel.
     channel_data[data_channel] = {bind_node_id, data_channel, network_node_id, event};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(event);
     LOG_DEBUG(Service_NWM, "called");
@@ -668,7 +668,7 @@ void NWM_UDS::Unbind(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x12, 1, 0};
     u32 bind_node_id{rp.Pop<u32>()};
     if (bind_node_id == 0) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
         return;
@@ -683,7 +683,7 @@ void NWM_UDS::Unbind(Kernel::HLERequestContext& ctx) {
         itr->second.event->Signal();
         channel_data.erase(itr);
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(5, 0)};
+    auto rb{rp.MakeBuilder(5, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(bind_node_id);
     // TODO: Find out what the other return values are
@@ -726,7 +726,7 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
         connection_status.changed_nodes |= 1;
         auto& member{system.RoomMember()};
         if (member.IsConnected())
-            network_info.host_mac_address = member.GetMacAddress();
+            network_info.host_mac_address = member.GetMACAddress();
         else
             network_info.host_mac_address = {{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
         node_info[0] = current_node;
@@ -740,7 +740,7 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
     // Start broadcasting the network, send a beacon frame every 102.4ms.
     system.CoreTiming().ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU),
                                       beacon_broadcast_event, 0);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_NWM, "An UDS network has been created.");
 }
@@ -748,7 +748,7 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
 void NWM_UDS::UpdateNetworkAttribute(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x07, 2, 0};
     rp.Skip(2, false);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NWM, "stubbed");
 }
@@ -781,8 +781,8 @@ void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
 
 void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
     IPC::ResponseBuilder rb{ctx, 0xA, 1, 0};
-    using Network::WifiPacket;
-    WifiPacket deauth;
+    using Network::WiFiPacket;
+    WiFiPacket deauth;
     {
         std::lock_guard lock{connection_status_mutex};
         if (connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
@@ -807,7 +807,7 @@ void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
         // TODO: Add disconnect reason
         deauth.data = {};
         deauth.destination_address = network_info.host_mac_address;
-        deauth.type = WifiPacket::PacketType::Deauthentication;
+        deauth.type = WiFiPacket::PacketType::Deauthentication;
     }
     SendPacket(deauth);
     for (auto bind_node : channel_data)
@@ -830,7 +830,7 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
     std::vector<u8> input_buffer{rp.PopStaticBuffer()};
     ASSERT(input_buffer.size() >= data_size);
     input_buffer.resize(data_size);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     std::lock_guard lock{connection_status_mutex};
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsClient) &&
         connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
@@ -846,7 +846,7 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
     }
     if (flags >> 2)
         LOG_ERROR(Service_NWM, "Unexpected flags 0x{:02X}", flags);
-    auto dest_address{GetNodeMacAddress(dest_node_id, flags)};
+    auto dest_address{GetNodeMACAddress(dest_node_id, flags)};
     if (!dest_address) {
         rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Status));
@@ -865,11 +865,11 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
                                                      sequence_number)};
     // TODO: Use the MAC address of the dest_node_id and our own to encrypt
     // and encapsulate the payload.
-    Network::WifiPacket packet;
+    Network::WiFiPacket packet;
     packet.destination_address = *dest_address;
     packet.channel = network_channel;
     packet.data = std::move(data_payload);
-    packet.type = Network::WifiPacket::PacketType::Data;
+    packet.type = Network::WiFiPacket::PacketType::Data;
     SendPacket(packet);
     rb.Push(RESULT_SUCCESS);
 }
@@ -885,7 +885,7 @@ void NWM_UDS::PullPacket(Kernel::HLERequestContext& ctx) {
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost) &&
         connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsClient) &&
         connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsSpectator)) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
         return;
@@ -895,14 +895,14 @@ void NWM_UDS::PullPacket(Kernel::HLERequestContext& ctx) {
             return data.second.bind_node_id == bind_node_id;
         })};
     if (channel == channel_data.end()) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
         return;
     }
     if (channel->second.received_packets.empty()) {
         std::vector<u8> output_buffer(buff_size, 0);
-        IPC::ResponseBuilder rb{rp.MakeBuilder(3, 2)};
+        auto rb{rp.MakeBuilder(3, 2)};
         rb.Push(RESULT_SUCCESS);
         rb.Push<u32>(0);
         rb.Push<u16>(0);
@@ -913,12 +913,12 @@ void NWM_UDS::PullPacket(Kernel::HLERequestContext& ctx) {
     auto secure_data{ParseSecureDataHeader(next_packet)};
     auto data_size{secure_data.GetActualDataSize()};
     if (data_size > max_out_buff_size) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::TooLarge, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
         return;
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(3, 2)};
+    auto rb{rp.MakeBuilder(3, 2)};
     std::vector<u8> output_buffer(buff_size, 0);
     // Write the actual data.
     std::memcpy(output_buffer.data(),
@@ -971,7 +971,7 @@ void NWM_UDS::SetApplicationData(Kernel::HLERequestContext& ctx) {
     u32 size{rp.Pop<u32>()};
     const std::vector<u8> program_data{rp.PopStaticBuffer()};
     ASSERT(program_data.size() == size);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     if (size > ProgramDataSize) {
         rb.Push(ResultCode(ErrorDescription::TooLarge, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
@@ -1025,7 +1025,7 @@ void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx) {
 
         nodes.push_back(node);
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     std::vector<u8> output_buffer(sizeof(NodeInfo) * UDSMaxNodes, 0);
     std::memcpy(output_buffer.data(), nodes.data(), sizeof(NodeInfo) * nodes.size());
@@ -1039,9 +1039,9 @@ void NWM_UDS::BeaconBroadcastCallback(s64 cycles_late) {
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost))
         return;
     std::vector<u8> frame{GenerateBeaconFrame(network_info, node_info)};
-    using Network::WifiPacket;
-    WifiPacket packet;
-    packet.type = WifiPacket::PacketType::Beacon;
+    using Network::WiFiPacket;
+    WiFiPacket packet;
+    packet.type = WiFiPacket::PacketType::Beacon;
     packet.data = std::move(frame);
     packet.destination_address = BroadcastMac;
     packet.channel = network_channel;
@@ -1096,8 +1096,8 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework{"nwm::UDS"}, system{sy
     rng.GenerateBlock(static_cast<CryptoPP::byte*>(mac.data() + 3), 3);
     auto& member{system.RoomMember()};
     if (member.IsConnected())
-        mac = member.GetMacAddress();
-    system.Kernel().GetSharedPageHandler().SetMacAddress(mac);
+        mac = member.GetMACAddress();
+    system.Kernel().GetSharedPageHandler().SetMACAddress(mac);
 }
 
 NWM_UDS::~NWM_UDS() {

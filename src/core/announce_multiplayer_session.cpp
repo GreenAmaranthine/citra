@@ -66,7 +66,7 @@ void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
         auto member_list{room.GetRoomMemberList()};
         backend->SetRoomInformation(room_information.name, room_information.port,
                                     room_information.creator, room_information.description,
-                                    room_information.member_slots, Network::network_version,
+                                    room_information.member_slots, Network::NetworkVersion,
                                     room.HasPassword());
         backend->ClearMembers();
         for (const auto& member : member_list)

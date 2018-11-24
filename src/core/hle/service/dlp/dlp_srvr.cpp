@@ -14,7 +14,7 @@ void DLP_SRVR::IsChild(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0E, 1, 0};
     rp.Skip(1, false);
 
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(false);
 

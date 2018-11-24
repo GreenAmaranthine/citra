@@ -300,7 +300,7 @@ void GatewayCheat::Execute(Core::System& system) {
             break;
         case CheatType::Loop: {
             // C0000000 YYYYYYYY - LOOP next block YYYYYYYY times
-            // TODO(B3N30): Support nested loops if necessary
+            // TODO: Support nested loops if necessary
             LoopOp(line, state);
             break;
         }

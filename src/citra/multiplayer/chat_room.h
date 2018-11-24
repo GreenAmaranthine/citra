@@ -40,6 +40,8 @@ public:
     bool Send(QString msg);
     void HandleNewMessage(const QString& msg);
 
+    void SetModPerms(bool is_mod);
+
 public slots:
     void OnChatReceive(const Network::ChatEntry&);
     void OnStatusMessageReceive(const Network::StatusMessageEntry&);
@@ -56,7 +58,10 @@ signals:
 private:
     void AppendChatMessage(const QString&);
     bool ValidateMessage(const std::string&);
+    void SendModerationRequest(Network::RoomMessageTypes type, const std::string& nickname);
+    void UpdateIconDisplay();
 
+    bool has_mod_perms{};
     QStandardItemModel* member_list;
     std::unique_ptr<Ui::ChatRoom> ui;
     std::unordered_set<std::string> block_list;
@@ -68,3 +73,4 @@ Q_DECLARE_METATYPE(Network::ChatEntry);
 Q_DECLARE_METATYPE(Network::StatusMessageEntry);
 Q_DECLARE_METATYPE(Network::RoomInformation);
 Q_DECLARE_METATYPE(Network::RoomMember::State);
+Q_DECLARE_METATYPE(Network::RoomMember::Error);

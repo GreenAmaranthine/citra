@@ -96,7 +96,7 @@ struct AppDataWriteStruct {
 void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x01, 1, 0};
     Type type{rp.PopEnum<Type>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     nfc->type = type;
     nfc->tag_state = TagState::NotScanning;
     rb.Push(RESULT_SUCCESS);
@@ -112,7 +112,7 @@ void Module::Interface::Shutdown(Kernel::HLERequestContext& ctx) {
     nfc->encrypted_data.fill(0);
     nfc->decrypted_data.fill(0);
     nfc->amiibo_file.clear();
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_NFC, "param={}", param);
 }
@@ -132,7 +132,7 @@ void Module::Interface::StopCommunication(Kernel::HLERequestContext& ctx) {
 void Module::Interface::StartTagScanning(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x05, 1, 0};
     u16 in_val{rp.Pop<u16>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     if (nfc->tag_state != TagState::NotScanning && nfc->tag_state != TagState::TagOutOfRange) {
         LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
         rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
@@ -320,7 +320,7 @@ void Module::Interface::InitializeWriteAppData(Kernel::HLERequestContext& ctx) {
     auto unknown_0x30_byte_structure{rp.PopRaw<std::array<u8, 0x30>>()};
     rp.PopPID();
     const auto buffer{rp.PopStaticBuffer()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     if (nfc->tag_state != TagState::TagDataLoaded) {
         LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
         rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
@@ -343,7 +343,7 @@ void Module::Interface::InitializeWriteAppData(Kernel::HLERequestContext& ctx) {
 void Module::Interface::UpdateStoredAmiiboData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x9, 0, 2};
     u32 pid{rp.PopPID()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     if (nfc->tag_state != TagState::TagDataLoaded) {
         LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->tag_state.load()));
         rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
@@ -386,7 +386,7 @@ void Module::Interface::OpenAppData(Kernel::HLERequestContext& ctx) {
         result = ResultCode(0xC8A17628); // Uninitialised
     if (result == RESULT_SUCCESS)
         nfc->appdata_initialized = true;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(result);
     LOG_DEBUG(Service_NFC, "program_id=0x{:09X}", program_id);
 }
@@ -396,7 +396,7 @@ void Module::Interface::ReadAppData(Kernel::HLERequestContext& ctx) {
     u32 size{rp.Pop<u32>()};
     if (!nfc->appdata_initialized) {
         LOG_ERROR(Service_NFC, "AppData not initialized");
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
         return;
@@ -404,7 +404,7 @@ void Module::Interface::ReadAppData(Kernel::HLERequestContext& ctx) {
     ASSERT(size >= 0xD8);
     std::vector<u8> buffer(0xD8);
     std::memcpy(buffer.data(), &nfc->decrypted_data[0xDC], 0xD8);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(buffer, 0);
     LOG_DEBUG(Service_NFC, "size={}", size);
@@ -415,7 +415,7 @@ void Module::Interface::WriteAppData(Kernel::HLERequestContext& ctx) {
     u32 size{rp.Pop<u32>()};
     AppDataWriteStruct write_struct{rp.PopRaw<AppDataWriteStruct>()};
     const auto buffer{rp.PopStaticBuffer()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     if (!nfc->appdata_initialized) {
         LOG_ERROR(Service_NFC, "AppData not initialized");
         rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,

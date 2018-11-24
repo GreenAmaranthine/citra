@@ -6,6 +6,7 @@
 #include <mutex>
 #include "common/string_util.h"
 #include "core/core.h"
+#include "core/frontend.h"
 #include "core/hle/applets/erreula.h"
 #include "core/hle/service/cfg/cfg.h"
 
@@ -29,7 +30,7 @@ ResultCode ErrEula::ReceiveParameter(const Service::APT::MessageParameter& param
     // Create a SharedMemory that directly points to this heap block.
     framebuffer_memory = manager.System().Kernel().CreateSharedMemoryForApplet(
         0, capture_info.size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
-        "ErrEula Memory");
+        "ErrEula Shared Memory");
     // Send the response message with the newly created SharedMemory
     Service::APT::MessageParameter result;
     result.signal = Service::APT::SignalType::Response;
@@ -48,7 +49,7 @@ ResultCode ErrEula::StartImpl(const Service::APT::AppletStartupParameter& parame
 }
 
 void ErrEula::Update() {
-    cb(config, is_running);
+    manager.System().GetFrontend().LaunchErrEula(config, is_running);
     std::mutex m;
     std::unique_lock lock{m};
     std::condition_variable cv;

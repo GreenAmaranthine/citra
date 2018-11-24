@@ -293,7 +293,7 @@ ResultCode SVC::MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 oth
     case MemoryPermission::WriteExecute:
     case MemoryPermission::ReadWriteExecute:
     case MemoryPermission::DontCare:
-        return shared_memory->Map(kernel.GetCurrentProcess().get(), addr, permissions_type,
+        return shared_memory->Map(*kernel.GetCurrentProcess(), addr, permissions_type,
                                   static_cast<MemoryPermission>(other_permissions));
     default:
         LOG_ERROR(Kernel_SVC, "unknown permissions=0x{:08X}", permissions);
@@ -308,7 +308,7 @@ ResultCode SVC::UnmapMemoryBlock(Handle handle, u32 addr) {
     auto shared_memory{current_process->handle_table.Get<SharedMemory>(handle)};
     if (!shared_memory)
         return ERR_INVALID_HANDLE;
-    return shared_memory->Unmap(current_process.get(), addr);
+    return shared_memory->Unmap(*current_process, addr);
 }
 
 /// Connect to an OS service given the port name, returns the handle to the port to out
@@ -443,7 +443,7 @@ ResultCode SVC::WaitSynchronizationN(s32* out, VAddr handles_address, s32 handle
             }
             ASSERT(reason == ThreadWakeupReason::Signal);
             thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
-            // The wait_all case does not update the output index.
+            // The wait_all case doesn't update the output index.
         };
         system.PrepareReschedule();
         // This value gets set to -1 by default in this case, it isn't modified after this.

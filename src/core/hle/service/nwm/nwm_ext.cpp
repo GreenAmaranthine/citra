@@ -4,6 +4,7 @@
 
 #include "common/logging/log.h"
 #include "core/core.h"
+#include "core/frontend.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/shared_page.h"
 #include "core/hle/service/cfg/cfg.h"
@@ -41,9 +42,9 @@ void NWM_EXT::ControlWirelessEnabled(Kernel::HLERequestContext& ctx) {
                                              : 1;
         Settings::values.n_wifi_link_level = 3;
         Settings::values.n_state = 2;
-        shared_page.SetWifiLinkLevel(SharedPage::WifiLinkLevel::Best);
+        shared_page.SetWiFiLinkLevel(SharedPage::WiFiLinkLevel::Best);
         shared_page.SetNetworkState(SharedPage::NetworkState::Internet);
-        update_control_panel();
+        system.GetFrontend().UpdateNetwork();
         break;
     }
     case 1: { // Disable
@@ -56,9 +57,9 @@ void NWM_EXT::ControlWirelessEnabled(Kernel::HLERequestContext& ctx) {
         Settings::values.n_wifi_status = 0;
         Settings::values.n_wifi_link_level = 0;
         Settings::values.n_state = 7;
-        shared_page.SetWifiLinkLevel(SharedPage::WifiLinkLevel::Off);
+        shared_page.SetWiFiLinkLevel(SharedPage::WiFiLinkLevel::Off);
         shared_page.SetNetworkState(SharedPage::NetworkState::Disabled);
-        update_control_panel();
+        system.GetFrontend().UpdateNetwork();
         break;
     }
     default: {
@@ -66,7 +67,7 @@ void NWM_EXT::ControlWirelessEnabled(Kernel::HLERequestContext& ctx) {
         break;
     }
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(result);
 }
 

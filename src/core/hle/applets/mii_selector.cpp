@@ -9,6 +9,7 @@
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/core.h"
+#include "core/frontend.h"
 #include "core/hle/applets/mii_selector.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
@@ -33,7 +34,7 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
     // Create a SharedMemory that directly points to this heap block.
     framebuffer_memory = manager.System().Kernel().CreateSharedMemoryForApplet(
         0, capture_info.size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
-        "MiiSelector Memory");
+        "Mii Selector Shared Memory");
     // Send the response message with the newly created SharedMemory
     Service::APT::MessageParameter result;
     result.signal = Service::APT::SignalType::Response;
@@ -52,16 +53,14 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
     if (config.magic_value != MiiSelectorMagic)
         result.return_code = 1;
     else {
-        cb(config, result, is_running);
-        /*        std::mutex m;
-                std::unique_lock lock{m};
-                std::condition_variable cv;
-                cv.wait(lock, [this]() -> bool { return !is_running; });*/
-        while (is_running)
-            std::this_thread::yield();
+        manager.System().GetFrontend().LaunchMiiSelector(config, result, is_running);
+        std::mutex m;
+        std::unique_lock lock{m};
+        std::condition_variable cv;
+        cv.wait(lock, [this]() -> bool { return !is_running; });
         result.mii_data_checksum = boost::crc<16, 0x1021, 0, 0, false, false>(
             result.selected_mii_data.data(),
-            result.selected_mii_data.size() + sizeof(result.pad52));
+            result.selected_mii_data.size() + sizeof(result.pad51));
     }
     // Let the program know that we're closing
     Service::APT::MessageParameter message;

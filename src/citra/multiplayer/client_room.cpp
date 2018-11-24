@@ -41,6 +41,10 @@ ClientRoomWindow::ClientRoomWindow(QWidget* parent, Core::System& system)
 
 ClientRoomWindow::~ClientRoomWindow() = default;
 
+void ClientRoomWindow::SetModPerms(bool is_mod) {
+    ui->chat->SetModPerms(is_mod);
+}
+
 void ClientRoomWindow::OnRoomUpdate(const Network::RoomInformation& info) {
     UpdateView();
 }

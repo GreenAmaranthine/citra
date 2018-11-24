@@ -33,10 +33,8 @@
 #include "citra/control_panel.h"
 #include "citra/hotkeys.h"
 #include "citra/main.h"
-#include "citra/mii_selector.h"
 #include "citra/multiplayer/state.h"
 #include "citra/program_list.h"
-#include "citra/swkbd.h"
 #include "citra/ui_settings.h"
 #include "citra/util/clickable_label.h"
 #include "citra/util/util.h"
@@ -47,7 +45,6 @@
 #include "common/logging/text_formatter.h"
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
-#include "common/string_util.h"
 #include "core/3ds.h"
 #include "core/core.h"
 #include "core/file_sys/archive_extsavedata.h"
@@ -55,7 +52,6 @@
 #include "core/file_sys/seed_db.h"
 #include "core/hle/kernel/shared_page.h"
 #include "core/hle/service/am/am_u.h"
-#include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/hle/service/nwm/nwm_ext.h"
@@ -121,7 +117,7 @@ GMainWindow::~GMainWindow() {
 }
 
 void GMainWindow::InitializeWidgets() {
-    screens = new Screens(this, emu_thread.get());
+    screens = new Screens(this, emu_thread.get(), system);
     screens->hide();
     program_list = new ProgramList(system, this);
     ui.horizontalLayout->addWidget(program_list);
@@ -261,21 +257,21 @@ void GMainWindow::InitializeHotkeys() {
     connect(hotkey_registry.GetHotkey("Main Window", "Toggle Speed Limit", this),
             &QShortcut::activated, this, [&] {
                 Settings::values.use_frame_limit = !Settings::values.use_frame_limit;
-                UpdatePerformanceStats();
+                UpdatePerfStats();
             });
     constexpr u16 SPEED_LIMIT_STEP{5};
     connect(hotkey_registry.GetHotkey("Main Window", "Increase Speed Limit", this),
             &QShortcut::activated, this, [&] {
                 if (Settings::values.frame_limit < 9999 - SPEED_LIMIT_STEP) {
                     Settings::values.frame_limit += SPEED_LIMIT_STEP;
-                    UpdatePerformanceStats();
+                    UpdatePerfStats();
                 }
             });
     connect(hotkey_registry.GetHotkey("Main Window", "Decrease Speed Limit", this),
             &QShortcut::activated, this, [&] {
                 if (Settings::values.frame_limit > SPEED_LIMIT_STEP) {
                     Settings::values.frame_limit -= SPEED_LIMIT_STEP;
-                    UpdatePerformanceStats();
+                    UpdatePerfStats();
                 }
             });
     connect(hotkey_registry.GetHotkey("Main Window", "Increase Internal Resolution", this),
@@ -371,7 +367,7 @@ void GMainWindow::ConnectWidgetEvents() {
     connect(program_list, &ProgramList::ShowList, this, &GMainWindow::OnProgramListShowList);
     connect(this, &GMainWindow::EmulationStarting, screens, &Screens::OnEmulationStarting);
     connect(this, &GMainWindow::EmulationStopping, screens, &Screens::OnEmulationStopping);
-    connect(&perf_stats_update_timer, &QTimer::timeout, this, &GMainWindow::UpdatePerformanceStats);
+    connect(&perf_stats_update_timer, &QTimer::timeout, this, &GMainWindow::UpdatePerfStats);
     connect(this, &GMainWindow::UpdateProgress, this, &GMainWindow::OnUpdateProgress);
     connect(this, &GMainWindow::CIAInstallReport, this, &GMainWindow::OnCIAInstallReport);
     connect(this, &GMainWindow::CIAInstallFinished, this, &GMainWindow::OnCIAInstallFinished);
@@ -598,20 +594,6 @@ void GMainWindow::BootProgram(const std::string& filename) {
         movie_record_path.clear();
     }
     connect(emu_thread.get(), &EmuThread::ErrorThrown, this, &GMainWindow::OnCoreError);
-    HLE::Applets::ErrEula::cb = [this](HLE::Applets::ErrEulaConfig& config, bool& is_running) {
-        ErrEulaCallback(config, is_running);
-    };
-    HLE::Applets::SoftwareKeyboard::cb = [this](HLE::Applets::SoftwareKeyboardConfig& config,
-                                                std::u16string& text, bool& is_running) {
-        SwkbdCallback(config, text, is_running);
-    };
-    HLE::Applets::MiiSelector::cb = [this](const HLE::Applets::MiiConfig& config,
-                                           HLE::Applets::MiiResult& result, bool& is_running) {
-        MiiSelectorCallback(config, result, is_running);
-    };
-    SharedPage::Handler::update_3d = [this] { Update3D(); };
-    RPC::RPCServer::cb_update_frame_advancing = [this] { UpdateFrameAdvancingCallback(); };
-    Service::NWM::NWM_EXT::update_control_panel = [this] { UpdateControlPanelNetwork(); };
     // Update Discord RPC
     auto& member{system.RoomMember()};
     if (!member.IsConnected())
@@ -680,70 +662,6 @@ void GMainWindow::StoreRecentFile(const QString& filename) {
     UpdateRecentFiles();
 }
 
-void GMainWindow::ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& is_running) {
-    if (QThread::currentThread() != thread()) {
-        QMetaObject::invokeMethod(this, "ErrEulaCallback", Qt::BlockingQueuedConnection,
-                                  Q_ARG(HLE::Applets::ErrEulaConfig&, config),
-                                  Q_ARG(bool&, is_running));
-        return;
-    }
-    switch (config.error_type) {
-    case HLE::Applets::ErrEulaErrorType::ErrorCode:
-        QMessageBox::critical(nullptr, "ErrEula",
-                              QString::fromStdString(fmt::format("0x{:08X}", config.error_code)));
-        break;
-    case HLE::Applets::ErrEulaErrorType::LocalizedErrorText:
-    case HLE::Applets::ErrEulaErrorType::ErrorText:
-        QMessageBox::critical(
-            nullptr, "ErrEula",
-            QString::fromStdString(
-                fmt::format("0x{:08X}\n{}", config.error_code,
-                            Common::UTF16ToUTF8(std::u16string(
-                                reinterpret_cast<const char16_t*>(config.error_text.data()))))));
-        break;
-    case HLE::Applets::ErrEulaErrorType::Agree:
-    case HLE::Applets::ErrEulaErrorType::Eula:
-    case HLE::Applets::ErrEulaErrorType::EulaDrawOnly:
-    case HLE::Applets::ErrEulaErrorType::EulaFirstBoot:
-        if (QMessageBox::question(nullptr, "ErrEula", "Agree EULA?") ==
-            QMessageBox::StandardButton::Yes)
-            system.ServiceManager()
-                .GetService<Service::CFG::Module::Interface>("cfg:u")
-                ->GetModule()
-                ->AgreeEula();
-        break;
-    }
-    config.return_code = HLE::Applets::ErrEulaResult::Success;
-    is_running = false;
-}
-
-void GMainWindow::SwkbdCallback(HLE::Applets::SoftwareKeyboardConfig& config, std::u16string& text,
-                                bool& is_running) {
-    if (QThread::currentThread() != thread()) {
-        QMetaObject::invokeMethod(this, "SwkbdCallback", Qt::BlockingQueuedConnection,
-                                  Q_ARG(HLE::Applets::SoftwareKeyboardConfig&, config),
-                                  Q_ARG(std::u16string&, text), Q_ARG(bool&, is_running));
-        return;
-    }
-    SoftwareKeyboardDialog dialog{this, config, text};
-    dialog.exec();
-    is_running = false;
-}
-
-void GMainWindow::MiiSelectorCallback(const HLE::Applets::MiiConfig& config,
-                                      HLE::Applets::MiiResult& result, bool& is_running) {
-    if (QThread::currentThread() != thread()) {
-        QMetaObject::invokeMethod(this, "MiiSelectorCallback", Qt::BlockingQueuedConnection,
-                                  Q_ARG(const HLE::Applets::MiiConfig&, config),
-                                  Q_ARG(HLE::Applets::MiiResult&, result),
-                                  Q_ARG(bool&, is_running));
-        return;
-    }
-    MiiSelectorDialog dialog{this, config, result};
-    dialog.exec();
-    is_running = false;
-}
-
 void GMainWindow::Update3D() {
     if (QThread::currentThread() != thread()) {
         QMetaObject::invokeMethod(this, "Update3D", Qt::BlockingQueuedConnection);
@@ -753,24 +671,23 @@ void GMainWindow::Update3D() {
         control_panel->Update3D();
 }
 
-void GMainWindow::UpdateFrameAdvancingCallback() {
+void GMainWindow::UpdateNetwork() {
     if (QThread::currentThread() != thread()) {
-        QMetaObject::invokeMethod(this, "UpdateFrameAdvancingCallback",
-                                  Qt::BlockingQueuedConnection);
+        QMetaObject::invokeMethod(this, "UpdateNetwork", Qt::BlockingQueuedConnection);
+        return;
+    }
+    if (control_panel)
+        control_panel->UpdateNetwork();
+}
+
+void GMainWindow::UpdateFrameAdvancing() {
+    if (QThread::currentThread() != thread()) {
+        QMetaObject::invokeMethod(this, "UpdateFrameAdvancing", Qt::BlockingQueuedConnection);
         return;
     }
     const bool enabled{system.frame_limiter.GetFrameAdvancing()};
     ui.action_Enable_Frame_Advancing->setChecked(enabled);
     ui.action_Advance_Frame->setEnabled(enabled);
-}
-
-void GMainWindow::UpdateControlPanelNetwork() {
-    if (QThread::currentThread() != thread()) {
-        QMetaObject::invokeMethod(this, "UpdateControlPanelNetwork", Qt::BlockingQueuedConnection);
-        return;
-    }
-    if (control_panel)
-        control_panel->UpdateNetwork();
 }
 
 void GMainWindow::UpdateRecentFiles() {
@@ -1455,7 +1372,7 @@ void GMainWindow::OnDumpRAM() {
     LOG_INFO(Frontend, "Memory dump finished.");
 }
 
-void GMainWindow::UpdatePerformanceStats() {
+void GMainWindow::UpdatePerfStats() {
     if (!emu_thread) {
         perf_stats_update_timer.stop();
         return;

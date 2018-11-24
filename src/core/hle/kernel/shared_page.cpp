@@ -6,9 +6,11 @@
 #include <cstring>
 #include "core/core.h"
 #include "core/core_timing.h"
+#include "core/frontend.h"
 #include "core/hle/kernel/shared_page.h"
 #include "core/movie.h"
 #include "core/settings.h"
+
 
 namespace SharedPage {
 
@@ -34,7 +36,7 @@ static std::chrono::seconds GetInitTime(Core::Movie& movie) {
     }
 }
 
-Handler::Handler(Core::System& system) : timing{system.CoreTiming()} {
+Handler::Handler(Core::System& system) : timing{system.CoreTiming()}, frontend{frontend} {
     std::memset(&shared_page, 0, sizeof(shared_page));
     shared_page.running_hw = 0x1; // Product
     // Some games wait until this value becomes 0x1, before asking running_hw
@@ -91,11 +93,11 @@ void Handler::UpdateTimeCallback(u64 userdata, int cycles_late) {
     timing.ScheduleEvent(msToCycles(60 * 60 * 1000) - cycles_late, update_time_event);
 }
 
-void Handler::SetMacAddress(const MACAddress& addr) {
+void Handler::SetMACAddress(const MACAddress& addr) {
     std::memcpy(shared_page.wifi_macaddr, addr.data(), sizeof(MACAddress));
 }
 
-void Handler::SetWifiLinkLevel(WifiLinkLevel level) {
+void Handler::SetWiFiLinkLevel(WiFiLinkLevel level) {
     shared_page.wifi_link_level = static_cast<u8>(level);
 }
 
@@ -132,8 +134,8 @@ void Handler::Update3DSettings(bool called_by_control_panel) {
     shared_page.ledstate_3d = Settings::values.factor_3d == 0 ? 1 : 0;
     shared_page.sliderstate_3d =
         Settings::values.factor_3d != 0 ? (float_le)Settings::values.factor_3d / 100 : 0.0f;
-    if (!called_by_control_panel && update_3d)
-        update_3d();
+    if (!called_by_control_panel)
+        frontend.Update3D();
 }
 
 } // namespace SharedPage

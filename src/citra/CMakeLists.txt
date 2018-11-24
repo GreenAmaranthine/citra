@@ -64,6 +64,8 @@ add_executable(citra
     multiplayer/lobby_p.h
     multiplayer/message.cpp
     multiplayer/message.h
+    multiplayer/moderation_dialog.cpp
+    multiplayer/moderation_dialog.h
     multiplayer/state.cpp
     multiplayer/state.h
     multiplayer/validation.h
@@ -109,11 +111,12 @@ set(UIS
     cheats.ui
     main.ui
     control_panel.ui
-    multiplayer/direct_connect.ui
-    multiplayer/lobby.ui
     multiplayer/chat_room.ui
     multiplayer/client_room.ui
+    multiplayer/direct_connect.ui
     multiplayer/host_room.ui
+    multiplayer/lobby.ui
+    multiplayer/moderation_dialog.ui
 )
 
 file(GLOB_RECURSE ICONS ${PROJECT_SOURCE_DIR}/dist/icons/*)

@@ -54,8 +54,8 @@ void LogSettings() {
     LogSetting("ControlPanel_BatteryCharging", values.p_battery_charging);
     LogSetting("ControlPanel_BatteryLevel", values.p_battery_level);
     LogSetting("ControlPanel_NetworkState", values.n_state);
-    LogSetting("ControlPanel_WifiLinkLevel", values.n_wifi_link_level);
-    LogSetting("ControlPanel_WifiStatus", values.n_wifi_status);
+    LogSetting("ControlPanel_WiFiLinkLevel", values.n_wifi_link_level);
+    LogSetting("ControlPanel_WiFiStatus", values.n_wifi_status);
     LogSetting("Core_KeyboardMode", static_cast<int>(values.keyboard_mode));
     LogSetting("Core_EnableNSLaunch", values.enable_ns_launch);
     LogSetting("Renderer_UseHwShaders", values.use_hw_shaders);

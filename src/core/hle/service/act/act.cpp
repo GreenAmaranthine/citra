@@ -23,7 +23,7 @@ void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
     rp.Skip(1, false);
     ASSERT(rp.Pop<u32>() == 0);
     u32 shared_memory{rp.Pop<u32>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_ACT,
                 "(stubbed) version=0x{:08X}, shared_memory_size=0x{:X}, shared_memory=0x{:08X}",
@@ -33,7 +33,7 @@ void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
 void Module::Interface::GetErrorCode(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0002, 1, 0};
     u32 error_code{rp.Pop<u32>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(error_code); // TODO: convert
     LOG_WARNING(Service_ACT, "stubbed");
@@ -108,7 +108,7 @@ void Module::Interface::GetAccountDataBlock(Kernel::HLERequestContext& ctx) {
         break;
     }
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(buffer);
     LOG_WARNING(Service_ACT, "(stubbed) unk=0x{:02X}, size=0x{:X}, id=0x{:X}", unk, size,

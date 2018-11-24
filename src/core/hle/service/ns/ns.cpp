@@ -37,12 +37,12 @@ void NS_S::LaunchTitle(Kernel::HLERequestContext& ctx) {
     FS::MediaType media_type{(program_id == 0) ? FS::MediaType::GameCard
                                                : AM::GetProgramMediaType(program_id)};
     if (!Settings::values.enable_ns_launch) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+        auto rb{rp.MakeBuilder(2, 0)};
         rb.Push(RESULT_SUCCESS);
         rb.Push<u32>(0);
     } else {
         auto process{Launch(system, media_type, program_id)};
-        IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+        auto rb{rp.MakeBuilder(2, 0)};
         rb.Push(RESULT_SUCCESS);
         rb.Push<u32>(process ? process->process_id : 0);
     }

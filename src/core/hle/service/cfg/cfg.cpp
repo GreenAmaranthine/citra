@@ -131,7 +131,7 @@ std::shared_ptr<Module> Module::Interface::GetModule() {
 void Module::Interface::GetCountryCodeString(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x09, 1, 0};
     u16 country_code_id{rp.Pop<u16>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     if (country_code_id >= country_codes.size() || 0 == country_codes[country_code_id]) {
         LOG_ERROR(Service_CFG, "requested country code id={} is invalid", country_code_id);
         rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Config,
@@ -156,7 +156,7 @@ void Module::Interface::GetCountryCodeID(Kernel::HLERequestContext& ctx) {
             break;
         }
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     if (country_code_id == 0) {
         LOG_ERROR(Service_CFG, "requested country code name={}{} is invalid", country_code & 0xff,
                   country_code >> 8);
@@ -184,7 +184,7 @@ void Module::Interface::SecureInfoGetRegion(Kernel::HLERequestContext& ctx, u16 
 void Module::Interface::GenHashConsoleUnique(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x03, 1, 0};
     const u32 program_id_salt{rp.Pop<u32>() & 0x000FFFFF};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(3, 0)};
+    auto rb{rp.MakeBuilder(3, 0)};
     std::array<u8, 12> buffer;
     const auto result{cfg->GetConfigInfoBlock(ConsoleUniqueID2BlockID, 8, 2, buffer.data())};
     rb.Push(result);
@@ -206,7 +206,7 @@ void Module::Interface::GenHashConsoleUnique(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetRegionCanadaUSA(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x04, 2, 0};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     u8 canada_or_usa{1};
     if (cfg->GetRegionValue() == canada_or_usa)
@@ -248,7 +248,7 @@ void Module::Interface::GetConfigInfoBlk2(Kernel::HLERequestContext& ctx) {
     u32 size{rp.Pop<u32>()};
     u32 block_id{rp.Pop<u32>()};
     auto& buffer{rp.PopMappedBuffer()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     std::vector<u8> data(size);
     rb.Push(cfg->GetConfigInfoBlock(block_id, size, 0x2, data.data()));
     buffer.Write(data.data(), 0, data.size());
@@ -260,7 +260,7 @@ void Module::Interface::GetConfigInfoBlk8(Kernel::HLERequestContext& ctx, u16 id
     u32 size{rp.Pop<u32>()};
     u32 block_id{rp.Pop<u32>()};
     auto& buffer{rp.PopMappedBuffer()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     std::vector<u8> data(size);
     rb.Push(cfg->GetConfigInfoBlock(block_id, size, 0x8, data.data()));
     buffer.Write(data.data(), 0, data.size());
@@ -274,7 +274,7 @@ void Module::Interface::SetConfigInfoBlk4(Kernel::HLERequestContext& ctx, u16 id
     auto& buffer{rp.PopMappedBuffer()};
     std::vector<u8> data(size);
     buffer.Read(data.data(), 0, data.size());
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(cfg->SetConfigInfoBlock(block_id, size, 0x4, data.data()));
     rb.PushMappedBuffer(buffer);
 }
@@ -307,7 +307,7 @@ void Module::Interface::GetLocalFriendCodeSeedData(Kernel::HLERequestContext& ct
     auto& buffer{rp.PopMappedBuffer()};
     auto [exists, lfcs]{PS::GetLocalFriendCodeSeedTuple()};
     buffer.Write(&lfcs, 0, sizeof(PS::LocalFriendCodeSeed));
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(buffer);
 }
@@ -328,7 +328,7 @@ void Module::Interface::CreateConfigInfoBlk(Kernel::HLERequestContext& ctx) {
     std::vector<u8> data(buffer.GetSize());
     buffer.Read(data.data(), 0, buffer.GetSize());
     cfg->CreateConfigInfoBlk(block_id, size, flags, data.data());
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(buffer);
 }
@@ -349,7 +349,7 @@ void Module::Interface::SetGetLocalFriendCodeSeedData(Kernel::HLERequestContext&
         FileUtil::IOFile file{path, "rb"};
         file.WriteBytes(&lfcs, sizeof(PS::LocalFriendCodeSeed));
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(buffer);
 }
@@ -365,7 +365,7 @@ void Module::Interface::SetLocalFriendCodeSeedSignature(Kernel::HLERequestContex
     FileUtil::CreateFullPath(path);
     FileUtil::IOFile file{path, "rb"};
     file.WriteBytes(&lfcs, sizeof(PS::LocalFriendCodeSeed));
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 

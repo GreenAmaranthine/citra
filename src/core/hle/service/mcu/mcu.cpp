@@ -47,13 +47,13 @@ void Module::Interface::Set3DLEDState(Kernel::HLERequestContext& ctx) {
             Settings::values.factor_3d = 100;
         mcu->system.Kernel().GetSharedPageHandler().Update3DSettings();
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 
 void Module::Interface::GetSoundVolume(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, IPC::Header{ctx.CommandBuffer()[0]}};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(static_cast<u8>(0x3F * Settings::values.volume));
 }

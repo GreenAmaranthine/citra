@@ -44,7 +44,6 @@ public:
     }
 
     static const HandleType HANDLE_TYPE{HandleType::Timer};
-
     HandleType GetHandleType() const override {
         return HANDLE_TYPE;
     }

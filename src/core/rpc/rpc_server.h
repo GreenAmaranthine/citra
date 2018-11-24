@@ -25,8 +25,6 @@ public:
 
     void QueueRequest(std::unique_ptr<RPC::Packet> request);
 
-    static inline std::function<void()> cb_update_frame_advancing;
-
 private:
     void Start();
     void Stop();

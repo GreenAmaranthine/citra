@@ -29,9 +29,11 @@ struct RoomMember::RoomMemberImpl {
     /// The current program
     std::string current_program;
 
-    std::atomic<State> state{State::Idle}; ///< Current state of the RoomMember.
+    std::atomic<State> state{State::Idle};         ///< Current state of the RoomMember.
+    std::atomic<Error> error{Error::UnknownError}; ///< Current state of the RoomMember.
 
     void SetState(const State new_state);
+    void SetError(const Error new_error);
     bool IsConnected() const;
 
     std::string nickname;   ///< The nickname of this member.
@@ -54,11 +56,13 @@ struct RoomMember::RoomMemberImpl {
         CallbackSet<T>& Get();
 
     private:
-        CallbackSet<WifiPacket> callback_set_wifi_packet;
+        CallbackSet<WiFiPacket> callback_set_wifi_packet;
         CallbackSet<ChatEntry> callback_set_chat_messages;
         CallbackSet<StatusMessageEntry> callback_set_status_messages;
         CallbackSet<RoomInformation> callback_set_room_information;
         CallbackSet<State> callback_set_state;
+        CallbackSet<Error> callback_set_error;
+        CallbackSet<Room::BanList> callback_set_ban_list;
     };
 
     Callbacks callbacks; ///< All CallbackSets to all events
@@ -97,10 +101,10 @@ struct RoomMember::RoomMemberImpl {
     void HandleRoomInformationPacket(const ENetEvent* event);
 
     /**
-     * Extracts a WifiPacket from a received ENet packet.
+     * Extracts a WiFiPacket from a received ENet packet.
      * @param event The  ENet event that was received.
      */
-    void HandleWifiPacket(const ENetEvent* event);
+    void HandleWiFiPacket(const ENetEvent* event);
 
     /**
      * Extracts a chat entry from a received ENet packet and adds it to the chat queue.
@@ -114,6 +118,12 @@ struct RoomMember::RoomMemberImpl {
      * @param event The ENet event that was received.
      */
     void HandleStatusMessagePacket(const ENetEvent* event);
+
+    /**
+     * Extracts a ban list request response from a received ENet packet.
+     * @param event The ENet event that was received.
+     */
+    void HandleModBanListResponsePacket(const ENetEvent* event);
 
     /// Disconnects the RoomMember from the Room
     void Disconnect();
@@ -133,6 +143,13 @@ void RoomMember::RoomMemberImpl::SetState(const State new_state) {
     }
 }
 
+void RoomMember::RoomMemberImpl::SetError(const Error new_error) {
+    if (error != new_error) {
+        error = new_error;
+        Invoke<Error>(error);
+    }
+}
+
 bool RoomMember::RoomMemberImpl::IsConnected() const {
     return state == State::Joining || state == State::Joined;
 }
@@ -146,8 +163,8 @@ void RoomMember::RoomMemberImpl::MemberLoop() {
             switch (event.type) {
             case ENET_EVENT_TYPE_RECEIVE:
                 switch (event.packet->data[0]) {
-                case IdWifiPacket:
-                    HandleWifiPacket(&event);
+                case IdWiFiPacket:
+                    HandleWiFiPacket(&event);
                     break;
                 case IdChatMessage:
                     HandleChatPacket(&event);
@@ -166,32 +183,59 @@ void RoomMember::RoomMemberImpl::MemberLoop() {
                     HandleJoinPacket(&event);
                     SetState(State::Joined);
                     break;
+                case IdModBanListResponse:
+                    HandleModBanListResponsePacket(&event);
+                    break;
                 case IdRoomIsFull:
-                    SetState(State::RoomIsFull);
+                    SetState(State::Idle);
+                    SetError(Error::RoomIsFull);
                     break;
                 case IdNameCollision:
-                    SetState(State::NameCollision);
+                    SetState(State::Idle);
+                    SetError(Error::NameCollision);
                     break;
-                case IdMacCollision:
-                    SetState(State::MacCollision);
+                case IdMACCollision:
+                    SetState(State::Idle);
+                    SetError(Error::MACCollision);
                     break;
                 case IdConsoleIdCollision:
-                    SetState(State::ConsoleIdCollision);
+                    SetState(State::Idle);
+                    SetError(Error::ConsoleIdCollision);
                     break;
                 case IdVersionMismatch:
-                    SetState(State::WrongVersion);
+                    SetState(State::Idle);
+                    SetError(Error::WrongVersion);
                     break;
                 case IdWrongPassword:
-                    SetState(State::WrongPassword);
+                    SetState(State::Idle);
+                    SetError(Error::WrongPassword);
                     break;
                 case IdCloseRoom:
-                    SetState(State::LostConnection);
+                    SetState(State::Idle);
+                    SetError(Error::LostConnection);
+                    break;
+                case IdHostKicked:
+                    SetState(State::Idle);
+                    SetError(Error::HostKicked);
+                    break;
+                case IdHostBanned:
+                    SetState(State::Idle);
+                    SetError(Error::HostBanned);
+                    break;
+                case IdModPermissionDenied:
+                    SetError(Error::PermissionDenied);
+                    break;
+                case IdModNoSuchUser:
+                    SetError(Error::NoSuchUser);
                     break;
                 }
                 enet_packet_destroy(event.packet);
                 break;
             case ENET_EVENT_TYPE_DISCONNECT:
-                SetState(State::LostConnection);
+                if (state == State::Joined && error != Error::HostBanned) {
+                    SetState(State::Idle);
+                    SetError(Error::LostConnection);
+                }
                 break;
             }
         }
@@ -226,7 +270,7 @@ void RoomMember::RoomMemberImpl::SendJoinRequest(const std::string& nickname, u6
     packet << nickname;
     packet << console_id;
     packet << preferred_mac;
-    packet << network_version;
+    packet << NetworkVersion;
     packet << password;
     Send(std::move(packet));
 }
@@ -236,15 +280,11 @@ void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* ev
     packet.Append(event->packet->data, event->packet->dataLength);
     // Ignore the first byte, which is the message ID.
     packet.IgnoreBytes(sizeof(u8)); // Ignore the message type
-    RoomInformation info;
-    packet >> info.name;
-    packet >> info.description;
-    packet >> info.member_slots;
-    packet >> info.port;
-    room_information.name = info.name;
-    room_information.description = info.description;
-    room_information.member_slots = info.member_slots;
-    room_information.port = info.port;
+    packet >> room_information.name;
+    packet >> room_information.description;
+    packet >> room_information.member_slots;
+    packet >> room_information.port;
+    packet >> room_information.creator;
     u32 num_members;
     packet >> num_members;
     member_information.resize(num_members);
@@ -266,22 +306,22 @@ void RoomMember::RoomMemberImpl::HandleJoinPacket(const ENetEvent* event) {
     SetState(State::Joined);
 }
 
-void RoomMember::RoomMemberImpl::HandleWifiPacket(const ENetEvent* event) {
-    WifiPacket wifi_packet;
+void RoomMember::RoomMemberImpl::HandleWiFiPacket(const ENetEvent* event) {
+    WiFiPacket wifi_packet;
     Packet packet;
     packet.Append(event->packet->data, event->packet->dataLength);
     // Ignore the first byte, which is the message ID.
     packet.IgnoreBytes(sizeof(u8)); // Ignore the message type
-    // Parse the WifiPacket from the packet
+    // Parse the WiFiPacket from the packet
     u8 frame_type;
     packet >> frame_type;
-    WifiPacket::PacketType type{static_cast<WifiPacket::PacketType>(frame_type)};
+    WiFiPacket::PacketType type{static_cast<WiFiPacket::PacketType>(frame_type)};
     wifi_packet.type = type;
     packet >> wifi_packet.channel;
     packet >> wifi_packet.transmitter_address;
     packet >> wifi_packet.destination_address;
     packet >> wifi_packet.data;
-    Invoke<WifiPacket>(wifi_packet);
+    Invoke<WiFiPacket>(wifi_packet);
 }
 
 void RoomMember::RoomMemberImpl::HandleChatPacket(const ENetEvent* event) {
@@ -306,6 +346,16 @@ void RoomMember::RoomMemberImpl::HandleStatusMessagePacket(const ENetEvent* even
     status_message_entry.type = static_cast<StatusMessageTypes>(type);
     packet >> status_message_entry.nickname;
     Invoke<StatusMessageEntry>(status_message_entry);
+}
+
+void RoomMember::RoomMemberImpl::HandleModBanListResponsePacket(const ENetEvent* event) {
+    Packet packet;
+    packet.Append(event->packet->data, event->packet->dataLength);
+    // Ignore the first byte, which is the message id.
+    packet.IgnoreBytes(sizeof(u8));
+    Room::BanList ban_list;
+    packet >> ban_list;
+    Invoke<Room::BanList>(ban_list);
 }
 
 void RoomMember::RoomMemberImpl::Disconnect() {
@@ -335,7 +385,7 @@ void RoomMember::RoomMemberImpl::Disconnect() {
 }
 
 template <>
-RoomMember::RoomMemberImpl::CallbackSet<WifiPacket>& RoomMember::RoomMemberImpl::Callbacks::Get() {
+RoomMember::RoomMemberImpl::CallbackSet<WiFiPacket>& RoomMember::RoomMemberImpl::Callbacks::Get() {
     return callback_set_wifi_packet;
 }
 
@@ -343,6 +393,12 @@ template <>
 RoomMember::RoomMemberImpl::CallbackSet<RoomMember::State>&
 RoomMember::RoomMemberImpl::Callbacks::Get() {
     return callback_set_state;
+}
+
+template <>
+RoomMember::RoomMemberImpl::CallbackSet<RoomMember::Error>&
+RoomMember::RoomMemberImpl::Callbacks::Get() {
+    return callback_set_error;
 }
 
 template <>
@@ -360,6 +416,12 @@ template <>
 RoomMember::RoomMemberImpl::CallbackSet<StatusMessageEntry>&
 RoomMember::RoomMemberImpl::Callbacks::Get() {
     return callback_set_status_messages;
+}
+
+template <>
+RoomMember::RoomMemberImpl::CallbackSet<Room::BanList>&
+RoomMember::RoomMemberImpl::Callbacks::Get() {
+    return callback_set_ban_list;
 }
 
 template <typename T>
@@ -400,7 +462,7 @@ const std::string& RoomMember::GetNickname() const {
     return room_member_impl->nickname;
 }
 
-const MACAddress& RoomMember::GetMacAddress() const {
+const MACAddress& RoomMember::GetMACAddress() const {
     ASSERT_MSG(IsConnected(), "Tried to get MAC address while not connected");
     return room_member_impl->mac_address;
 }
@@ -429,7 +491,8 @@ void RoomMember::Join(const std::string& nick, u64 console_id, const char* serve
     room_member_impl->server =
         enet_host_connect(room_member_impl->client, &address, NumChannels, 0);
     if (!room_member_impl->server) {
-        room_member_impl->SetState(State::Error);
+        room_member_impl->SetState(State::Idle);
+        room_member_impl->SetError(Error::UnknownError);
         return;
     }
     ENetEvent event;
@@ -441,7 +504,8 @@ void RoomMember::Join(const std::string& nick, u64 console_id, const char* serve
         SendProgram(room_member_impl->current_program);
     } else {
         enet_peer_disconnect(room_member_impl->server, 0);
-        room_member_impl->SetState(State::CouldNotConnect);
+        room_member_impl->SetState(State::Idle);
+        room_member_impl->SetError(Error::CouldNotConnect);
     }
 }
 
@@ -449,9 +513,9 @@ bool RoomMember::IsConnected() const {
     return room_member_impl->IsConnected();
 }
 
-void RoomMember::SendWifiPacket(const WifiPacket& wifi_packet) {
+void RoomMember::SendWiFiPacket(const WiFiPacket& wifi_packet) {
     Packet packet;
-    packet << static_cast<u8>(IdWifiPacket);
+    packet << static_cast<u8>(IdWiFiPacket);
     packet << static_cast<u8>(wifi_packet.type);
     packet << wifi_packet.channel;
     packet << wifi_packet.transmitter_address;
@@ -477,13 +541,37 @@ void RoomMember::SendProgram(const std::string& program) {
     room_member_impl->Send(std::move(packet));
 }
 
+void RoomMember::SendModerationRequest(RoomMessageTypes type, const std::string& nickname) {
+    ASSERT_MSG(type == IdModKick || type == IdModBan || type == IdModUnban,
+               "Type isn't a moderation request");
+    if (!IsConnected())
+        return;
+    Packet packet;
+    packet << static_cast<u8>(type);
+    packet << nickname;
+    room_member_impl->Send(std::move(packet));
+}
+
+void RoomMember::RequestBanList() {
+    if (!IsConnected())
+        return;
+    Packet packet;
+    packet << static_cast<u8>(IdModGetBanList);
+    room_member_impl->Send(std::move(packet));
+}
+
 RoomMember::CallbackHandle<RoomMember::State> RoomMember::BindOnStateChanged(
     std::function<void(const RoomMember::State&)> callback) {
     return room_member_impl->Bind(callback);
 }
 
-RoomMember::CallbackHandle<WifiPacket> RoomMember::BindOnWifiPacketReceived(
-    std::function<void(const WifiPacket&)> callback) {
+RoomMember::CallbackHandle<RoomMember::Error> RoomMember::BindOnError(
+    std::function<void(const RoomMember::Error&)> callback) {
+    return room_member_impl->Bind(callback);
+}
+
+RoomMember::CallbackHandle<WiFiPacket> RoomMember::BindOnWiFiPacketReceived(
+    std::function<void(const WiFiPacket&)> callback) {
     return room_member_impl->Bind(callback);
 }
 
@@ -502,6 +590,11 @@ RoomMember::CallbackHandle<StatusMessageEntry> RoomMember::BindOnStatusMessageRe
     return room_member_impl->Bind(callback);
 }
 
+RoomMember::CallbackHandle<Room::BanList> RoomMember::BindOnBanListReceived(
+    std::function<void(const Room::BanList&)> callback) {
+    return room_member_impl->Bind(callback);
+}
+
 template <typename T>
 void RoomMember::Unbind(CallbackHandle<T> handle) {
     std::lock_guard lock{room_member_impl->callback_mutex};
@@ -517,10 +610,12 @@ void RoomMember::Leave() {
     room_member_impl->Invoke(RoomInformation{});
 }
 
-template void RoomMember::Unbind(CallbackHandle<WifiPacket>);
+template void RoomMember::Unbind(CallbackHandle<WiFiPacket>);
 template void RoomMember::Unbind(CallbackHandle<RoomMember::State>);
+template void RoomMember::Unbind(CallbackHandle<RoomMember::Error>);
 template void RoomMember::Unbind(CallbackHandle<RoomInformation>);
 template void RoomMember::Unbind(CallbackHandle<ChatEntry>);
 template void RoomMember::Unbind(CallbackHandle<StatusMessageEntry>);
+template void RoomMember::Unbind(CallbackHandle<Room::BanList>);
 
 } // namespace Network

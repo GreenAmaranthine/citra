@@ -13,6 +13,7 @@
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "core/core.h"
+#include "core/frontend.h"
 #include "core/hle/applets/swkbd.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
@@ -144,7 +145,7 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
     // Create a SharedMemory that directly points to this heap block.
     framebuffer_memory = manager.System().Kernel().CreateSharedMemoryForApplet(
         0, capture_info.size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
-        "SoftwareKeyboard Memory");
+        "Software Keyboard Shared Memory");
     // Send the response message with the newly created SharedMemory
     Service::APT::MessageParameter result;
     result.signal = Service::APT::SignalType::Response;
@@ -163,7 +164,7 @@ ResultCode SoftwareKeyboard::StartImpl(const Service::APT::AppletStartupParamete
     text_memory =
         boost::static_pointer_cast<Kernel::SharedMemory, Kernel::Object>(parameter.object);
     // TODO: Verify if this is the correct behavior
-    std::memset(text_memory->GetPointer(), 0, text_memory->size);
+    std::memset(text_memory->GetPointer(), 0, text_memory->GetSize());
     is_running = true;
     return RESULT_SUCCESS;
 }
@@ -226,9 +227,7 @@ void SoftwareKeyboard::Update() {
             std::cout << "Enter the text you will send to the program:" << std::endl;
             std::getline(std::cin, input);
         } while (!ValidateInputString());
-
         std::string option_text;
-
         // Convert all of the button texts into something we can output
         // num_buttons is in the range of 0-2 so use <= instead of <
         u32 num_buttons{static_cast<u32>(config.num_buttons_m1)};
@@ -292,7 +291,7 @@ void SoftwareKeyboard::Update() {
             config.return_code = SoftwareKeyboardResult::None;
             break;
         }
-        std::u16string utf16_input{Common::UTF8ToUTF16(input)};
+        auto utf16_input{Common::UTF8ToUTF16(input)};
         std::memcpy(text_memory->GetPointer(), utf16_input.c_str(),
                     utf16_input.length() * sizeof(char16_t));
         config.text_length = static_cast<u16>(utf16_input.size());
@@ -302,7 +301,7 @@ void SoftwareKeyboard::Update() {
     }
     case Settings::KeyboardMode::Qt: {
         std::u16string text;
-        cb(config, text, is_running);
+        manager.System().GetFrontend().LaunchSoftwareKeyboard(config, text, is_running);
         std::mutex m;
         std::unique_lock lock{m};
         std::condition_variable cv;
