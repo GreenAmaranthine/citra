@@ -16,6 +16,8 @@ HandleTable::HandleTable(KernelSystem& kernel) : kernel{kernel} {
     Clear();
 }
 
+HandleTable::~HandleTable() = default;
+
 Handle HandleTable::Create(SharedPtr<Object> obj) {
     DEBUG_ASSERT(obj);
     return objects.emplace(++handle_counter, std::move(obj)).first->first;

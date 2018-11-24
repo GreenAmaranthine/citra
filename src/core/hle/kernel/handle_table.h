@@ -26,6 +26,7 @@ enum KernelHandle : Handle {
 class HandleTable final : NonCopyable {
 public:
     explicit HandleTable(KernelSystem& kernel);
+    ~HandleTable();
 
     /**
      * Allocates a handle for the given object.

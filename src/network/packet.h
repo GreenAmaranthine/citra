@@ -123,10 +123,9 @@ Packet& Packet::operator>>(std::vector<T>& out_data) {
     u32 size;
     *this >> size;
     out_data.resize(size);
-
     // Then extract the data
     for (std::size_t i{}; i < out_data.size(); ++i) {
-        T character{};
+        T character;
         *this >> character;
         out_data[i] = character;
     }
@@ -136,7 +135,7 @@ Packet& Packet::operator>>(std::vector<T>& out_data) {
 template <typename T, std::size_t S>
 Packet& Packet::operator>>(std::array<T, S>& out_data) {
     for (std::size_t i{}; i < out_data.size(); ++i) {
-        T character{};
+        T character;
         *this >> character;
         out_data[i] = character;
     }
