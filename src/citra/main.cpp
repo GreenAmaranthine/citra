@@ -594,9 +594,6 @@ void GMainWindow::BootProgram(const std::string& filename) {
         movie_record_path.clear();
     }
     connect(emu_thread.get(), &EmuThread::ErrorThrown, this, &GMainWindow::OnCoreError);
-    SharedPage::Handler::update_3d = [this] { Update3D(); };
-    RPC::RPCServer::cb_update_frame_advancing = [this] { UpdateFrameAdvancingCallback(); };
-    Service::NWM::NWM_EXT::update_control_panel = [this] { UpdateControlPanelNetwork(); };
     // Update Discord RPC
     auto& member{system.RoomMember()};
     if (!member.IsConnected())
@@ -674,24 +671,23 @@ void GMainWindow::Update3D() {
         control_panel->Update3D();
 }
 
-void GMainWindow::UpdateFrameAdvancingCallback() {
+void GMainWindow::UpdateNetwork() {
     if (QThread::currentThread() != thread()) {
-        QMetaObject::invokeMethod(this, "UpdateFrameAdvancingCallback",
-                                  Qt::BlockingQueuedConnection);
+        QMetaObject::invokeMethod(this, "UpdateNetwork", Qt::BlockingQueuedConnection);
+        return;
+    }
+    if (control_panel)
+        control_panel->UpdateNetwork();
+}
+
+void GMainWindow::UpdateFrameAdvancing() {
+    if (QThread::currentThread() != thread()) {
+        QMetaObject::invokeMethod(this, "UpdateFrameAdvancing", Qt::BlockingQueuedConnection);
         return;
     }
     const bool enabled{system.frame_limiter.GetFrameAdvancing()};
     ui.action_Enable_Frame_Advancing->setChecked(enabled);
     ui.action_Advance_Frame->setEnabled(enabled);
-}
-
-void GMainWindow::UpdateControlPanelNetwork() {
-    if (QThread::currentThread() != thread()) {
-        QMetaObject::invokeMethod(this, "UpdateControlPanelNetwork", Qt::BlockingQueuedConnection);
-        return;
-    }
-    if (control_panel)
-        control_panel->UpdateNetwork();
 }
 
 void GMainWindow::UpdateRecentFiles() {

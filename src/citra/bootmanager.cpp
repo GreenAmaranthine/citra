@@ -11,6 +11,7 @@
 #include <QScreen>
 #include <QWindow>
 #include "citra/bootmanager.h"
+#include "citra/main.h"
 #include "citra/mii_selector.h"
 #include "citra/swkbd.h"
 #include "common/scm_rev.h"
@@ -67,8 +68,8 @@ private:
     Screens* parent;
 };
 
-Screens::Screens(QWidget* parent, EmuThread* emu_thread, Core::System& system)
-    : QWidget{parent}, emu_thread{emu_thread}, system{system} {
+Screens::Screens(GMainWindow* parent, EmuThread* emu_thread, Core::System& system)
+    : QWidget{parent}, emu_thread{emu_thread}, system{system}, window{parent} {
     setAttribute(Qt::WA_AcceptTouchEvents);
     InputCommon::Init();
 }
@@ -256,7 +257,7 @@ void Screens::InitRenderTarget() {
     // Requests a forward-compatible context, which is required to get a 3.2+ context on macOS
     fmt.setOption(QGL::NoDeprecatedFunctions);
     child = new GGLWidgetInternal(fmt, this);
-    QBoxLayout* layout{new QHBoxLayout(this)};
+    auto layout{new QHBoxLayout(this)};
     resize(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
     layout->addWidget(child);
     layout->setMargin(0);
@@ -341,6 +342,18 @@ void Screens::LaunchMiiSelectorImpl(const HLE::Applets::MiiConfig& config,
     MiiSelectorDialog dialog{this, config, result};
     dialog.exec();
     is_running = false;
+}
+
+void Screens::Update3D() {
+    qobject_cast<GMainWindow*>(parentWidget())->Update3D();
+}
+
+void Screens::UpdateNetwork() {
+    window->UpdateNetwork();
+}
+
+void Screens::UpdateFrameAdvancing() {
+    window->UpdateFrameAdvancing();
 }
 
 void Screens::OnEmulationStarting(EmuThread* emu_thread) {

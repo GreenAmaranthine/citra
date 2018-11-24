@@ -36,6 +36,9 @@ public:
     virtual void LaunchErrEula(HLE::Applets::ErrEulaConfig&, bool&) = 0;
     virtual void LaunchMiiSelector(const HLE::Applets::MiiConfig&, HLE::Applets::MiiResult&,
                                    bool&) = 0;
+    virtual void Update3D() {}
+    virtual void UpdateNetwork() {}
+    virtual void UpdateFrameAdvancing() {}
 
 private:
     Layout::FramebufferLayout framebuffer_layout; ///< Current framebuffer layout

@@ -15,7 +15,7 @@ namespace Network {
 
 /// Information about the received WiFi packets.
 /// Acts as our own 802.11 header.
-struct WifiPacket {
+struct WiFiPacket {
     enum class PacketType : u8 {
         Beacon,
         Data,
@@ -134,7 +134,7 @@ public:
      * Sends a WiFi packet to the room.
      * @param packet The WiFi packet to send.
      */
-    void SendWifiPacket(const WifiPacket& packet);
+    void SendWiFiPacket(const WiFiPacket& packet);
 
     /**
      * Sends a chat message to the room.
@@ -180,14 +180,14 @@ public:
     CallbackHandle<Error> BindOnError(std::function<void(const Error&)> callback);
 
     /**
-     * Binds a function to an event that will be triggered every time a WifiPacket is received.
+     * Binds a function to an event that will be triggered every time a WiFiPacket is received.
      * The function wil be called everytime the event is triggered.
      * The callback function must not bind or unbind a function. Doing so will cause a deadlock
      * @param callback The function to call
      * @return A handle used for removing the function from the registered list
      */
-    CallbackHandle<WifiPacket> BindOnWifiPacketReceived(
-        std::function<void(const WifiPacket&)> callback);
+    CallbackHandle<WiFiPacket> BindOnWiFiPacketReceived(
+        std::function<void(const WiFiPacket&)> callback);
 
     /**
      * Binds a function to an event that will be triggered every time the RoomInformation changes.

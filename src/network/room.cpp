@@ -173,7 +173,7 @@ struct Room::RoomImpl {
      * Broadcasts this packet to all members except the sender.
      * @param event The ENet event containing the data
      */
-    void HandleWifiPacket(const ENetEvent* event);
+    void HandleWiFiPacket(const ENetEvent* event);
 
     /**
      * Extracts a chat entry from a received ENet packet and adds it to the chat queue.
@@ -208,8 +208,8 @@ void Room::RoomImpl::ServerLoop() {
                 case IdSetProgram:
                     HandleProgramPacket(&event);
                     break;
-                case IdWifiPacket:
-                    HandleWifiPacket(&event);
+                case IdWiFiPacket:
+                    HandleWiFiPacket(&event);
                     break;
                 case IdChatMessage:
                     HandleChatPacket(&event);
@@ -289,7 +289,7 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
         SendConsoleIdCollision(event->peer);
         return;
     }
-    if (client_version != network_version) {
+    if (client_version != NetworkVersion) {
         SendVersionMismatch(event->peer);
         return;
     }
@@ -511,7 +511,7 @@ void Room::RoomImpl::SendRoomIsFull(ENetPeer* client) {
 void Room::RoomImpl::SendVersionMismatch(ENetPeer* client) {
     Packet packet;
     packet << static_cast<u8>(IdVersionMismatch);
-    packet << network_version;
+    packet << NetworkVersion;
     auto enet_packet{
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE)};
     enet_peer_send(client, 0, enet_packet);
@@ -641,13 +641,13 @@ MACAddress Room::RoomImpl::GenerateMACAddress() {
     return result_mac;
 }
 
-void Room::RoomImpl::HandleWifiPacket(const ENetEvent* event) {
+void Room::RoomImpl::HandleWiFiPacket(const ENetEvent* event) {
     Packet in_packet;
     in_packet.Append(event->packet->data, event->packet->dataLength);
     in_packet.IgnoreBytes(sizeof(u8));         // Message type
-    in_packet.IgnoreBytes(sizeof(u8));         // WifiPacket Type
-    in_packet.IgnoreBytes(sizeof(u8));         // WifiPacket Channel
-    in_packet.IgnoreBytes(sizeof(MACAddress)); // WifiPacket Transmitter Address
+    in_packet.IgnoreBytes(sizeof(u8));         // WiFiPacket Type
+    in_packet.IgnoreBytes(sizeof(u8));         // WiFiPacket Channel
+    in_packet.IgnoreBytes(sizeof(MACAddress)); // WiFiPacket Transmitter Address
     MACAddress destination_address;
     in_packet >> destination_address;
     Packet out_packet;

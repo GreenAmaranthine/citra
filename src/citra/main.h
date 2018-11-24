@@ -43,6 +43,10 @@ public:
     void filterBarSetChecked(bool state);
     void UpdateUITheme();
 
+    Q_INVOKABLE void Update3D();
+    Q_INVOKABLE void UpdateNetwork();
+    Q_INVOKABLE void UpdateFrameAdvancing();
+
 signals:
     /**
      * Signal that is emitted when a new EmuThread has been created and an emulation session is
@@ -169,9 +173,6 @@ private:
     void UpdatePerfStats();
     void UpdateTitle();
 
-    Q_INVOKABLE void Update3D();
-    Q_INVOKABLE void UpdateFrameAdvancingCallback();
-    Q_INVOKABLE void UpdateControlPanelNetwork();
     Q_INVOKABLE void OnMoviePlaybackCompleted();
 
     Ui::MainWindow ui;

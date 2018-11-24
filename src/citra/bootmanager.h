@@ -52,7 +52,7 @@ class Screens : public QWidget, public Frontend {
     Q_OBJECT
 
 public:
-    explicit Screens(QWidget* parent, EmuThread* emu_thread, Core::System& system);
+    explicit Screens(GMainWindow* parent, EmuThread* emu_thread, Core::System& system);
     ~Screens();
 
     void SwapBuffers() override;
@@ -103,6 +103,10 @@ public:
         LaunchMiiSelectorImpl(config, result, is_running);
     }
 
+    void Update3D() override;
+    void UpdateNetwork() override;
+    void UpdateFrameAdvancing() override;
+
 public slots:
     void moveContext(); // overridden
 
@@ -132,6 +136,7 @@ private:
     QImage screenshot_image;
 
     Core::System& system;
+    GMainWindow* window;
 
 protected:
     void showEvent(QShowEvent* event) override;
