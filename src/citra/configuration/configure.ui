@@ -63,11 +63,6 @@
              <string>LLE</string>
             </attribute>
            </widget>
-           <widget class="ConfigureWeb" name="webTab">
-            <attribute name="title">
-             <string>Web</string>
-            </attribute>
-           </widget>
            <widget class="ConfigureUi" name="uiTab">
             <attribute name="title">
              <string>UI</string>
@@ -137,12 +132,6 @@
    <class>ConfigureGraphics</class>
    <extends>QWidget</extends>
    <header>configuration/configure_graphics.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>ConfigureWeb</class>
-   <extends>QWidget</extends>
-   <header>configuration/configure_web.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>

@@ -20,13 +20,16 @@ private:
     std::string err;
 };
 
+/// When the nickname is considered invalid by the client
 extern const ConnectionError USERNAME_NOT_VALID;
 extern const ConnectionError ROOMNAME_NOT_VALID;
-extern const ConnectionError USERNAME_IN_USE;
+/// When the nickname is considered invalid by the room server
+extern const ConnectionError USERNAME_NOT_VALID_SERVER;
 extern const ConnectionError IP_ADDRESS_NOT_VALID;
 extern const ConnectionError PORT_NOT_VALID;
 extern const ConnectionError NO_INTERNET;
 extern const ConnectionError UNABLE_TO_CONNECT;
+extern const ConnectionError ROOM_IS_FULL;
 extern const ConnectionError COULD_NOT_CREATE_ROOM;
 extern const ConnectionError HOST_BANNED;
 extern const ConnectionError WRONG_VERSION;
@@ -34,6 +37,7 @@ extern const ConnectionError WRONG_PASSWORD;
 extern const ConnectionError GENERIC_ERROR;
 extern const ConnectionError LOST_CONNECTION;
 extern const ConnectionError MAC_COLLISION;
+extern const ConnectionError CONSOLE_ID_COLLISION;
 
 /// Shows a standard QMessageBox with a error message
 void ShowError(const ConnectionError& e);

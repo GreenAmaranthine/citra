@@ -5,14 +5,12 @@
 #include <QAction>
 #include <QIcon>
 #include <QMessageBox>
-#include <QStandardItemModel>
 #include "citra/multiplayer/client_room.h"
 #include "citra/multiplayer/direct_connect.h"
 #include "citra/multiplayer/host_room.h"
 #include "citra/multiplayer/lobby.h"
 #include "citra/multiplayer/message.h"
 #include "citra/multiplayer/state.h"
-#include "citra/program_list.h"
 #include "citra/util/clickable_label.h"
 #include "common/announce_multiplayer_room.h"
 #include "common/logging/log.h"
@@ -22,17 +20,16 @@
 #include "network/room.h"
 #include "network/room_member.h"
 
-MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* program_list_model,
-                                   QAction* leave_room, QAction* show_room, Core::System& system)
-    : QWidget{parent}, program_list_model{program_list_model},
-      leave_room{leave_room}, show_room{show_room}, system{system} {
+MultiplayerState::MultiplayerState(QWidget* parent, QAction* leave_room, QAction* show_room,
+                                   Core::System& system)
+    : QWidget{parent}, leave_room{leave_room}, show_room{show_room}, system{system} {
     // Register the network structs to use in slots and signals
+    qRegisterMetaType<Network::RoomMember::State>();
+    qRegisterMetaType<Common::WebResult>();
     state_callback_handle = system.RoomMember().BindOnStateChanged(
         [this](const Network::RoomMember::State& state) { emit NetworkStateChanged(state); });
     connect(this, &MultiplayerState::NetworkStateChanged, this,
             &MultiplayerState::OnNetworkStateChanged);
-    qRegisterMetaType<Network::RoomMember::State>();
-    qRegisterMetaType<Common::WebResult>();
     announce_multiplayer_session =
         std::make_shared<Core::AnnounceMultiplayerSession>(system.Room());
     announce_multiplayer_session->BindErrorCallback(
@@ -70,10 +67,16 @@ void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& s
         NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
         break;
     case Network::RoomMember::State::NameCollision:
-        NetworkMessage::ShowError(NetworkMessage::USERNAME_IN_USE);
+        NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID_SERVER);
         break;
     case Network::RoomMember::State::MacCollision:
         NetworkMessage::ShowError(NetworkMessage::MAC_COLLISION);
+        break;
+    case Network::RoomMember::State::ConsoleIdCollision:
+        NetworkMessage::ShowError(NetworkMessage::CONSOLE_ID_COLLISION);
+        break;
+    case Network::RoomMember::State::RoomIsFull:
+        NetworkMessage::ShowError(NetworkMessage::ROOM_IS_FULL);
         break;
     case Network::RoomMember::State::WrongPassword:
         NetworkMessage::ShowError(NetworkMessage::WRONG_PASSWORD);
@@ -107,16 +110,11 @@ void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& s
 
 void MultiplayerState::OnAnnounceFailed(const Common::WebResult& result) {
     announce_multiplayer_session->Stop();
-    QMessageBox::warning(
-        this, "Error",
-        QString("Failed to announce the room to the public lobby. In order to host a room "
-                "publicly, you "
-                "must have a valid Citra account configured in Emulation -> Configure -> Web. If "
-                "you do "
-                "not want to publish a room in the public lobby, then select Unlisted instead.\n"
-                "Debug Message: ") +
-            QString::fromStdString(result.result_string),
-        QMessageBox::Ok);
+    QMessageBox::warning(this, "Error",
+                         QString("Failed to announce the room to the public lobby. Please report "
+                                 "this issue now.\nDebug Message: ") +
+                             QString::fromStdString(result.result_string),
+                         QMessageBox::Ok);
 }
 
 void MultiplayerState::UpdateThemedIcons() {
@@ -134,14 +132,13 @@ static void BringWidgetToFront(QWidget* widget) {
 
 void MultiplayerState::OnViewLobby() {
     if (!lobby)
-        lobby = new Lobby(this, program_list_model, announce_multiplayer_session, system);
+        lobby = new Lobby(this, announce_multiplayer_session, system);
     BringWidgetToFront(lobby);
 }
 
 void MultiplayerState::OnCreateRoom() {
     if (!host_room)
-        host_room =
-            new HostRoomWindow(this, program_list_model, announce_multiplayer_session, system);
+        host_room = new HostRoomWindow(this, announce_multiplayer_session, system);
     BringWidgetToFront(host_room);
 }
 

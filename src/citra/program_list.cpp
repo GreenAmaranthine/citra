@@ -285,7 +285,7 @@ ProgramList::ProgramList(Core::System& system, GMainWindow* parent)
             &ProgramList::PopupContextMenu);
     connect(tree_view, &QTreeView::expanded, this, &ProgramList::OnItemExpanded);
     connect(tree_view, &QTreeView::collapsed, this, &ProgramList::OnItemExpanded);
-    // We must register all custom types with the Qt Automoc system so that we're able to use
+    // We must register all custom types with the Qt Automoc system so that we are able to use
     // it with signals/slots. In this case, QList falls under the umbrells of custom types.
     qRegisterMetaType<QList<QStandardItem*>>("QList<QStandardItem*>");
     layout->setContentsMargins(0, 0, 0, 0);
@@ -563,10 +563,6 @@ void ProgramList::AddPermDirPopup(QMenu& context_menu, QStandardItem* child) {
     });
     connect(open_directory_location, &QAction::triggered,
             [&] { emit OpenDirectory(program_dir.path); });
-}
-
-QStandardItemModel* ProgramList::GetModel() const {
-    return item_model;
 }
 
 void ProgramList::PopulateAsync(QList<UISettings::AppDir>& program_dirs) {

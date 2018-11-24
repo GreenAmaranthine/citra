@@ -30,7 +30,7 @@ class HostRoomWindow : public QDialog {
     Q_OBJECT
 
 public:
-    explicit HostRoomWindow(QWidget* parent, QStandardItemModel* list,
+    explicit HostRoomWindow(QWidget* parent,
                             std::shared_ptr<Core::AnnounceMultiplayerSession> session,
                             Core::System& system);
     ~HostRoomWindow();
@@ -49,26 +49,7 @@ private:
     void UpdateReplies();
 
     std::weak_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
-    QStandardItemModel* program_list;
-    ComboBoxProxyModel* proxy;
     std::unique_ptr<Ui::HostRoom> ui;
     Validation validation;
     Core::System& system;
-};
-
-/**
- * Proxy Model for the program list combo box so we can reuse the program list model while
- * still displaying the fields slightly differently
- */
-class ComboBoxProxyModel : public QSortFilterProxyModel {
-    Q_OBJECT
-
-public:
-    int columnCount(const QModelIndex& idx) const override {
-        return 1;
-    }
-
-    QVariant data(const QModelIndex& idx, int role) const override;
-
-    bool lessThan(const QModelIndex& left, const QModelIndex& right) const override;
 };

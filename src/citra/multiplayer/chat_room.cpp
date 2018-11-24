@@ -63,7 +63,7 @@ public:
     }
 
     QString GetSystemChatMessage() const {
-        return QString("[%1] <font color='#888888'><i>%2</i></font>").arg(timestamp, message);
+        return QString("[%1] <font color='#FF8C00'>* %2</font>").arg(timestamp, message);
     }
 
 private:
@@ -93,10 +93,16 @@ ChatRoom::ChatRoom(QWidget* parent)
     qRegisterMetaType<Network::ChatEntry>();
     qRegisterMetaType<Network::RoomInformation>();
     qRegisterMetaType<Network::RoomMember::State>();
+    qRegisterMetaType<Network::StatusMessageEntry>();
     // Setup the callbacks for network updates
-    system.RoomMember().BindOnChatMessageRecieved(
+    auto& member{system.RoomMember()};
+    member.BindOnChatMessageRecieved(
         [this](const Network::ChatEntry& chat) { emit ChatReceived(chat); });
+    member.BindOnStatusMessageReceived([this](const Network::StatusMessageEntry& status_message) {
+        emit StatusMessageReceived(status_message);
+    });
     connect(this, &ChatRoom::ChatReceived, this, &ChatRoom::OnChatReceive);
+    connect(this, &ChatRoom::StatusMessageReceived, this, &ChatRoom::OnStatusMessageReceive);
     // Load emoji list
     QStringList emoji_list;
     for (const auto& emoji : EmojiMap)
@@ -201,8 +207,21 @@ void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
     HandleNewMessage(message.remove(QChar('\0')));
 }
 
+void ChatRoom::OnStatusMessageReceive(const Network::StatusMessageEntry& status_message) {
+    switch (status_message.type) {
+    case Network::IdMemberJoin:
+        AppendStatusMessage(
+            QString("%1 has joined").arg(QString::fromStdString(status_message.nickname)));
+        break;
+    case Network::IdMemberLeave:
+        AppendStatusMessage(
+            QString("%1 has left").arg(QString::fromStdString(status_message.nickname)));
+        break;
+    }
+}
+
 void ChatRoom::OnSendChat() {
-    QString message{ui->chat_message->text()};
+    auto message{ui->chat_message->text()};
     if (!Send(message))
         return;
     ui->chat_message->clear();
@@ -216,7 +235,7 @@ void ChatRoom::SetMemberList(const Network::RoomMember::MemberList& member_list)
         if (member.nickname.empty())
             continue;
         QList<QStandardItem*> l;
-        std::vector<std::string> elements{member.nickname, member.program_info.name};
+        std::vector<std::string> elements{member.nickname, member.program};
         for (const auto& item : elements) {
             QStandardItem* child{new QStandardItem(QString::fromStdString(item))};
             child->setEditable(false);

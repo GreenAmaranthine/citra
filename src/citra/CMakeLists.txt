@@ -46,8 +46,6 @@ add_executable(citra
     configuration/configure_motion_touch.h
     configuration/configure_system.cpp
     configuration/configure_system.h
-    configuration/configure_web.cpp
-    configuration/configure_web.h
     configuration/configure_ui.cpp
     configuration/configure_ui.h
     multiplayer/emojis.h
@@ -103,7 +101,6 @@ set(UIS
     configuration/configure_input.ui
     configuration/configure_motion_touch.ui
     configuration/configure_system.ui
-    configuration/configure_web.ui
     configuration/configure_ui.ui
     swkbd.ui
     mii_selector.ui
@@ -155,9 +152,6 @@ target_link_libraries(citra PRIVATE Boost::boost Qt5::OpenGL Qt5::Widgets Qt5::M
 if (ENABLE_DISCORD_RPC)
     target_link_libraries(citra PRIVATE discord-rpc)
     target_compile_definitions(citra PRIVATE -DENABLE_DISCORD_RPC)
-endif()
-if (ENABLE_WEB_SERVICE)
-    add_definitions(-DENABLE_WEB_SERVICE)
 endif()
 target_link_libraries(citra PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
 

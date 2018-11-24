@@ -5,20 +5,20 @@
 #pragma once
 
 #include <utility>
-#include <QPixmap>
 #include <QStandardItem>
 #include <QStandardItemModel>
 #include "common/common_types.h"
 
 namespace Column {
+
 enum List {
     EXPAND,
     ROOM_NAME,
-    PROGRAM_NAME,
     HOST,
     MEMBER,
     TOTAL,
 };
+
 } // namespace Column
 
 class LobbyItem : public QStandardItem {
@@ -30,6 +30,9 @@ public:
 
 class LobbyItemName : public LobbyItem {
 public:
+    static const int NameRole{Qt::UserRole + 1};
+    static const int PasswordRole{Qt::UserRole + 2};
+
     LobbyItemName() = default;
 
     explicit LobbyItemName(bool has_password, QString name) : LobbyItem() {
@@ -50,41 +53,32 @@ public:
     bool operator<(const QStandardItem& other) const override {
         return data(NameRole).toString().localeAwareCompare(other.data(NameRole).toString()) < 0;
     }
-
-    static const int NameRole{Qt::UserRole + 1};
-    static const int PasswordRole{Qt::UserRole + 2};
 };
 
-class LobbyItemApp : public LobbyItem {
+class LobbyItemDescription : public LobbyItem {
 public:
-    LobbyItemApp() = default;
+    LobbyItemDescription() = default;
 
-    explicit LobbyItemApp(u64 program_id, QString program_name, QPixmap smdh_icon) {
-        setData(static_cast<unsigned long long>(program_id), ProgramIDRole);
-        setData(program_name, AppNameRole);
-        if (!smdh_icon.isNull())
-            setData(smdh_icon, IconRole);
+    explicit LobbyItemDescription(QString description) {
+        setData(description, DescriptionRole);
     }
 
     QVariant data(int role) const override {
-        if (role == Qt::DecorationRole) {
-            auto val{data(IconRole)};
-            if (val.isValid())
-                val = val.value<QPixmap>().scaled(16, 16, Qt::KeepAspectRatio);
-            return val;
-        } else if (role != Qt::DisplayRole)
+        if (role != Qt::DisplayRole)
             return LobbyItem::data(role);
-        return data(AppNameRole).toString();
+        auto description{data(DescriptionRole).toString()};
+        description.prepend("Description: ");
+        return description;
     }
 
     bool operator<(const QStandardItem& other) const override {
-        return data(AppNameRole).toString().localeAwareCompare(other.data(AppNameRole).toString()) <
-               0;
+        return data(DescriptionRole)
+                   .toString()
+                   .localeAwareCompare(other.data(DescriptionRole).toString()) < 0;
     }
 
-    static const int ProgramIDRole{Qt::UserRole + 1};
-    static const int AppNameRole{Qt::UserRole + 2};
-    static const int IconRole{Qt::UserRole + 3};
+private:
+    static const int DescriptionRole{Qt::UserRole + 1};
 };
 
 class LobbyItemHost : public LobbyItem {
@@ -119,28 +113,22 @@ public:
     LobbyMember() = default;
     LobbyMember(const LobbyMember& other) = default;
 
-    explicit LobbyMember(QString username, u64 program_id, QString program_name)
-        : username{std::move(username)}, program_id{program_id}, program_name{
-                                                                     std::move(program_name)} {}
+    explicit LobbyMember(QString username, QString program)
+        : username{std::move(username)}, program{std::move(program)} {}
 
     ~LobbyMember() = default;
-
-    u64 GetProgramID() const {
-        return program_id;
-    }
 
     QString GetUsername() const {
         return username;
     }
 
-    QString GetAppName() const {
-        return program_name;
+    QString GetProgram() const {
+        return program;
     }
 
 private:
     QString username;
-    u64 program_id;
-    QString program_name;
+    QString program;
 };
 
 Q_DECLARE_METATYPE(LobbyMember);
@@ -192,10 +180,11 @@ public:
             if (!first)
                 out += '\n';
             const auto& m{member.value<LobbyMember>()};
-            if (m.GetAppName().isEmpty())
+            auto program{m.GetProgram()};
+            if (program.isEmpty())
                 out += QString("%1 isn't runnning a program").arg(m.GetUsername());
             else
-                out += QString("%1 is running %2").arg(m.GetUsername(), m.GetAppName());
+                out += QString("%1 is running %2").arg(m.GetUsername(), program);
             first = false;
         }
         return out;

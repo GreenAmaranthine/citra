@@ -29,9 +29,6 @@
 #ifdef ENABLE_SCRIPTING
 #include "core/rpc/rpc_server.h"
 #endif
-#ifdef ENABLE_WEB_SERVICE
-#include "web_service/verify_login.h"
-#endif
 #include "core/settings.h"
 #include "video_core/renderer/renderer.h"
 #include "video_core/video_core.h"
@@ -280,7 +277,7 @@ void System::Shutdown() {
     dsp_core.reset();
     timing.reset();
     program_loader.reset();
-    room_member->SendProgramInfo(Network::ProgramInfo{});
+    room_member->SendProgram(std::string{});
     LOG_DEBUG(Core, "Shutdown OK");
 }
 
@@ -295,14 +292,6 @@ void System::SetProgram(const std::string& path) {
 
 void System::CloseProgram() {
     SetProgram("");
-}
-
-bool VerifyLogin(const std::string& host, const std::string& username, const std::string& token) {
-#ifdef ENABLE_WEB_SERVICE
-    return WebService::VerifyLogin(host, username, token);
-#else
-    return false;
-#endif
 }
 
 } // namespace Core

@@ -777,4 +777,13 @@ void InstallInterfaces(Core::System& system) {
     std::make_shared<CFG_NOR>()->InstallAsService(service_manager);
 }
 
+u64 GetConsoleId(Core::System& system) {
+    if (system.IsPoweredOn()) {
+        auto cfg{system.ServiceManager().GetService<Module::Interface>("cfg:u")};
+        ASSERT_MSG(cfg, "CFG module missing!");
+        return cfg->GetModule()->GetConsoleUniqueId();
+    } else
+        return std::make_unique<Service::CFG::Module>()->GetConsoleUniqueId();
+}
+
 } // namespace Service::CFG

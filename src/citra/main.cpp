@@ -41,7 +41,6 @@
 #include "citra/util/clickable_label.h"
 #include "citra/util/util.h"
 #include "common/common_paths.h"
-#include "common/detached_tasks.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
@@ -129,8 +128,8 @@ void GMainWindow::InitializeWidgets() {
     program_list_placeholder = new ProgramListPlaceholder(this);
     ui.horizontalLayout->addWidget(program_list_placeholder);
     program_list_placeholder->setVisible(false);
-    multiplayer_state = new MultiplayerState(this, program_list->GetModel(), ui.action_Leave_Room,
-                                             ui.action_Show_Room, system);
+    multiplayer_state =
+        new MultiplayerState(this, ui.action_Leave_Room, ui.action_Show_Room, system);
     multiplayer_state->setVisible(false);
     // Create status bar
     message_label = new QLabel();
@@ -1728,8 +1727,6 @@ int main(int argc, char* argv[]) {
     qRegisterMetaType<std::string>("std::string");
     qRegisterMetaType<Core::System::ResultStatus>("Core::System::ResultStatus");
     qRegisterMetaType<Service::AM::InstallStatus>("Service::AM::InstallStatus");
-    // Create detached tasks
-    Common::DetachedTasks detached_tasks;
     // Create application
     QCoreApplication::setOrganizationName("Citra Valentin team");
     QCoreApplication::setApplicationName("Citra");

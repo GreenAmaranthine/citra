@@ -27,8 +27,8 @@ struct WifiPacket {
     PacketType type;      ///< The type of 802.11 frame.
     std::vector<u8> data; ///< Raw 802.11 frame data, starting at the management frame header
                           /// for management frames.
-    MacAddress transmitter_address; ///< Mac address of the transmitter.
-    MacAddress destination_address; ///< Mac address of the receiver.
+    MACAddress transmitter_address; ///< MAC address of the transmitter.
+    MACAddress destination_address; ///< MAC address of the receiver.
     u8 channel;                     ///< WiFi channel where this frame was transmitted.
 };
 
@@ -36,6 +36,13 @@ struct WifiPacket {
 struct ChatEntry {
     std::string nickname; ///< Nickname of the client who sent this message.
     std::string message;  ///< Body of the message.
+};
+
+/// Represents a system status message.
+struct StatusMessageEntry {
+    StatusMessageTypes type; ///< Type of the message
+    /// Subject of the message. i.e. the user who is joining/leaving/being banned, etc.
+    std::string nickname;
 };
 
 /**
@@ -54,19 +61,20 @@ public:
         LostConnection, ///< Connection closed
 
         // Reasons why connection was rejected
-        NameCollision,  ///< Somebody is already using this name
-        MacCollision,   ///< Somebody is already using that mac-address
-        WrongVersion,   ///< The room version isn't the same as for this RoomMember
-        WrongPassword,  ///< The password doesn't match the one from the Room
-        CouldNotConnect ///< The room isn't responding to a connection attempt
+        NameCollision,      ///< Somebody is already using this name
+        MacCollision,       ///< Somebody is already using that mac-address
+        ConsoleIdCollision, ///< Somebody in the room has the same Console ID
+        WrongVersion,       ///< The room version is not the same as for this RoomMember
+        WrongPassword,      ///< The password doesn't match the one from the Room
+        CouldNotConnect,    ///< The room is not responding to a connection attempt
+        RoomIsFull          ///< Room is already at the maximum number of players
     };
 
     struct MemberInformation {
-        std::string nickname;     ///< Nickname of the member.
-        ProgramInfo program_info; ///< Information of the program they're currently running, name is
-                                  ///< empty if they're
-                                  /// not running anything.
-        MacAddress mac_address;   ///< MAC address associated with this member.
+        std::string nickname;   ///< Nickname of the member.
+        std::string program;    ///< Program that the member is running. Empty if the member isn't
+                                ///< running a program.
+        MACAddress mac_address; ///< MAC address associated with this member.
     };
 
     using MemberList = std::vector<MemberInformation>;
@@ -85,43 +93,32 @@ public:
     RoomMember();
     ~RoomMember();
 
-    /**
-     * Returns the status of our connection to the room.
-     */
+    /// Returns the status of our connection to the room.
     State GetState() const;
 
-    /**
-     * Returns information about the members in the room we're currently connected to.
-     */
+    /// Returns information about the members in the room we're currently connected to.
     const MemberList& GetMemberInformation() const;
 
-    /**
-     * Returns the nickname of the RoomMember.
-     */
+    /// Returns the nickname of the RoomMember.
     const std::string& GetNickname() const;
 
-    /**
-     * Returns the MAC address of the RoomMember.
-     */
-    const MacAddress& GetMacAddress() const;
+    /// Returns the MAC address of the RoomMember.
+    const MACAddress& GetMacAddress() const;
 
-    /**
-     * Returns information about the room we're currently connected to.
-     */
+    /// Returns information about the room we're currently connected to.
     RoomInformation GetRoomInformation() const;
 
-    /**
-     * Returns whether we're connected to a server or not.
-     */
+    /// Returns whether we're connected to a server or not.
     bool IsConnected() const;
 
     /**
      * Attempts to join a room at the specified address and port, using the specified nickname.
-     * This may fail if the username is already taken.
+     * The console ID is passed in to check console ID conflicts.
+     * This may fail if the username or console ID is already taken.
      */
-    void Join(const std::string& nickname, const char* server_addr = "127.0.0.1",
+    void Join(const std::string& nickname, u64 console_id, const char* server_addr = "127.0.0.1",
               const u16 server_port = DefaultRoomPort,
-              const MacAddress& preferred_mac = BroadcastMac, const std::string& password = "");
+              const MACAddress& preferred_mac = BroadcastMac, const std::string& password = "");
 
     /**
      * Sends a WiFi packet to the room.
@@ -136,10 +133,10 @@ public:
     void SendChatMessage(const std::string& message);
 
     /**
-     * Sends the current program info to the room.
-     * @param program_info The program information.
+     * Sends the current program to the room.
+     * @param program The program name.
      */
-    void SendProgramInfo(const ProgramInfo& program_info);
+    void SendProgram(const std::string& program);
 
     /**
      * Binds a function to an event that will be triggered every time the State of the member
@@ -181,8 +178,16 @@ public:
         std::function<void(const ChatEntry&)> callback);
 
     /**
-     * Leaves the current room.
+     * Binds a function to an event that will be triggered every time a StatusMessage is
+     * received. The function will be called every time the event is triggered. The callback
+     * function must not bind or unbind a function. Doing so will cause a deadlock
+     * @param callback The function to call
+     * @return A handle used for removing the function from the registered list
      */
+    CallbackHandle<StatusMessageEntry> BindOnStatusMessageReceived(
+        std::function<void(const StatusMessageEntry&)> callback);
+
+    /// Leaves the current room.
     void Leave();
 
 private:
@@ -206,12 +211,16 @@ static const char* GetStateStr(const RoomMember::State& s) {
         return "NameCollision";
     case RoomMember::State::MacCollision:
         return "MacCollision";
+    case RoomMember::State::ConsoleIdCollision:
+        return "ConsoleIdCollision";
     case RoomMember::State::WrongVersion:
         return "WrongVersion";
     case RoomMember::State::WrongPassword:
         return "WrongPassword";
     case RoomMember::State::CouldNotConnect:
         return "CouldNotConnect";
+    case RoomMember::State::RoomIsFull:
+        return "RoomIsFull";
     }
     return "Unknown";
 }

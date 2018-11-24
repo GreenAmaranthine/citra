@@ -44,14 +44,13 @@ void ConfigurationDialog::ApplyConfiguration() {
     ui->hacksTab->ApplyConfiguration(system);
     ui->lleTab->ApplyConfiguration();
     ui->uiTab->ApplyConfiguration();
-    ui->webTab->ApplyConfiguration();
     Settings::Apply(system);
     Settings::LogSettings();
 }
 
 void ConfigurationDialog::PopulateSelectionList() {
     const std::array<std::pair<QString, QStringList>, 4> items{{
-        {"General", {"General", "UI", "Web"}},
+        {"General", {"General", "UI"}},
         {"System", {"System", "Audio", "Camera", "Hacks", "LLE"}},
         {"Graphics", {"Graphics"}},
         {"Controls", {"Input"}},
@@ -77,7 +76,6 @@ void ConfigurationDialog::UpdateVisibleTabs() {
         {"Hacks", ui->hacksTab},
         {"LLE", ui->lleTab},
         {"UI", ui->uiTab},
-        {"Web", ui->webTab},
     }};
     ui->tabWidget->clear();
     auto tabs{items[0]->data(Qt::UserRole).toStringList()};

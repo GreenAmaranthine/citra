@@ -15,6 +15,7 @@
 #include "citra/multiplayer/state.h"
 #include "citra/multiplayer/validation.h"
 #include "citra/ui_settings.h"
+#include "core/hle/service/cfg/cfg.h"
 #include "core/settings.h"
 #include "network/room.h"
 #include "ui_direct_connect.h"
@@ -28,12 +29,8 @@ DirectConnectWindow::DirectConnectWindow(QWidget* parent, Core::System& system)
     // Setup the watcher for background connections
     watcher = new QFutureWatcher<void>;
     connect(watcher, &QFutureWatcher<void>::finished, this, &DirectConnectWindow::OnConnection);
-
     ui->nickname->setValidator(validation.GetNickname());
     ui->nickname->setText(UISettings::values.nickname);
-    if (ui->nickname->text().isEmpty() && !Settings::values.citra_username.empty())
-        // Use Citra Web Service user name as nickname by default
-        ui->nickname->setText(QString::fromStdString(Settings::values.citra_username));
     ui->ip->setValidator(validation.GetIP());
     ui->ip->setText(UISettings::values.ip);
     ui->port->setValidator(validation.GetPort());
@@ -79,9 +76,10 @@ void DirectConnectWindow::Connect() {
                                   ? ui->port->text()
                                   : UISettings::values.port;
     // Attempt to connect in a different thread
-    QFuture<void> f{QtConcurrent::run([&] {
+    auto f{QtConcurrent::run([&] {
         auto port{UISettings::values.port.toUInt()};
         system.RoomMember().Join(ui->nickname->text().toStdString(),
+                                 Service::CFG::GetConsoleId(system),
                                  ui->ip->text().toStdString().c_str(), port, BroadcastMac,
                                  ui->password->text().toStdString().c_str());
     })};
