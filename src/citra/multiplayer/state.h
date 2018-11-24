@@ -29,9 +29,7 @@ public:
                               Core::System& system);
     ~MultiplayerState();
 
-    /**
-     * Close all open multiplayer related dialogs
-     */
+    /// Close all open multiplayer related dialogs
     void Close();
 
     ClickableLabel* GetStatusIcon() const {
@@ -72,10 +70,11 @@ private:
     QAction* show_room;
     std::shared_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
     Network::RoomMember::State current_state{Network::RoomMember::State::Uninitialized};
+    bool has_mod_perms{};
     Network::RoomMember::CallbackHandle<Network::RoomMember::State> state_callback_handle;
+    Network::RoomMember::CallbackHandle<Network::RoomMember::Error> error_callback_handle;
     Replies replies;
     Core::System& system;
-    Network::RoomMember::CallbackHandle<Network::RoomMember::Error> error_callback_handle;
 };
 
 Q_DECLARE_METATYPE(Common::WebResult);

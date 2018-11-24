@@ -36,10 +36,18 @@ ClientRoomWindow::ClientRoomWindow(QWidget* parent, Core::System& system)
     connect(ui->disconnect, &QPushButton::released, [this] { Disconnect(); });
     ui->disconnect->setDefault(false);
     ui->disconnect->setAutoDefault(false);
+    connect(ui->moderation, &QPushButton::clicked, [this] {
+        ModerationDialog dialog{this, system};
+        dialog.exec();
+    });
     UpdateView();
 }
 
 ClientRoomWindow::~ClientRoomWindow() = default;
+
+void ClientRoomWindow::SetModPerms(bool is_mod) {
+    ui->moderation->setVisible(is_mod);
+}
 
 void ClientRoomWindow::OnRoomUpdate(const Network::RoomInformation& info) {
     UpdateView();

@@ -263,7 +263,7 @@ static const char* GetErrorStr(const RoomMember::Error& e) {
         return "MACCollision";
     case RoomMember::Error::ConsoleIdCollision:
         return "ConsoleIdCollision";
-    case RoomMember::State::WrongVersion:
+    case RoomMember::Error::WrongVersion:
         return "WrongVersion";
     case RoomMember::Error::WrongPassword:
         return "WrongPassword";

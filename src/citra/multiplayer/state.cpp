@@ -25,11 +25,15 @@ MultiplayerState::MultiplayerState(QWidget* parent, QAction* leave_room, QAction
     : QWidget{parent}, leave_room{leave_room}, show_room{show_room}, system{system} {
     // Register the network structs to use in slots and signals
     qRegisterMetaType<Network::RoomMember::State>();
+    qRegisterMetaType<Network::RoomMember::Error>();
     qRegisterMetaType<Common::WebResult>();
     state_callback_handle = system.RoomMember().BindOnStateChanged(
         [this](const Network::RoomMember::State& state) { emit NetworkStateChanged(state); });
     connect(this, &MultiplayerState::NetworkStateChanged, this,
             &MultiplayerState::OnNetworkStateChanged);
+    error_callback_handle = member->BindOnError(
+        [this](const Network::RoomMember::Error& error) { emit NetworkError(error); });
+    connect(this, &MultiplayerState::NetworkError, this, &MultiplayerState::OnNetworkError);
     announce_multiplayer_session =
         std::make_shared<Core::AnnounceMultiplayerSession>(system.Room());
     announce_multiplayer_session->BindErrorCallback(
@@ -41,8 +45,11 @@ MultiplayerState::MultiplayerState(QWidget* parent, QAction* leave_room, QAction
 }
 
 MultiplayerState::~MultiplayerState() {
+    auto& member{system.RoomMember()};
     if (state_callback_handle)
-        system.RoomMember().Unbind(state_callback_handle);
+        member.Unbind(state_callback_handle);
+    if (error_callback_handle)
+        member.Unbind(error_callback_handle);
 }
 
 void MultiplayerState::Close() {
@@ -58,45 +65,11 @@ void MultiplayerState::Close() {
 
 void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& state) {
     LOG_DEBUG(Frontend, "Network State: {}", Network::GetStateStr(state));
-    bool is_connected{};
-    switch (state) {
-    case Network::RoomMember::State::LostConnection:
-        NetworkMessage::ShowError(NetworkMessage::LOST_CONNECTION);
-        break;
-    case Network::RoomMember::State::CouldNotConnect:
-        NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
-        break;
-    case Network::RoomMember::State::NameCollision:
-        NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID_SERVER);
-        break;
-    case Network::RoomMember::State::MacCollision:
-        NetworkMessage::ShowError(NetworkMessage::MAC_COLLISION);
-        break;
-    case Network::RoomMember::State::ConsoleIdCollision:
-        NetworkMessage::ShowError(NetworkMessage::CONSOLE_ID_COLLISION);
-        break;
-    case Network::RoomMember::State::RoomIsFull:
-        NetworkMessage::ShowError(NetworkMessage::ROOM_IS_FULL);
-        break;
-    case Network::RoomMember::State::WrongPassword:
-        NetworkMessage::ShowError(NetworkMessage::WRONG_PASSWORD);
-        break;
-    case Network::RoomMember::State::WrongVersion:
-        NetworkMessage::ShowError(NetworkMessage::WRONG_VERSION);
-        break;
-    case Network::RoomMember::State::Error:
-        NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
-        break;
-    case Network::RoomMember::State::Joined: {
-        is_connected = true;
+    if (state == Network::RoomMember::State::Joined) {
         if (system.IsPoweredOn())
             system.Kernel().GetSharedPageHandler().SetMacAddress(
                 system.RoomMember().GetMacAddress());
         OnOpenNetworkRoom();
-        break;
-    }
-    }
-    if (is_connected) {
         status_icon->setPixmap(QIcon::fromTheme("connected").pixmap(16));
         leave_room->setEnabled(true);
         show_room->setEnabled(true);
@@ -106,6 +79,45 @@ void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& s
         show_room->setEnabled(false);
     }
     current_state = state;
+}
+
+void MultiplayerState::OnNetworkError(const Network::RoomMember::Error& error) {
+    LOG_DEBUG(Frontend, "Network Error: {}", Network::GetErrorStr(error));
+    switch (error) {
+    case Network::RoomMember::Error::LostConnection:
+        NetworkMessage::ShowError(NetworkMessage::LOST_CONNECTION);
+        break;
+    case Network::RoomMember::Error::CouldNotConnect:
+        NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
+        break;
+    case Network::RoomMember::Error::NameCollision:
+        NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID_SERVER);
+        break;
+    case Network::RoomMember::Error::MACCollision:
+        NetworkMessage::ShowError(NetworkMessage::MAC_COLLISION);
+        break;
+    case Network::RoomMember::Error::ConsoleIdCollision:
+        NetworkMessage::ShowError(NetworkMessage::CONSOLE_ID_COLLISION);
+        break;
+    case Network::RoomMember::Error::RoomIsFull:
+        NetworkMessage::ShowError(NetworkMessage::ROOM_IS_FULL);
+        break;
+    case Network::RoomMember::Error::WrongPassword:
+        NetworkMessage::ShowError(NetworkMessage::WRONG_PASSWORD);
+        break;
+    case Network::RoomMember::Error::WrongVersion:
+        NetworkMessage::ShowError(NetworkMessage::WRONG_VERSION);
+        break;
+    case Network::RoomMember::Error::UnknownError:
+        NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
+        break;
+    case Network::RoomMember::Error::PermissionDenied:
+        NetworkMessage::ShowError(NetworkMessage::PERMISSION_DENIED);
+        break;
+    case Network::RoomMember::Error::NoSuchUser:
+        NetworkMessage::ShowError(NetworkMessage::NO_SUCH_USER);
+        break;
+    }
 }
 
 void MultiplayerState::OnAnnounceFailed(const Common::WebResult& result) {
@@ -161,9 +173,15 @@ bool MultiplayerState::OnCloseRoom() {
 }
 
 void MultiplayerState::OnOpenNetworkRoom() {
-    if (system.RoomMember().IsConnected()) {
+    auto& member{system.RoomMember()};
+    if (member.IsConnected()) {
         if (!client_room)
             client_room = new ClientRoomWindow(this, system);
+        const std::string host{member.GetRoomInformation().creator};
+        if (host.empty())
+            client_room->SetModPerms(false);
+        else
+            client_room->SetModPerms(member.GetNickname() == host);
         BringWidgetToFront(client_room);
         return;
     }

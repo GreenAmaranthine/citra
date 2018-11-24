@@ -21,7 +21,6 @@
        <property name="rightMargin">
         <number>0</number>
        </property>
-       <item>
         <widget class="QLabel" name="description">
          <property name="text">
           <string>Room Description</string>
@@ -40,6 +39,16 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="moderation">
+         <property name="text">
+          <string>Moderation...</string>
+         </property>
+         <property name="visible">
+          <bool>false</bool>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QPushButton" name="disconnect">
