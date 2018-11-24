@@ -80,7 +80,7 @@ struct Room::RoomImpl {
     void SendMacCollision(ENetPeer* client);
 
     /**
-     * Sends a IdConsoleIdCollison message telling the client that another member with the same
+     * Sends a IdConsoleIdCollision message telling the client that another member with the same
      * console ID exists.
      */
     void SendConsoleIdCollision(ENetPeer* client);
@@ -201,10 +201,10 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
     packet.IgnoreBytes(sizeof(u8)); // Ignore the message type
     std::string nickname;
     packet >> nickname;
-    MACAddress preferred_mac;
-    packet >> preferred_mac;
     u64 console_id;
     packet >> console_id;
+    MACAddress preferred_mac;
+    packet >> preferred_mac;
     u32 client_version;
     packet >> client_version;
     std::string pass;
@@ -298,9 +298,8 @@ void Room::RoomImpl::SendMacCollision(ENetPeer* client) {
 void Room::RoomImpl::SendConsoleIdCollision(ENetPeer* client) {
     Packet packet;
     packet << static_cast<u8>(IdConsoleIdCollision);
-
-    ENetPacket* enet_packet =
-        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
+    auto enet_packet{
+        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE)};
     enet_peer_send(client, 0, enet_packet);
     enet_host_flush(server);
 }

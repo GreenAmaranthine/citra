@@ -93,6 +93,7 @@ ChatRoom::ChatRoom(QWidget* parent)
     qRegisterMetaType<Network::ChatEntry>();
     qRegisterMetaType<Network::RoomInformation>();
     qRegisterMetaType<Network::RoomMember::State>();
+    qRegisterMetaType<Network::StatusMessageEntry>();
     // Setup the callbacks for network updates
     auto& member{system.RoomMember()};
     member.BindOnChatMessageRecieved(

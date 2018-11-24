@@ -211,12 +211,16 @@ static const char* GetStateStr(const RoomMember::State& s) {
         return "NameCollision";
     case RoomMember::State::MacCollision:
         return "MacCollision";
+    case RoomMember::State::ConsoleIdCollision:
+        return "ConsoleIdCollision";
     case RoomMember::State::WrongVersion:
         return "WrongVersion";
     case RoomMember::State::WrongPassword:
         return "WrongPassword";
     case RoomMember::State::CouldNotConnect:
         return "CouldNotConnect";
+    case RoomMember::State::RoomIsFull:
+        return "RoomIsFull";
     }
     return "Unknown";
 }
