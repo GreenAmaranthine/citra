@@ -11,7 +11,6 @@
 #include "core/movie.h"
 #include "core/settings.h"
 
-
 namespace SharedPage {
 
 static std::chrono::seconds GetInitTime(Core::Movie& movie) {
