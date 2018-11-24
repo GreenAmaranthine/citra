@@ -37,18 +37,32 @@ enum RoomMessageTypes : u8 {
     IdChatMessage,
     IdStatusMessage,
     IdNameCollision,
-    IdMacCollision,
+    IdMACCollision,
     IdConsoleIdCollision,
     IdVersionMismatch,
     IdWrongPassword,
     IdCloseRoom,
     IdRoomIsFull,
+    IdHostKicked,
+    IdHostBanned,
+    /// Moderation requests
+    IdModKick,
+    IdModBan,
+    IdModUnban,
+    IdModGetBanList,
+    // Moderation responses
+    IdModBanListResponse,
+    IdModPermissionDenied,
+    IdModNoSuchUser,
 };
 
 /// Types of system status messages
 enum StatusMessageTypes : u8 {
-    IdMemberJoin = 1, ///< Member joining
-    IdMemberLeave,    ///< Member leaving
+    IdMemberJoin = 1,  ///< Member joining
+    IdMemberLeave,     ///< Member leaving
+    IdMemberKicked,    ///< A member is kicked from the room
+    IdMemberBanned,    ///< A member is banned from the room
+    IdAddressUnbanned, ///< A username / ip address is unbanned from the room
 };
 
 /// This is what a server [person creating a server] would use.
@@ -59,6 +73,8 @@ public:
         std::string program;    ///< The current program of the member.
         MACAddress mac_address; ///< The assigned MAC address of the member.
     };
+
+    using BanList = std::vector<std::string>;
 
     Room();
     ~Room();
@@ -78,7 +94,10 @@ public:
     /// Creates the socket for this room
     bool Create(const std::string& name, const std::string& description, const std::string& creator,
                 u16 port = DefaultRoomPort, const std::string& password = "",
-                const u32 max_connections = MaxConcurrentConnections);
+                const u32 max_connections = MaxConcurrentConnections, const BanList& ban_list = {});
+
+    /// Gets the banned IPs of the room.
+    BanList GetBanList() const;
 
     /**
      * Destroys the socket

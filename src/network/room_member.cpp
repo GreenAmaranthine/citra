@@ -172,8 +172,8 @@ void RoomMember::RoomMemberImpl::MemberLoop() {
                 case IdNameCollision:
                     SetState(State::NameCollision);
                     break;
-                case IdMacCollision:
-                    SetState(State::MacCollision);
+                case IdMACCollision:
+                    SetState(State::MACCollision);
                     break;
                 case IdConsoleIdCollision:
                     SetState(State::ConsoleIdCollision);

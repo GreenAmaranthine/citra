@@ -62,7 +62,7 @@ public:
 
         // Reasons why connection was rejected
         NameCollision,      ///< Somebody is already using this name
-        MacCollision,       ///< Somebody is already using that mac-address
+        MACCollision,       ///< Somebody is already using that MAC address
         ConsoleIdCollision, ///< Somebody in the room has the same Console ID
         WrongVersion,       ///< The room version is not the same as for this RoomMember
         WrongPassword,      ///< The password doesn't match the one from the Room
@@ -209,8 +209,8 @@ static const char* GetStateStr(const RoomMember::State& s) {
         return "LostConnection";
     case RoomMember::State::NameCollision:
         return "NameCollision";
-    case RoomMember::State::MacCollision:
-        return "MacCollision";
+    case RoomMember::State::MACCollision:
+        return "MACCollision";
     case RoomMember::State::ConsoleIdCollision:
         return "ConsoleIdCollision";
     case RoomMember::State::WrongVersion:
