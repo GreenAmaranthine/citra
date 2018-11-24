@@ -565,10 +565,6 @@ void ProgramList::AddPermDirPopup(QMenu& context_menu, QStandardItem* child) {
             [&] { emit OpenDirectory(program_dir.path); });
 }
 
-QStandardItemModel* ProgramList::GetModel() const {
-    return item_model;
-}
-
 void ProgramList::PopulateAsync(QList<UISettings::AppDir>& program_dirs) {
     tree_view->setEnabled(false);
     // Delete any rows that might already exist if we're repopulating

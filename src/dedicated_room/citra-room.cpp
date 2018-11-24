@@ -23,7 +23,6 @@
 #endif
 
 #include "common/common_types.h"
-#include "common/detached_tasks.h"
 #include "common/scm_rev.h"
 #include "core/announce_multiplayer_session.h"
 #include "core/core.h"
@@ -37,11 +36,7 @@ static void PrintHelp(const char* argv0) {
                  "--port              The port used for the room\n"
                  "--max_members       The maximum number of members for this room\n"
                  "--password          The password for the room\n"
-                 "--preferred-program     The preferred program for this room\n"
-                 "--preferred-program-id  The preferred program ID for this room\n"
-                 "--username          The username used for announce\n"
-                 "--token             The token used for announce\n"
-                 "--web-api-url       Citra Web API url\n"
+
                  "-h, --help          Display this help and exit\n"
                  "-v, --version       Output version information and exit\n";
 }
@@ -53,36 +48,20 @@ static void PrintVersion() {
 
 /// Program entry point
 int main(int argc, char** argv) {
-    Common::DetachedTasks detached_tasks;
     int option_index{};
     char* endarg;
     // This is just to be able to link against core
     gladLoadGL();
-    std::string room_name;
-    std::string password;
-    std::string preferred_program;
-    std::string username;
-    std::string token;
-    std::string web_api_url;
-    u64 preferred_program_id{};
-    u32 port{Network::DefaultRoomPort};
-    u32 max_members{16};
+    std::string room_name, creator, password;
+    u32 port{Network::DefaultRoomPort}, max_members{16};
     static struct option long_options[]{
-        {"room-name", required_argument, 0, 'n'},
-        {"port", required_argument, 0, 'p'},
-        {"max_members", required_argument, 0, 'm'},
-        {"password", required_argument, 0, 'w'},
-        {"preferred-program", required_argument, 0, 'g'},
-        {"preferred-program-id", required_argument, 0, 'i'},
-        {"username", required_argument, 0, 'u'},
-        {"token", required_argument, 0, 't'},
-        {"web-api-url", required_argument, 0, 'a'},
-        {"help", no_argument, 0, 'h'},
-        {"version", no_argument, 0, 'v'},
-        {0, 0, 0, 0},
+        {"room-name", required_argument, 0, 'n'},   {"port", required_argument, 0, 'p'},
+        {"max-members", required_argument, 0, 'm'}, {"password", required_argument, 0, 'w'},
+        {"creator", required_argument, 0, 'c'},     {"help", no_argument, 0, 'h'},
+        {"version", no_argument, 0, 'v'},           {0, 0, 0, 0},
     };
     while (optind < argc) {
-        int arg{getopt_long(argc, argv, "n:p:m:w:g:u:t:a:i:hv", long_options, &option_index)};
+        int arg{getopt_long(argc, argv, "n:p:m:w:c:hv", long_options, &option_index)};
         if (arg != -1) {
             switch (arg) {
             case 'n':
@@ -97,20 +76,8 @@ int main(int argc, char** argv) {
             case 'w':
                 password.assign(optarg);
                 break;
-            case 'g':
-                preferred_program.assign(optarg);
-                break;
-            case 'i':
-                preferred_program_id = strtoull(optarg, &endarg, 16);
-                break;
-            case 'u':
-                username.assign(optarg);
-                break;
-            case 't':
-                token.assign(optarg);
-                break;
-            case 'a':
-                web_api_url.assign(optarg);
+            case 'c':
+                creator.assign(optarg);
                 break;
             case 'h':
                 PrintHelp(argv[0]);
@@ -122,21 +89,12 @@ int main(int argc, char** argv) {
         }
     }
     if (room_name.empty()) {
-        std::cout << "room name is empty!\n\n";
+        std::cout << "Room name is empty!\n\n";
         PrintHelp(argv[0]);
         return -1;
     }
-    if (preferred_program.empty()) {
-        std::cout << "preferred program is empty!\n\n";
-        PrintHelp(argv[0]);
-        return -1;
-    }
-    if (preferred_program_id == 0)
-        std::cout
-            << "preferred-program-id not set!\nThis should get set to allow users to find your "
-               "room.\nSet with --preferred-program-id id\n\n";
     if (max_members >= Network::MaxConcurrentConnections || max_members < 2) {
-        std::cout << "max_members needs to be in the range 2 - "
+        std::cout << "max-members needs to be in the range 2 - "
                   << Network::MaxConcurrentConnections << "!\n\n";
         PrintHelp(argv[0]);
         return -1;
@@ -146,49 +104,26 @@ int main(int argc, char** argv) {
         PrintHelp(argv[0]);
         return -1;
     }
-    bool announce{true};
-    if (username.empty()) {
-        announce = false;
-        std::cout << "username is empty: Hosting a private room\n\n";
-    }
-    if (token.empty() && announce) {
-        announce = false;
-        std::cout << "token is empty: Hosting a private room\n\n";
-    }
-    if (web_api_url.empty() && announce) {
-        announce = false;
-        std::cout << "endpoint url is empty: Hosting a private room\n\n";
-    }
-    if (announce) {
-        std::cout << "Hosting a public room\n\n";
-        Settings::values.web_api_url = web_api_url;
-        Settings::values.citra_username = username;
-        Settings::values.citra_token = token;
-    }
     Network::Room room;
-    if (!room.Create(room_name, "", port, password, max_members, preferred_program,
-                     preferred_program_id)) {
+    if (!room.Create(room_name, creator, port, password, max_members)) {
         std::cout << "Failed to create room!\n\n";
         return -1;
     }
     std::cout << "Room is open. Close with Q+Enter...\n\n";
     auto announce_session{std::make_unique<Core::AnnounceMultiplayerSession>(room)};
-    if (announce)
-        announce_session->Start();
+    announce_session->Start();
     while (room.IsOpen()) {
         std::string in;
         std::cin >> in;
         if (in.size() > 0) {
-            if (announce)
-                announce_session->Stop();
+            announce_session->Stop();
             announce_session.reset();
             room.Destroy();
             return 0;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds{100});
     }
-    if (announce)
-        announce_session->Stop();
+    announce_session->Stop();
     announce_session.reset();
     room.Destroy();
     return 0;

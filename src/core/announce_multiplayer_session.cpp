@@ -3,31 +3,22 @@
 // Refer to the license.txt file included.
 
 #include <chrono>
+#include <future>
 #include <vector>
 #include "announce_multiplayer_session.h"
 #include "common/announce_multiplayer_room.h"
 #include "common/assert.h"
 #include "core/core.h"
-#include "core/settings.h"
+#include "lobby/api.h"
 #include "network/room.h"
-
-#ifdef ENABLE_WEB_SERVICE
-#include "web_service/announce_room_json.h"
-#endif
 
 namespace Core {
 
-// Time between room is announced to web services
+// Time between room is announced to lobby
 constexpr std::chrono::seconds announce_time_interval{15};
 
 AnnounceMultiplayerSession::AnnounceMultiplayerSession(Network::Room& room) : room{room} {
-#ifdef ENABLE_WEB_SERVICE
-    backend = std::make_unique<WebService::RoomJson>(Settings::values.web_api_url,
-                                                     Settings::values.citra_username,
-                                                     Settings::values.citra_token);
-#else
-    backend = std::make_unique<AnnounceMultiplayerRoom::NullBackend>();
-#endif
+    backend = std::make_unique<LobbyAPI>();
 }
 
 void AnnounceMultiplayerSession::Start() {
@@ -73,14 +64,12 @@ void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
             break;
         auto room_information{room.GetRoomInformation()};
         auto member_list{room.GetRoomMemberList()};
-        backend->SetRoomInformation(
-            room_information.uid, room_information.name, room_information.port,
-            room_information.member_slots, Network::network_version, room.HasPassword(),
-            room_information.preferred_program, room_information.preferred_program_id);
+        backend->SetRoomInformation(room_information.name, room_information.port,
+                                    room_information.creator, room_information.member_slots,
+                                    Network::network_version, room.HasPassword());
         backend->ClearMembers();
         for (const auto& member : member_list)
-            backend->AddMember(member.nickname, member.mac_address, member.program_info.id,
-                               member.program_info.name);
+            backend->AddMember(member.nickname, member.mac_address, member.program);
         auto result{backend->Announce()};
         if (result.result_code != Common::WebResult::Code::Success) {
             std::lock_guard lock{callback_mutex};

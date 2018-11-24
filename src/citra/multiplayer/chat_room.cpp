@@ -216,7 +216,7 @@ void ChatRoom::SetMemberList(const Network::RoomMember::MemberList& member_list)
         if (member.nickname.empty())
             continue;
         QList<QStandardItem*> l;
-        std::vector<std::string> elements{member.nickname, member.program_info.name};
+        std::vector<std::string> elements{member.nickname, member.program};
         for (const auto& item : elements) {
             QStandardItem* child{new QStandardItem(QString::fromStdString(item))};
             child->setEditable(false);

@@ -42,7 +42,7 @@ constexpr u16 BroadcastNetworkNodeId{0xFFFF};
 constexpr u16 HostDestNodeId{1};
 
 /// Returns a list of received 802.11 beacon frames from the specified sender since the last call.
-std::list<Network::WifiPacket> NWM_UDS::GetReceivedBeacons(const MacAddress& sender) {
+std::list<Network::WifiPacket> NWM_UDS::GetReceivedBeacons(const MACAddress& sender) {
     std::lock_guard lock{beacon_mutex};
     if (sender != BroadcastMac) {
         std::list<Network::WifiPacket> filtered_list;
@@ -114,7 +114,7 @@ void NWM_UDS::HandleNodeMapPacket(const Network::WifiPacket& packet) {
     }
     node_map.clear();
     std::size_t num_entries;
-    MacAddress address;
+    MACAddress address;
     u16 id;
     std::memcpy(&num_entries, packet.data.data(), sizeof(num_entries));
     std::size_t offset{sizeof(num_entries)};
@@ -321,7 +321,7 @@ void NWM_UDS::HandleSecureDataPacket(const Network::WifiPacket& packet) {
  * Start a connection sequence with an UDS server. The sequence starts by sending an 802.11
  * authentication frame with SEQ1.
  */
-void NWM_UDS::StartConnectionSequence(const MacAddress& server) {
+void NWM_UDS::StartConnectionSequence(const MACAddress& server) {
     using Network::WifiPacket;
     WifiPacket auth_request;
     {
@@ -338,7 +338,7 @@ void NWM_UDS::StartConnectionSequence(const MacAddress& server) {
 }
 
 /// Sends an Association Response frame to the specified MAC address
-void NWM_UDS::SendAssociationResponseFrame(const MacAddress& address) {
+void NWM_UDS::SendAssociationResponseFrame(const MACAddress& address) {
     using Network::WifiPacket;
     WifiPacket assoc_response;
     {
@@ -418,7 +418,7 @@ void NWM_UDS::HandleDeauthenticationFrame(const Network::WifiPacket& packet) {
     Node node{node_map[packet.transmitter_address]};
     node_map.erase(packet.transmitter_address);
     if (!node.connected) {
-        LOG_DEBUG(Service_NWM, "Received DeauthenticationFrame from a not connected MAC Address");
+        LOG_DEBUG(Service_NWM, "Received DeauthenticationFrame from a not connected MAC address");
         return;
     }
     auto node_it{std::find_if(node_info.begin(), node_info.end(), [&node](const NodeInfo& info) {
@@ -471,7 +471,7 @@ void NWM_UDS::OnWifiPacketReceived(const Network::WifiPacket& packet) {
     }
 }
 
-std::optional<MacAddress> NWM_UDS::GetNodeMacAddress(u16 dest_node_id, u8 flags) {
+std::optional<MACAddress> NWM_UDS::GetNodeMacAddress(u16 dest_node_id, u8 flags) {
     constexpr u8 BroadcastFlag{0x2};
     if ((flags & BroadcastFlag) || dest_node_id == BroadcastNetworkNodeId)
         // Broadcast
@@ -506,7 +506,7 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     u32 out_buffer_size{rp.Pop<u32>()};
     u32 unk1{rp.Pop<u32>()};
     u32 unk2{rp.Pop<u32>()};
-    MacAddress mac_address;
+    MACAddress mac_address;
     rp.PopRaw(mac_address);
     rp.Skip(9, false);
     u32 wlan_comm_id{rp.Pop<u32>()};

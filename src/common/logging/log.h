@@ -97,7 +97,6 @@ enum class Class : u8 {
     Network,            ///< Network emulation
     Movie,              ///< Movie (Input Recording) Playback
     RPC,                ///< RPC (Scripting)
-    WebService,         ///< Interface to Citra Web Services
     Count               ///< Total number of logging classes
 };
 

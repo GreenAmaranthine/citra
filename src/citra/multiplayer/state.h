@@ -13,7 +13,6 @@ namespace Core {
 class System;
 } // namespace Core
 
-class QStandardItemModel;
 class Lobby;
 class HostRoomWindow;
 class ClientRoomWindow;
@@ -26,8 +25,8 @@ class MultiplayerState : public QWidget {
 public:
     using Replies = std::unordered_map<std::string, std::string>;
 
-    explicit MultiplayerState(QWidget* parent, QStandardItemModel* program_list,
-                              QAction* leave_room, QAction* show_room, Core::System& system);
+    explicit MultiplayerState(QWidget* parent, QAction* leave_room, QAction* show_room,
+                              Core::System& system);
     ~MultiplayerState();
 
     /**
@@ -67,7 +66,6 @@ private:
     ClientRoomWindow* client_room{};
     DirectConnectWindow* direct_connect{};
     ClickableLabel* status_icon;
-    QStandardItemModel* program_list_model;
     QAction* leave_room;
     QAction* show_room;
     std::shared_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;

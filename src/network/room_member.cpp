@@ -26,8 +26,8 @@ struct RoomMember::RoomMemberImpl {
     /// Information about the room we're connected to.
     RoomInformation room_information;
 
-    /// The current program name and ID
-    ProgramInfo current_program_info;
+    /// The current program
+    std::string current_program;
 
     std::atomic<State> state{State::Idle}; ///< Current state of the RoomMember.
 
@@ -35,7 +35,7 @@ struct RoomMember::RoomMemberImpl {
     bool IsConnected() const;
 
     std::string nickname;   ///< The nickname of this member.
-    MacAddress mac_address; ///< The mac_address of this member.
+    MACAddress mac_address; ///< The mac_address of this member.
 
     std::mutex network_mutex; ///< Mutex that controls access to the client variable.
     std::unique_ptr<std::thread>
@@ -76,15 +76,14 @@ struct RoomMember::RoomMemberImpl {
      * nickname and preferred mac.
      * @params nickname The desired nickname.
      * @params preferred_mac The preferred MAC address to use in the room, the BroadcastMac tells
-     * the server to assign one for us.
      * @params password The password for the room
+     * the server to assign one for us.
      */
     void SendJoinRequest(const std::string& nickname,
-                         const MacAddress& preferred_mac = BroadcastMac,
+                         const MACAddress& preferred_mac = BroadcastMac,
                          const std::string& password = "");
-
     /**
-     * Extracts a MAC Address from a received ENet packet.
+     * Extracts a MAC address from a received ENet packet.
      * @param event The ENet event that was received.
      */
     void HandleJoinPacket(const ENetEvent* event);
@@ -152,7 +151,7 @@ void RoomMember::RoomMemberImpl::MemberLoop() {
                     // If we joined successfully, there must be at least one client in the room: us.
                     ASSERT_MSG(member_information.size() > 0,
                                "We have not yet received member information.");
-                    HandleJoinPacket(&event); // Get the MAC Address for the client
+                    HandleJoinPacket(&event);
                     SetState(State::Joined);
                     break;
                 case IdNameCollision:
@@ -202,7 +201,7 @@ void RoomMember::RoomMemberImpl::Send(Packet&& packet) {
 }
 
 void RoomMember::RoomMemberImpl::SendJoinRequest(const std::string& nickname,
-                                                 const MacAddress& preferred_mac,
+                                                 const MACAddress& preferred_mac,
                                                  const std::string& password) {
     Packet packet;
     packet << static_cast<u8>(IdJoinRequest);
@@ -221,21 +220,17 @@ void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* ev
     RoomInformation info;
     packet >> info.name;
     packet >> info.member_slots;
-    packet >> info.uid;
     packet >> info.port;
-    packet >> info.preferred_program;
     room_information.name = info.name;
     room_information.member_slots = info.member_slots;
     room_information.port = info.port;
-    room_information.preferred_program = info.preferred_program;
     u32 num_members;
     packet >> num_members;
     member_information.resize(num_members);
     for (auto& member : member_information) {
         packet >> member.nickname;
         packet >> member.mac_address;
-        packet >> member.program_info.name;
-        packet >> member.program_info.id;
+        packet >> member.program;
     }
     Invoke(room_information);
 }
@@ -245,7 +240,7 @@ void RoomMember::RoomMemberImpl::HandleJoinPacket(const ENetEvent* event) {
     packet.Append(event->packet->data, event->packet->dataLength);
     // Ignore the first byte, which is the message id.
     packet.IgnoreBytes(sizeof(u8)); // Ignore the message type
-    // Parse the MAC Address from the packet
+    // Parse the MAC address from the packet
     packet >> mac_address;
     SetState(State::Joined);
 }
@@ -365,7 +360,7 @@ const std::string& RoomMember::GetNickname() const {
     return room_member_impl->nickname;
 }
 
-const MacAddress& RoomMember::GetMacAddress() const {
+const MACAddress& RoomMember::GetMacAddress() const {
     ASSERT_MSG(IsConnected(), "Tried to get MAC address while not connected");
     return room_member_impl->mac_address;
 }
@@ -375,7 +370,7 @@ RoomInformation RoomMember::GetRoomInformation() const {
 }
 
 void RoomMember::Join(const std::string& nick, const char* server_addr, u16 server_port,
-                      const MacAddress& preferred_mac, const std::string& password) {
+                      const MACAddress& preferred_mac, const std::string& password) {
     // If the member is connected, kill the connection first
     if (room_member_impl->loop_thread && room_member_impl->loop_thread->joinable())
         Leave();
@@ -402,7 +397,7 @@ void RoomMember::Join(const std::string& nick, const char* server_addr, u16 serv
         room_member_impl->nickname = nick;
         room_member_impl->StartLoop();
         room_member_impl->SendJoinRequest(nick, preferred_mac, password);
-        SendProgramInfo(room_member_impl->current_program_info);
+        SendProgram(room_member_impl->current_program);
     } else {
         enet_peer_disconnect(room_member_impl->server, 0);
         room_member_impl->SetState(State::CouldNotConnect);
@@ -431,14 +426,13 @@ void RoomMember::SendChatMessage(const std::string& message) {
     room_member_impl->Send(std::move(packet));
 }
 
-void RoomMember::SendProgramInfo(const ProgramInfo& program_info) {
-    room_member_impl->current_program_info = program_info;
+void RoomMember::SendProgram(const std::string& program) {
+    room_member_impl->current_program = program;
     if (!IsConnected())
         return;
     Packet packet;
-    packet << static_cast<u8>(IdSetProgramInfo);
-    packet << program_info.name;
-    packet << program_info.id;
+    packet << static_cast<u8>(IdSetProgram);
+    packet << program;
     room_member_impl->Send(std::move(packet));
 }
 

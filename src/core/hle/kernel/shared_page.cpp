@@ -91,8 +91,8 @@ void Handler::UpdateTimeCallback(u64 userdata, int cycles_late) {
     timing.ScheduleEvent(msToCycles(60 * 60 * 1000) - cycles_late, update_time_event);
 }
 
-void Handler::SetMacAddress(const MacAddress& addr) {
-    std::memcpy(shared_page.wifi_macaddr, addr.data(), sizeof(MacAddress));
+void Handler::SetMacAddress(const MACAddress& addr) {
+    std::memcpy(shared_page.wifi_macaddr, addr.data(), sizeof(MACAddress));
 }
 
 void Handler::SetWifiLinkLevel(WifiLinkLevel level) {

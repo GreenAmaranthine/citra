@@ -27,7 +27,9 @@ const ConnectionError HOST_BANNED{
     "The host of the room has banned you. Speak with the host to unban you "
     "or try a different room."};
 const ConnectionError WRONG_VERSION{
-    "Version mismatch! Please update to the latest version of Citra. If the problem "
+    "Version mismatch!\nIf you are connecting to a room created with official/my old builds: "
+    "There's no way to do that!\nIf you are connectiong to a room created with my new builds, "
+    "please update to the latest version of Citra. If the problem "
     "persists, contact the room host and ask them to update the server."};
 const ConnectionError WRONG_PASSWORD{"Incorrect password."};
 const ConnectionError GENERIC_ERROR{

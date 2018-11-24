@@ -61,8 +61,6 @@ public:
     void SaveInterfaceLayout();
     void LoadInterfaceLayout();
 
-    QStandardItemModel* GetModel() const;
-
     QString FindProgramByProgramID(u64 program_id);
 
     void Refresh();

@@ -27,8 +27,8 @@ struct WifiPacket {
     PacketType type;      ///< The type of 802.11 frame.
     std::vector<u8> data; ///< Raw 802.11 frame data, starting at the management frame header
                           /// for management frames.
-    MacAddress transmitter_address; ///< Mac address of the transmitter.
-    MacAddress destination_address; ///< Mac address of the receiver.
+    MACAddress transmitter_address; ///< MAC address of the transmitter.
+    MACAddress destination_address; ///< MAC address of the receiver.
     u8 channel;                     ///< WiFi channel where this frame was transmitted.
 };
 
@@ -62,11 +62,10 @@ public:
     };
 
     struct MemberInformation {
-        std::string nickname;     ///< Nickname of the member.
-        ProgramInfo program_info; ///< Information of the program they're currently running, name is
-                                  ///< empty if they're
-                                  /// not running anything.
-        MacAddress mac_address;   ///< MAC address associated with this member.
+        std::string nickname;   ///< Nickname of the member.
+        std::string program;    ///< Program that the member is running. Empty if the member isn't
+                                ///< running a program.
+        MACAddress mac_address; ///< MAC address associated with this member.
     };
 
     using MemberList = std::vector<MemberInformation>;
@@ -85,34 +84,22 @@ public:
     RoomMember();
     ~RoomMember();
 
-    /**
-     * Returns the status of our connection to the room.
-     */
+    /// Returns the status of our connection to the room.
     State GetState() const;
 
-    /**
-     * Returns information about the members in the room we're currently connected to.
-     */
+    /// Returns information about the members in the room we're currently connected to.
     const MemberList& GetMemberInformation() const;
 
-    /**
-     * Returns the nickname of the RoomMember.
-     */
+    /// Returns the nickname of the RoomMember.
     const std::string& GetNickname() const;
 
-    /**
-     * Returns the MAC address of the RoomMember.
-     */
-    const MacAddress& GetMacAddress() const;
+    /// Returns the MAC address of the RoomMember.
+    const MACAddress& GetMacAddress() const;
 
-    /**
-     * Returns information about the room we're currently connected to.
-     */
+    /// Returns information about the room we're currently connected to.
     RoomInformation GetRoomInformation() const;
 
-    /**
-     * Returns whether we're connected to a server or not.
-     */
+    /// Returns whether we're connected to a server or not.
     bool IsConnected() const;
 
     /**
@@ -121,7 +108,7 @@ public:
      */
     void Join(const std::string& nickname, const char* server_addr = "127.0.0.1",
               const u16 server_port = DefaultRoomPort,
-              const MacAddress& preferred_mac = BroadcastMac, const std::string& password = "");
+              const MACAddress& preferred_mac = BroadcastMac, const std::string& password = "");
 
     /**
      * Sends a WiFi packet to the room.
@@ -136,10 +123,10 @@ public:
     void SendChatMessage(const std::string& message);
 
     /**
-     * Sends the current program info to the room.
-     * @param program_info The program information.
+     * Sends the current program to the room.
+     * @param program The program name.
      */
-    void SendProgramInfo(const ProgramInfo& program_info);
+    void SendProgram(const std::string& program);
 
     /**
      * Binds a function to an event that will be triggered every time the State of the member
@@ -180,9 +167,7 @@ public:
     CallbackHandle<ChatEntry> BindOnChatMessageRecieved(
         std::function<void(const ChatEntry&)> callback);
 
-    /**
-     * Leaves the current room.
-     */
+    /// Leaves the current room.
     void Leave();
 
 private:

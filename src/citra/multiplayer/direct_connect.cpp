@@ -28,12 +28,8 @@ DirectConnectWindow::DirectConnectWindow(QWidget* parent, Core::System& system)
     // Setup the watcher for background connections
     watcher = new QFutureWatcher<void>;
     connect(watcher, &QFutureWatcher<void>::finished, this, &DirectConnectWindow::OnConnection);
-
     ui->nickname->setValidator(validation.GetNickname());
     ui->nickname->setText(UISettings::values.nickname);
-    if (ui->nickname->text().isEmpty() && !Settings::values.citra_username.empty())
-        // Use Citra Web Service user name as nickname by default
-        ui->nickname->setText(QString::fromStdString(Settings::values.citra_username));
     ui->ip->setValidator(validation.GetIP());
     ui->ip->setText(UISettings::values.ip);
     ui->port->setValidator(validation.GetPort());

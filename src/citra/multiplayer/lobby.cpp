@@ -18,22 +18,16 @@
 #include "core/settings.h"
 #include "network/room_member.h"
 
-Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
-             std::shared_ptr<Core::AnnounceMultiplayerSession> session, Core::System& system)
+Lobby::Lobby(QWidget* parent, std::shared_ptr<Core::AnnounceMultiplayerSession> session,
+             Core::System& system)
     : QDialog{parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint},
       ui{std::make_unique<Ui::Lobby>()}, announce_multiplayer_session{session}, system{system} {
     ui->setupUi(this);
     // Setup the watcher for background connections
     watcher = new QFutureWatcher<void>;
     model = new QStandardItemModel(ui->room_list);
-    // Create a proxy to the program list to get the list of programs
-    program_list = new QStandardItemModel;
-    for (int i{}; i < list->rowCount(); i++) {
-        auto parent{list->item(i, 0)};
-        for (int j{}; j < parent->rowCount(); j++)
-            program_list->appendRow(parent->child(j)->clone());
-    }
-    proxy = new LobbyFilterProxyModel(this, program_list);
+    // Create a proxy for filtering
+    proxy = new LobbyFilterProxyModel(this);
     proxy->setSourceModel(model);
     proxy->setDynamicSortFilter(true);
     proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
@@ -52,12 +46,8 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     ui->room_list->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->nickname->setValidator(validation.GetNickname());
     ui->nickname->setText(UISettings::values.nickname);
-    if (ui->nickname->text().isEmpty() && !Settings::values.citra_username.empty())
-        // Use Citra Web Service user name as nickname by default
-        ui->nickname->setText(QString::fromStdString(Settings::values.citra_username));
     // UI Buttons
     connect(ui->refresh_list, &QPushButton::released, this, &Lobby::RefreshLobby);
-    connect(ui->in_list, &QCheckBox::stateChanged, proxy, &LobbyFilterProxyModel::SetFilterInList);
     connect(ui->hide_full, &QCheckBox::stateChanged, proxy, &LobbyFilterProxyModel::SetFilterFull);
     connect(ui->search, &QLineEdit::textChanged, proxy, &LobbyFilterProxyModel::SetFilterSearch);
     connect(ui->room_list, &QTreeView::doubleClicked, this, &Lobby::OnJoinRoom);
@@ -93,7 +83,7 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
         // And ask if they want to leave the room if they are already in one.
         if (!NetworkMessage::WarnDisconnect())
             return;
-    QModelIndex index{source};
+    auto index{source};
     // If the user double clicks on a child row (aka the member list) then use the parent instead
     if (source.parent() != QModelIndex())
         index = source.parent();
@@ -102,12 +92,12 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
         return;
     }
     // Get a password to pass if the room is password protected
-    QModelIndex password_index{proxy->index(index.row(), Column::ROOM_NAME)};
+    auto password_index{proxy->index(index.row(), Column::ROOM_NAME)};
     bool has_password{proxy->data(password_index, LobbyItemName::PasswordRole).toBool()};
     const auto password{has_password ? PasswordPrompt().toStdString() : ""};
     if (has_password && password.empty())
         return;
-    QModelIndex connection_index{proxy->index(index.row(), Column::HOST)};
+    auto connection_index{proxy->index(index.row(), Column::HOST)};
     const auto nickname{ui->nickname->text().toStdString()};
     const auto ip{
         proxy->data(connection_index, LobbyItemHost::HostIPRole).toString().toStdString()};
@@ -129,8 +119,6 @@ void Lobby::ResetModel() {
     model->insertColumns(0, Column::TOTAL);
     model->setHeaderData(Column::EXPAND, Qt::Horizontal, "", Qt::DisplayRole);
     model->setHeaderData(Column::ROOM_NAME, Qt::Horizontal, "Room Name", Qt::DisplayRole);
-    model->setHeaderData(Column::PROGRAM_NAME, Qt::Horizontal, "Preferred Program",
-                         Qt::DisplayRole);
     model->setHeaderData(Column::HOST, Qt::Horizontal, "Host", Qt::DisplayRole);
     model->setHeaderData(Column::MEMBER, Qt::Horizontal, "Members", Qt::DisplayRole);
 }
@@ -147,31 +135,20 @@ void Lobby::RefreshLobby() {
 }
 
 void Lobby::OnRefreshLobby() {
-    AnnounceMultiplayerRoom::RoomList new_room_list{room_list_watcher.result()};
+    auto new_room_list{room_list_watcher.result()};
     for (auto room : new_room_list) {
-        // Find the icon if this person has that program.
-        QPixmap smdh_icon;
-        for (int r{}; r < program_list->rowCount(); ++r) {
-            auto index{program_list->index(r, 0)};
-            auto program_id{
-                program_list->data(index, ProgramListItemPath::ProgramIdRole).toULongLong()};
-            if (program_id != 0 && room.preferred_program_id == program_id)
-                smdh_icon = program_list->data(index, Qt::DecorationRole).value<QPixmap>();
-        }
         QList<QVariant> members;
         for (auto member : room.members) {
             QVariant var;
-            var.setValue(LobbyMember{QString::fromStdString(member.name), member.program_id,
-                                     QString::fromStdString(member.program_name)});
+            var.setValue(LobbyMember{QString::fromStdString(member.name),
+                                     QString::fromStdString(member.program)});
             members.append(var);
         }
         auto first_item{new LobbyItem()};
         auto row{QList<QStandardItem*>({
             first_item,
             new LobbyItemName(room.has_password, QString::fromStdString(room.name)),
-            new LobbyItemApp(room.preferred_program_id,
-                             QString::fromStdString(room.preferred_program), smdh_icon),
-            new LobbyItemHost(QString::fromStdString(room.owner), QString::fromStdString(room.ip),
+            new LobbyItemHost(QString::fromStdString(room.creator), QString::fromStdString(room.ip),
                               room.port),
             new LobbyItemMemberList(members, room.max_members),
         })};
@@ -196,8 +173,7 @@ void Lobby::OnRefreshLobby() {
     }
 }
 
-LobbyFilterProxyModel::LobbyFilterProxyModel(QWidget* parent, QStandardItemModel* list)
-    : QSortFilterProxyModel{parent}, program_list{list} {}
+LobbyFilterProxyModel::LobbyFilterProxyModel(QWidget* parent) : QSortFilterProxyModel{parent} {}
 
 bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const {
     // Prioritize filters by fastest to compute
@@ -206,7 +182,7 @@ bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& s
         return true;
     // Filter by filled rooms
     if (filter_full) {
-        QModelIndex member_list{sourceModel()->index(sourceRow, Column::MEMBER, sourceParent)};
+        auto member_list{sourceModel()->index(sourceRow, Column::MEMBER, sourceParent)};
         int member_count{
             sourceModel()->data(member_list, LobbyItemMemberList::MemberListRole).toList().size()};
         int max_members{
@@ -216,13 +192,8 @@ bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& s
     }
     // Filter by search parameters
     if (!filter_search.isEmpty()) {
-        auto program_name{sourceModel()->index(sourceRow, Column::PROGRAM_NAME, sourceParent)};
         auto room_name{sourceModel()->index(sourceRow, Column::ROOM_NAME, sourceParent)};
         auto host_name{sourceModel()->index(sourceRow, Column::HOST, sourceParent)};
-        bool preferred_program_match{sourceModel()
-                                         ->data(program_name, LobbyItemApp::AppNameRole)
-                                         .toString()
-                                         .contains(filter_search, filterCaseSensitivity())};
         bool room_name_match{sourceModel()
                                  ->data(room_name, LobbyItemName::NameRole)
                                  .toString()
@@ -231,39 +202,12 @@ bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& s
                                 ->data(host_name, LobbyItemHost::HostUsernameRole)
                                 .toString()
                                 .contains(filter_search, filterCaseSensitivity())};
-        if (!preferred_program_match && !room_name_match && !username_match)
-            return false;
-    }
-    // Filter by programs in list
-    if (filter_in_list) {
-        auto program_name{sourceModel()->index(sourceRow, Column::PROGRAM_NAME, sourceParent)};
-        QList<QModelIndex> l;
-        for (int r{}; r < program_list->rowCount(); ++r)
-            l.append(QModelIndex(program_list->index(r, 0)));
-        auto current_id{
-            sourceModel()->data(program_name, LobbyItemApp::ProgramIDRole).toLongLong()};
-        if (current_id == 0)
-            // Homebrew often doesn't have a program ID and this hides them
-            return false;
-        bool in_list{};
-        for (const auto& program : l) {
-            auto id{program_list->data(program, ProgramListItemPath::ProgramIdRole).toLongLong()};
-            if (current_id == id)
-                in_list = true;
-        }
-        if (!in_list)
-            return false;
     }
     return true;
 }
 
 void LobbyFilterProxyModel::sort(int column, Qt::SortOrder order) {
     sourceModel()->sort(column, order);
-}
-
-void LobbyFilterProxyModel::SetFilterInList(bool filter) {
-    filter_in_list = filter;
-    invalidate();
 }
 
 void LobbyFilterProxyModel::SetFilterFull(bool filter) {

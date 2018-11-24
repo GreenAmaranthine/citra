@@ -12,7 +12,7 @@
 
 namespace Network {
 
-constexpr u32 network_version{3}; ///< The network version
+constexpr u32 network_version{0xFF01}; ///< The network version
 constexpr u16 DefaultRoomPort{24872};
 constexpr u32 MaxMessageSize{500};
 constexpr u32 MaxConcurrentConnections{
@@ -20,17 +20,10 @@ constexpr u32 MaxConcurrentConnections{
 constexpr std::size_t NumChannels{1}; // Number of channels used for the connection
 
 struct RoomInformation {
-    std::string name;              ///< Name of the server
-    u32 member_slots;              ///< Maximum number of members in this room
-    std::string uid;               ///< The unique ID of the room
-    u16 port;                      ///< The port of this room
-    std::string preferred_program; ///< Preferred program name
-    u64 preferred_program_id;      ///< Preferred program's ID
-};
-
-struct ProgramInfo {
-    std::string name{};
-    u64 id{};
+    std::string name;    ///< Name of the server
+    u32 member_slots;    ///< Maximum number of members in this room
+    u16 port;            ///< The port of this room
+    std::string creator; ///< The creator of this room
 };
 
 // The different types of messages that can be sent. The first byte of each packet defines the type
@@ -38,7 +31,7 @@ enum RoomMessageTypes : u8 {
     IdJoinRequest = 1,
     IdJoinSuccess,
     IdRoomInformation,
-    IdSetProgramInfo,
+    IdSetProgram,
     IdWifiPacket,
     IdChatMessage,
     IdNameCollision,
@@ -52,42 +45,30 @@ enum RoomMessageTypes : u8 {
 class Room final {
 public:
     struct Member {
-        std::string nickname;     ///< The nickname of the member.
-        ProgramInfo program_info; ///< The current program of the member.
-        MacAddress mac_address;   ///< The assigned MAC address of the member.
+        std::string nickname;   ///< The nickname of the member.
+        std::string program;    ///< The current program of the member.
+        MACAddress mac_address; ///< The assigned MAC address of the member.
     };
 
     Room();
     ~Room();
 
-    /**
-     * Return whether the room is open.
-     */
+    /// Return whether the room is open.
     bool IsOpen() const;
 
-    /**
-     * Gets the room information of the room.
-     */
+    /// Gets the room information of the room.
     const RoomInformation& GetRoomInformation() const;
 
-    /**
-     * Gets a list of the mbmers connected to the room.
-     */
+    /// Gets a list of the mbmers connected to the room.
     std::vector<Member> GetRoomMemberList() const;
 
-    /**
-     * Checks if the room is password protected
-     */
+    /// Checks if the room is password protected
     bool HasPassword() const;
 
-    /**
-     * Creates the socket for this room. Will bind to default address if
-     * server is empty string.
-     */
-    bool Create(const std::string& name, const std::string& server = "",
-                u16 server_port = DefaultRoomPort, const std::string& password = "",
-                const u32 max_connections = MaxConcurrentConnections,
-                const std::string& preferred_program = "", u64 preferred_program_id = 0);
+    /// Creates the socket for this room
+    bool Create(const std::string& name, const std::string& creator, u16 port = DefaultRoomPort,
+                const std::string& password = "",
+                const u32 max_connections = MaxConcurrentConnections);
 
     /**
      * Destroys the socket

@@ -24,7 +24,7 @@
 #include "core/settings.h"
 #include "ui_host_room.h"
 
-HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
+HostRoomWindow::HostRoomWindow(QWidget* parent,
                                std::shared_ptr<Core::AnnounceMultiplayerSession> session,
                                Core::System& system)
     : QDialog{parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint},
@@ -35,17 +35,6 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
     ui->username->setValidator(validation.GetNickname());
     ui->port->setValidator(validation.GetPort());
     ui->port->setPlaceholderText(QString::number(Network::DefaultRoomPort));
-    // Create a proxy to the program list to display the list of preferred program
-    program_list = new QStandardItemModel;
-    for (int i{}; i < list->rowCount(); i++) {
-        auto parent{list->item(i, 0)};
-        for (int j{}; j < parent->rowCount(); j++)
-            program_list->appendRow(parent->child(j)->clone());
-    }
-    proxy = new ComboBoxProxyModel;
-    proxy->setSourceModel(program_list);
-    proxy->sort(0, Qt::AscendingOrder);
-    ui->program_list->setModel(proxy);
     // Disable editing replies text
     ui->tableReplies->setEditTriggers(QAbstractItemView::NoEditTriggers);
     // Connect all the widgets to the appropriate events
@@ -54,19 +43,12 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
     connect(ui->host, &QPushButton::released, this, &HostRoomWindow::Host);
     // Restore the settings
     ui->username->setText(UISettings::values.room_nickname);
-    if (ui->username->text().isEmpty() && !Settings::values.citra_username.empty())
-        // Use Citra Web Service user name as nickname by default
-        ui->username->setText(QString::fromStdString(Settings::values.citra_username));
     ui->room_name->setText(UISettings::values.room_name);
     ui->port->setText(UISettings::values.room_port);
     ui->max_members->setValue(UISettings::values.max_members);
     int index{static_cast<int>(UISettings::values.host_type)};
     if (index < ui->host_type->count())
         ui->host_type->setCurrentIndex(index);
-    index = ui->program_list->findData(UISettings::values.program_id,
-                                       ProgramListItemPath::ProgramIdRole);
-    if (index != -1)
-        ui->program_list->setCurrentIndex(index);
 }
 
 HostRoomWindow::~HostRoomWindow() = default;
@@ -95,13 +77,11 @@ void HostRoomWindow::Host() {
         }
     }
     ui->host->setDisabled(true);
-    auto program_name{ui->program_list->currentData(Qt::DisplayRole).toString()};
-    auto program_id{ui->program_list->currentData(ProgramListItemPath::ProgramIdRole).toLongLong()};
     auto port{ui->port->isModified() ? ui->port->text().toInt() : Network::DefaultRoomPort};
     auto password{ui->password->text().toStdString()};
-    bool created{system.Room().Create(ui->room_name->text().toStdString(), "", port, password,
-                                      ui->max_members->value(), program_name.toStdString(),
-                                      program_id)};
+    bool created{system.Room().Create(ui->room_name->text().toStdString(),
+                                      ui->username->text().toStdString(), port, password,
+                                      ui->max_members->value())};
     if (!created) {
         NetworkMessage::ShowError(NetworkMessage::COULD_NOT_CREATE_ROOM);
         LOG_ERROR(Network, "Couldn't create room!");
@@ -112,8 +92,6 @@ void HostRoomWindow::Host() {
     // Store settings
     UISettings::values.room_nickname = ui->username->text();
     UISettings::values.room_name = ui->room_name->text();
-    UISettings::values.program_id =
-        ui->program_list->currentData(ProgramListItemPath::ProgramIdRole).toLongLong();
     UISettings::values.max_members = ui->max_members->value();
     UISettings::values.host_type = ui->host_type->currentIndex();
     UISettings::values.room_port = (ui->port->isModified() && !ui->port->text().isEmpty())
@@ -175,27 +153,4 @@ void HostRoomWindow::OnConnection() {
         UpdateReplies();
         close();
     }
-}
-
-QVariant ComboBoxProxyModel::data(const QModelIndex& idx, int role) const {
-    if (role != Qt::DisplayRole) {
-        auto val{QSortFilterProxyModel::data(idx, role)};
-        // If its the icon, shrink it to 16x16
-        if (role == Qt::DecorationRole)
-            val = val.value<QImage>().scaled(16, 16, Qt::KeepAspectRatio);
-        return val;
-    }
-    std::string filename;
-    Common::SplitPath(QSortFilterProxyModel::data(idx, ProgramListItemPath::FullPathRole)
-                          .toString()
-                          .toStdString(),
-                      nullptr, &filename, nullptr);
-    QString title{QSortFilterProxyModel::data(idx, ProgramListItemPath::TitleRole).toString()};
-    return title.isEmpty() ? QString::fromStdString(filename) : title;
-}
-
-bool ComboBoxProxyModel::lessThan(const QModelIndex& left, const QModelIndex& right) const {
-    auto leftData = left.data(ProgramListItemPath::TitleRole).toString();
-    auto rightData = right.data(ProgramListItemPath::TitleRole).toString();
-    return leftData.compare(rightData) < 0;
 }

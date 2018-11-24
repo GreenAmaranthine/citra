@@ -22,20 +22,20 @@ class System;
 class LobbyModel;
 class LobbyFilterProxyModel;
 
-// Listing of all public rooms pulled from services. The lobby should be simple enough for users to
+// Listing of all public rooms pulled from API. The lobby should be simple enough for users to
 // find the program, and join it.
 class Lobby : public QDialog {
     Q_OBJECT
 
 public:
-    explicit Lobby(QWidget* parent, QStandardItemModel* list,
-                   std::shared_ptr<Core::AnnounceMultiplayerSession> session, Core::System& system);
+    explicit Lobby(QWidget* parent, std::shared_ptr<Core::AnnounceMultiplayerSession> session,
+                   Core::System& system);
     ~Lobby() = default;
 
 public slots:
     /**
-     * Begin the process to pull the latest room list from web services. After the listing is
-     * returned from web services, `LobbyRefreshed` will be signalled
+     * Begin the process to pull the latest room list from API. After the listing is
+     * returned from API, `LobbyRefreshed` will be signalled
      */
     void RefreshLobby();
 
@@ -71,7 +71,6 @@ private:
     QString PasswordPrompt();
 
     QStandardItemModel* model;
-    QStandardItemModel* program_list;
     LobbyFilterProxyModel* proxy;
 
     QFutureWatcher<AnnounceMultiplayerRoom::RoomList> room_list_watcher;
@@ -87,17 +86,15 @@ class LobbyFilterProxyModel : public QSortFilterProxyModel {
     Q_OBJECT
 
 public:
-    explicit LobbyFilterProxyModel(QWidget* parent, QStandardItemModel* list);
+    explicit LobbyFilterProxyModel(QWidget* parent);
     bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const override;
     void sort(int column, Qt::SortOrder order) override;
 
 public slots:
-    void SetFilterInList(bool);
     void SetFilterFull(bool);
     void SetFilterSearch(const QString&);
 
 private:
-    QStandardItemModel* program_list;
     bool filter_in_list{};
     bool filter_full{};
     QString filter_search;

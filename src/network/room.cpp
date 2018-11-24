@@ -7,7 +7,6 @@
 #include <iomanip>
 #include <mutex>
 #include <random>
-#include <sstream>
 #include <thread>
 #include <enet/enet.h>
 #include "common/logging/log.h"
@@ -17,7 +16,7 @@
 namespace Network {
 
 struct Room::RoomImpl {
-    std::mt19937 random_gen; ///< Random number generator. Used for GenerateMacAddress
+    std::mt19937 random_gen; ///< Random number generator. Used for GenerateMACAddress
 
     ENetHost* server; ///< Network interface.
 
@@ -27,10 +26,10 @@ struct Room::RoomImpl {
     std::string password; ///< The password required to connect to this room.
 
     struct Member {
-        std::string nickname;     ///< The nickname of the member.
-        ProgramInfo program_info; ///< The current program of the member.
-        MacAddress mac_address;   ///< The assigned MAC address of the member.
-        ENetPeer* peer;           ///< The remote peer.
+        std::string nickname;   ///< The nickname of the member.
+        std::string program;    ///< The current program of the member.
+        MACAddress mac_address; ///< The assigned MAC address of the member.
+        ENetPeer* peer;         ///< The remote peer.
     };
 
     using MemberList = std::vector<Member>;
@@ -60,7 +59,7 @@ struct Room::RoomImpl {
 
     /// Returns whether the MAC address is valid, ie. isn't already taken by someone else in the
     /// room.
-    bool IsValidMacAddress(const MacAddress& address) const;
+    bool IsValidMacAddress(const MACAddress& address) const;
 
     /// Sends a ID_ROOM_NAME_COLLISION message telling the client that the name is invalid.
     void SendNameCollision(ENetPeer* client);
@@ -78,7 +77,7 @@ struct Room::RoomImpl {
      * Notifies the member that its connection attempt was successful,
      * and it is now part of the room.
      */
-    void SendJoinSuccess(ENetPeer* client, MacAddress mac_address);
+    void SendJoinSuccess(ENetPeer* client, MACAddress mac_address);
 
     /// Notifies the members that the room is closed,
     void SendCloseMessage();
@@ -90,18 +89,17 @@ struct Room::RoomImpl {
      * <MessageID> ID_ROOM_INFORMATION
      * <String> room_name
      * <u32> member_slots: The max number of clients allowed in this room
-     * <String> uid
      * <u16> port
      * <u32> num_members: the number of currently joined clients
      * This is followed by the following three values for each member:
      * <String> nickname of that member
-     * <MacAddress> mac_address of that member
-     * <String> program_name of that member
+     * <MACAddress> mac_address of that member
+     * <String> program of that member
      */
     void BroadcastRoomInformation();
 
     /// Generates a free MAC address to assign to a new client.
-    MacAddress GenerateMacAddress();
+    MACAddress GenerateMACAddress();
 
     /**
      * Broadcasts this packet to all members except the sender.
@@ -119,16 +117,13 @@ struct Room::RoomImpl {
      * Extracts the program information from a received ENet packet and broadcasts it.
      * @param event The ENet event that was received.
      */
-    void HandleProgramInfoPacket(const ENetEvent* event);
+    void HandleProgramPacket(const ENetEvent* event);
 
     /**
      * Removes the client from the members list if it was in it and announces the change
      * to all other clients.
      */
     void HandleClientDisconnection(ENetPeer* client);
-
-    /// Creates a random ID in the form 12345678-1234-1234-1234-123456789012
-    void CreateUniqueID();
 };
 
 // RoomImpl
@@ -142,8 +137,8 @@ void Room::RoomImpl::ServerLoop() {
                 case IdJoinRequest:
                     HandleJoinRequest(&event);
                     break;
-                case IdSetProgramInfo:
-                    HandleProgramInfoPacket(&event);
+                case IdSetProgram:
+                    HandleProgramPacket(&event);
                     break;
                 case IdWifiPacket:
                     HandleWifiPacket(&event);
@@ -177,7 +172,7 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
     packet.IgnoreBytes(sizeof(u8)); // Ignore the message type
     std::string nickname;
     packet >> nickname;
-    MacAddress preferred_mac;
+    MACAddress preferred_mac;
     packet >> preferred_mac;
     u32 client_version;
     packet >> client_version;
@@ -199,7 +194,7 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
         }
     } else
         // Assign a MAC address of this client automatically
-        preferred_mac = GenerateMacAddress();
+        preferred_mac = GenerateMACAddress();
     if (client_version != network_version) {
         SendVersionMismatch(event->peer);
         return;
@@ -226,7 +221,7 @@ bool Room::RoomImpl::IsValidNickname(const std::string& nickname) const {
                        [&nickname](const auto& member) { return member.nickname != nickname; });
 }
 
-bool Room::RoomImpl::IsValidMacAddress(const MacAddress& address) const {
+bool Room::RoomImpl::IsValidMacAddress(const MACAddress& address) const {
     // A MAC address is valid if it isn't already taken by anybody else in the room.
     std::lock_guard lock{member_mutex};
     return std::all_of(members.begin(), members.end(),
@@ -270,7 +265,7 @@ void Room::RoomImpl::SendVersionMismatch(ENetPeer* client) {
     enet_host_flush(server);
 }
 
-void Room::RoomImpl::SendJoinSuccess(ENetPeer* client, MacAddress mac_address) {
+void Room::RoomImpl::SendJoinSuccess(ENetPeer* client, MACAddress mac_address) {
     Packet packet;
     packet << static_cast<u8>(IdJoinSuccess);
     packet << mac_address;
@@ -300,17 +295,14 @@ void Room::RoomImpl::BroadcastRoomInformation() {
     packet << static_cast<u8>(IdRoomInformation);
     packet << room_information.name;
     packet << room_information.member_slots;
-    packet << room_information.uid;
     packet << room_information.port;
-    packet << room_information.preferred_program;
     packet << static_cast<u32>(members.size());
     {
         std::lock_guard lock{member_mutex};
         for (const auto& member : members) {
             packet << member.nickname;
             packet << member.mac_address;
-            packet << member.program_info.name;
-            packet << member.program_info.id;
+            packet << member.program;
         }
     }
     ENetPacket* enet_packet{
@@ -319,9 +311,9 @@ void Room::RoomImpl::BroadcastRoomInformation() {
     enet_host_flush(server);
 }
 
-MacAddress Room::RoomImpl::GenerateMacAddress() {
+MACAddress Room::RoomImpl::GenerateMACAddress() {
     // The first three bytes of each MAC address will be the NintendoOUI
-    MacAddress result_mac{NintendoOUI};
+    MACAddress result_mac{NintendoOUI};
     std::uniform_int_distribution<> dis{0x00, 0xFF}; // Random byte between 0 and 0xFF
     do {
         for (std::size_t i{3}; i < result_mac.size(); ++i)
@@ -336,8 +328,8 @@ void Room::RoomImpl::HandleWifiPacket(const ENetEvent* event) {
     in_packet.IgnoreBytes(sizeof(u8));         // Message type
     in_packet.IgnoreBytes(sizeof(u8));         // WifiPacket Type
     in_packet.IgnoreBytes(sizeof(u8));         // WifiPacket Channel
-    in_packet.IgnoreBytes(sizeof(MacAddress)); // WifiPacket Transmitter Address
-    MacAddress destination_address;
+    in_packet.IgnoreBytes(sizeof(MACAddress)); // WifiPacket Transmitter Address
+    MACAddress destination_address;
     in_packet >> destination_address;
     Packet out_packet;
     out_packet.Append(event->packet->data, event->packet->dataLength);
@@ -407,13 +399,12 @@ void Room::RoomImpl::HandleChatPacket(const ENetEvent* event) {
     enet_host_flush(server);
 }
 
-void Room::RoomImpl::HandleProgramInfoPacket(const ENetEvent* event) {
+void Room::RoomImpl::HandleProgramPacket(const ENetEvent* event) {
     Packet in_packet;
     in_packet.Append(event->packet->data, event->packet->dataLength);
     in_packet.IgnoreBytes(sizeof(u8)); // Ignore the message type
-    ProgramInfo program_info;
-    in_packet >> program_info.name;
-    in_packet >> program_info.id;
+    std::string program;
+    in_packet >> program;
     {
         std::lock_guard lock{member_mutex};
         auto member{
@@ -421,7 +412,7 @@ void Room::RoomImpl::HandleProgramInfoPacket(const ENetEvent* event) {
                 return member.peer == event->peer;
             })};
         if (member != members.end())
-            member->program_info = program_info;
+            member->program = program;
     }
     BroadcastRoomInformation();
 }
@@ -440,43 +431,24 @@ void Room::RoomImpl::HandleClientDisconnection(ENetPeer* client) {
     BroadcastRoomInformation();
 }
 
-void Room::RoomImpl::CreateUniqueID() {
-    std::uniform_int_distribution<> dis{0, 9999};
-    std::ostringstream stream;
-    stream << std::setfill('0') << std::setw(4) << dis(random_gen);
-    stream << std::setfill('0') << std::setw(4) << dis(random_gen) << "-";
-    stream << std::setfill('0') << std::setw(4) << dis(random_gen) << "-";
-    stream << std::setfill('0') << std::setw(4) << dis(random_gen) << "-";
-    stream << std::setfill('0') << std::setw(4) << dis(random_gen) << "-";
-    stream << std::setfill('0') << std::setw(4) << dis(random_gen);
-    stream << std::setfill('0') << std::setw(4) << dis(random_gen);
-    stream << std::setfill('0') << std::setw(4) << dis(random_gen);
-    room_information.uid = stream.str();
-}
-
 // Room
 Room::Room() : room_impl{std::make_unique<RoomImpl>()} {}
 Room::~Room() = default;
 
-bool Room::Create(const std::string& name, const std::string& server_address, u16 server_port,
-                  const std::string& password, const u32 max_connections,
-                  const std::string& preferred_program, u64 preferred_program_id) {
+bool Room::Create(const std::string& name, const std::string& creator, u16 port,
+                  const std::string& password, const u32 max_connections) {
     ENetAddress address;
     address.host = ENET_HOST_ANY;
-    if (!server_address.empty())
-        enet_address_set_host(&address, server_address.c_str());
-    address.port = server_port;
+    address.port = port;
     room_impl->server = enet_host_create(&address, max_connections, NumChannels, 0, 0);
     if (!room_impl->server)
         return false;
     room_impl->is_open.store(true, std::memory_order_relaxed);
     room_impl->room_information.name = name;
+    room_impl->room_information.creator = creator;
     room_impl->room_information.member_slots = max_connections;
-    room_impl->room_information.port = server_port;
-    room_impl->room_information.preferred_program = preferred_program;
-    room_impl->room_information.preferred_program_id = preferred_program_id;
+    room_impl->room_information.port = port;
     room_impl->password = password;
-    room_impl->CreateUniqueID();
     room_impl->StartLoop();
     return true;
 }
@@ -496,7 +468,7 @@ std::vector<Room::Member> Room::GetRoomMemberList() const {
         Member member;
         member.nickname = member_impl.nickname;
         member.mac_address = member_impl.mac_address;
-        member.program_info = member_impl.program_info;
+        member.program = member_impl.program;
         member_list.push_back(member);
     }
     return member_list;

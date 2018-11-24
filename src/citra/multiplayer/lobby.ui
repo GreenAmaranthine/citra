@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>876</width>
-    <height>502</height>
+    <width>689</width>
+    <height>468</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -67,13 +67,6 @@
            </property>
            <property name="clearButtonEnabled">
             <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="in_list">
-           <property name="text">
-            <string>In List</string>
            </property>
           </widget>
          </item>

@@ -17,11 +17,13 @@ namespace Network {
 class Room;
 } // namespace Network
 
+class LobbyAPI;
+
 namespace Core {
 
 /**
- * Instruments AnnounceMultiplayerRoom::Backend.
- * Creates a thread that regularly updates the room information and submits them
+ * Instruments LobbyAPI.
+ * Creates a thread that regularly updates the room information and submits it
  * An async get of room information is also possible
  */
 class AnnounceMultiplayerSession : NonCopyable {
@@ -44,18 +46,14 @@ public:
      */
     void UnbindErrorCallback(CallbackHandle handle);
 
-    /**
-     * Starts the announce of a room to web services
-     */
+    /// Starts the announce of a room to web services
     void Start();
 
-    /**
-     * Stops the announce to web services
-     */
+    /// Stops the announce to web services
     void Stop();
 
     /**
-     *  Returns a list of all room information the backend got
+     * Returns a list of all room information the backend got
      * @param func A function that gets executed when the async get finished, e.g. a signal
      * @return a list of rooms received from the web service
      */
@@ -68,8 +66,8 @@ private:
     std::unique_ptr<std::thread> announce_multiplayer_thread;
     Network::Room& room;
 
-    /// Backend interface that logs fields
-    std::unique_ptr<AnnounceMultiplayerRoom::Backend> backend;
+    /// Backend that sends the data
+    std::unique_ptr<LobbyAPI> backend;
 
     void AnnounceMultiplayerLoop();
 };
