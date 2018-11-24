@@ -62,7 +62,7 @@ enum StatusMessageTypes : u8 {
     IdMemberLeave,     ///< Member leaving
     IdMemberKicked,    ///< A member is kicked from the room
     IdMemberBanned,    ///< A member is banned from the room
-    IdAddressUnbanned, ///< A username / ip address is unbanned from the room
+    IdAddressUnbanned, ///< A ip address is unbanned from the room
 };
 
 /// This is what a server [person creating a server] would use.

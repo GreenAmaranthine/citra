@@ -337,7 +337,7 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
             auto result{QMessageBox::question(
                 this, "Ban Member",
                 QString("Are you sure you would like to <b>kick and ban</b> %1?\n\nThis would "
-                        "ban both their IP address.")
+                        "ban their IP address.")
                     .arg(QString::fromStdString(nickname)),
                 QMessageBox::Yes | QMessageBox::No)};
             if (result == QMessageBox::Yes)
