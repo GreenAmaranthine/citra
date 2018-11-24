@@ -67,8 +67,8 @@ void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& s
     LOG_DEBUG(Frontend, "Network State: {}", Network::GetStateStr(state));
     if (state == Network::RoomMember::State::Joined) {
         if (system.IsPoweredOn())
-            system.Kernel().GetSharedPageHandler().SetMacAddress(
-                system.RoomMember().GetMacAddress());
+            system.Kernel().GetSharedPageHandler().SetMACAddress(
+                system.RoomMember().GetMACAddress());
         OnOpenNetworkRoom();
         status_icon->setPixmap(QIcon::fromTheme("connected").pixmap(16));
         leave_room->setEnabled(true);
@@ -165,6 +165,8 @@ bool MultiplayerState::OnCloseRoom() {
     // If we're hosting a room, also stop hosting
     if (!room.IsOpen())
         return true;
+    // Save ban list
+    UISettings::values.ban_list = std::move(room.GetBanList());
     room.Destroy();
     announce_multiplayer_session->Stop();
     LOG_DEBUG(Frontend, "Closed the room (as a server)");

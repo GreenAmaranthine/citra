@@ -353,13 +353,10 @@ void RoomMember::RoomMemberImpl::HandleStatusMessagePacket(const ENetEvent* even
 void RoomMember::RoomMemberImpl::HandleModBanListResponsePacket(const ENetEvent* event) {
     Packet packet;
     packet.Append(event->packet->data, event->packet->dataLength);
-
     // Ignore the first byte, which is the message id.
     packet.IgnoreBytes(sizeof(u8));
-
-    Room::BanList ban_list = {};
-    packet >> ban_list.first;
-    packet >> ban_list.second;
+    Room::BanList ban_list;
+    packet >> ban_list;
     Invoke<Room::BanList>(ban_list);
 }
 
@@ -467,7 +464,7 @@ const std::string& RoomMember::GetNickname() const {
     return room_member_impl->nickname;
 }
 
-const MACAddress& RoomMember::GetMacAddress() const {
+const MACAddress& RoomMember::GetMACAddress() const {
     ASSERT_MSG(IsConnected(), "Tried to get MAC address while not connected");
     return room_member_impl->mac_address;
 }

@@ -36,10 +36,11 @@ struct Room::RoomImpl {
     };
 
     using MemberList = std::vector<Member>;
-    MemberList members; ///< Information about the members of this room
+    MemberList members;              ///< Information about the members of this room
+    mutable std::mutex member_mutex; ///< Mutex for locking the members list
 
-    IPBanList ip_ban_list;             ///< List of banned IP addresses
-    mutable std::mutex ban_list_mutex; ///< Mutex for the ban lists
+    BanList ban_list;                  ///< List of banned IP addresses
+    mutable std::mutex ban_list_mutex; ///< Mutex for locking the ban list
 
     RoomImpl() : random_gen{std::random_device{}()} {}
 
@@ -52,7 +53,7 @@ struct Room::RoomImpl {
 
     /**
      * Parses and answers a room join request from a client.
-     * Validates the uniqueness of the username and assigns the MAC address
+     * Validates the uniqueness of the nicknamename and assigns the MAC address
      * that the client will use for the remainder of the connection.
      */
     void HandleJoinRequest(const ENetEvent* event);
@@ -65,7 +66,7 @@ struct Room::RoomImpl {
 
     /**
      * Parses and answers a ban request from a client.
-     * Validates the permissions and bans the user (by forum username or IP).
+     * Validates the permissions and bans the user by IP.
      */
     void HandleModBanPacket(const ENetEvent* event);
 
@@ -127,9 +128,7 @@ struct Room::RoomImpl {
     /// Sends a IdHostKicked message telling the client that they have been kicked.
     void SendUserKicked(ENetPeer* client);
 
-    /**
-     * Sends a IdHostBanned message telling the client that they have been banned.
-     */
+    /// Sends a IdHostBanned message telling the client that they have been banned.
     void SendUserBanned(ENetPeer* client);
 
     /**
@@ -138,19 +137,13 @@ struct Room::RoomImpl {
      */
     void SendModPermissionDenied(ENetPeer* client);
 
-    /**
-     * Sends a IdModNoSuchUser message telling the client that the given user could not be found.
-     */
+    /// Sends a IdModNoSuchUser message telling the client that the given user could not be found.
     void SendModNoSuchUser(ENetPeer* client);
 
-    /**
-     * Sends the ban list in response to a client's request for getting ban list.
-     */
+    /// Sends the ban list in response to a client's request for getting ban list.
     void SendModBanListResponse(ENetPeer* client);
 
-    /**
-     * Notifies the members that the room is closed,
-     */
+    /// Notifies the members that the room is closed.
     void SendCloseMessage();
 
     /// Sends a system message to all the connected clients.
@@ -312,7 +305,7 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
         char ip_raw[256];
         enet_address_get_host_ip(&event->peer->address, ip_raw, 256);
         std::string ip{ip_raw};
-        if (std::find(ip_ban_list.begin(), ip_ban_list.end(), ip) != ip_ban_list.end()) {
+        if (std::find(ban_list.begin(), ban_list.end(), ip) != ban_list.end()) {
             SendUserBanned(event->peer);
             return;
         }
@@ -389,8 +382,8 @@ void Room::RoomImpl::HandleModBanPacket(const ENetEvent* event) {
     {
         std::lock_guard lock{ban_list_mutex};
         // Ban the member's IP as well
-        if (std::find(ip_ban_list.begin(), ip_ban_list.end(), ip) == ip_ban_list.end())
-            ip_ban_list.emplace_back(ip);
+        if (std::find(ban_list.begin(), ban_list.end(), ip) == ban_list.end())
+            ban_list.emplace_back(ip);
     }
     // Announce the change to all clients.
     SendStatusMessage(IdMemberBanned, nickname);
@@ -410,14 +403,14 @@ void Room::RoomImpl::HandleModUnbanPacket(const ENetEvent* event) {
     bool unbanned{};
     {
         std::lock_guard lock{ban_list_mutex};
-        auto it = std::find(ip_ban_list.begin(), ip_ban_list.end(), address);
-        if (it != ip_ban_list.end()) {
+        auto it = std::find(ban_list.begin(), ban_list.end(), address);
+        if (it != ban_list.end()) {
             unbanned = true;
-            ip_ban_list.erase(it);
+            ban_list.erase(it);
         }
     }
     if (unbanned)
-        SendStatusMessage(IdAddressUnbanned, address, "");
+        SendStatusMessage(IdAddressUnbanned, address);
     else
         SendModNoSuchUser(event->peer);
 }
@@ -579,13 +572,11 @@ void Room::RoomImpl::SendModBanListResponse(ENetPeer* client) {
     Packet packet;
     packet << static_cast<u8>(IdModBanListResponse);
     {
-        std::lock_guard<std::mutex> lock(ban_list_mutex);
-        packet << username_ban_list;
-        packet << ip_ban_list;
+        std::lock_guard lock{ban_list_mutex};
+        packet << ban_list;
     }
-
-    ENetPacket* enet_packet =
-        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
+    auto enet_packet{
+        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE)};
     enet_peer_send(client, 0, enet_packet);
     enet_host_flush(server);
 }
@@ -790,7 +781,7 @@ bool Room::Create(const std::string& name, const std::string& description,
     room_impl->room_information.member_slots = max_connections;
     room_impl->room_information.port = port;
     room_impl->password = password;
-    room_impl->ip_ban_list = ban_list.second;
+    room_impl->ban_list = ban_list;
     room_impl->StartLoop();
     return true;
 }
@@ -805,7 +796,7 @@ const RoomInformation& Room::GetRoomInformation() const {
 
 Room::BanList Room::GetBanList() const {
     std::lock_guard lock{room_impl->ban_list_mutex};
-    return room_impl->ip_ban_list;
+    return room_impl->ban_list;
 }
 
 std::vector<Room::Member> Room::GetRoomMemberList() const {

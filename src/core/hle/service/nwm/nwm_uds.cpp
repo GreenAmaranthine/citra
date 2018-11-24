@@ -64,7 +64,7 @@ std::list<Network::WifiPacket> NWM_UDS::GetReceivedBeacons(const MACAddress& sen
 void NWM_UDS::SendPacket(Network::WifiPacket& packet) {
     auto& member{system.RoomMember()};
     if (member.GetState() == Network::RoomMember::State::Joined) {
-        packet.transmitter_address = member.GetMacAddress();
+        packet.transmitter_address = member.GetMACAddress();
         member.SendWifiPacket(packet);
     }
 }
@@ -471,7 +471,7 @@ void NWM_UDS::OnWifiPacketReceived(const Network::WifiPacket& packet) {
     }
 }
 
-std::optional<MACAddress> NWM_UDS::GetNodeMacAddress(u16 dest_node_id, u8 flags) {
+std::optional<MACAddress> NWM_UDS::GetNodeMACAddress(u16 dest_node_id, u8 flags) {
     constexpr u8 BroadcastFlag{0x2};
     if ((flags & BroadcastFlag) || dest_node_id == BroadcastNetworkNodeId)
         // Broadcast
@@ -726,7 +726,7 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
         connection_status.changed_nodes |= 1;
         auto& member{system.RoomMember()};
         if (member.IsConnected())
-            network_info.host_mac_address = member.GetMacAddress();
+            network_info.host_mac_address = member.GetMACAddress();
         else
             network_info.host_mac_address = {{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
         node_info[0] = current_node;
@@ -846,7 +846,7 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
     }
     if (flags >> 2)
         LOG_ERROR(Service_NWM, "Unexpected flags 0x{:02X}", flags);
-    auto dest_address{GetNodeMacAddress(dest_node_id, flags)};
+    auto dest_address{GetNodeMACAddress(dest_node_id, flags)};
     if (!dest_address) {
         rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Status));
@@ -1096,8 +1096,8 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework{"nwm::UDS"}, system{sy
     rng.GenerateBlock(static_cast<CryptoPP::byte*>(mac.data() + 3), 3);
     auto& member{system.RoomMember()};
     if (member.IsConnected())
-        mac = member.GetMacAddress();
-    system.Kernel().GetSharedPageHandler().SetMacAddress(mac);
+        mac = member.GetMACAddress();
+    system.Kernel().GetSharedPageHandler().SetMACAddress(mac);
 }
 
 NWM_UDS::~NWM_UDS() {

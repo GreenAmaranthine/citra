@@ -90,7 +90,7 @@ class Handler {
 public:
     explicit Handler(Core::System& system);
 
-    void SetMacAddress(const MACAddress&);
+    void SetMACAddress(const MACAddress&);
     void SetWifiLinkLevel(WifiLinkLevel);
     void SetNetworkState(NetworkState);
     NetworkState GetNetworkState();

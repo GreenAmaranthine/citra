@@ -155,7 +155,7 @@ private:
     void HandleDeauthenticationFrame(const Network::WifiPacket& packet);
     void HandleDataFrame(const Network::WifiPacket& packet);
     void OnWifiPacketReceived(const Network::WifiPacket& packet);
-    std::optional<MACAddress> GetNodeMacAddress(u16 dest_node_id, u8 flags);
+    std::optional<MACAddress> GetNodeMACAddress(u16 dest_node_id, u8 flags);
 
     // Event that is signaled every time the connection status changes.
     Kernel::SharedPtr<Kernel::Event> connection_status_event;

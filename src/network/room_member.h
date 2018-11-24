@@ -113,7 +113,7 @@ public:
     const std::string& GetNickname() const;
 
     /// Returns the MAC address of the RoomMember.
-    const MACAddress& GetMacAddress() const;
+    const MACAddress& GetMACAddress() const;
 
     /// Returns information about the room we're currently connected to.
     RoomInformation GetRoomInformation() const;
