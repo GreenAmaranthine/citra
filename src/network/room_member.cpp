@@ -29,7 +29,8 @@ struct RoomMember::RoomMemberImpl {
     /// The current program
     std::string current_program;
 
-    std::atomic<State> state{State::Idle}; ///< Current state of the RoomMember.
+    std::atomic<State> state{State::Idle};         ///< Current state of the RoomMember.
+    std::atomic<Error> error{Error::UnknownError}; ///< Current state of the RoomMember.
 
     void SetState(const State new_state);
     void SetError(const Error new_error);
@@ -143,7 +144,10 @@ void RoomMember::RoomMemberImpl::SetState(const State new_state) {
 }
 
 void RoomMember::RoomMemberImpl::SetError(const Error new_error) {
-    Invoke<Error>(new_error);
+    if (error != new_error) {
+        error = new_error;
+        Invoke<Error>(error);
+    }
 }
 
 bool RoomMember::RoomMemberImpl::IsConnected() const {
@@ -228,7 +232,7 @@ void RoomMember::RoomMemberImpl::MemberLoop() {
                 enet_packet_destroy(event.packet);
                 break;
             case ENET_EVENT_TYPE_DISCONNECT:
-                if (state == State::Joined) {
+                if (state == State::Joined && error != Error::HostBanned) {
                     SetState(State::Idle);
                     SetError(Error::LostConnection);
                 }
@@ -551,7 +555,6 @@ void RoomMember::SendModerationRequest(RoomMessageTypes type, const std::string&
 void RoomMember::RequestBanList() {
     if (!IsConnected())
         return;
-
     Packet packet;
     packet << static_cast<u8>(IdModGetBanList);
     room_member_impl->Send(std::move(packet));

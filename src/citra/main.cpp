@@ -36,7 +36,6 @@
 #include "citra/mii_selector.h"
 #include "citra/multiplayer/state.h"
 #include "citra/program_list.h"
-#include "citra/swkbd.h"
 #include "citra/ui_settings.h"
 #include "citra/util/clickable_label.h"
 #include "citra/util/util.h"
@@ -601,10 +600,6 @@ void GMainWindow::BootProgram(const std::string& filename) {
     HLE::Applets::ErrEula::cb = [this](HLE::Applets::ErrEulaConfig& config, bool& is_running) {
         ErrEulaCallback(config, is_running);
     };
-    HLE::Applets::SoftwareKeyboard::cb = [this](HLE::Applets::SoftwareKeyboardConfig& config,
-                                                std::u16string& text, bool& is_running) {
-        SwkbdCallback(config, text, is_running);
-    };
     HLE::Applets::MiiSelector::cb = [this](const HLE::Applets::MiiConfig& config,
                                            HLE::Applets::MiiResult& result, bool& is_running) {
         MiiSelectorCallback(config, result, is_running);
@@ -714,19 +709,6 @@ void GMainWindow::ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& is_
         break;
     }
     config.return_code = HLE::Applets::ErrEulaResult::Success;
-    is_running = false;
-}
-
-void GMainWindow::SwkbdCallback(HLE::Applets::SoftwareKeyboardConfig& config, std::u16string& text,
-                                bool& is_running) {
-    if (QThread::currentThread() != thread()) {
-        QMetaObject::invokeMethod(this, "SwkbdCallback", Qt::BlockingQueuedConnection,
-                                  Q_ARG(HLE::Applets::SoftwareKeyboardConfig&, config),
-                                  Q_ARG(std::u16string&, text), Q_ARG(bool&, is_running));
-        return;
-    }
-    SoftwareKeyboardDialog dialog{this, config, text};
-    dialog.exec();
     is_running = false;
 }
 

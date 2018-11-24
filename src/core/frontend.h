@@ -7,6 +7,7 @@
 #include <memory>
 #include <tuple>
 #include "core/framebuffer_layout.h"
+#include "core/hle/applets/swkbd.h"
 
 class Frontend {
 public:
@@ -27,6 +28,9 @@ public:
     virtual void SwapBuffers() = 0;
     virtual void MakeCurrent() = 0;
     virtual void DoneCurrent() = 0;
+
+    virtual void LaunchSoftwareKeyboard(HLE::Applets::SoftwareKeyboardConfig&, std::u16string&,
+                                        bool&) = 0;
 
 private:
     Layout::FramebufferLayout framebuffer_layout; ///< Current framebuffer layout

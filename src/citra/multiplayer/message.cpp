@@ -29,14 +29,13 @@ const ConnectionError HOST_BANNED{
     "The host of the room has banned you. Speak with the host to unban you "
     "or try a different room."};
 const ConnectionError WRONG_VERSION{
-    "Version mismatch!\nIf you are connecting to a room created with official/my old builds: "
-    "There's no way to do that!\nIf you are connectiong to a room created with my new builds: "
-    "please update to the latest version. If the problem "
+    "Version mismatch! Please update to the latest version of Citra. If the problem "
     "persists, contact the room host and ask them to update the server."};
 const ConnectionError WRONG_PASSWORD{"Incorrect password."};
 const ConnectionError GENERIC_ERROR{
     "An unknown error occured. If this error continues to occur, please open an issue"};
 const ConnectionError LOST_CONNECTION{"Connection to room lost. Try to reconnect."};
+const ConnectionError HOST_KICKED{"You have been kicked by the room host."};
 const ConnectionError MAC_COLLISION{"MAC address is already in use. Please choose another."};
 const ConnectionError CONSOLE_ID_COLLISION{
     "Your Console ID conflicted with someone else's in the room.\n\nPlease go to Emulation "

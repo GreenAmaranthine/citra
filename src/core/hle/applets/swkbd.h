@@ -228,9 +228,7 @@ const SoftwareKeyboardResult results[][3]{
 };
 
 ValidationError ValidateFilters(const SoftwareKeyboardConfig& config, const std::string& input);
-
 ValidationError ValidateInput(const SoftwareKeyboardConfig& config, const std::string& input);
-
 ValidationError ValidateButton(const SoftwareKeyboardConfig& config, u8 button);
 
 class SoftwareKeyboard final : public Applet {
@@ -248,9 +246,6 @@ public:
      */
     void Finalize();
 
-    static inline std::function<void(HLE::Applets::SoftwareKeyboardConfig&, std::u16string&, bool&)>
-        cb;
-
 private:
     /// This SharedMemory will be created when we receive the LibAppJustStarted message.
     /// It holds the framebuffer info retrieved by the program with
@@ -263,4 +258,5 @@ private:
     /// Configuration of this instance of the SoftwareKeyboard, as received from the program
     SoftwareKeyboardConfig config;
 };
+
 } // namespace HLE::Applets

@@ -83,6 +83,14 @@ public:
 
     void CaptureScreenshot(u16 res_scale, const QString& screenshot_path);
 
+    Q_INVOKABLE void LaunchSoftwareKeyboardImpl(HLE::Applets::SoftwareKeyboardConfig& config,
+                                                std::u16string& text, bool& is_running);
+
+    void LaunchSoftwareKeyboard(HLE::Applets::SoftwareKeyboardConfig& config, std::u16string& text,
+                                bool& is_running) override {
+        LaunchSoftwareKeyboardImpl(config, text, is_running);
+    }
+
 public slots:
     void moveContext(); // overridden
 

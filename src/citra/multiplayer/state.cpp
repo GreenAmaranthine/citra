@@ -89,6 +89,9 @@ void MultiplayerState::OnNetworkError(const Network::RoomMember::Error& error) {
     case Network::RoomMember::Error::LostConnection:
         NetworkMessage::ShowError(NetworkMessage::LOST_CONNECTION);
         break;
+    case Network::RoomMember::Error::HostKicked:
+        NetworkMessage::ShowError(NetworkMessage::HOST_KICKED);
+        break;
     case Network::RoomMember::Error::CouldNotConnect:
         NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
         break;
@@ -109,6 +112,9 @@ void MultiplayerState::OnNetworkError(const Network::RoomMember::Error& error) {
         break;
     case Network::RoomMember::Error::WrongVersion:
         NetworkMessage::ShowError(NetworkMessage::WRONG_VERSION);
+        break;
+    case Network::RoomMember::Error::HostBanned:
+        NetworkMessage::ShowError(NetworkMessage::HOST_BANNED);
         break;
     case Network::RoomMember::Error::UnknownError:
         NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);

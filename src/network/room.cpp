@@ -381,9 +381,9 @@ void Room::RoomImpl::HandleModBanPacket(const ENetEvent* event) {
     }
     {
         std::lock_guard lock{ban_list_mutex};
-        // Ban the member's IP as well
+        // Ban the member's IP
         if (std::find(ban_list.begin(), ban_list.end(), ip) == ban_list.end())
-            ban_list.emplace_back(ip);
+            ban_list.push_back(ip);
     }
     // Announce the change to all clients.
     SendStatusMessage(IdMemberBanned, nickname);
@@ -531,9 +531,8 @@ void Room::RoomImpl::SendJoinSuccess(ENetPeer* client, MACAddress mac_address) {
 void Room::RoomImpl::SendUserKicked(ENetPeer* client) {
     Packet packet;
     packet << static_cast<u8>(IdHostKicked);
-
-    ENetPacket* enet_packet =
-        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
+    auto enet_packet{
+        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE)};
     enet_peer_send(client, 0, enet_packet);
     enet_host_flush(server);
 }
@@ -541,9 +540,8 @@ void Room::RoomImpl::SendUserKicked(ENetPeer* client) {
 void Room::RoomImpl::SendUserBanned(ENetPeer* client) {
     Packet packet;
     packet << static_cast<u8>(IdHostBanned);
-
-    ENetPacket* enet_packet =
-        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
+    auto enet_packet{
+        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE)};
     enet_peer_send(client, 0, enet_packet);
     enet_host_flush(server);
 }
@@ -551,9 +549,8 @@ void Room::RoomImpl::SendUserBanned(ENetPeer* client) {
 void Room::RoomImpl::SendModPermissionDenied(ENetPeer* client) {
     Packet packet;
     packet << static_cast<u8>(IdModPermissionDenied);
-
-    ENetPacket* enet_packet =
-        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
+    auto enet_packet{
+        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE)};
     enet_peer_send(client, 0, enet_packet);
     enet_host_flush(server);
 }
@@ -561,9 +558,8 @@ void Room::RoomImpl::SendModPermissionDenied(ENetPeer* client) {
 void Room::RoomImpl::SendModNoSuchUser(ENetPeer* client) {
     Packet packet;
     packet << static_cast<u8>(IdModNoSuchUser);
-
-    ENetPacket* enet_packet =
-        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
+    auto enet_packet{
+        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE)};
     enet_peer_send(client, 0, enet_packet);
     enet_host_flush(server);
 }

@@ -12,7 +12,6 @@
 #include "core/core.h"
 #include "core/hle/applets/erreula.h"
 #include "core/hle/applets/mii_selector.h"
-#include "core/hle/applets/swkbd.h"
 #include "core/hle/service/am/am.h"
 #include "network/room.h"
 #include "network/room_member.h"
@@ -173,8 +172,6 @@ private:
     void UpdateTitle();
 
     Q_INVOKABLE void ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& is_running);
-    Q_INVOKABLE void SwkbdCallback(HLE::Applets::SoftwareKeyboardConfig& config,
-                                   std::u16string& text, bool& is_running);
     Q_INVOKABLE void MiiSelectorCallback(const HLE::Applets::MiiConfig& config,
                                          HLE::Applets::MiiResult& result, bool& is_running);
     Q_INVOKABLE void Update3D();

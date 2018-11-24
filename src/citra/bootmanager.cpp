@@ -10,6 +10,7 @@
 #include <QScreen>
 #include <QWindow>
 #include "citra/bootmanager.h"
+#include "citra/swkbd.h"
 #include "common/scm_rev.h"
 #include "core/3ds.h"
 #include "core/core.h"
@@ -270,6 +271,19 @@ void Screens::CaptureScreenshot(u16 res_scale, const QString& screenshot_path) {
                                      LOG_INFO(Frontend, "The screenshot is saved.");
                                  },
                                  layout);
+}
+
+void Screens::LaunchSoftwareKeyboardImpl(HLE::Applets::SoftwareKeyboardConfig& config,
+                                         std::u16string& text, bool& is_running) {
+    if (QThread::currentThread() != thread()) {
+        QMetaObject::invokeMethod(this, "LaunchSoftwareKeyboardImpl", Qt::BlockingQueuedConnection,
+                                  Q_ARG(HLE::Applets::SoftwareKeyboardConfig&, config),
+                                  Q_ARG(std::u16string&, text), Q_ARG(bool&, is_running));
+        return;
+    }
+    SoftwareKeyboardDialog dialog{this, config, text};
+    dialog.exec();
+    is_running = false;
 }
 
 void Screens::OnEmulationStarting(EmuThread* emu_thread) {
