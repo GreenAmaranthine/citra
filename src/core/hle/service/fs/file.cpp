@@ -50,7 +50,7 @@ void File::Read(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_FS,
                   "Reading from out of bounds offset=0x{:X} length=0x{:08X} file_size=0x{:X}",
                   offset, length, backend->GetSize());
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
+    auto rb{rp.MakeBuilder(2, 2)};
     std::vector<u8> data(length);
     ResultVal<std::size_t> read{backend->Read(offset, data.size(), data.data())};
     if (read.Failed()) {
@@ -79,7 +79,7 @@ void File::Write(Kernel::HLERequestContext& ctx) {
     auto& buffer{rp.PopMappedBuffer()};
     LOG_TRACE(Service_FS, "Write {}: offset=0x{:X}, length={}, flush=0x{:x}", GetName(), offset,
               length, flush);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
+    auto rb{rp.MakeBuilder(2, 2)};
     const FileSessionSlot* file{GetSessionData(ctx.Session())};
     // Subfiles can not be written to
     if (file->subfile) {
@@ -112,7 +112,7 @@ void File::SetSize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0805, 2, 0};
     u64 size{rp.Pop<u64>()};
     FileSessionSlot* file{GetSessionData(ctx.Session())};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     // SetSize can not be called on subfiles.
     if (file->subfile) {
         rb.Push(FileSys::ERROR_UNSUPPORTED_OPEN_FLAGS);
@@ -149,7 +149,7 @@ void File::SetPriority(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x080A, 1, 0};
     FileSessionSlot* file{GetSessionData(ctx.Session())};
     file->priority = rp.Pop<u32>();
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 
@@ -183,7 +183,7 @@ void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0801, 4, 0};
     s64 offset{rp.PopRaw<s64>()};
     s64 size{rp.PopRaw<s64>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     const FileSessionSlot* original_file{GetSessionData(ctx.Session())};
     if (original_file->subfile) {
         // OpenSubFile can not be called on a file which is already as subfile

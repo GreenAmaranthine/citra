@@ -19,7 +19,7 @@ void SSL_C::Initialize(Kernel::HLERequestContext& ctx) {
     rand_gen.seed(rand_device());
 
     // Stub, return success
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 
@@ -52,7 +52,7 @@ void SSL_C::GenerateRandomData(Kernel::HLERequestContext& ctx) {
     }
 
     // Stub, return success
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(buffer);
 }

@@ -305,13 +305,13 @@ void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
     ASSERT(session_data);
     if (session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Tried to initialize an already initialized session");
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ERROR_STATE_ERROR);
         return;
     }
     session_data->initialized = true;
     session_data->session_id = ++session_counter;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(Settings::values.n_wifi_status == 0 ? ERROR_NO_NETWORK_CONNECTION : RESULT_SUCCESS);
     LOG_DEBUG(Service_HTTP, "shmem_size={}", shmem_size);
 }
@@ -324,14 +324,14 @@ void HTTP_C::InitializeConnectionSession(Kernel::HLERequestContext& ctx) {
     ASSERT(session_data);
     if (session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Tried to initialize an already initialized session");
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ERROR_STATE_ERROR);
         return;
     }
     // TODO: Check that the input PID matches the PID that created the context.
     auto itr{contexts.find(context_handle)};
     if (itr == contexts.end()) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrCodes::ContextNotFound, ErrorModule::HTTP, ErrorSummary::InvalidState,
                            ErrorLevel::Permanent));
         return;
@@ -340,7 +340,7 @@ void HTTP_C::InitializeConnectionSession(Kernel::HLERequestContext& ctx) {
     session_data->session_id = ++session_counter;
     // Bind the context to the current session.
     session_data->current_http_context = context_handle;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HTTP, "context_handle={}", context_handle);
 }
@@ -357,7 +357,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     ASSERT(session_data);
     if (!session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Tried to create a context on an uninitialized session");
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+        auto rb{rp.MakeBuilder(1, 2)};
         rb.Push(ERROR_STATE_ERROR);
         rb.PushMappedBuffer(buffer);
         return;
@@ -365,7 +365,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     // This command can only be called without a bound session.
     if (session_data->current_http_context) {
         LOG_ERROR(Service_HTTP, "Command called with a bound context");
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+        auto rb{rp.MakeBuilder(1, 2)};
         rb.Push(ResultCode(ErrorDescription::NotImplemented, ErrorModule::HTTP,
                            ErrorSummary::Internal, ErrorLevel::Permanent));
         rb.PushMappedBuffer(buffer);
@@ -375,7 +375,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     if (session_data->num_http_contexts >= MaxConcurrentHTTPContexts) {
         // There can only be 8 HTTP contexts open at the same time for any particular session.
         LOG_ERROR(Service_HTTP, "Tried to open too many HTTP contexts");
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+        auto rb{rp.MakeBuilder(1, 2)};
         rb.Push(ResultCode(ErrCodes::TooManyContexts, ErrorModule::HTTP, ErrorSummary::InvalidState,
                            ErrorLevel::Permanent));
         rb.PushMappedBuffer(buffer);
@@ -383,7 +383,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     }
     if (method == RequestMethod::None || static_cast<u32>(method) >= TotalRequestMethods) {
         LOG_ERROR(Service_HTTP, "invalid request method {}", static_cast<u32>(method));
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+        auto rb{rp.MakeBuilder(1, 2)};
         rb.Push(ResultCode(ErrCodes::InvalidRequestMethod, ErrorModule::HTTP,
                            ErrorSummary::InvalidState, ErrorLevel::Permanent));
         rb.PushMappedBuffer(buffer);
@@ -399,7 +399,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     context.session_id = session_data->session_id;
     context.headers = std::make_unique<httplib::Headers>();
     ++session_data->num_http_contexts;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
+    auto rb{rp.MakeBuilder(2, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(context_counter);
     rb.PushMappedBuffer(buffer);
@@ -414,7 +414,7 @@ void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
     ASSERT(session_data);
     if (!session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Tried to close a context on an uninitialized session");
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ERROR_STATE_ERROR);
         return;
     }
@@ -423,7 +423,7 @@ void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
     auto itr{contexts.find(context_handle)};
     if (itr == contexts.end()) {
         // The real HTTP module just silently fails in this case.
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(RESULT_SUCCESS);
         LOG_ERROR(Service_HTTP, "context {} not found", context_handle);
         return;
@@ -432,7 +432,7 @@ void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
     contexts.erase(itr);
     --context_counter;
     --session_data->num_http_contexts;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HTTP, "context_handle={}", context_handle);
 }
@@ -453,7 +453,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     ASSERT(session_data);
     if (!session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Tried to add a request header on an uninitialized session");
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+        auto rb{rp.MakeBuilder(1, 2)};
         rb.Push(ERROR_STATE_ERROR);
         rb.PushMappedBuffer(value_buffer);
         return;
@@ -461,7 +461,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     // This command can only be called with a bound context
     if (!session_data->current_http_context) {
         LOG_ERROR(Service_HTTP, "Command called without a bound context");
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+        auto rb{rp.MakeBuilder(1, 2)};
         rb.Push(ResultCode(ErrorDescription::NotImplemented, ErrorModule::HTTP,
                            ErrorSummary::Internal, ErrorLevel::Permanent));
         rb.PushMappedBuffer(value_buffer);
@@ -472,7 +472,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
                   "Tried to add a request header on a mismatched session input context={}, session "
                   "context={}",
                   context_handle, *session_data->current_http_context);
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+        auto rb{rp.MakeBuilder(1, 2)};
         rb.Push(ERROR_STATE_ERROR);
         rb.PushMappedBuffer(value_buffer);
         return;
@@ -482,7 +482,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     if (itr->second.state != RequestState::NotStarted) {
         LOG_ERROR(Service_HTTP,
                   "Tried to add a request header on a context that has already been started.");
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+        auto rb{rp.MakeBuilder(1, 2)};
         rb.Push(ResultCode(ErrCodes::InvalidRequestState, ErrorModule::HTTP,
                            ErrorSummary::InvalidState, ErrorLevel::Permanent));
         rb.PushMappedBuffer(value_buffer);
@@ -491,7 +491,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     if (itr->second.headers->headers.find(name) != itr->second.headers->headers.end())
         itr->second.headers->headers.erase(name);
     itr->second.headers->headers.emplace(name, value);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(value_buffer);
     LOG_DEBUG(Service_HTTP, "name={}, value={}, context_handle={}", name, value, context_handle);
@@ -526,7 +526,7 @@ void HTTP_C::OpenClientCertContext(Kernel::HLERequestContext& ctx) {
         ++session_data->num_client_certs;
     }
     LOG_DEBUG(Service_HTTP, "cert_size={}, key_size={}", cert_size, key_size);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 4)};
+    auto rb{rp.MakeBuilder(2, 4)};
     rb.Push(result);
     rb.Push<u32>(client_certs_counter);
     rb.PushMappedBuffer(cert_buffer);
@@ -540,32 +540,32 @@ void HTTP_C::OpenDefaultClientCertContext(Kernel::HLERequestContext& ctx) {
     ASSERT(session_data);
     if (!session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Command called with uninitialized session");
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ERROR_STATE_ERROR);
         return;
     }
     if (session_data->current_http_context) {
         LOG_ERROR(Service_HTTP, "Command called with a bound context");
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ERROR_NOT_IMPLEMENTED);
         return;
     }
     if (session_data->num_client_certs >= 2) {
         LOG_ERROR(Service_HTTP, "tried to load more then 2 client certs");
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ERROR_TOO_MANY_CLIENT_CERTS);
         return;
     }
     constexpr u8 default_cert_id{0x40};
     if (cert_id != default_cert_id) {
         LOG_ERROR(Service_HTTP, "called with invalid cert_id {}", cert_id);
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ERROR_WRONG_CERT_ID);
         return;
     }
     if (!ClCertA.init) {
         LOG_ERROR(Service_HTTP, "called but ClCertA is missing");
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(static_cast<ResultCode>(-1));
         return;
     }
@@ -575,7 +575,7 @@ void HTTP_C::OpenDefaultClientCertContext(Kernel::HLERequestContext& ctx) {
                                            session_data->session_id == i.second.session_id;
                                 })};
     if (it != client_certs.end()) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+        auto rb{rp.MakeBuilder(2, 0)};
         rb.Push(RESULT_SUCCESS);
         rb.Push<u32>(it->first);
         LOG_DEBUG(Service_HTTP, "called with an already loaded cert_id={}", cert_id);
@@ -587,7 +587,7 @@ void HTTP_C::OpenDefaultClientCertContext(Kernel::HLERequestContext& ctx) {
     cert.private_key = ClCertA.private_key;
     cert.session_id = session_data->session_id;
     ++session_data->num_client_certs;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(client_certs_counter);
     LOG_DEBUG(Service_HTTP, "cert_id={}", cert_id);
@@ -600,14 +600,14 @@ void HTTP_C::CloseClientCertContext(Kernel::HLERequestContext& ctx) {
     ASSERT(session_data);
     if (client_certs.find(cert_handle) == client_certs.end()) {
         LOG_ERROR(Service_HTTP, "Command called with a unknown client cert handle {}", cert_handle);
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         // This just return success without doing anything
         rb.Push(RESULT_SUCCESS);
         return;
     }
     if (client_certs[cert_handle].session_id != session_data->session_id) {
         LOG_ERROR(Service_HTTP, "called from another main session");
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         // This just return success without doing anything
         rb.Push(RESULT_SUCCESS);
         return;
@@ -615,7 +615,7 @@ void HTTP_C::CloseClientCertContext(Kernel::HLERequestContext& ctx) {
     client_certs.erase(cert_handle);
     --client_certs_counter;
     --session_data->num_client_certs;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HTTP, "cert_handle={}", cert_handle);
 }
@@ -625,7 +625,7 @@ void HTTP_C::GetRequestState(Kernel::HLERequestContext& ctx) {
     const u32 context_id{rp.Pop<u32>()};
     auto itr{contexts.find(context_id)};
     ASSERT(itr != contexts.end());
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.PushEnum<RequestState>(itr->second.state);
     LOG_DEBUG(Service_HTTP, "state={}", static_cast<u32>(itr->second.state));
@@ -637,7 +637,7 @@ void HTTP_C::GetDownloadSizeState(Kernel::HLERequestContext& ctx) {
     auto itr{contexts.find(context_id)};
     ASSERT(itr != contexts.end());
     u32 content_length{itr->second.GetResponseContentLength()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(3, 0)};
+    auto rb{rp.MakeBuilder(3, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(itr->second.current_offset);
     rb.Push<u32>(content_length);
@@ -664,7 +664,7 @@ void HTTP_C::AddPostDataAscii(Kernel::HLERequestContext& ctx) {
     post_data.ascii.name = name;
     post_data.ascii.value = value;
     itr->second.post_data.push_back(post_data);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HTTP, "context_id={}, name={}, value={}", context_id, name, value);
 }
@@ -688,7 +688,7 @@ void HTTP_C::AddPostDataBinary(Kernel::HLERequestContext& ctx) {
     post_data.binary.name = name;
     post_data.binary.data = data;
     itr->second.post_data.push_back(post_data);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HTTP, "context_id={}, name={}, data={}", context_id, name,
               std::string(reinterpret_cast<const char*>(data.data())));
@@ -708,7 +708,7 @@ void HTTP_C::AddPostDataRaw(Kernel::HLERequestContext& ctx) {
     post_data.type = PostData::Type::Raw;
     post_data.raw.data = data;
     itr->second.post_data.push_back(post_data);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(buffer);
     LOG_DEBUG(Service_HTTP, "context_id={}, data={}", context_id, data);
@@ -720,7 +720,7 @@ void HTTP_C::SetPostDataType(Kernel::HLERequestContext& ctx) {
     const u8 type{rp.Pop<u8>()};
     auto itr{contexts.find(context_id)};
     ASSERT(itr != contexts.end());
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_HTTP, "(stubbed) context_id={}, type={}", context_id,
                 static_cast<u32>(type));
@@ -742,7 +742,7 @@ void HTTP_C::SendPOSTDataRawTimeout(Kernel::HLERequestContext& ctx) {
     post_data.type = PostData::Type::Raw;
     post_data.raw.data = data;
     itr->second.post_data.push_back(post_data);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(buffer);
     LOG_DEBUG(Service_HTTP, "context_id={}, buffer_size={}, timeout={}, data={}", context_id,
@@ -754,7 +754,7 @@ void HTTP_C::NotifyFinishSendPostData(Kernel::HLERequestContext& ctx) {
     const u32 context_id{rp.Pop<u32>()};
     auto itr{contexts.find(context_id)};
     ASSERT(itr != contexts.end());
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_HTTP, "(stubbed) context_id={}", context_id);
 }
@@ -774,14 +774,14 @@ void HTTP_C::GetResponseHeader(Kernel::HLERequestContext& ctx) {
         if (value.length() > value_max_size)
             value.resize(value_max_size);
         value_buffer.Write(value.c_str(), 0, value.length());
-        IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
+        auto rb{rp.MakeBuilder(2, 2)};
         rb.Push(RESULT_SUCCESS);
         rb.Push<u32>(value.length());
         rb.PushMappedBuffer(value_buffer);
         LOG_DEBUG(Service_HTTP, "name={}, name_size={}, value={}, value_max_size={}, context_id={}",
                   name, name_size, value, value_max_size, context_id);
     } else {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ERROR_HEADER_NOT_FOUND);
         LOG_ERROR(Service_HTTP,
                   "Header not found (name={}, name_size={}, value_max_size={}, context_id={})",
@@ -806,7 +806,7 @@ void HTTP_C::GetResponseHeaderTimeout(Kernel::HLERequestContext& ctx) {
         if (value.length() > value_max_size)
             value.resize(value_max_size);
         value_buffer.Write(value.c_str(), 0, value.length());
-        IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
+        auto rb{rp.MakeBuilder(2, 2)};
         rb.Push(RESULT_SUCCESS);
         rb.Push<u32>(value.length());
         rb.PushMappedBuffer(value_buffer);
@@ -814,7 +814,7 @@ void HTTP_C::GetResponseHeaderTimeout(Kernel::HLERequestContext& ctx) {
                   "name={}, name_size={}, value={}, value_max_size={}, timeout={}, context_id={}",
                   name, name_size, value, value_max_size, timeout, context_id);
     } else {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ERROR_HEADER_NOT_FOUND);
         LOG_ERROR(Service_HTTP,
                   "Header not found (name={}, name_size={}, value_max_size={}, timeout={}, "
@@ -834,7 +834,7 @@ void HTTP_C::GetResponseData(Kernel::HLERequestContext& ctx) {
     if (raw.length() > max_buffer_size)
         raw.resize(max_buffer_size);
     buffer.Write(raw.c_str(), 0, raw.length());
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
+    auto rb{rp.MakeBuilder(2, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(raw.length());
     rb.PushMappedBuffer(buffer);
@@ -854,7 +854,7 @@ void HTTP_C::GetResponseDataTimeout(Kernel::HLERequestContext& ctx) {
     if (raw.length() > max_buffer_size)
         raw.resize(max_buffer_size);
     buffer.Write(raw.c_str(), 0, raw.length());
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
+    auto rb{rp.MakeBuilder(2, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(raw.length());
     rb.PushMappedBuffer(buffer);
@@ -867,7 +867,7 @@ void HTTP_C::GetResponseStatusCode(Kernel::HLERequestContext& ctx) {
     const u32 context_id{rp.Pop<u32>()};
     auto itr{contexts.find(context_id)};
     ASSERT(itr != contexts.end());
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(static_cast<u32>(itr->second.response->status));
     LOG_DEBUG(Service_HTTP, "context_id={}, status={}", context_id, itr->second.response->status);
@@ -880,7 +880,7 @@ void HTTP_C::GetResponseStatusCodeTimeout(Kernel::HLERequestContext& ctx) {
     auto itr{contexts.find(context_id)};
     ASSERT(itr != contexts.end());
     itr->second.timeout = timeout;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(static_cast<u32>(itr->second.response->status));
     LOG_DEBUG(Service_HTTP, "context_id={}, timeout={}, status={}", context_id, timeout,
@@ -903,7 +903,7 @@ void HTTP_C::AddTrustedRootCA(Kernel::HLERequestContext& ctx) {
     cert.certificate.resize(buffer_size);
     buffer.Read(cert.certificate.data(), 0, buffer_size);
     itr->second.ssl_config.root_ca_chain.certificates.push_back(cert);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(static_cast<u32>(itr->second.response->status));
     LOG_DEBUG(Service_HTTP, "context_id={}, buffer_size={}", context_id, buffer_size);
@@ -924,7 +924,7 @@ void HTTP_C::AddDefaultCert(Kernel::HLERequestContext& ctx) {
     cert.handle = ++itr->second.ssl_config.root_ca_chain.certs_counter;
     cert.certificate = default_root_certs[cert_id].certificate;
     itr->second.ssl_config.root_ca_chain.certificates.push_back(cert);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HTTP, "context_id={}, cert_id={}", context_id, cert_id);
 }
@@ -943,7 +943,7 @@ void HTTP_C::RootCertChainAddCert(Kernel::HLERequestContext& ctx) {
     cert.handle = ++itr->second.certs_counter;
     buffer.Read(cert.certificate.data(), 0, buffer_size);
     itr->second.certificates.push_back(cert);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(itr->second.certs_counter);
     LOG_DEBUG(Service_HTTP, "context_id={}, buffer_size={}, cert_id={}", context_id, buffer_size,
@@ -962,7 +962,7 @@ void HTTP_C::RootCertChainRemoveCert(Kernel::HLERequestContext& ctx) {
         itr->second.certificates.erase(cert_itr);
         itr->second.certs_counter--;
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HTTP, "context_id={}, cert_id={}", context_id, cert_id);
 }
@@ -983,7 +983,7 @@ void HTTP_C::SetClientCertContext(Kernel::HLERequestContext& ctx) {
     itr->second.ssl_config.client_cert_ctx.handle = cert_itr->second.handle;
     itr->second.ssl_config.client_cert_ctx.private_key = cert_itr->second.private_key;
     itr->second.ssl_config.client_cert_ctx.session_id = session_data->session_id;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_HTTP, "context_id={}, client_cert_context_id={}", context_id,
@@ -997,7 +997,7 @@ void HTTP_C::SetSSLOpt(Kernel::HLERequestContext& ctx) {
     auto itr{contexts.find(context_id)};
     ASSERT(itr != contexts.end());
     itr->second.ssl_config.options = ssl_options;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HTTP, "context_id={}, ssl_options=0x{:X}", context_id, ssl_options);
 }
@@ -1009,7 +1009,7 @@ void HTTP_C::SetSSLClearOpt(Kernel::HLERequestContext& ctx) {
     auto itr{contexts.find(context_id)};
     ASSERT(itr != contexts.end());
     itr->second.ssl_config.options &= ~bitmask;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HTTP, "context_id={}, bitmask=0x{:X}", context_id, bitmask);
 }
@@ -1027,7 +1027,7 @@ void HTTP_C::BeginRequest(Kernel::HLERequestContext& ctx) {
     itr->second.state = RequestState::InProgress;
     itr->second.Send();
     itr->second.state = RequestState::ReadyToDownloadContent;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HTTP, "context_id={}", context_id);
 }
@@ -1045,7 +1045,7 @@ void HTTP_C::BeginRequestAsync(Kernel::HLERequestContext& ctx) {
     itr->second.state = RequestState::InProgress;
     itr->second.Send();
     itr->second.state = RequestState::ReadyToDownloadContent;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HTTP, "context_id={}", context_id);
 }
@@ -1061,7 +1061,7 @@ void HTTP_C::ReceiveData(Kernel::HLERequestContext& ctx) {
         std::min(buffer_size, itr->second.GetResponseContentLength() - itr->second.current_offset)};
     buffer.Write(&itr->second.response->body[itr->second.current_offset], 0, size);
     itr->second.current_offset += size;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(itr->second.current_offset < itr->second.GetResponseContentLength()
                 ? RESULT_DOWNLOADPENDING
                 : RESULT_SUCCESS);
@@ -1082,7 +1082,7 @@ void HTTP_C::ReceiveDataTimeout(Kernel::HLERequestContext& ctx) {
         std::min(buffer_size, itr->second.GetResponseContentLength() - itr->second.current_offset)};
     buffer.Write(&itr->second.response->body[itr->second.current_offset], 0, size);
     itr->second.current_offset += size;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(itr->second.current_offset < itr->second.GetResponseContentLength()
                 ? RESULT_DOWNLOADPENDING
                 : RESULT_SUCCESS);
@@ -1097,7 +1097,7 @@ void HTTP_C::SetProxyDefault(Kernel::HLERequestContext& ctx) {
     auto itr{contexts.find(context_id)};
     ASSERT(itr != contexts.end());
     itr->second.proxy_default = true;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HTTP, "context_id={}", context_id);
 }
@@ -1109,7 +1109,7 @@ void HTTP_C::SetKeepAlive(Kernel::HLERequestContext& ctx) {
     auto itr{contexts.find(context_id)};
     ASSERT(itr != contexts.end());
     itr->second.SetKeepAlive(keep_alive);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HTTP, "context_id={}, keep_alive={}", context_id, keep_alive);
 }
@@ -1121,7 +1121,7 @@ void HTTP_C::SetSocketBufferSize(Kernel::HLERequestContext& ctx) {
     auto itr{contexts.find(context_id)};
     ASSERT(itr != contexts.end());
     itr->second.socket_buffer_size = val;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HTTP, "val={}", val);
 }
@@ -1141,7 +1141,7 @@ void HTTP_C::GetSSLError(Kernel::HLERequestContext& ctx) {
     const u32 context_id{rp.Pop<u32>()};
     auto itr{contexts.find(context_id)};
     ASSERT(itr != contexts.end());
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(itr->second.ssl_error);
     LOG_DEBUG(Service_HTTP, "ssl_error={}", itr->second.ssl_error);
@@ -1169,7 +1169,7 @@ void HTTP_C::DestroyRootCertChain(Kernel::HLERequestContext& ctx) {
     root_cert_chains.erase(context_id);
     --root_cert_chains_counter;
     --session_data->num_root_cert_chains;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 
@@ -1187,7 +1187,7 @@ void HTTP_C::RootCertChainAddDefaultCert(Kernel::HLERequestContext& ctx) {
     cert.handle = ++itr->second.certs_counter;
     cert.certificate = default_root_certs[cert_id].certificate;
     itr->second.certificates.push_back(cert);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(itr->second.certs_counter);
 }
@@ -1203,7 +1203,7 @@ void HTTP_C::SelectRootCertChain(Kernel::HLERequestContext& ctx) {
     auto chain_itr{root_cert_chains.find(chain_id)};
     ASSERT(chain_itr != root_cert_chains.end());
     itr->second.ssl_config.root_ca_chain = chain_itr->second;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 
@@ -1224,7 +1224,7 @@ void HTTP_C::SetClientCert(Kernel::HLERequestContext& ctx) {
                      cert_buffer_size);
     private_key_buffer.Read(itr->second.ssl_config.client_cert_ctx.private_key.data(), 0,
                             private_key_buffer_size);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_HTTP, "context_id={}, cert_buffer_size={}, private_key_buffer_size={}",
               context_id, cert_buffer_size, private_key_buffer_size);
@@ -1237,7 +1237,7 @@ void HTTP_C::SetClientCertDefault(Kernel::HLERequestContext& ctx) {
     auto itr{contexts.find(context_id)};
     ASSERT(itr != contexts.end());
     if (cert_id != 0x40) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ERROR_WRONG_CERT_ID);
         return;
     }
@@ -1247,7 +1247,7 @@ void HTTP_C::SetClientCertDefault(Kernel::HLERequestContext& ctx) {
         itr->second.ssl_config.client_cert_ctx.certificate = ClCertA.certificate;
         itr->second.ssl_config.client_cert_ctx.private_key = ClCertA.private_key;
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 
@@ -1267,7 +1267,7 @@ void HTTP_C::SetBasicAuthorization(Kernel::HLERequestContext& ctx) {
     itr->second.basic_auth = Context::BasicAuth{};
     itr->second.basic_auth->username = username;
     itr->second.basic_auth->password = password;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_HTTP, "(stubbed) username={}, password={}", username, password);
 }
@@ -1295,7 +1295,7 @@ void HTTP_C::SetProxy(Kernel::HLERequestContext& ctx) {
     itr->second.proxy->username = username;
     itr->second.proxy->password = password;
     itr->second.proxy->port = port;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_HTTP, "(stubbed) proxy={}, username={}, password={}, port={}", proxy,
                 username, password, username);

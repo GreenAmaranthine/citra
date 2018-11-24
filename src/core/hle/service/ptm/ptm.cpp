@@ -67,7 +67,7 @@ void Module::Interface::GetStepHistory(Kernel::HLERequestContext& ctx) {
         const u16_le steps_per_hour{};
         buffer.Write(&steps_per_hour, i * sizeof(u16), sizeof(u16));
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(buffer);
     LOG_WARNING(Service_PTM, "(stubbed) from time(raw): 0x{:X}, for {} hours", start_time, hours);
@@ -90,7 +90,7 @@ void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
 void Module::Interface::ConfigureNew3DSCPU(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x818, 1, 0};
     u8 value{static_cast<u8>(rp.Pop<u8>() & 0xF)};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_PTM, "stubbed");
 }

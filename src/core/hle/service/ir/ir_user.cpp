@@ -227,7 +227,7 @@ void IR_USER::InitializeIrNopShared(Kernel::HLERequestContext& ctx) {
     const u32 send_buff_packet_count{rp.Pop<u32>()};
     const u8 baud_rate{rp.Pop<u8>()};
     shared_memory = rp.PopObject<Kernel::SharedMemory>();
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     shared_memory->SetName("ir:USER Shared Memory");
     receive_buffer = std::make_unique<BufferManager>(shared_memory, 0x10, 0x20,
                                                      recv_buff_packet_count, recv_buff_size);
@@ -261,7 +261,7 @@ void IR_USER::RequireConnection(Kernel::HLERequestContext& ctx) {
         shared_memory_ptr[offsetof(SharedMemoryHeader, connection_status)] = 1;
         shared_memory_ptr[offsetof(SharedMemoryHeader, trying_to_connect_status)] = 2;
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_IR, "device_id={}", device_id);
 }
@@ -314,9 +314,9 @@ void IR_USER::FinalizeIrNop(Kernel::HLERequestContext& ctx) {
 void IR_USER::SendIrNop(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0D, 1, 2};
     const u32 size{rp.Pop<u32>()};
-    std::vector<u8> buffer{rp.PopStaticBuffer()};
+    auto& buffer{rp.PopStaticBuffer()};
     ASSERT(size == buffer.size());
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     if (connected_device) {
         connected_device->OnReceive(buffer);
         send_event->Signal();
@@ -337,7 +337,7 @@ void IR_USER::SendIrNop(Kernel::HLERequestContext& ctx) {
 void IR_USER::ReleaseReceivedData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x19, 1, 0};
     u32 count{rp.Pop<u32>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     if (receive_buffer->Release(count))
         rb.Push(RESULT_SUCCESS);
     else {

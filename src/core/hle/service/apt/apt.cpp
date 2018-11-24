@@ -39,11 +39,11 @@ void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
               attributes);
     auto result{apt->applet_manager->Initialize(program_id, attributes)};
     if (result.Failed()) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(result.Code());
     } else {
         auto events{std::move(result).Unwrap()};
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 3)};
+        auto rb{rp.MakeBuilder(1, 3)};
         rb.Push(RESULT_SUCCESS);
         rb.PushCopyObjects(events.notification_event, events.parameter_event);
     }
@@ -188,7 +188,7 @@ void Module::Interface::GetSharedFont(Kernel::HLERequestContext& ctx) {
 void Module::Interface::NotifyToWait(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x43, 1, 0};
     u32 program_id{rp.Pop<u32>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS); // No error
     LOG_WARNING(Service_APT, "(stubbed) program_id={}", program_id);
 }
@@ -199,7 +199,7 @@ void Module::Interface::GetLockHandle(Kernel::HLERequestContext& ctx) {
     // Bit 5 tells the program that there's a pending APT parameter,
     // this will cause the program to wait until parameter_event is signaled.
     u32 applet_attributes{rp.Pop<u32>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(3, 2)};
+    auto rb{rp.MakeBuilder(3, 2)};
     rb.Push(RESULT_SUCCESS); // No error
     // TODO: The output attributes should have an AppletPos of either Library or System |
     // Library (depending on the type of the last launched applet) if the input attributes'
@@ -213,7 +213,7 @@ void Module::Interface::GetLockHandle(Kernel::HLERequestContext& ctx) {
 void Module::Interface::Enable(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x3, 1, 0};
     u32 attributes{rp.Pop<u32>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(apt->applet_manager->Enable(attributes));
 
     LOG_DEBUG(Service_APT, "attributes={:#010X}", attributes);
@@ -222,7 +222,7 @@ void Module::Interface::Enable(Kernel::HLERequestContext& ctx) {
 void Module::Interface::GetAppletManInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x5, 1, 0};
     u32 unk{rp.Pop<u32>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(5, 0)};
+    auto rb{rp.MakeBuilder(5, 0)};
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push<u32>(0);
     rb.Push<u32>(0);
@@ -235,7 +235,7 @@ void Module::Interface::GetAppletManInfo(Kernel::HLERequestContext& ctx) {
 void Module::Interface::IsRegistered(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x9, 1, 0};
     AppletId program_id{rp.PopEnum<AppletId>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(apt->applet_manager->IsRegistered(program_id));
 
@@ -245,7 +245,7 @@ void Module::Interface::IsRegistered(Kernel::HLERequestContext& ctx) {
 void Module::Interface::InquireNotification(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0xB, 1, 0};
     u32 program_id{rp.Pop<u32>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);                     // No error
     rb.Push(static_cast<u32>(SignalType::None)); // Signal type
     LOG_WARNING(Service_APT, "(stubbed) program_id={:#010X}", program_id);
@@ -264,7 +264,7 @@ void Module::Interface::SendParameter(Kernel::HLERequestContext& ctx) {
               "buffer_size={:#010X}",
               static_cast<u32>(src_program_id), static_cast<u32>(dst_program_id),
               static_cast<u32>(signal_type), buffer_size);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     MessageParameter param;
     param.destination_id = dst_program_id;
     param.sender_id = src_program_id;
@@ -282,11 +282,11 @@ void Module::Interface::ReceiveParameter(Kernel::HLERequestContext& ctx) {
               static_cast<u32>(program_id), buffer_size);
     auto next_parameter{apt->applet_manager->ReceiveParameter(program_id)};
     if (next_parameter.Failed()) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(next_parameter.Code());
         return;
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(4, 4)};
+    auto rb{rp.MakeBuilder(4, 4)};
     rb.Push(RESULT_SUCCESS); // No error
     rb.PushEnum(next_parameter->sender_id);
     rb.PushEnum(next_parameter->signal); // Signal type
@@ -305,11 +305,11 @@ void Module::Interface::GlanceParameter(Kernel::HLERequestContext& ctx) {
               static_cast<u32>(program_id), buffer_size);
     auto next_parameter{apt->applet_manager->GlanceParameter(program_id)};
     if (next_parameter.Failed()) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(next_parameter.Code());
         return;
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(4, 4)};
+    auto rb{rp.MakeBuilder(4, 4)};
     rb.Push(RESULT_SUCCESS); // No error
     rb.PushEnum(next_parameter->sender_id);
     rb.PushEnum(next_parameter->signal); // Signal type
@@ -326,7 +326,7 @@ void Module::Interface::CancelParameter(Kernel::HLERequestContext& ctx) {
     AppletId sender_appid{rp.PopEnum<AppletId>()};
     bool check_receiver{rp.Pop<bool>()};
     AppletId receiver_appid{rp.PopEnum<AppletId>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(apt->applet_manager->CancelParameter(check_sender, sender_appid, check_receiver,
                                                  receiver_appid));
@@ -345,7 +345,7 @@ void Module::Interface::PrepareToStartApplication(Kernel::HLERequestContext& ctx
         apt->unknown_ns_state_field = 1;
     apt->jump_program_id = program_info.program_id;
     apt->jump_media = static_cast<FS::MediaType>(program_info.media_type);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS); // No error
     LOG_DEBUG(Service_APT, "program_id=0x{:016X}, media_type=0x{:X}, flags={:#010X}",
               program_info.program_id, program_info.media_type, flags);
@@ -362,7 +362,7 @@ void Module::Interface::StartApplication(Kernel::HLERequestContext& ctx) {
     apt->system.hmac = rp.PopStaticBuffer();
     apt->system.hmac.resize(hmac_size);
     apt->system.SetProgram(AM::GetProgramContentPath(apt->jump_media, apt->jump_program_id));
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS); // No error
     LOG_DEBUG(Service_APT, "parameter_size={:#010X}, hmac_size={:#010X}, paused={}", parameter_size,
               hmac_size, paused);
@@ -375,7 +375,7 @@ void Module::Interface::AppletUtility(Kernel::HLERequestContext& ctx) {
     u32 input_size{rp.Pop<u32>()};
     u32 output_size{rp.Pop<u32>()};
     std::vector<u8> input{rp.PopStaticBuffer()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS); // No error
     LOG_WARNING(Service_APT,
                 "(stubbed) command={:#010X}, input_size={:#010X}, output_size={:#010X}",
@@ -388,7 +388,7 @@ void Module::Interface::SetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
     apt->cpu_percent = rp.Pop<u32>();
     if (value != 1)
         LOG_ERROR(Service_APT, "This value should be one, but is actually {}!", value);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS); // No error
     LOG_WARNING(Service_APT, "(stubbed) cpu_percent={}, value={}", apt->cpu_percent, value);
 }
@@ -398,7 +398,7 @@ void Module::Interface::GetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
     u32 value{rp.Pop<u32>()};
     if (value != 1)
         LOG_ERROR(Service_APT, "This value should be one, but is actually {}!", value);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(apt->cpu_percent);
     LOG_WARNING(Service_APT, "(stubbed) value={}", value);
@@ -407,7 +407,7 @@ void Module::Interface::GetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
 void Module::Interface::PrepareToStartLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x18, 1, 0};
     AppletId applet_id{rp.PopEnum<AppletId>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(apt->applet_manager->PrepareToStartLibraryApplet(applet_id));
     LOG_DEBUG(Service_APT, "applet_id={:08X}", static_cast<u32>(applet_id));
 }
@@ -426,14 +426,14 @@ void Module::Interface::PreloadLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x16, 1, 0};
     AppletId applet_id{rp.PopEnum<AppletId>()};
     LOG_DEBUG(Service_APT, "applet_id={:08X}", static_cast<u32>(applet_id));
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(apt->applet_manager->PreloadLibraryApplet(applet_id));
 }
 
 void Module::Interface::FinishPreloadingLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x17, 1, 0};
     AppletId applet_id{rp.PopEnum<AppletId>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(apt->applet_manager->FinishPreloadingLibraryApplet(applet_id));
     LOG_WARNING(Service_APT, "(stubbed) applet_id={:#05X}", static_cast<u32>(applet_id));
 }
@@ -445,7 +445,7 @@ void Module::Interface::StartLibraryApplet(Kernel::HLERequestContext& ctx) {
     Kernel::SharedPtr<Kernel::Object> object{rp.PopGenericObject()};
     std::vector<u8> buffer{rp.PopStaticBuffer()};
     LOG_DEBUG(Service_APT, "applet_id={:08X}", static_cast<u32>(applet_id));
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(apt->applet_manager->StartLibraryApplet(applet_id, object, buffer));
 }
 
@@ -456,7 +456,7 @@ void Module::Interface::CloseApplication(Kernel::HLERequestContext& ctx) {
     std::vector<u8> buffer{rp.PopStaticBuffer()};
     LOG_DEBUG(Service_APT, "called");
     apt->system.CloseProgram();
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 
@@ -466,7 +466,7 @@ void Module::Interface::PrepareToDoApplicationJump(Kernel::HLERequestContext& ct
     apt->jump_program_id = rp.Pop<u64>();
     apt->jump_media = static_cast<FS::MediaType>(rp.Pop<u8>());
     apt->program_restart = flags == 0x2;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 
@@ -486,14 +486,14 @@ void Module::Interface::DoApplicationJump(Kernel::HLERequestContext& ctx) {
         apt->system.CloseProgram();
     else
         apt->system.SetProgram(AM::GetProgramContentPath(apt->jump_media, apt->jump_program_id));
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 
 void Module::Interface::CancelLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x3B, 1, 0};
     bool exiting{rp.Pop<bool>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push<u32>(1); // TODO: Find the return code meaning
     LOG_WARNING(Service_APT, "(stubbed) exiting={}", exiting);
 }
@@ -503,7 +503,7 @@ void Module::Interface::PrepareToCloseLibraryApplet(Kernel::HLERequestContext& c
     bool not_pause{rp.Pop<bool>()};
     bool exiting{rp.Pop<bool>()};
     bool jump_to_home{rp.Pop<bool>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(apt->applet_manager->PrepareToCloseLibraryApplet(not_pause, exiting, jump_to_home));
     LOG_DEBUG(Service_APT, "not_pause={}, exiting={}, jump_to_home={}", not_pause, exiting,
               jump_to_home);
@@ -515,7 +515,7 @@ void Module::Interface::CloseLibraryApplet(Kernel::HLERequestContext& ctx) {
     auto object{rp.PopGenericObject()};
     std::vector<u8> buffer{rp.PopStaticBuffer()};
     LOG_DEBUG(Service_APT, "size={}", parameter_size);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(apt->applet_manager->CloseLibraryApplet(std::move(object), std::move(buffer)));
 }
 
@@ -527,7 +527,7 @@ void Module::Interface::SendDspSleep(Kernel::HLERequestContext& ctx) {
     std::vector<u8> buffer(4);
     buffer[0] = 3;
     apt->system.DSP().PipeWrite(AudioCore::DspPipe::Audio, buffer);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 
@@ -539,7 +539,7 @@ void Module::Interface::SendDspWakeUp(Kernel::HLERequestContext& ctx) {
     std::vector<u8> buffer(4);
     buffer[0] = 2;
     apt->system.DSP().PipeWrite(AudioCore::DspPipe::Audio, buffer);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 
@@ -548,7 +548,7 @@ void Module::Interface::SendCaptureBufferInfo(Kernel::HLERequestContext& ctx) {
     u32 size{rp.Pop<u32>()};
     ASSERT(size == 0x20);
     apt->screen_capture_buffer = rp.PopStaticBuffer();
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 
@@ -556,7 +556,7 @@ void Module::Interface::ReceiveCaptureBufferInfo(Kernel::HLERequestContext& ctx)
     IPC::RequestParser rp{ctx, 0x41, 1, 0};
     u32 size{rp.Pop<u32>()};
     ASSERT(size == 0x20);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
+    auto rb{rp.MakeBuilder(2, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(static_cast<u32>(apt->screen_capture_buffer.size()));
     rb.PushStaticBuffer(std::move(apt->screen_capture_buffer), 0);
@@ -566,14 +566,14 @@ void Module::Interface::SleepSystem(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x42, 2, 0};
     u64 time{rp.Pop<u64>()};
     std::this_thread::sleep_for(std::chrono::nanoseconds{time});
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 
 void Module::Interface::SetScreenCapPostPermission(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x55, 1, 0};
     apt->screen_capture_post_permission = static_cast<ScreencapPostPermission>(rp.Pop<u32>() & 0xF);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS); // No error
     LOG_WARNING(Service_APT, "(stubbed) screen_capture_post_permission={}",
                 static_cast<u32>(apt->screen_capture_post_permission));
@@ -593,10 +593,10 @@ void Module::Interface::GetAppletInfo(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_APT, "program_id={}", static_cast<u32>(program_id));
     auto info{apt->applet_manager->GetAppletInfo(program_id)};
     if (info.Failed()) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(info.Code());
     } else {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(7, 0)};
+        auto rb{rp.MakeBuilder(7, 0)};
         rb.Push(RESULT_SUCCESS);
         rb.Push(info->program_id);
         rb.Push(static_cast<u8>(info->media_type));
@@ -622,7 +622,7 @@ void Module::Interface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
               static_cast<u32>(startup_argument_type), parameter_size);
     if (!apt->system.argument.empty())
         apt->system.argument.resize(parameter_size);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
+    auto rb{rp.MakeBuilder(2, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(!apt->system.argument.empty());
     rb.PushStaticBuffer(apt->system.argument, 0);
@@ -658,7 +658,7 @@ void Module::Interface::Wrap(Kernel::HLERequestContext& ctx) {
     // Puts the nonce to the beginning of the output, with ciphertext followed
     output.Write(nonce.data(), 0, nonce_size);
     output.Write(cipher.data(), nonce_size, cipher.size());
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 4)};
+    auto rb{rp.MakeBuilder(1, 4)};
     rb.Push(RESULT_SUCCESS);
     // Unmap buffer
     rb.PushMappedBuffer(input);
@@ -691,7 +691,7 @@ void Module::Interface::Unwrap(Kernel::HLERequestContext& ctx) {
     input.Read(cipher.data(), nonce_size, cipher_size);
     // Decrypts the ciphertext using AES-CCM
     auto pdata{HW::AES::DecryptVerifyCCM(cipher, nonce, HW::AES::KeySlotID::APTWrap)};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 4)};
+    auto rb{rp.MakeBuilder(1, 4)};
     if (!pdata.empty()) {
         // Splits the plaintext and put the nonce in between
         output.Write(pdata.data(), 0, nonce_offset);
@@ -753,7 +753,7 @@ void Module::Interface::ReplySleepQuery(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x3E, 2, 0};
     AppletId program_id{rp.PopEnum<AppletId>()};
     QueryReply query_reply{rp.PopEnum<QueryReply>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_APT, "stubbed");
 }
@@ -763,14 +763,14 @@ void Module::Interface::ReceiveDeliverArg(Kernel::HLERequestContext& ctx) {
     u32 parameter_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x300))};
     u32 hmac_size{std::clamp(rp.Pop<u32>(), static_cast<u32>(0), static_cast<u32>(0x20))};
     if (apt->system.argument.empty()) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(3, 0)};
+        auto rb{rp.MakeBuilder(3, 0)};
         rb.Push(RESULT_SUCCESS);
         rb.Push<u64>(0);
         rb.Push<bool>(false);
     } else {
         apt->system.argument.resize(parameter_size);
         apt->system.hmac.resize(hmac_size);
-        IPC::ResponseBuilder rb{rp.MakeBuilder(3, 4)};
+        auto rb{rp.MakeBuilder(3, 4)};
         rb.Push(RESULT_SUCCESS);
         rb.Push<u64>(apt->system.argument_source);
         rb.Push<bool>(true);
@@ -792,7 +792,7 @@ void Module::Interface::SendDeliverArg(Kernel::HLERequestContext& ctx) {
     apt->system.argument_source = apt->system.Kernel().GetCurrentProcess()->codeset->program_id;
     apt->system.hmac = rp.PopStaticBuffer();
     apt->system.hmac.resize(hmac_size);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_APT, "parameter_size={}, hmac_size={}", parameter_size, hmac_size);
 }
@@ -801,7 +801,7 @@ void Module::Interface::GetProgramID(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x58, 0, 2};
     u32 pid{rp.PopPID()};
     auto process{apt->system.Kernel().GetProcessById(pid)};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(3, 0)};
+    auto rb{rp.MakeBuilder(3, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(process->codeset->program_id);
     LOG_DEBUG(Service_APT, "called");
@@ -810,7 +810,7 @@ void Module::Interface::GetProgramID(Kernel::HLERequestContext& ctx) {
 void Module::Interface::IsTitleAllowed(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x105, 4, 0};
     auto program_info{rp.PopRaw<FS::ProgramInfo>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(true);
     LOG_WARNING(Service_APT, "(stubbed) program_info.media_type={}, program_info.program_id={}",

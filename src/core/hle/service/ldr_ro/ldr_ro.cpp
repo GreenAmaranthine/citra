@@ -66,7 +66,7 @@ void RO::Initialize(Kernel::HLERequestContext& ctx) {
     auto process{rp.PopObject<Kernel::Process>()};
     LOG_DEBUG(Service_LDR, "crs_buffer_ptr=0x{:08X}, crs_address=0x{:08X}, crs_size=0x{:X}",
               crs_buffer_ptr, crs_address, crs_size);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     auto slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs != 0) {
         LOG_ERROR(Service_LDR, "Already initialized");
@@ -128,7 +128,7 @@ void RO::LoadCRR(Kernel::HLERequestContext& ctx) {
     VAddr crr_buffer_ptr{rp.Pop<u32>()};
     u32 crr_size{rp.Pop<u32>()};
     auto process{rp.PopObject<Kernel::Process>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_LDR, "(stubbed) crr_buffer_ptr=0x{:08X}, crr_size=0x{:08X}", crr_buffer_ptr,
                 crr_size);
@@ -138,7 +138,7 @@ void RO::UnloadCRR(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x03, 1, 2);
     u32 crr_buffer_ptr = rp.Pop<u32>();
     auto process{rp.PopObject<Kernel::Process>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_LDR, "(stubbed) crr_buffer_ptr=0x{:08X}", crr_buffer_ptr);
 }
@@ -165,7 +165,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
               link_on_load_bug_fix ? "new" : "old", cro_buffer_ptr, cro_address, cro_size,
               data_segment_address, zero, data_segment_size, bss_segment_address, bss_segment_size,
               auto_link, fix_level, crr_address);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     auto slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
@@ -296,7 +296,7 @@ void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_LDR, "cro_address=0x{:08X}, zero={}, cro_buffer_ptr=0x{:08X}", cro_address,
               zero, cro_buffer_ptr);
     CROHelper cro{cro_address, *process};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     auto slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
@@ -347,7 +347,7 @@ void RO::LinkCRO(Kernel::HLERequestContext& ctx) {
     auto process{rp.PopObject<Kernel::Process>()};
     LOG_DEBUG(Service_LDR, "cro_address=0x{:08X}", cro_address);
     CROHelper cro{cro_address, *process};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     auto slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
@@ -377,7 +377,7 @@ void RO::UnlinkCRO(Kernel::HLERequestContext& ctx) {
     auto process{rp.PopObject<Kernel::Process>()};
     LOG_DEBUG(Service_LDR, "cro_address=0x{:08X}", cro_address);
     CROHelper cro{cro_address, *process};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     auto slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
@@ -406,7 +406,7 @@ void RO::Shutdown(Kernel::HLERequestContext& ctx) {
     VAddr crs_buffer_ptr{rp.Pop<u32>()};
     auto process{rp.PopObject<Kernel::Process>()};
     LOG_DEBUG(Service_LDR, "crs_buffer_ptr=0x{:08X}", crs_buffer_ptr);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     auto slot{GetSessionData(ctx.Session())};
     if (slot->loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");

@@ -30,7 +30,7 @@ void GSP_LCD::SetBrightnessRaw(Kernel::HLERequestContext& ctx) {
 #endif
     if (ret == 0)
         this->brightness = brightness_f;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 
@@ -50,14 +50,14 @@ void GSP_LCD::SetBrightness(Kernel::HLERequestContext& ctx) {
 #endif
     if (ret == 0)
         this->brightness = brightness_f;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 
 void GSP_LCD::GetBrightness(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x15, 1, 0};
     u32 screen{rp.Pop<u32>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(static_cast<u32>(brightness * MAX_BRIGHTNESS_RAW));
 }

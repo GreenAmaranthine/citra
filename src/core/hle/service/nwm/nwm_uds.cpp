@@ -543,7 +543,7 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     // Update the total size in the structure and write it to the buffer again.
     data_reply_header.total_size = static_cast<u32>(cur_buffer_size);
     out_buffer.Write(&data_reply_header, 0, sizeof(BeaconDataReplyHeader));
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(out_buffer);
     LOG_DEBUG(Service_NWM,
@@ -573,7 +573,7 @@ void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
         node_info.push_back(current_node);
         channel_data.clear();
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(connection_status_event);
     LOG_DEBUG(Service_NWM, "sharedmem_size=0x{:08X}, version=0x{:08X}", sharedmem_size, version);
@@ -598,7 +598,7 @@ void NWM_UDS::GetNodeInformation(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0xD, 1, 0};
     u16 network_node_id{rp.Pop<u16>()};
     if (!initialized) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::NotInitialized, ErrorModule::UDS,
                            ErrorSummary::StatusChanged, ErrorLevel::Status));
         return;
@@ -610,12 +610,12 @@ void NWM_UDS::GetNodeInformation(Kernel::HLERequestContext& ctx) {
                                   return node.network_node_id == network_node_id;
                               })};
         if (itr == node_info.end()) {
-            IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+            auto rb{rp.MakeBuilder(1, 0)};
             rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::UDS,
                                ErrorSummary::WrongArgument, ErrorLevel::Status));
             return;
         }
-        IPC::ResponseBuilder rb{rp.MakeBuilder(11, 0)};
+        auto rb{rp.MakeBuilder(11, 0)};
         rb.Push(RESULT_SUCCESS);
         rb.PushRaw<NodeInfo>(*itr);
     }
@@ -629,7 +629,7 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
     u8 data_channel{rp.Pop<u8>()};
     u16 network_node_id{rp.Pop<u16>()};
     if (data_channel == 0 || bind_node_id == 0) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
         LOG_WARNING(Service_NWM, "data_channel={}, bind_node_id={}", data_channel, bind_node_id);
@@ -637,7 +637,7 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
     }
     constexpr std::size_t MaxBindNodes{16};
     if (channel_data.size() >= MaxBindNodes) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::OutOfMemory, ErrorModule::UDS,
                            ErrorSummary::OutOfResource, ErrorLevel::Status));
         LOG_WARNING(Service_NWM, "max bind nodes");
@@ -645,7 +645,7 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
     }
     constexpr u32 MinRecvBufferSize{0x5F4};
     if (recv_buffer_size < MinRecvBufferSize) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::TooLarge, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
         LOG_WARNING(Service_NWM, "MinRecvBufferSize");
@@ -658,7 +658,7 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
     ASSERT(channel_data.find(data_channel) == channel_data.end());
     // TODO: Support more than one bind node per channel.
     channel_data[data_channel] = {bind_node_id, data_channel, network_node_id, event};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(event);
     LOG_DEBUG(Service_NWM, "called");
@@ -668,7 +668,7 @@ void NWM_UDS::Unbind(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x12, 1, 0};
     u32 bind_node_id{rp.Pop<u32>()};
     if (bind_node_id == 0) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
         return;
@@ -683,7 +683,7 @@ void NWM_UDS::Unbind(Kernel::HLERequestContext& ctx) {
         itr->second.event->Signal();
         channel_data.erase(itr);
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(5, 0)};
+    auto rb{rp.MakeBuilder(5, 0)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(bind_node_id);
     // TODO: Find out what the other return values are
@@ -740,7 +740,7 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
     // Start broadcasting the network, send a beacon frame every 102.4ms.
     system.CoreTiming().ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU),
                                       beacon_broadcast_event, 0);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_NWM, "An UDS network has been created.");
 }
@@ -748,7 +748,7 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
 void NWM_UDS::UpdateNetworkAttribute(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x07, 2, 0};
     rp.Skip(2, false);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NWM, "stubbed");
 }
@@ -830,7 +830,7 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
     std::vector<u8> input_buffer{rp.PopStaticBuffer()};
     ASSERT(input_buffer.size() >= data_size);
     input_buffer.resize(data_size);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     std::lock_guard lock{connection_status_mutex};
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsClient) &&
         connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
@@ -885,7 +885,7 @@ void NWM_UDS::PullPacket(Kernel::HLERequestContext& ctx) {
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost) &&
         connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsClient) &&
         connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsSpectator)) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
         return;
@@ -895,14 +895,14 @@ void NWM_UDS::PullPacket(Kernel::HLERequestContext& ctx) {
             return data.second.bind_node_id == bind_node_id;
         })};
     if (channel == channel_data.end()) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
         return;
     }
     if (channel->second.received_packets.empty()) {
         std::vector<u8> output_buffer(buff_size, 0);
-        IPC::ResponseBuilder rb{rp.MakeBuilder(3, 2)};
+        auto rb{rp.MakeBuilder(3, 2)};
         rb.Push(RESULT_SUCCESS);
         rb.Push<u32>(0);
         rb.Push<u16>(0);
@@ -913,12 +913,12 @@ void NWM_UDS::PullPacket(Kernel::HLERequestContext& ctx) {
     auto secure_data{ParseSecureDataHeader(next_packet)};
     auto data_size{secure_data.GetActualDataSize()};
     if (data_size > max_out_buff_size) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ResultCode(ErrorDescription::TooLarge, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
         return;
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(3, 2)};
+    auto rb{rp.MakeBuilder(3, 2)};
     std::vector<u8> output_buffer(buff_size, 0);
     // Write the actual data.
     std::memcpy(output_buffer.data(),
@@ -971,7 +971,7 @@ void NWM_UDS::SetApplicationData(Kernel::HLERequestContext& ctx) {
     u32 size{rp.Pop<u32>()};
     const std::vector<u8> program_data{rp.PopStaticBuffer()};
     ASSERT(program_data.size() == size);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     if (size > ProgramDataSize) {
         rb.Push(ResultCode(ErrorDescription::TooLarge, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
@@ -1025,7 +1025,7 @@ void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx) {
 
         nodes.push_back(node);
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     std::vector<u8> output_buffer(sizeof(NodeInfo) * UDSMaxNodes, 0);
     std::memcpy(output_buffer.data(), nodes.data(), sizeof(NodeInfo) * nodes.size());

@@ -28,12 +28,12 @@ void SRV::RegisterClient(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x1, 0, 2};
     u32 pid_descriptor{rp.Pop<u32>()};
     if (pid_descriptor != IPC::CallingPidDesc()) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(IPC::ERR_INVALID_BUFFER_DESCRIPTOR);
         return;
     }
     u32 caller_pid{rp.Pop<u32>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_SRV, "stubbed");
 }
@@ -54,7 +54,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
     u32 flags{rp.Pop<u32>()};
     bool wait_until_available{(flags & 1) == 0};
     if (name_size > Service::kMaxPortSize) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(ERR_INVALID_NAME_SIZE);
         LOG_ERROR(Service_SRV, "(name_size=0x{:X}) invalid name size", name_size);
         return;
@@ -92,7 +92,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
             get_service_handle_delayed_map[name] = std::move(get_service_handle_event);
             return;
         } else {
-            IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+            auto rb{rp.MakeBuilder(1, 0)};
             rb.Push(client_port.Code());
             LOG_ERROR(Service_SRV, "service={} -> error 0x{:08X}", name, client_port.Code().raw);
             return;
@@ -101,7 +101,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
     auto session{client_port.Unwrap()->Connect()};
     if (session.Succeeded()) {
         LOG_DEBUG(Service_SRV, "service={} -> session={}", name, (*session)->GetObjectId());
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+        auto rb{rp.MakeBuilder(1, 2)};
         rb.Push(session.Code());
         rb.PushMoveObjects(std::move(session).Unwrap());
     } else if (session.Code() == Kernel::ERR_MAX_CONNECTIONS_REACHED && wait_until_available) {
@@ -110,7 +110,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
         UNIMPLEMENTED_MSG("Unimplemented wait until port {} is available.", name);
     } else {
         LOG_ERROR(Service_SRV, "service={} -> error 0x{:08X}", name, session.Code().raw);
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(session.Code());
     }
 }
@@ -118,7 +118,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
 void SRV::Subscribe(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x9, 1, 0};
     u32 notification_id{rp.Pop<u32>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_SRV, "(stubbed) notification_id=0x{:X}", notification_id);
 }
@@ -126,7 +126,7 @@ void SRV::Subscribe(Kernel::HLERequestContext& ctx) {
 void SRV::Unsubscribe(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0xA, 1, 0};
     u32 notification_id{rp.Pop<u32>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_SRV, "(stubbed) notification_id=0x{:X}", notification_id);
 }
@@ -135,7 +135,7 @@ void SRV::PublishToSubscriber(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0xC, 2, 0};
     u32 notification_id{rp.Pop<u32>()};
     u8 flags{rp.Pop<u8>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_SRV, "(stubbed) notification_id=0x{:X}, flags={}", notification_id, flags);
 }
@@ -148,7 +148,7 @@ void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
     std::string name(name_buf.data(), std::min(name_len, name_buf.size()));
     auto port{system.ServiceManager().RegisterService(name, max_sessions)};
     if (port.Failed()) {
-        IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+        auto rb{rp.MakeBuilder(1, 0)};
         rb.Push(port.Code());
         LOG_ERROR(Service_SRV, "service={} -> error 0x{:08X}", name, port.Code().raw);
         return;
@@ -158,7 +158,7 @@ void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
         it->second->Signal();
         get_service_handle_delayed_map.erase(it);
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMoveObjects(port.Unwrap());
 }

@@ -216,7 +216,7 @@ void ERR_F::ThrowFatalError(Kernel::HLERequestContext& ctx) {
         break;
     }
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
 }
 
@@ -226,7 +226,7 @@ void ERR_F::SetUserString(Kernel::HLERequestContext& ctx) {
     auto buffer{rp.PopStaticBuffer()};
     std::string string(size, '\0');
     std::memcpy(&string[0], buffer.data(), size);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(std::move(buffer), 0);
 }

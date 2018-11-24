@@ -47,7 +47,7 @@ void Module::Interface::Open(Kernel::HLERequestContext& ctx) {
     session_data->open_mode.raw = open_mode.raw;
     session_data->data_path_type = path_type;
     session_data->path = path;
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 0)};
+    auto rb{rp.MakeBuilder(2, 0)};
     switch (path_type) {
     case CecDataPathType::RootDir:
     case CecDataPathType::MboxDir:
@@ -119,7 +119,7 @@ void Module::Interface::Read(Kernel::HLERequestContext& ctx) {
               session_data->open_mode.unknown, session_data->open_mode.read,
               session_data->open_mode.write, session_data->open_mode.create,
               session_data->open_mode.check);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
+    auto rb{rp.MakeBuilder(2, 2)};
     switch (session_data->data_path_type) {
     case CecDataPathType::RootDir:
     case CecDataPathType::MboxDir:
@@ -161,7 +161,7 @@ void Module::Interface::ReadMessage(Kernel::HLERequestContext& ctx) {
                                                                 ncch_program_id, id_buffer)
                                    .data()};
     auto message_result{cecd->cecd_system_save_data_archive->OpenFile(message_path, mode)};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 4)};
+    auto rb{rp.MakeBuilder(2, 4)};
     if (message_result.Succeeded()) {
         auto message{std::move(message_result).Unwrap()};
         std::vector<u8> buffer(buffer_size);
@@ -220,7 +220,7 @@ void Module::Interface::ReadMessageWithHMAC(Kernel::HLERequestContext& ctx) {
                                                                 ncch_program_id, id_buffer)
                                    .data()};
     auto message_result{cecd->cecd_system_save_data_archive->OpenFile(message_path, mode)};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 6)};
+    auto rb{rp.MakeBuilder(2, 6)};
     if (message_result.Succeeded()) {
         auto message{std::move(message_result).Unwrap()};
         std::vector<u8> buffer(buffer_size);
@@ -290,7 +290,7 @@ void Module::Interface::Write(Kernel::HLERequestContext& ctx) {
               session_data->open_mode.unknown, session_data->open_mode.read,
               session_data->open_mode.write, session_data->open_mode.create,
               session_data->open_mode.check);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     switch (session_data->data_path_type) {
     case CecDataPathType::RootDir:
     case CecDataPathType::MboxDir:
@@ -334,7 +334,7 @@ void Module::Interface::WriteMessage(Kernel::HLERequestContext& ctx) {
                                                                 ncch_program_id, id_buffer)
                                    .data()};
     auto message_result{cecd->cecd_system_save_data_archive->OpenFile(message_path, mode)};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 4)};
+    auto rb{rp.MakeBuilder(1, 4)};
     if (message_result.Succeeded()) {
         auto message{std::move(message_result).Unwrap()};
         std::vector<u8> buffer(buffer_size);
@@ -390,7 +390,7 @@ void Module::Interface::WriteMessageWithHMAC(Kernel::HLERequestContext& ctx) {
                                                                 ncch_program_id, id_buffer)
                                    .data()};
     auto message_result{cecd->cecd_system_save_data_archive->OpenFile(message_path, mode)};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 6)};
+    auto rb{rp.MakeBuilder(1, 6)};
     if (message_result.Succeeded()) {
         auto message{std::move(message_result).Unwrap()};
         std::vector<u8> buffer(buffer_size);
@@ -449,7 +449,7 @@ void Module::Interface::Delete(Kernel::HLERequestContext& ctx) {
     FileSys::Path path{cecd->GetCecDataPathTypeAsString(path_type, ncch_program_id).data()};
     FileSys::Mode mode{};
     mode.write_flag.Assign(1);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     switch (path_type) {
     case CecDataPathType::RootDir:
     case CecDataPathType::MboxDir:
@@ -501,7 +501,7 @@ void Module::Interface::SetData(Kernel::HLERequestContext& ctx) {
             file->Close();
         }
     }
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(read_buffer);
     LOG_DEBUG(Service_CECD, "ncch_program_id={:#010x}, buffer_size={:#x}, option={:#x}",
@@ -515,7 +515,7 @@ void Module::Interface::ReadData(Kernel::HLERequestContext& ctx) {
     const u32 param_buffer_size{rp.Pop<u32>()};
     auto& param_buffer{rp.PopMappedBuffer()};
     auto& dest_buffer{rp.PopMappedBuffer()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 4)};
+    auto rb{rp.MakeBuilder(1, 4)};
     std::vector<u8> buffer;
     switch (info_type) {
     case CecSystemInfoType::EulaVersion:
@@ -552,7 +552,7 @@ void Module::Interface::ReadData(Kernel::HLERequestContext& ctx) {
 void Module::Interface::Start(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0B, 1, 0};
     const CecCommand command{rp.PopEnum<CecCommand>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_CECD, "(stubbed) command={}", cecd->GetCecCommandAsString(command));
 }
@@ -560,7 +560,7 @@ void Module::Interface::Start(Kernel::HLERequestContext& ctx) {
 void Module::Interface::Stop(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x0C, 1, 0};
     const CecCommand command{rp.PopEnum<CecCommand>()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 0)};
+    auto rb{rp.MakeBuilder(1, 0)};
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_CECD, "(stubbed) command={}", cecd->GetCecCommandAsString(command));
 }
@@ -570,7 +570,7 @@ void Module::Interface::GetCecInfoBuffer(Kernel::HLERequestContext& ctx) {
     const u32 buffer_size{rp.Pop<u32>()};
     const u32 possible_info_type{rp.Pop<u32>()};
     auto& buffer{rp.PopMappedBuffer()};
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(buffer);
     LOG_DEBUG(Service_CECD, "buffer_size={}, possible_info_type={}", buffer_size,
@@ -611,7 +611,7 @@ void Module::Interface::OpenAndWrite(Kernel::HLERequestContext& ctx) {
     FileSys::Mode mode{};
     mode.write_flag.Assign(1);
     mode.create_flag.Assign(1);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(1, 2)};
+    auto rb{rp.MakeBuilder(1, 2)};
     switch (path_type) {
     case CecDataPathType::RootDir:
     case CecDataPathType::MboxDir:
@@ -659,7 +659,7 @@ void Module::Interface::OpenAndRead(Kernel::HLERequestContext& ctx) {
     FileSys::Path path{cecd->GetCecDataPathTypeAsString(path_type, ncch_program_id).data()};
     FileSys::Mode mode;
     mode.read_flag.Assign(1);
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
+    auto rb{rp.MakeBuilder(2, 2)};
     switch (path_type) {
     case CecDataPathType::RootDir:
     case CecDataPathType::MboxDir:

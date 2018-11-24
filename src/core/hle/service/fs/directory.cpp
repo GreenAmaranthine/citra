@@ -30,7 +30,7 @@ void Directory::Read(Kernel::HLERequestContext& ctx) {
     // Number of entries actually read
     u32 read{backend->Read(static_cast<u32>(entries.size()), entries.data())};
     buffer.Write(entries.data(), 0, read * sizeof(FileSys::Entry));
-    IPC::ResponseBuilder rb{rp.MakeBuilder(2, 2)};
+    auto rb{rp.MakeBuilder(2, 2)};
     rb.Push(RESULT_SUCCESS);
     rb.Push(read);
     rb.PushMappedBuffer(buffer);
