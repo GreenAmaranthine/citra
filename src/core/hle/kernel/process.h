@@ -67,7 +67,6 @@ public:
     }
 
     static const HandleType HANDLE_TYPE{HandleType::CodeSet};
-
     HandleType GetHandleType() const override {
         return HANDLE_TYPE;
     }

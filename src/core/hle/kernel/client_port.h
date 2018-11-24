@@ -27,7 +27,6 @@ public:
     }
 
     static const HandleType HANDLE_TYPE{HandleType::ClientPort};
-
     HandleType GetHandleType() const override {
         return HANDLE_TYPE;
     }

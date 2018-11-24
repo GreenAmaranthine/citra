@@ -140,7 +140,6 @@ public:
     }
 
     static const HandleType HANDLE_TYPE{HandleType::Thread};
-
     HandleType GetHandleType() const override {
         return HANDLE_TYPE;
     }

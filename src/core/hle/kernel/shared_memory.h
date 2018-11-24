@@ -22,6 +22,7 @@ public:
     std::string GetName() const override {
         return name;
     }
+
     void SetName(std::string name) {
         this->name = std::move(name);
     }
