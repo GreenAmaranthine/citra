@@ -56,12 +56,7 @@ AnnounceMultiplayerSession::~AnnounceMultiplayerSession() {
 }
 
 void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
-    auto update_time{std::chrono::steady_clock::now()};
-    std::future<Common::WebResult> future;
-    while (!shutdown_event.WaitUntil(update_time)) {
-        update_time += announce_time_interval;
-        if (!room.IsOpen())
-            break;
+    auto announce{[&] {
         auto room_information{room.GetRoomInformation()};
         auto member_list{room.GetRoomMemberList()};
         backend->SetRoomInformation(room_information.name, room_information.port,
@@ -77,6 +72,15 @@ void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
             for (auto callback : error_callbacks)
                 (*callback)(result);
         }
+    }};
+    announce();
+    auto update_time{std::chrono::steady_clock::now()};
+    std::future<Common::WebResult> future;
+    while (!shutdown_event.WaitUntil(update_time)) {
+        update_time += announce_time_interval;
+        if (!room.IsOpen())
+            break;
+        announce();
     }
 }
 
