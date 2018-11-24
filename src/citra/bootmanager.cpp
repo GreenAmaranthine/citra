@@ -7,14 +7,18 @@
 #include <QApplication>
 #include <QHBoxLayout>
 #include <QKeyEvent>
+#include <QMessageBox>
 #include <QScreen>
 #include <QWindow>
 #include "citra/bootmanager.h"
+#include "citra/mii_selector.h"
 #include "citra/swkbd.h"
 #include "common/scm_rev.h"
+#include "common/string_util.h"
 #include "core/3ds.h"
 #include "core/core.h"
 #include "core/hle/applets/erreula.h"
+#include "core/hle/service/cfg/cfg.h"
 #include "core/input.h"
 #include "core/settings.h"
 #include "input_common/keyboard.h"
@@ -63,7 +67,8 @@ private:
     Screens* parent;
 };
 
-Screens::Screens(QWidget* parent, EmuThread* emu_thread) : QWidget{parent}, emu_thread{emu_thread} {
+Screens::Screens(QWidget* parent, EmuThread* emu_thread, Core::System& system)
+    : QWidget{parent}, emu_thread{emu_thread}, system{system} {
     setAttribute(Qt::WA_AcceptTouchEvents);
     InputCommon::Init();
 }
@@ -287,7 +292,7 @@ void Screens::LaunchSoftwareKeyboardImpl(HLE::Applets::SoftwareKeyboardConfig& c
     is_running = false;
 }
 
-void Screens::ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& is_running) {
+void Screens::LaunchErrEulaImpl(HLE::Applets::ErrEulaConfig& config, bool& is_running) {
     if (QThread::currentThread() != thread()) {
         QMetaObject::invokeMethod(this, "LaunchErrEulaImpl", Qt::BlockingQueuedConnection,
                                   Q_ARG(HLE::Applets::ErrEulaConfig&, config),
@@ -321,6 +326,20 @@ void Screens::ErrEulaCallback(HLE::Applets::ErrEulaConfig& config, bool& is_runn
         break;
     }
     config.return_code = HLE::Applets::ErrEulaResult::Success;
+    is_running = false;
+}
+
+void Screens::LaunchMiiSelectorImpl(const HLE::Applets::MiiConfig& config,
+                                    HLE::Applets::MiiResult& result, bool& is_running) {
+    if (QThread::currentThread() != thread()) {
+        QMetaObject::invokeMethod(this, "LaunchMiiSelectorImpl", Qt::BlockingQueuedConnection,
+                                  Q_ARG(const HLE::Applets::MiiConfig&, config),
+                                  Q_ARG(HLE::Applets::MiiResult&, result),
+                                  Q_ARG(bool&, is_running));
+        return;
+    }
+    MiiSelectorDialog dialog{this, config, result};
+    dialog.exec();
     is_running = false;
 }
 

@@ -7,6 +7,8 @@
 #include <memory>
 #include <tuple>
 #include "core/framebuffer_layout.h"
+#include "core/hle/applets/erreula.h"
+#include "core/hle/applets/mii_selector.h"
 #include "core/hle/applets/swkbd.h"
 
 class Frontend {
@@ -32,6 +34,8 @@ public:
     virtual void LaunchSoftwareKeyboard(HLE::Applets::SoftwareKeyboardConfig&, std::u16string&,
                                         bool&) = 0;
     virtual void LaunchErrEula(HLE::Applets::ErrEulaConfig&, bool&) = 0;
+    virtual void LaunchMiiSelector(const HLE::Applets::MiiConfig&, HLE::Applets::MiiResult&,
+                                   bool&) = 0;
 
 private:
     Layout::FramebufferLayout framebuffer_layout; ///< Current framebuffer layout

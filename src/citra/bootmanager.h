@@ -52,7 +52,7 @@ class Screens : public QWidget, public Frontend {
     Q_OBJECT
 
 public:
-    explicit Screens(QWidget* parent, EmuThread* emu_thread);
+    explicit Screens(QWidget* parent, EmuThread* emu_thread, Core::System& system);
     ~Screens();
 
     void SwapBuffers() override;
@@ -86,6 +86,8 @@ public:
     Q_INVOKABLE void LaunchSoftwareKeyboardImpl(HLE::Applets::SoftwareKeyboardConfig& config,
                                                 std::u16string& text, bool& is_running);
     Q_INVOKABLE void LaunchErrEulaImpl(HLE::Applets::ErrEulaConfig& config, bool& is_running);
+    Q_INVOKABLE void LaunchMiiSelectorImpl(const HLE::Applets::MiiConfig& config,
+                                           HLE::Applets::MiiResult& result, bool& is_running);
 
     void LaunchSoftwareKeyboard(HLE::Applets::SoftwareKeyboardConfig& config, std::u16string& text,
                                 bool& is_running) override {
@@ -94,6 +96,11 @@ public:
 
     void LaunchErrEula(HLE::Applets::ErrEulaConfig& config, bool& is_running) override {
         LaunchErrEulaImpl(config, is_running);
+    }
+
+    void LaunchMiiSelector(const HLE::Applets::MiiConfig& config, HLE::Applets::MiiResult& result,
+                           bool& is_running) override {
+        LaunchMiiSelectorImpl(config, result, is_running);
     }
 
 public slots:
@@ -123,6 +130,8 @@ private:
 
     /// Temporary storage of the screenshot taken
     QImage screenshot_image;
+
+    Core::System& system;
 
 protected:
     void showEvent(QShowEvent* event) override;

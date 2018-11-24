@@ -33,7 +33,6 @@
 #include "citra/control_panel.h"
 #include "citra/hotkeys.h"
 #include "citra/main.h"
-#include "citra/mii_selector.h"
 #include "citra/multiplayer/state.h"
 #include "citra/program_list.h"
 #include "citra/ui_settings.h"
@@ -46,7 +45,6 @@
 #include "common/logging/text_formatter.h"
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
-#include "common/string_util.h"
 #include "core/3ds.h"
 #include "core/core.h"
 #include "core/file_sys/archive_extsavedata.h"
@@ -54,7 +52,6 @@
 #include "core/file_sys/seed_db.h"
 #include "core/hle/kernel/shared_page.h"
 #include "core/hle/service/am/am_u.h"
-#include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/hle/service/nwm/nwm_ext.h"
@@ -120,7 +117,7 @@ GMainWindow::~GMainWindow() {
 }
 
 void GMainWindow::InitializeWidgets() {
-    screens = new Screens(this, emu_thread.get());
+    screens = new Screens(this, emu_thread.get(), system);
     screens->hide();
     program_list = new ProgramList(system, this);
     ui.horizontalLayout->addWidget(program_list);
@@ -260,21 +257,21 @@ void GMainWindow::InitializeHotkeys() {
     connect(hotkey_registry.GetHotkey("Main Window", "Toggle Speed Limit", this),
             &QShortcut::activated, this, [&] {
                 Settings::values.use_frame_limit = !Settings::values.use_frame_limit;
-                UpdatePerformanceStats();
+                UpdatePerfStats();
             });
     constexpr u16 SPEED_LIMIT_STEP{5};
     connect(hotkey_registry.GetHotkey("Main Window", "Increase Speed Limit", this),
             &QShortcut::activated, this, [&] {
                 if (Settings::values.frame_limit < 9999 - SPEED_LIMIT_STEP) {
                     Settings::values.frame_limit += SPEED_LIMIT_STEP;
-                    UpdatePerformanceStats();
+                    UpdatePerfStats();
                 }
             });
     connect(hotkey_registry.GetHotkey("Main Window", "Decrease Speed Limit", this),
             &QShortcut::activated, this, [&] {
                 if (Settings::values.frame_limit > SPEED_LIMIT_STEP) {
                     Settings::values.frame_limit -= SPEED_LIMIT_STEP;
-                    UpdatePerformanceStats();
+                    UpdatePerfStats();
                 }
             });
     connect(hotkey_registry.GetHotkey("Main Window", "Increase Internal Resolution", this),
@@ -370,7 +367,7 @@ void GMainWindow::ConnectWidgetEvents() {
     connect(program_list, &ProgramList::ShowList, this, &GMainWindow::OnProgramListShowList);
     connect(this, &GMainWindow::EmulationStarting, screens, &Screens::OnEmulationStarting);
     connect(this, &GMainWindow::EmulationStopping, screens, &Screens::OnEmulationStopping);
-    connect(&perf_stats_update_timer, &QTimer::timeout, this, &GMainWindow::UpdatePerformanceStats);
+    connect(&perf_stats_update_timer, &QTimer::timeout, this, &GMainWindow::UpdatePerfStats);
     connect(this, &GMainWindow::UpdateProgress, this, &GMainWindow::OnUpdateProgress);
     connect(this, &GMainWindow::CIAInstallReport, this, &GMainWindow::OnCIAInstallReport);
     connect(this, &GMainWindow::CIAInstallFinished, this, &GMainWindow::OnCIAInstallFinished);
@@ -597,10 +594,6 @@ void GMainWindow::BootProgram(const std::string& filename) {
         movie_record_path.clear();
     }
     connect(emu_thread.get(), &EmuThread::ErrorThrown, this, &GMainWindow::OnCoreError);
-    HLE::Applets::MiiSelector::cb = [this](const HLE::Applets::MiiConfig& config,
-                                           HLE::Applets::MiiResult& result, bool& is_running) {
-        MiiSelectorCallback(config, result, is_running);
-    };
     SharedPage::Handler::update_3d = [this] { Update3D(); };
     RPC::RPCServer::cb_update_frame_advancing = [this] { UpdateFrameAdvancingCallback(); };
     Service::NWM::NWM_EXT::update_control_panel = [this] { UpdateControlPanelNetwork(); };
@@ -670,20 +663,6 @@ void GMainWindow::StoreRecentFile(const QString& filename) {
     while (UISettings::values.recent_files.size() > MaxRecentFiles)
         UISettings::values.recent_files.removeLast();
     UpdateRecentFiles();
-}
-
-void GMainWindow::MiiSelectorCallback(const HLE::Applets::MiiConfig& config,
-                                      HLE::Applets::MiiResult& result, bool& is_running) {
-    if (QThread::currentThread() != thread()) {
-        QMetaObject::invokeMethod(this, "MiiSelectorCallback", Qt::BlockingQueuedConnection,
-                                  Q_ARG(const HLE::Applets::MiiConfig&, config),
-                                  Q_ARG(HLE::Applets::MiiResult&, result),
-                                  Q_ARG(bool&, is_running));
-        return;
-    }
-    MiiSelectorDialog dialog{this, config, result};
-    dialog.exec();
-    is_running = false;
 }
 
 void GMainWindow::Update3D() {
@@ -1397,7 +1376,7 @@ void GMainWindow::OnDumpRAM() {
     LOG_INFO(Frontend, "Memory dump finished.");
 }
 
-void GMainWindow::UpdatePerformanceStats() {
+void GMainWindow::UpdatePerfStats() {
     if (!emu_thread) {
         perf_stats_update_timer.stop();
         return;

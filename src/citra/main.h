@@ -10,7 +10,6 @@
 #include "citra/hotkeys.h"
 #include "common/announce_multiplayer_room.h"
 #include "core/core.h"
-#include "core/hle/applets/mii_selector.h"
 #include "core/hle/service/am/am.h"
 #include "network/room.h"
 #include "network/room_member.h"
@@ -167,11 +166,9 @@ private:
     void closeEvent(QCloseEvent* event) override;
 
     bool ValidateMovie(const QString& path, u64 program_id = 0);
-    void UpdatePerformanceStats();
+    void UpdatePerfStats();
     void UpdateTitle();
 
-    Q_INVOKABLE void MiiSelectorCallback(const HLE::Applets::MiiConfig& config,
-                                         HLE::Applets::MiiResult& result, bool& is_running);
     Q_INVOKABLE void Update3D();
     Q_INVOKABLE void UpdateFrameAdvancingCallback();
     Q_INVOKABLE void UpdateControlPanelNetwork();
