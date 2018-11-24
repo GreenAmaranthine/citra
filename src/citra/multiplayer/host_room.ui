@@ -181,7 +181,7 @@ When someone sends one of the messages in the table below, the reply will be aut
       </widget>
      </item>
      <item>
-      <widget class="QTextEdit" name="textEdit"/>
+      <widget class="QTextEdit" name="room_description"/>
      </item>
     </layout>
    </item>

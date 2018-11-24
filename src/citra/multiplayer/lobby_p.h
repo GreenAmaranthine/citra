@@ -30,6 +30,9 @@ public:
 
 class LobbyItemName : public LobbyItem {
 public:
+    static const int NameRole{Qt::UserRole + 1};
+    static const int PasswordRole{Qt::UserRole + 2};
+
     LobbyItemName() = default;
 
     explicit LobbyItemName(bool has_password, QString name) : LobbyItem() {

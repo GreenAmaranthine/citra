@@ -100,11 +100,8 @@ struct Room::RoomImpl {
     /// Notifies the members that the room is closed,
     void SendCloseMessage();
 
-    /**
-     * Sends a system message to all the connected clients.
-     */
-    void SendStatusMessage(StatusMessageTypes type, const std::string& nickname,
-                           const std::string& username);
+    /// Sends a system message to all the connected clients.
+    void SendStatusMessage(StatusMessageTypes type, const std::string& nickname);
 
     /**
      * Sends the information about the room, along with the list of members
@@ -283,7 +280,7 @@ bool Room::RoomImpl::IsValidConsoleId(u64 console_id) const {
 void Room::RoomImpl::SendNameCollision(ENetPeer* client) {
     Packet packet;
     packet << static_cast<u8>(IdNameCollision);
-    auto packet{
+    auto enet_packet{
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE)};
     enet_peer_send(client, 0, enet_packet);
     enet_host_flush(server);
@@ -292,7 +289,7 @@ void Room::RoomImpl::SendNameCollision(ENetPeer* client) {
 void Room::RoomImpl::SendMacCollision(ENetPeer* client) {
     Packet packet;
     packet << static_cast<u8>(IdMacCollision);
-    auto packet{
+    auto enet_packet{
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE)};
     enet_peer_send(client, 0, enet_packet);
     enet_host_flush(server);
@@ -311,7 +308,7 @@ void Room::RoomImpl::SendConsoleIdCollision(ENetPeer* client) {
 void Room::RoomImpl::SendWrongPassword(ENetPeer* client) {
     Packet packet;
     packet << static_cast<u8>(IdWrongPassword);
-    auto packet{
+    auto enet_packet{
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE)};
     enet_peer_send(client, 0, enet_packet);
     enet_host_flush(server);
@@ -330,7 +327,7 @@ void Room::RoomImpl::SendVersionMismatch(ENetPeer* client) {
     Packet packet;
     packet << static_cast<u8>(IdVersionMismatch);
     packet << network_version;
-    auto packet{
+    auto enet_packet{
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE)};
     enet_peer_send(client, 0, enet_packet);
     enet_host_flush(server);
@@ -340,7 +337,7 @@ void Room::RoomImpl::SendJoinSuccess(ENetPeer* client, MACAddress mac_address) {
     Packet packet;
     packet << static_cast<u8>(IdJoinSuccess);
     packet << mac_address;
-    auto packet{
+    auto enet_packet{
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE)};
     enet_peer_send(client, 0, enet_packet);
     enet_host_flush(server);
@@ -351,7 +348,7 @@ void Room::RoomImpl::SendCloseMessage() {
     packet << static_cast<u8>(IdCloseRoom);
     std::lock_guard lock{member_mutex};
     if (!members.empty()) {
-        auto packet{
+        auto enet_packet{
             enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE)};
         for (auto& member : members)
             enet_peer_send(member.peer, 0, enet_packet);
@@ -361,13 +358,11 @@ void Room::RoomImpl::SendCloseMessage() {
         enet_peer_disconnect(member.peer, 0);
 }
 
-void Room::RoomImpl::SendStatusMessage(StatusMessageTypes type, const std::string& nickname,
-                                       const std::string& username) {
+void Room::RoomImpl::SendStatusMessage(StatusMessageTypes type, const std::string& nickname) {
     Packet packet;
     packet << static_cast<u8>(IdStatusMessage);
     packet << static_cast<u8>(type);
     packet << nickname;
-    packet << username;
     std::lock_guard lock{member_mutex};
     if (!members.empty()) {
         auto enet_packet{
@@ -394,7 +389,7 @@ void Room::RoomImpl::BroadcastRoomInformation() {
             packet << member.program;
         }
     }
-    auto packet{
+    auto enet_packet{
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE)};
     enet_host_broadcast(server, 0, enet_packet);
     enet_host_flush(server);
@@ -422,8 +417,8 @@ void Room::RoomImpl::HandleWifiPacket(const ENetEvent* event) {
     in_packet >> destination_address;
     Packet out_packet;
     out_packet.Append(event->packet->data, event->packet->dataLength);
-    auto packet{enet_packet_create(out_packet.GetData(), out_packet.GetDataSize(),
-                                   ENET_PACKET_FLAG_RELIABLE)};
+    auto enet_packet{enet_packet_create(out_packet.GetData(), out_packet.GetDataSize(),
+                                        ENET_PACKET_FLAG_RELIABLE)};
     if (destination_address == BroadcastMac) { // Send the data to everyone except the sender
         std::lock_guard lock{member_mutex};
         bool sent_packet{};
@@ -474,8 +469,8 @@ void Room::RoomImpl::HandleChatPacket(const ENetEvent* event) {
     out_packet << static_cast<u8>(IdChatMessage);
     out_packet << sending_member->nickname;
     out_packet << message;
-    auto packet{enet_packet_create(out_packet.GetData(), out_packet.GetDataSize(),
-                                   ENET_PACKET_FLAG_RELIABLE)};
+    auto enet_packet{enet_packet_create(out_packet.GetData(), out_packet.GetDataSize(),
+                                        ENET_PACKET_FLAG_RELIABLE)};
     bool sent_packet{};
     for (const auto& member : members) {
         if (member.peer != event->peer) {
@@ -533,6 +528,7 @@ bool Room::Create(const std::string& name, const std::string& description,
                   const std::string& creator, u16 port, const std::string& password,
                   const u32 max_connections) {
     ENetAddress address;
+    address.host = ENET_HOST_ANY;
     address.port = port;
     // In order to send the room is full message to the connecting client, we need to leave one slot
     // open so enet won't reject the incoming connection without telling us

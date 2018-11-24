@@ -24,6 +24,8 @@ MultiplayerState::MultiplayerState(QWidget* parent, QAction* leave_room, QAction
                                    Core::System& system)
     : QWidget{parent}, leave_room{leave_room}, show_room{show_room}, system{system} {
     // Register the network structs to use in slots and signals
+    qRegisterMetaType<Network::RoomMember::State>();
+    qRegisterMetaType<Common::WebResult>();
     state_callback_handle = system.RoomMember().BindOnStateChanged(
         [this](const Network::RoomMember::State& state) { emit NetworkStateChanged(state); });
     connect(this, &MultiplayerState::NetworkStateChanged, this,

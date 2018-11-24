@@ -285,6 +285,9 @@ ProgramList::ProgramList(Core::System& system, GMainWindow* parent)
             &ProgramList::PopupContextMenu);
     connect(tree_view, &QTreeView::expanded, this, &ProgramList::OnItemExpanded);
     connect(tree_view, &QTreeView::collapsed, this, &ProgramList::OnItemExpanded);
+    // We must register all custom types with the Qt Automoc system so that we are able to use
+    // it with signals/slots. In this case, QList falls under the umbrells of custom types.
+    qRegisterMetaType<QList<QStandardItem*>>("QList<QStandardItem*>");
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     layout->addWidget(tree_view);

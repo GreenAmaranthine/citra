@@ -18,7 +18,8 @@ public:
     ~LobbyAPI() = default;
 
     void SetRoomInformation(const std::string& name, const u16 port, const std::string& creator,
-                            const u32 max_members, const u32 net_version, const bool has_password);
+                            const std::string& description, const u32 max_members,
+                            const u32 net_version, const bool has_password);
 
     void AddMember(const std::string& nickname, const MACAddress& mac_address,
                    const std::string& program);

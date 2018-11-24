@@ -89,6 +89,10 @@ ChatRoom::ChatRoom(QWidget* parent)
     member_list->setHeaderData(COLUMN_APP, Qt::Horizontal, "Program");
     constexpr int MaxChatLines{1000};
     ui->chat_history->document()->setMaximumBlockCount(MaxChatLines);
+    // Register the network structs to use in slots and signals
+    qRegisterMetaType<Network::ChatEntry>();
+    qRegisterMetaType<Network::RoomInformation>();
+    qRegisterMetaType<Network::RoomMember::State>();
     // Setup the callbacks for network updates
     auto& member{system.RoomMember()};
     member.BindOnChatMessageRecieved(
@@ -205,14 +209,14 @@ void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
 void ChatRoom::OnStatusMessageReceive(const Network::StatusMessageEntry& status_message) {
     switch (status_message.type) {
     case Network::IdMemberJoin:
-        message = QString("%1 has joined").arg(QString::fromStdString());
+        AppendStatusMessage(
+            QString("%1 has joined").arg(QString::fromStdString(status_message.nickname)));
         break;
     case Network::IdMemberLeave:
-        message = QString("%1 has left").arg(name);
+        AppendStatusMessage(
+            QString("%1 has left").arg(QString::fromStdString(status_message.nickname)));
         break;
     }
-    if (!message.isEmpty())
-        AppendStatusMessage(message);
 }
 
 void ChatRoom::OnSendChat() {

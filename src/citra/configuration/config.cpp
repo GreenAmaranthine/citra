@@ -549,7 +549,7 @@ void Config::Save() {
     qt_config->setValue("room_port", UISettings::values.room_port);
     qt_config->setValue("host_type", UISettings::values.host_type);
     qt_config->setValue("max_members", UISettings::values.max_members);
-    qt_config->setValue("room_description", UISettings::values.room_description, "");
+    qt_config->setValue("room_description", UISettings::values.room_description);
     qt_config->endGroup();
     qt_config->endGroup();
 }
