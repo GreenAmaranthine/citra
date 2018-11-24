@@ -68,9 +68,8 @@ Packet::operator bool() const {
 
 Packet& Packet::operator>>(bool& out_data) {
     u8 value;
-    if (*this >> value) {
+    if (*this >> value)
         out_data = (value != 0);
-    }
     return *this;
 }
 
@@ -140,16 +139,13 @@ Packet& Packet::operator>>(char* out_data) {
     // First extract string length
     u32 length;
     *this >> length;
-
     if ((length > 0) && CheckSize(length)) {
         // Then extract characters
         std::memcpy(out_data, &data[read_pos], length);
         out_data[length] = '\0';
-
         // Update reading position
         read_pos += length;
     }
-
     return *this;
 }
 
@@ -157,16 +153,13 @@ Packet& Packet::operator>>(std::string& out_data) {
     // First extract string length
     u32 length;
     *this >> length;
-
     out_data.clear();
     if ((length > 0) && CheckSize(length)) {
         // Then extract characters
         out_data.assign(&data[read_pos], length);
-
         // Update reading position
         read_pos += length;
     }
-
     return *this;
 }
 
@@ -235,10 +228,8 @@ Packet& Packet::operator<<(const char* in_data) {
     // First insert string length
     u32 length{static_cast<u32>(std::strlen(in_data))};
     *this << length;
-
     // Then insert characters
     Append(in_data, length * sizeof(char));
-
     return *this;
 }
 
@@ -246,17 +237,14 @@ Packet& Packet::operator<<(const std::string& in_data) {
     // First insert string length
     u32 length{static_cast<u32>(in_data.size())};
     *this << length;
-
     // Then insert characters
     if (length > 0)
         Append(in_data.c_str(), length * sizeof(std::string::value_type));
-
     return *this;
 }
 
 bool Packet::CheckSize(std::size_t size) {
     is_valid = is_valid && (read_pos + size <= data.size());
-
     return is_valid;
 }
 

@@ -48,6 +48,7 @@ public:
 
 public slots:
     void OnNetworkStateChanged(const Network::RoomMember::State& state);
+    void OnNetworkError(const Network::RoomMember::Error& error);
     void OnViewLobby();
     void OnCreateRoom();
     bool OnCloseRoom();
@@ -58,6 +59,7 @@ public slots:
 
 signals:
     void NetworkStateChanged(const Network::RoomMember::State&);
+    void NetworkError(const Network::RoomMember::Error&);
     void AnnounceFailed(const Common::WebResult&);
 
 private:
@@ -73,6 +75,7 @@ private:
     Network::RoomMember::CallbackHandle<Network::RoomMember::State> state_callback_handle;
     Replies replies;
     Core::System& system;
+    Network::RoomMember::CallbackHandle<Network::RoomMember::Error> error_callback_handle;
 };
 
 Q_DECLARE_METATYPE(Common::WebResult);

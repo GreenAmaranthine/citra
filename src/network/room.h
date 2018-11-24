@@ -12,7 +12,7 @@
 
 namespace Network {
 
-constexpr u32 network_version{0xFF01}; ///< The network version
+constexpr u32 network_version{0xFF02}; ///< The network version
 constexpr u16 DefaultRoomPort{24872};
 constexpr u32 MaxMessageSize{500};
 constexpr u32 MaxConcurrentConnections{
