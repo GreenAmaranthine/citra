@@ -150,7 +150,7 @@ ResultCode SharedMemory::Map(Process& target_process, VAddr address, MemoryPermi
 }
 
 ResultCode SharedMemory::Unmap(Process& target_process, VAddr address) {
-    // TODO: Verify what happens if the program tries to unmap an address that is not
+    // TODO: Verify what happens if the program tries to unmap an address that isn't
     // mapped to a SharedMemory.
     return target_process.vm_manager.UnmapRange(address, size);
 }

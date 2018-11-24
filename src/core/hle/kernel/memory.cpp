@@ -66,7 +66,7 @@ void KernelSystem::MemoryInit(u32 mem_type) {
     config_mem_handler = std::make_unique<ConfigMem::Handler>();
     auto& config_mem{config_mem_handler->GetConfigMem()};
     config_mem.program_mem_type = mem_type;
-    // program_mem_alloc does not always match the configured size for memory_region[0]: in case the
+    // program_mem_alloc doesn't always match the configured size for memory_region[0]: in case the
     // n3DS type override is in effect it reports the size the program expects, not the real
     // one.
     config_mem.program_mem_alloc = memory_region_sizes[mem_type][0];

@@ -276,17 +276,11 @@ void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* ev
     packet.Append(event->packet->data, event->packet->dataLength);
     // Ignore the first byte, which is the message ID.
     packet.IgnoreBytes(sizeof(u8)); // Ignore the message type
-    RoomInformation info;
     packet >> room_information.name;
     packet >> room_information.description;
     packet >> room_information.member_slots;
     packet >> room_information.port;
     packet >> room_information.creator;
-    room_information.name = info.name;
-    room_information.description = info.description;
-    room_information.member_slots = info.member_slots;
-    room_information.port = info.port;
-    room_information.creator = info.creator;
     u32 num_members;
     packet >> num_members;
     member_information.resize(num_members);
@@ -545,10 +539,9 @@ void RoomMember::SendProgram(const std::string& program) {
 
 void RoomMember::SendModerationRequest(RoomMessageTypes type, const std::string& nickname) {
     ASSERT_MSG(type == IdModKick || type == IdModBan || type == IdModUnban,
-               "type is not a moderation request");
+               "Type isn't a moderation request");
     if (!IsConnected())
         return;
-
     Packet packet;
     packet << static_cast<u8>(type);
     packet << nickname;

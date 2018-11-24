@@ -11,6 +11,7 @@
 #include "citra/multiplayer/lobby.h"
 #include "citra/multiplayer/message.h"
 #include "citra/multiplayer/state.h"
+#include "citra/ui_settings.h"
 #include "citra/util/clickable_label.h"
 #include "common/announce_multiplayer_room.h"
 #include "common/logging/log.h"
@@ -27,11 +28,12 @@ MultiplayerState::MultiplayerState(QWidget* parent, QAction* leave_room, QAction
     qRegisterMetaType<Network::RoomMember::State>();
     qRegisterMetaType<Network::RoomMember::Error>();
     qRegisterMetaType<Common::WebResult>();
-    state_callback_handle = system.RoomMember().BindOnStateChanged(
+    auto& member{system.RoomMember()};
+    state_callback_handle = member.BindOnStateChanged(
         [this](const Network::RoomMember::State& state) { emit NetworkStateChanged(state); });
     connect(this, &MultiplayerState::NetworkStateChanged, this,
             &MultiplayerState::OnNetworkStateChanged);
-    error_callback_handle = member->BindOnError(
+    error_callback_handle = member.BindOnError(
         [this](const Network::RoomMember::Error& error) { emit NetworkError(error); });
     connect(this, &MultiplayerState::NetworkError, this, &MultiplayerState::OnNetworkError);
     announce_multiplayer_session =

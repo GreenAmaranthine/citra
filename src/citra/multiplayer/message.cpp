@@ -30,8 +30,8 @@ const ConnectionError HOST_BANNED{
     "or try a different room."};
 const ConnectionError WRONG_VERSION{
     "Version mismatch!\nIf you are connecting to a room created with official/my old builds: "
-    "There's no way to do that!\nIf you are connectiong to a room created with my new builds, "
-    "please update to the latest version of Citra. If the problem "
+    "There's no way to do that!\nIf you are connectiong to a room created with my new builds: "
+    "please update to the latest version. If the problem "
     "persists, contact the room host and ask them to update the server."};
 const ConnectionError WRONG_PASSWORD{"Incorrect password."};
 const ConnectionError GENERIC_ERROR{
@@ -41,6 +41,9 @@ const ConnectionError MAC_COLLISION{"MAC address is already in use. Please choos
 const ConnectionError CONSOLE_ID_COLLISION{
     "Your Console ID conflicted with someone else's in the room.\n\nPlease go to Emulation "
     "> Configure > System to regenerate your Console ID."};
+const ConnectionError PERMISSION_DENIED{"You don't have enough permission to perform this action."};
+const ConnectionError NO_SUCH_USER{
+    "The user you're trying to kick/ban couldn't be found.\nThey may have left the room."};
 
 static bool WarnMessage(const std::string& title, const std::string& text) {
     return QMessageBox::warning(nullptr, QString::fromStdString(title),

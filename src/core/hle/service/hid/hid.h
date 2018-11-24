@@ -212,7 +212,7 @@ public:
     void SetCircleState(s16 x, s16 y);
     void SetOverrideControls(bool pad, bool touch, bool motion, bool circle);
 
-    // The HID module of a console does not store the pad state.
+    // The HID module of a console doesn't store the pad state.
     // Storing this here was necessary for emulation specific tasks like cheats or scripting.
     u32 pad_state{};
 

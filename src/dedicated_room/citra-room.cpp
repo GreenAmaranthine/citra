@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <chrono>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <regex>
@@ -24,6 +25,7 @@
 
 #include "common/common_types.h"
 #include "common/scm_rev.h"
+#include "common/string_util.h"
 #include "core/announce_multiplayer_session.h"
 #include "core/core.h"
 #include "core/settings.h"
@@ -35,8 +37,10 @@ static void PrintHelp(const char* argv0) {
                  "--room-name         The name of the room\n"
                  "--room-description  The room description\n"
                  "--port              The port used for the room\n"
-                 "--max_members       The maximum number of members for this room\n"
+                 "--max-members       The maximum number of members for this room\n"
+                 "--public            Create a public room\n"
                  "--password          The password for the room\n"
+                 "--ban-list-file     The file for storing the room ban list\n"
                  "-h, --help          Display this help and exit\n"
                  "-v, --version       Output version information and exit\n";
 }
@@ -46,14 +50,46 @@ static void PrintVersion() {
               << " Libnetwork: " << Network::network_version << std::endl;
 }
 
-/// Program entry point
+static Network::Room::BanList LoadBanList(const std::string& path) {
+    std::ifstream file;
+    OpenFStream(file, path, std::ios_base::in);
+    if (!file || file.eof()) {
+        std::cout << "Couldn't open ban list!\n\n";
+        return {};
+    }
+    Network::Room::BanList ban_list;
+    while (!file.eof()) {
+        std::string line;
+        std::getline(file, line);
+        line.erase(std::remove(line.begin(), line.end(), '\0'), line.end());
+        line = Common::StripSpaces(line);
+        ban_list.emplace_back(line);
+    }
+    return ban_list;
+}
+
+static void SaveBanList(const Network::Room::BanList& ban_list, const std::string& path) {
+    std::ofstream file;
+    OpenFStream(file, path, std::ios_base::out);
+    if (!file) {
+        std::cout << "Couldn't save ban list!\n\n";
+        return;
+    }
+    // IP ban list
+    for (const auto& ip : ban_list)
+        file << ip << "\n";
+    file.flush();
+}
+
+/// Application entry point
 int main(int argc, char** argv) {
     int option_index{};
     char* endarg;
     // This is just to be able to link against core
     gladLoadGL();
-    std::string room_name, room_description, creator, password;
+    std::string room_name, room_description, creator, password, ban_list_file;
     u32 port{Network::DefaultRoomPort}, max_members{16};
+    bool announce{};
     static struct option long_options[]{
         {"room-name", required_argument, 0, 'n'},
         {"room-description", required_argument, 0, 'd'},
@@ -61,12 +97,14 @@ int main(int argc, char** argv) {
         {"max-members", required_argument, 0, 'm'},
         {"password", required_argument, 0, 'w'},
         {"creator", required_argument, 0, 'c'},
+        {"ban-list-file", required_argument, 0, 'b'},
+        {"announce", no_argument, 0, 'a'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0},
     };
     while (optind < argc) {
-        int arg{getopt_long(argc, argv, "n:d:p:m:w:c:hv", long_options, &option_index)};
+        int arg{getopt_long(argc, argv, "n:d:p:m:w:c:b:a:hv", long_options, &option_index)};
         if (arg != -1) {
             switch (arg) {
             case 'n':
@@ -86,6 +124,12 @@ int main(int argc, char** argv) {
                 break;
             case 'c':
                 creator.assign(optarg);
+                break;
+            case 'b':
+                ban_list_file.assign(optarg);
+                break;
+            case 'a':
+                announce = true;
                 break;
             case 'h':
                 PrintHelp(argv[0]);
@@ -112,27 +156,44 @@ int main(int argc, char** argv) {
         PrintHelp(argv[0]);
         return -1;
     }
+    if (ban_list_file.empty())
+        std::cout << "Ban list file not set!\nThis should get set to load and save room ban "
+                     "list.\nSet with --ban-list-file <file>\n\n";
+    // Load the ban list
+    Network::Room::BanList ban_list;
+    if (!ban_list_file.empty())
+        ban_list = LoadBanList(ban_list_file);
     Network::Room room;
-    if (!room.Create(room_name, room_description, creator, port, password, max_members)) {
+    if (!room.Create(room_name, room_description, creator, port, password, max_members, ban_list)) {
         std::cout << "Failed to create room!\n\n";
         return -1;
     }
-    std::cout << "Room is open. Close with Q+Enter...\n\n";
+    std::cout << fmt::format("Hosting a {} room\nRoom is open. Close with Q+Enter...\n\n",
+                             announce ? "public" : "private");
     auto announce_session{std::make_unique<Core::AnnounceMultiplayerSession>(room)};
-    announce_session->Start();
+    if (announce)
+        announce_session->Start();
     while (room.IsOpen()) {
         std::string in;
         std::cin >> in;
         if (in.size() > 0) {
-            announce_session->Stop();
+            if (announce)
+                announce_session->Stop();
             announce_session.reset();
+            // Save the ban list
+            if (!ban_list_file.empty())
+                SaveBanList(room.GetBanList(), ban_list_file);
             room.Destroy();
             return 0;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds{100});
     }
-    announce_session->Stop();
+    if (announce)
+        announce_session->Stop();
     announce_session.reset();
+    // Save the ban list
+    if (!ban_list_file.empty())
+        SaveBanList(room.GetBanList(), ban_list_file);
     room.Destroy();
     return 0;
 }

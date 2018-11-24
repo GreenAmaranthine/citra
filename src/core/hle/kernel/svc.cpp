@@ -443,7 +443,7 @@ ResultCode SVC::WaitSynchronizationN(s32* out, VAddr handles_address, s32 handle
             }
             ASSERT(reason == ThreadWakeupReason::Signal);
             thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
-            // The wait_all case does not update the output index.
+            // The wait_all case doesn't update the output index.
         };
         system.PrepareReschedule();
         // This value gets set to -1 by default in this case, it isn't modified after this.

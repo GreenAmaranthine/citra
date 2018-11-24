@@ -132,12 +132,12 @@ struct Room::RoomImpl {
     void SendUserBanned(ENetPeer* client);
 
     /**
-     * Sends a IdModPermissionDenied message telling the client that they do not have mod
+     * Sends a IdModPermissionDenied message telling the client that they don't have mod
      * permission.
      */
     void SendModPermissionDenied(ENetPeer* client);
 
-    /// Sends a IdModNoSuchUser message telling the client that the given user could not be found.
+    /// Sends a IdModNoSuchUser message telling the client that the given user couldn't be found.
     void SendModNoSuchUser(ENetPeer* client);
 
     /// Sends the ban list in response to a client's request for getting ban list.
@@ -424,7 +424,7 @@ void Room::RoomImpl::HandleModGetBanListPacket(const ENetEvent* event) {
 }
 
 bool Room::RoomImpl::IsValidNickname(const std::string& nickname) const {
-    // A nickname is valid if it matches the regex and is not already taken by anybody else in the
+    // A nickname is valid if it matches the regex and isn't already taken by anybody else in the
     // room.
     const std::regex nickname_regex{"^[ a-zA-Z0-9._-]{4,20}$"};
     if (!std::regex_match(nickname, nickname_regex))
@@ -442,7 +442,7 @@ bool Room::RoomImpl::IsValidMACAddress(const MACAddress& address) const {
 }
 
 bool Room::RoomImpl::IsValidConsoleId(u64 console_id) const {
-    // A Console ID is valid if it is not already taken by anybody else in the room.
+    // A Console ID is valid if it isn't already taken by anybody else in the room.
     std::lock_guard lock{member_mutex};
     return std::all_of(members.begin(), members.end(), [&console_id](const auto& member) {
         return member.console_id != console_id;
@@ -451,7 +451,7 @@ bool Room::RoomImpl::IsValidConsoleId(u64 console_id) const {
 
 bool Room::RoomImpl::HasModPermission(const ENetPeer* client) const {
     if (room_information.creator.empty())
-        return false; // This room does not support moderation
+        return false; // This room doesn't support moderation
     std::lock_guard lock{member_mutex};
     const auto sending_member{
         std::find_if(members.begin(), members.end(),

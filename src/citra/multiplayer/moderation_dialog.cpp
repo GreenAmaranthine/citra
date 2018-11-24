@@ -5,8 +5,6 @@
 #include <QStandardItem>
 #include <QStandardItemModel>
 #include "citra/multiplayer/moderation_dialog.h"
-#include "network/network.h"
-#include "network/room_member.h"
 #include "ui_moderation_dialog.h"
 
 namespace Column {
@@ -55,7 +53,7 @@ ModerationDialog::~ModerationDialog() {
 
 void ModerationDialog::LoadBanList() {
     ui->refresh->setEnabled(false);
-    ui->refresh->setText(tr("Refreshing"));
+    ui->refresh->setText("Refreshing");
     ui->unban->setEnabled(false);
     member.RequestBanList();
 }
@@ -64,7 +62,7 @@ void ModerationDialog::PopulateBanList(const Network::Room::BanList& ban_list) {
     model->removeRows(0, model->rowCount());
     for (const auto& ip : ban_list) {
         auto subject_item{new QStandardItem(QString::fromStdString(ip))};
-        auto type_item{new QStandardItem(tr("IP Address"))};
+        auto type_item{new QStandardItem("IP Address")};
         model->invisibleRootItem()->appendRow({subject_item, type_item});
     }
     for (int i{}; i < Column::COUNT - 1; ++i)

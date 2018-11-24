@@ -12,6 +12,7 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include "citra/multiplayer/client_room.h"
 #include "citra/multiplayer/message.h"
+#include "citra/multiplayer/moderation_dialog.h"
 #include "citra/multiplayer/state.h"
 #include "citra/program_list_p.h"
 #include "common/logging/log.h"
@@ -36,8 +37,8 @@ ClientRoomWindow::ClientRoomWindow(QWidget* parent, Core::System& system)
     connect(ui->disconnect, &QPushButton::released, [this] { Disconnect(); });
     ui->disconnect->setDefault(false);
     ui->disconnect->setAutoDefault(false);
-    connect(ui->moderation, &QPushButton::clicked, [this] {
-        ModerationDialog dialog{this, system};
+    connect(ui->moderation, &QPushButton::clicked, [&system, this] {
+        ModerationDialog dialog{system.RoomMember(), this};
         dialog.exec();
     });
     UpdateView();

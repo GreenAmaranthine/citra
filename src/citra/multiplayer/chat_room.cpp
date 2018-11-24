@@ -119,6 +119,10 @@ ChatRoom::ChatRoom(QWidget* parent)
 
 ChatRoom::~ChatRoom() = default;
 
+void ChatRoom::SetModPerms(bool is_mod) {
+    has_mod_perms = is_mod;
+}
+
 void ChatRoom::Clear() {
     ui->chat_history->clear();
     block_list.clear();

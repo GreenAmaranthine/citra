@@ -69,15 +69,15 @@ public:
         NameCollision,      ///< Somebody is already using this name
         MACCollision,       ///< Somebody is already using that MAC address
         ConsoleIdCollision, ///< Somebody in the room has the same Console ID
-        WrongVersion,       ///< The room version is not the same as for this RoomMember
+        WrongVersion,       ///< The room version isn't the same as for this RoomMember
         WrongPassword,      ///< The password doesn't match the one from the Room
-        CouldNotConnect,    ///< The room is not responding to a connection attempt
+        CouldNotConnect,    ///< The room isn't responding to a connection attempt
         RoomIsFull,         ///< Room is already at the maximum number of players
         HostBanned,         ///< The user is banned by the host
 
         // Reasons why moderation request failed
-        PermissionDenied, ///< The user does not have mod permissions
-        NoSuchUser,       ///< The nickname the user attempts to kick/ban does not exist
+        PermissionDenied, ///< The user doesn't have mod permissions
+        NoSuchUser,       ///< The nickname the user attempts to kick/ban doesn't exist
     };
 
     struct MemberInformation {
