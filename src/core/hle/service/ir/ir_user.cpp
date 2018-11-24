@@ -176,7 +176,12 @@ private:
 
 /// Wraps the payload into packet and puts it to the receive buffer
 void IR_USER::PutToReceive(const std::vector<u8>& payload) {
-    LOG_TRACE(Service_IR, "data={}", Common::ArrayToString(payload.data(), payload.size()));
+    std::string payload_string;
+    for (auto part : payload)
+        payload_string += fmt::format("{:02x} ", part);
+    if (!payload_string.empty())
+        payload_string.pop_back();
+    LOG_TRACE(Service_IR, "data={}", payload_string);
     std::size_t size{payload.size()};
     std::vector<u8> packet;
     // Builds packet header. For the format info:
@@ -321,7 +326,12 @@ void IR_USER::SendIrNop(Kernel::HLERequestContext& ctx) {
         rb.Push(ResultCode(static_cast<ErrorDescription>(13), ErrorModule::IR,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
     }
-    LOG_TRACE(Service_IR, "data={}", Common::ArrayToString(buffer.data(), size));
+    std::string buffer_string;
+    for (auto part : buffer)
+        buffer_string += fmt::format("{:02x} ", part);
+    if (!buffer_string.empty())
+        buffer_string.pop_back();
+    LOG_TRACE(Service_IR, "buffer={}", buffer_string);
 }
 
 void IR_USER::ReleaseReceivedData(Kernel::HLERequestContext& ctx) {
