@@ -345,7 +345,7 @@ void Screens::LaunchMiiSelectorImpl(const HLE::Applets::MiiConfig& config,
 }
 
 void Screens::Update3D() {
-    qobject_cast<GMainWindow*>(parentWidget())->Update3D();
+    window->Update3D();
 }
 
 void Screens::UpdateNetwork() {
