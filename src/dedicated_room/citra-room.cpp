@@ -38,7 +38,7 @@ static void PrintHelp(const char* argv0) {
                  "--room-description  The room description\n"
                  "--port              The port used for the room\n"
                  "--max-members       The maximum number of members for this room\n"
-                 "--public            Create a public room\n"
+                 "--announce          Create a public room\n"
                  "--password          The password for the room\n"
                  "--ban-list-file     The file for storing the room ban list\n"
                  "-h, --help          Display this help and exit\n"
