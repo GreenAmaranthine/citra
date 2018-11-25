@@ -44,7 +44,7 @@ DirectConnectWindow::~DirectConnectWindow() = default;
 
 void DirectConnectWindow::Connect() {
     if (!ui->nickname->hasAcceptableInput()) {
-        NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID);
+        NetworkMessage::ShowError(NetworkMessage::NICKNAME_NOT_VALID);
         return;
     }
     // Prevent the user from trying to join a room while they are already joining.

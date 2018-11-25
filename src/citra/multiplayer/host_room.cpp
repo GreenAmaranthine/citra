@@ -33,7 +33,7 @@ HostRoomWindow::HostRoomWindow(QWidget* parent,
     ui->setupUi(this);
     // Set up validation for all of the fields
     ui->room_name->setValidator(validation.GetRoomName());
-    ui->username->setValidator(validation.GetNickname());
+    ui->nickname->setValidator(validation.GetNickname());
     ui->port->setValidator(validation.GetPort());
     ui->port->setPlaceholderText(QString::number(Network::DefaultRoomPort));
     // Disable editing replies text
@@ -43,7 +43,7 @@ HostRoomWindow::HostRoomWindow(QWidget* parent,
     connect(ui->buttonRemoveReply, &QPushButton::released, this, &HostRoomWindow::RemoveReply);
     connect(ui->host, &QPushButton::released, this, &HostRoomWindow::Host);
     // Restore the settings
-    ui->username->setText(UISettings::values.room_nickname);
+    ui->nickname->setText(UISettings::values.room_nickname);
     ui->room_name->setText(UISettings::values.room_name);
     ui->port->setText(UISettings::values.room_port);
     ui->max_members->setValue(UISettings::values.max_members);
@@ -56,8 +56,8 @@ HostRoomWindow::HostRoomWindow(QWidget* parent,
 HostRoomWindow::~HostRoomWindow() = default;
 
 void HostRoomWindow::Host() {
-    if (!ui->username->hasAcceptableInput()) {
-        NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID);
+    if (!ui->nickname->hasAcceptableInput()) {
+        NetworkMessage::ShowError(NetworkMessage::NICKNAME_NOT_VALID);
         return;
     }
     if (!ui->room_name->hasAcceptableInput()) {
@@ -86,17 +86,17 @@ void HostRoomWindow::Host() {
         ban_list = UISettings::values.ban_list;
     bool created{system.Room().Create(
         ui->room_name->text().toStdString(), ui->room_description->toPlainText().toStdString(),
-        ui->username->text().toStdString(), port, password, ui->max_members->value(), ban_list)};
+        ui->nickname->text().toStdString(), port, password, ui->max_members->value(), ban_list)};
     if (!created) {
         NetworkMessage::ShowError(NetworkMessage::COULD_NOT_CREATE_ROOM);
         LOG_ERROR(Network, "Couldn't create room!");
         ui->host->setEnabled(true);
         return;
     }
-    member.Join(ui->username->text().toStdString(), Service::CFG::GetConsoleId(system), "127.0.0.1",
+    member.Join(ui->nickname->text().toStdString(), Service::CFG::GetConsoleId(system), "127.0.0.1",
                 port, BroadcastMac, password);
     // Store settings
-    UISettings::values.room_nickname = ui->username->text();
+    UISettings::values.room_nickname = ui->nickname->text();
     UISettings::values.room_name = ui->room_name->text();
     UISettings::values.max_members = ui->max_members->value();
     UISettings::values.host_type = ui->host_type->currentIndex();

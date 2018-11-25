@@ -85,8 +85,8 @@ class LobbyItemHost : public LobbyItem {
 public:
     LobbyItemHost() = default;
 
-    explicit LobbyItemHost(QString username, QString ip, u16 port) {
-        setData(username, HostUsernameRole);
+    explicit LobbyItemHost(QString creator, QString ip, u16 port) {
+        setData(creator, HostCreatorRole);
         setData(ip, HostIPRole);
         setData(port, HostPortRole);
     }
@@ -94,16 +94,16 @@ public:
     QVariant data(int role) const override {
         if (role != Qt::DisplayRole)
             return LobbyItem::data(role);
-        return data(HostUsernameRole).toString();
+        return data(HostCreatorRole).toString();
     }
 
     bool operator<(const QStandardItem& other) const override {
-        return data(HostUsernameRole)
+        return data(HostCreatorRole)
                    .toString()
-                   .localeAwareCompare(other.data(HostUsernameRole).toString()) < 0;
+                   .localeAwareCompare(other.data(HostCreatorRole).toString()) < 0;
     }
 
-    static const int HostUsernameRole{Qt::UserRole + 1};
+    static const int HostCreatorRole{Qt::UserRole + 1};
     static const int HostIPRole{Qt::UserRole + 2};
     static const int HostPortRole{Qt::UserRole + 3};
 };
@@ -113,13 +113,13 @@ public:
     LobbyMember() = default;
     LobbyMember(const LobbyMember& other) = default;
 
-    explicit LobbyMember(QString username, QString program)
-        : username{std::move(username)}, program{std::move(program)} {}
+    explicit LobbyMember(QString nickname, QString program)
+        : nickname{std::move(nickname)}, program{std::move(program)} {}
 
     ~LobbyMember() = default;
 
-    QString GetUsername() const {
-        return username;
+    QString GetNickname() const {
+        return nickname;
     }
 
     QString GetProgram() const {
@@ -127,7 +127,7 @@ public:
     }
 
 private:
-    QString username;
+    QString nickname;
     QString program;
 };
 
@@ -182,9 +182,9 @@ public:
             const auto& m{member.value<LobbyMember>()};
             auto program{m.GetProgram()};
             if (program.isEmpty())
-                out += QString("%1 isn't runnning a program").arg(m.GetUsername());
+                out += QString("%1 isn't runnning a program").arg(m.GetNickname());
             else
-                out += QString("%1 is running %2").arg(m.GetUsername(), program);
+                out += QString("%1 is running %2").arg(m.GetNickname(), program);
             first = false;
         }
         return out;

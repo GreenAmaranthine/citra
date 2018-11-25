@@ -89,7 +89,7 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
     if (source.parent() != QModelIndex())
         index = source.parent();
     if (!ui->nickname->hasAcceptableInput()) {
-        NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID);
+        NetworkMessage::ShowError(NetworkMessage::NICKNAME_NOT_VALID);
         return;
     }
     // Get a password to pass if the room is password protected
@@ -203,10 +203,12 @@ bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& s
                                  ->data(room_name, LobbyItemName::NameRole)
                                  .toString()
                                  .contains(filter_search, filterCaseSensitivity())};
-        bool username_match{sourceModel()
-                                ->data(host_name, LobbyItemHost::HostUsernameRole)
+        bool nickname_match{sourceModel()
+                                ->data(host_name, LobbyItemHost::HostCreatorRole)
                                 .toString()
                                 .contains(filter_search, filterCaseSensitivity())};
+        if (!room_name_match && !nickname_match)
+            return false;
     }
     return true;
 }

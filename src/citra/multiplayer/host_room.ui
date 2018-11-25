@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>686</width>
-    <height>401</height>
+    <height>432</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -73,12 +73,12 @@
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
         <item row="0" column="1">
-         <widget class="QLineEdit" name="username"/>
+         <widget class="QLineEdit" name="nickname"/>
         </item>
         <item row="0" column="0">
          <widget class="QLabel" name="label_6">
           <property name="text">
-           <string>Username</string>
+           <string>Nickname</string>
           </property>
          </widget>
         </item>
@@ -126,7 +126,7 @@
      <item>
       <widget class="QLabel" name="label_7">
        <property name="text">
-        <string>Responses
+        <string>Replies
 When someone sends one of the messages in the table below, the reply will be automatically sent.</string>
        </property>
       </widget>
