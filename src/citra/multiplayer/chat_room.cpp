@@ -283,12 +283,7 @@ void ChatRoom::OnChatTextChanged() {
 }
 
 void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
-    auto item{ui->member_view->indexAt(menu_location)};
-    if (!item.isValid())
-        return;
-    auto nickname{member_list->item(item.row())->text().toStdString()};
-    // You can't block, kick or ban yourself
-    if (nickname == system.RoomMember().GetNickname()) {
+    auto moderation_menu{[&] {
         if (has_mod_perms) {
             QMenu context_menu;
             auto moderation_action{context_menu.addAction("Moderation...")};
@@ -298,6 +293,16 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
             });
             context_menu.exec(ui->member_view->viewport()->mapToGlobal(menu_location));
         }
+    }};
+    auto item{ui->member_view->indexAt(menu_location)};
+    if (!item.isValid()) {
+        moderation_menu();
+        return;
+    }
+    auto nickname{member_list->item(item.row())->text().toStdString()};
+    // You can't block, kick or ban yourself
+    if (nickname == system.RoomMember().GetNickname()) {
+        moderation_menu();
         return;
     }
     QMenu context_menu;
