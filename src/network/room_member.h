@@ -122,9 +122,9 @@ public:
     bool IsConnected() const;
 
     /**
-     * Attempts to join a room at the specified address and port, using the specified nickname.
-     * The console ID is passed in to check console ID conflicts.
-     * This may fail if the nickname or console ID is already taken.
+     * Attempts to join a room at the specified address and port, using the specified nickname and
+     * preferred MAC address. The console ID is passed in to check console ID conflicts. This may
+     * fail if the nickname or console ID is already taken.
      */
     void Join(const std::string& nickname, u64 console_id, const char* server_addr = "127.0.0.1",
               const u16 server_port = DefaultRoomPort,

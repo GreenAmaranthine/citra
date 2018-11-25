@@ -78,7 +78,7 @@ struct RoomMember::RoomMemberImpl {
 
     /**
      * Sends a request to the server, asking for permission to join a room with the specified
-     * nickname and preferred mac.
+     * nickname and preferred MAC address.
      * @params nickname The desired nickname.
      * @params console_id The console ID.
      * @params preferred_mac The preferred MAC address to use in the room, the BroadcastMac tells
