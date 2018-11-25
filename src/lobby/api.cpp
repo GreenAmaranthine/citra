@@ -90,7 +90,7 @@ Common::WebResult LobbyAPI::MakeRequest(const std::string& method, const std::st
         headers.headers.emplace("Content-Type", "application/json");
     Request request;
     request.method = method;
-    request.path = "/";
+    request.path = "/api/lobby";
     request.headers = headers;
     request.body = body;
     Response response;
