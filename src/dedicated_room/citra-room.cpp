@@ -48,7 +48,7 @@ static void PrintHelp(const char* argv0) {
 
 static void PrintVersion() {
     std::cout << "Citra dedicated room " << Common::g_scm_branch << " " << Common::g_scm_desc
-              << " Libnetwork: " << Network::NetworkVersion << std::endl;
+              << " Libnetwork: " << Network::NetworkVersion - 0xFF00 << std::endl;
 }
 
 static Network::Room::BanList LoadBanList(const std::string& path) {
