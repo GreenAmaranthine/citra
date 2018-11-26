@@ -41,6 +41,7 @@ static const u32 memory_region_sizes[8][3]{
 };
 
 void KernelSystem::MemoryInit(u32 mem_type) {
+    LOG_DEBUG(Frontend, "Called");
     if (system.ServiceManager()
             .GetService<Service::CFG::Module::Interface>("cfg:u")
             ->GetModule()
@@ -49,7 +50,9 @@ void KernelSystem::MemoryInit(u32 mem_type) {
             mem_type = 7;
         else if (mem_type <= 5)
             mem_type = 6;
+    LOG_DEBUG(Frontend, "after new model check");
     ASSERT(mem_type != 1);
+    LOG_DEBUG(Frontend, "mem_type assert ok");
     // The kernel allocation regions (Program, System and Base) are laid out in sequence, with
     // the sizes specified in the memory_region_sizes table.
     VAddr base{};
@@ -57,14 +60,18 @@ void KernelSystem::MemoryInit(u32 mem_type) {
         memory_regions[i].Reset(base, memory_region_sizes[mem_type][i]);
         base += memory_regions[i].size;
     }
+    LOG_DEBUG(Frontend, "regions init ok");
     // We must've allocated the entire FCRAM by the end
     if (mem_type > 5)
         ASSERT(base == Memory::FCRAM_N3DS_SIZE);
     else
         ASSERT(base == Memory::FCRAM_SIZE);
+    LOG_DEBUG(Frontend, "assert mem_type new/old ok");
     // Create config mem
     config_mem_handler = std::make_unique<ConfigMem::Handler>();
+    LOG_DEBUG(Frontend, "config mem ok");
     auto& config_mem{config_mem_handler->GetConfigMem()};
+    LOG_DEBUG(Frontend, "config mem get ok");
     config_mem.program_mem_type = mem_type;
     // program_mem_alloc doesn't always match the configured size for memory_region[0]: in case the
     // n3DS type override is in effect it reports the size the program expects, not the real
@@ -74,6 +81,7 @@ void KernelSystem::MemoryInit(u32 mem_type) {
     config_mem.base_mem_alloc = memory_regions[2].size;
     // Create shared page
     shared_page_handler = std::make_unique<SharedPage::Handler>(system);
+    LOG_DEBUG(Frontend, "shared page created");
 }
 
 MemoryRegionInfo* KernelSystem::GetMemoryRegion(MemoryRegion region) {
