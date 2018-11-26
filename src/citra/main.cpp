@@ -567,37 +567,58 @@ bool GMainWindow::LoadProgram(const std::string& filename) {
 void GMainWindow::BootProgram(const std::string& filename) {
     LOG_INFO(Frontend, "Booting {}", filename);
     StoreRecentFile(QString::fromStdString(filename)); // Put the filename on top of the list
+    LOG_DEBUG(Frontend, "Recent file stored");
     auto& movie{system.MovieSystem()};
-    if (movie_record_on_start)
+    LOG_DEBUG(Frontend, "Get MovieSystem");
+    if (movie_record_on_start) {
         movie.PrepareForRecording();
-    if (!LoadProgram(filename))
+        LOG_DEBUG(Frontend, "Prepared for recording");
+    }
+    if (!LoadProgram(filename)) {
+        LOG_DEBUG(Frontend, "Failed to load program!");
         return;
+    }
     // Create and start the emulation thread
+    LOG_DEBUG(Frontend, "make emu_thread");
     emu_thread = std::make_unique<EmuThread>(system, screens);
+    LOG_DEBUG(Frontend, "finished make emu_thread");
     emit EmulationStarting(emu_thread.get());
+    LOG_DEBUG(Frontend, "EmulationStarting");
     screens->moveContext();
+    LOG_DEBUG(Frontend, "moveContext");
     emu_thread->start();
+    LOG_DEBUG(Frontend, "emu_thread->start");
     connect(screens, &Screens::Closed, this, &GMainWindow::OnStopProgram);
     connect(screens, &Screens::TouchChanged, this, &GMainWindow::OnTouchChanged);
+    LOG_DEBUG(Frontend, "connections ok");
     // Update the GUI
     program_list->hide();
     program_list_placeholder->hide();
+    LOG_DEBUG(Frontend, "program list: ok");
     perf_stats_update_timer.start(2000);
+    LOG_DEBUG(Frontend, "timer: ok");
     screens->show();
+    LOG_DEBUG(Frontend, "show screens: ok");
     screens->setFocus();
+    LOG_DEBUG(Frontend, "set focus: ok");
     if (ui.action_Fullscreen->isChecked())
         ShowFullscreen();
+    LOG_DEBUG(Frontend, "fullscreen check: ok");
     OnStartProgram();
+    LOG_DEBUG(Frontend, "startprogram: ok");
     if (movie_record_on_start) {
         movie.StartRecording(movie_record_path.toStdString());
         movie_record_on_start = false;
         movie_record_path.clear();
     }
+    LOG_DEBUG(Frontend, "movie_record_on_start: ok");
     connect(emu_thread.get(), &EmuThread::ErrorThrown, this, &GMainWindow::OnCoreError);
+    LOG_DEBUG(Frontend, "connect OnCoreError: ok");
     // Update Discord RPC
     auto& member{system.RoomMember()};
     if (!member.IsConnected())
         UpdateDiscordRPC(member.GetRoomInformation());
+    LOG_DEBUG(Frontend, "discord rpc updated: ok");
 }
 
 void GMainWindow::ShutdownProgram() {
@@ -915,7 +936,9 @@ void GMainWindow::OnMenuRecentFile() {
 
 void GMainWindow::OnStartProgram() {
     Camera::QtMultimediaCameraHandler::ResumeCameras();
+    LOG_DEBUG(Frontend, "resumecameras: ok");
     system.SetRunning(true);
+    LOG_DEBUG(Frontend, "setrunning: ok");
     ui.action_Start->setEnabled(false);
     ui.action_Start->setText("Continue");
     ui.action_Pause->setEnabled(true);
@@ -932,6 +955,7 @@ void GMainWindow::OnStartProgram() {
     ui.action_Sleep_Mode->setEnabled(true);
     ui.action_Sleep_Mode->setChecked(false);
     ui.action_Dump_RAM->setEnabled(true);
+    LOG_DEBUG(Frontend, "ui updated");
 }
 
 void GMainWindow::OnPauseProgram() {
