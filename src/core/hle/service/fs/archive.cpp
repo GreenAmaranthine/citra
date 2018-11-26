@@ -263,50 +263,61 @@ void ArchiveManager::RegisterArchiveTypes() {
         FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir, Settings::values.sdmc_dir)};
     auto nand_directory{
         FileUtil::GetUserPath(FileUtil::UserPath::NANDDir, Settings::values.nand_dir)};
+    LOG_DEBUG(Frontend, "get dirs ok");
     auto sdmc_factory{std::make_unique<FileSys::ArchiveFactory_SDMC>(sdmc_directory)};
     if (sdmc_factory->Initialize())
         RegisterArchiveType(std::move(sdmc_factory), ArchiveIdCode::SDMC);
     else
         LOG_ERROR(Service_FS, "Can't instantiate SDMC archive with path {}", sdmc_directory);
+    LOG_DEBUG(Frontend, "sdmc init ok");
     auto sdmcwo_factory{std::make_unique<FileSys::ArchiveFactory_SDMCWriteOnly>(sdmc_directory)};
     if (sdmcwo_factory->Initialize())
         RegisterArchiveType(std::move(sdmcwo_factory), ArchiveIdCode::SDMCWriteOnly);
     else
         LOG_ERROR(Service_FS, "Can't instantiate SDMCWriteOnly archive with path {}",
                   sdmc_directory);
+    LOG_DEBUG(Frontend, "sdmcwo init ok");
     // Create the SaveData archive
     auto sd_savedata_source{std::make_shared<FileSys::ArchiveSource_SDSaveData>(sdmc_directory)};
     auto savedata_factory{
         std::make_unique<FileSys::ArchiveFactory_SaveData>(system, sd_savedata_source)};
     RegisterArchiveType(std::move(savedata_factory), ArchiveIdCode::SaveData);
+    LOG_DEBUG(Frontend, "savedata init ok");
     // Create the OtherSaveDataPermitted archive
     auto other_savedata_permitted_factory{
         std::make_unique<FileSys::ArchiveFactory_OtherSaveDataPermitted>(sd_savedata_source)};
     RegisterArchiveType(std::move(other_savedata_permitted_factory),
                         ArchiveIdCode::OtherSaveDataPermitted);
+    LOG_DEBUG(Frontend, "othersavedatapermitted init ok");
     // Create the OtherSaveDataGeneral archive
     auto other_savedata_general_factory{
         std::make_unique<FileSys::ArchiveFactory_OtherSaveDataGeneral>(sd_savedata_source)};
     RegisterArchiveType(std::move(other_savedata_general_factory),
                         ArchiveIdCode::OtherSaveDataGeneral);
+    LOG_DEBUG(Frontend, "othersavedatageneral init ok");
     // Create the ExtSaveData archive
     auto extsavedata_factory{
         std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(sdmc_directory, false)};
     RegisterArchiveType(std::move(extsavedata_factory), ArchiveIdCode::ExtSaveData);
+    LOG_DEBUG(Frontend, "extsavedata init ok");
     // Create the shared ExtSaveData archive
     auto sharedextsavedata_factory{
         std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(nand_directory, true)};
     RegisterArchiveType(std::move(sharedextsavedata_factory), ArchiveIdCode::SharedExtSaveData);
+    LOG_DEBUG(Frontend, "shared ext savedata init ok");
     // Create the NCCH archive, basically a small variation of the RomFS archive
     auto savedatacheck_factory{std::make_unique<FileSys::ArchiveFactory_NCCH>(system)};
     RegisterArchiveType(std::move(savedatacheck_factory), ArchiveIdCode::NCCH);
+    LOG_DEBUG(Frontend, "ncch init ok");
     // Create the SystemSaveData archive
     auto systemsavedata_factory{
         std::make_unique<FileSys::ArchiveFactory_SystemSaveData>(nand_directory)};
     RegisterArchiveType(std::move(systemsavedata_factory), ArchiveIdCode::SystemSaveData);
+    LOG_DEBUG(Frontend, "systemsavedata init ok");
     // Create the SelfNCCH archive
     auto selfncch_factory{std::make_unique<FileSys::ArchiveFactory_SelfNCCH>(system)};
     RegisterArchiveType(std::move(selfncch_factory), ArchiveIdCode::SelfNCCH);
+    LOG_DEBUG(Frontend, "selfncch init ok");
 }
 
 void ArchiveManager::RegisterSelfNCCH(Loader::ProgramLoader& program_loader) {

@@ -97,12 +97,15 @@ System::ResultStatus System::RunLoop() {
 
 System::ResultStatus System::Load(Frontend& frontend, const std::string& filepath) {
     program_loader = Loader::GetLoader(*this, filepath);
+    LOG_DEBUG(Frontend, "getloader");
     if (!program_loader) {
         LOG_ERROR(Core, "Failed to obtain loader for {}!", filepath);
         return ResultStatus::ErrorGetLoader;
     }
+    LOG_DEBUG(Frontend, "loader valid");
     std::pair<std::optional<u32>, Loader::ResultStatus> system_mode{
         program_loader->LoadKernelSystemMode()};
+    LOG_DEBUG(Frontend, "load system mode");
     if (system_mode.second != Loader::ResultStatus::Success) {
         LOG_ERROR(Core, "Failed to determine system mode (Error {})!",
                   static_cast<int>(system_mode.second));
@@ -116,15 +119,21 @@ System::ResultStatus System::Load(Frontend& frontend, const std::string& filepat
         }
     }
     ASSERT(system_mode.first);
+    LOG_DEBUG(Frontend, "assert system mode ok");
     auto init_result{Init(frontend, *system_mode.first)};
+    LOG_DEBUG(Frontend, "init ok");
     if (init_result != ResultStatus::Success) {
         LOG_ERROR(Core, "Failed to initialize system (Error {})!", static_cast<u32>(init_result));
         Shutdown();
         return init_result;
     }
+    LOG_DEBUG(Frontend, "init success");
     Kernel::SharedPtr<Kernel::Process> process;
+    LOG_DEBUG(Frontend, "process create");
     const auto load_result{program_loader->Load(process)};
+    LOG_DEBUG(Frontend, "program load ok");
     kernel->SetCurrentProcess(process);
+    LOG_DEBUG(Frontend, "Set current process ok");
     if (Loader::ResultStatus::Success != load_result) {
         LOG_ERROR(Core, "Failed to load file (Error {})!", static_cast<u32>(load_result));
         Shutdown();
@@ -137,10 +146,12 @@ System::ResultStatus System::Load(Frontend& frontend, const std::string& filepat
             return ResultStatus::ErrorLoader;
         }
     }
+    LOG_DEBUG(Frontend, "load success");
     Memory::SetCurrentPageTable(&kernel->GetCurrentProcess()->vm_manager.page_table);
     cheat_engine = std::make_unique<Cheats::CheatEngine>(*this);
     status = ResultStatus::Success;
     m_filepath = filepath;
+    LOG_DEBUG(Frontend, "System::Load: {}", static_cast<u32>(status));
     return status;
 }
 
@@ -163,31 +174,48 @@ void System::Reschedule() {
 System::ResultStatus System::Init(Frontend& frontend, u32 system_mode) {
     LOG_DEBUG(HW_Memory, "initialized OK");
     m_frontend = &frontend;
+    LOG_DEBUG(Frontend, "Frontend init ok");
     timing = std::make_unique<Core::Timing>();
+    LOG_DEBUG(Frontend, "timing init ok");
     kernel = std::make_unique<Kernel::KernelSystem>(*this);
+    LOG_DEBUG(Frontend, "kernel init ok");
     // Initialize FS, CFG and memory
     service_manager = std::make_unique<Service::SM::ServiceManager>(*this);
+    LOG_DEBUG(Frontend, "sm init ok");
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
+    LOG_DEBUG(Frontend, "archive manager init ok");
     Service::FS::InstallInterfaces(*this);
+    LOG_DEBUG(Frontend, "fs init ok");
     Service::CFG::InstallInterfaces(*this);
+    LOG_DEBUG(Frontend, "cfg init ok");
     kernel->MemoryInit(system_mode);
+    LOG_DEBUG(Frontend, "memory init ok");
     cpu_core = std::make_unique<Cpu>(*this);
+    LOG_DEBUG(Frontend, "cpu init ok");
     dsp_core = std::make_unique<AudioCore::DspHle>(*this);
+    LOG_DEBUG(Frontend, "dsp init ok");
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching);
+    LOG_DEBUG(Frontend, "set stretching ok");
 #ifdef ENABLE_SCRIPTING
     rpc_server = std::make_unique<RPC::RPCServer>(*this);
+    LOG_DEBUG(Frontend, "rpc init ok");
 #endif
     shutdown_requested = false;
     sleep_mode_enabled = false;
+    LOG_DEBUG(Frontend, "atomics init ok");
     HW::Init();
+    LOG_DEBUG(Frontend, "hw init ok");
     Service::Init(*this);
+    LOG_DEBUG(Frontend, "services init ok");
     auto result{VideoCore::Init(*this)};
+    LOG_DEBUG(Frontend, "video core init ok");
     if (result != ResultStatus::Success)
         return result;
     LOG_DEBUG(Core, "Initialized OK");
     // Reset counters and set time origin to current frame
     GetAndResetPerfStats();
     perf_stats.BeginSystemFrame();
+    LOG_DEBUG(Frontend, "success");
     return ResultStatus::Success;
 }
 

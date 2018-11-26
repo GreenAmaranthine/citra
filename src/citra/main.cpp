@@ -467,17 +467,22 @@ void GMainWindow::ConnectMenuEvents() {
 
 bool GMainWindow::LoadProgram(const std::string& filename) {
     // Shutdown previous session if the emu thread is still active...
-    if (emu_thread)
+    if (emu_thread) {
         ShutdownProgram();
+        LOG_DEBUG(Frontend, "shutdown ok");
+    }
     screens->InitRenderTarget();
     screens->MakeCurrent();
+    LOG_DEBUG(Frontend, "screens calls ok");
     if (!gladLoadGL()) {
         QMessageBox::critical(this, "OpenGL 3.3 Unsupported",
                               "Your GPU may not support OpenGL 3.3, or you don't "
                               "have the latest graphics driver.");
         return false;
     }
+    LOG_DEBUG(Frontend, "opengl check ok");
     const auto result{system.Load(*screens, filename)};
+    LOG_DEBUG(Frontend, "load ok");
     if (result != Core::System::ResultStatus::Success) {
         switch (result) {
         case Core::System::ResultStatus::ErrorGetLoader:
@@ -561,6 +566,7 @@ bool GMainWindow::LoadProgram(const std::string& filename) {
     }
     system.GetProgramLoader().ReadShortTitle(short_title);
     UpdateTitle();
+    LOG_DEBUG(Frontend, "all ok in load");
     return true;
 }
 
